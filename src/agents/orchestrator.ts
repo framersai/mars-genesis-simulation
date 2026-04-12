@@ -8,23 +8,17 @@ import {
 } from '@framers/agentos';
 import type { Department, TurnOutcome } from '../kernel/state.js';
 import { SeededRng } from '../kernel/rng.js';
-import { classifyOutcome } from '../kernel/progression.js';
+import { classifyOutcome, classifyOutcomeById } from '../kernel/progression.js';
 import type { DepartmentReport, CommanderDecision, TurnArtifact } from './contracts.js';
 import { SimulationKernel, type PolicyEffect } from '../kernel/kernel.js';
 import type { KeyPersonnel } from '../kernel/colonist-generator.js';
 import { SCENARIOS } from '../research/scenarios.js';
 import { getResearchPacket } from '../research/research.js';
 import { DEPARTMENT_CONFIGS, buildDepartmentContext, getDepartmentsForTurn } from './departments.js';
+import type { LeaderConfig } from '../types.js';
+export type { LeaderConfig };
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
-export interface LeaderConfig {
-  name: string;
-  archetype: string;
-  colony: string;
-  hexaco: { openness: number; conscientiousness: number; extraversion: number; agreeableness: number; emotionality: number; honestyHumility: number };
-  instructions: string;
-}
 
 // ---------------------------------------------------------------------------
 // Web search tool
@@ -145,42 +139,65 @@ function humanizeToolName(name: string): string {
   return name.replace(/_v\d+$/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
+/** Extract all top-level JSON objects from a string using balanced brace counting. */
+function extractJsonBlocks(text: string): string[] {
+  const blocks: string[] = [];
+  let depth = 0, start = -1;
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === '{') { if (depth === 0) start = i; depth++; }
+    if (text[i] === '}') { depth--; if (depth === 0 && start >= 0) { blocks.push(text.slice(start, i + 1)); start = -1; } }
+  }
+  return blocks;
+}
+
 function cleanSummary(raw: string): string {
-  // Strip LLM cruft: "Decision:", "I recommend", "**Option A**", markdown
   let s = raw
+    .replace(/^#{1,4}\s+/gm, '')
     .replace(/\*\*/g, '')
-    .replace(/^(Decision:|Recommendation:|Summary:|Analysis:|I recommend|My analysis|Based on|After careful|Given the|Looking at|The data)\s*/gi, '')
-    .replace(/^(choose |select |go with |opt for )/i, '')
+    .replace(/^[-*]\s+/gm, '')
+    .replace(/^\d+\.\s+/gm, '')
+    .replace(/^(Decision|Recommendation|Summary|Analysis|Conclusion|I recommend|My analysis|Based on|After careful|Given the|Looking at|The data|In conclusion|Therefore|Overall|To summarize|As a result|In summary|Considering|Upon review|Having analyzed)\s*:?\s*/gim, '')
+    .replace(/^(choose|select|go with|opt for|approve|we should|I suggest|I propose)\s+/i, '')
     .replace(/^Option [A-C][.:,]\s*/i, '')
+    .replace(/\n+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
     .trim();
-  // Take first complete sentence
-  const match = s.match(/^[^.!?]{10,}[.!?]/);
-  return (match?.[0] || s.slice(0, 120)).slice(0, 120);
+
+  if (s.startsWith('{') || s.startsWith('[')) return '';
+
+  const sentences = s.match(/[^.!?]+[.!?]/g) || [];
+  const result = sentences.slice(0, 2).join(' ').trim();
+  return result || s.slice(0, 150);
+}
+
+function buildReadableSummary(raw: any, dept: Department): string {
+  const summaryText = raw.summary || raw.decision || raw.recommendation || '';
+  const cleaned = cleanSummary(summaryText);
+  if (cleaned && cleaned.length >= 20) return cleaned;
+
+  const recs = (raw.recommendedActions || []).slice(0, 2).join('. ');
+  if (recs) return cleanSummary(recs);
+
+  const risks = (raw.risks || []).map((r: any) => r.description).slice(0, 2).join('. ');
+  if (risks) return cleanSummary(risks);
+
+  return `${dept.charAt(0).toUpperCase() + dept.slice(1)} department analysis complete.`;
 }
 
 function parseDeptReport(text: string, dept: Department): DepartmentReport {
-  // Try to extract JSON from the response
-  const jsonMatch = text.match(/\{[\s\S]*"department"[\s\S]*\}/);
-  if (jsonMatch) {
+  const jsonBlocks = extractJsonBlocks(text);
+  for (const block of jsonBlocks) {
     try {
-      const raw = JSON.parse(jsonMatch[0]);
-      const report = { ...emptyReport(dept), ...raw, department: dept };
-      // Use 'summary' or 'decision' or 'recommendation' field
-      const summaryText = raw.summary || raw.decision || raw.recommendation || raw.analysis || '';
-      // If summary looks like raw JSON or is too short, build one from other fields
-      if (!summaryText || summaryText.length < 10 || summaryText.startsWith('{')) {
-        const recs = (raw.recommendedActions || []).join('. ');
-        const risks = (raw.risks || []).map((r: any) => r.description).join('. ');
-        report.summary = cleanSummary(recs || risks || `${dept} analysis complete.`);
-      } else {
-        report.summary = cleanSummary(summaryText);
+      const raw = JSON.parse(block);
+      if (raw.department || raw.summary || raw.risks || raw.recommendedActions) {
+        const report = { ...emptyReport(dept), ...raw, department: dept };
+        report.summary = buildReadableSummary(raw, dept);
+        if (typeof report.confidence !== 'number' || report.confidence < 0.1) report.confidence = 0.8;
+        return report;
       }
-      // Ensure confidence is readable
-      if (typeof report.confidence !== 'number' || report.confidence < 0.1) report.confidence = 0.8;
-      return report;
-    } catch {}
+    } catch { /* try next block */ }
   }
-  // Fallback: extract from free text
+
   const cites: DepartmentReport['citations'] = [];
   let m; const re = /\[([^\]]+)\]\(([^)]+)\)/g;
   while ((m = re.exec(text))) if (m[2].startsWith('http')) cites.push({ text: m[1], url: m[2], context: m[1] });
@@ -188,13 +205,20 @@ function parseDeptReport(text: string, dept: Department): DepartmentReport {
 }
 
 function parseCmdDecision(text: string, depts: Department[]): CommanderDecision {
-  const jsonMatch = text.match(/\{[\s\S]*"decision"[\s\S]*\}/);
-  if (jsonMatch) try { return { ...emptyDecision(depts), ...JSON.parse(jsonMatch[0]) }; } catch {}
+  const jsonBlocks = extractJsonBlocks(text);
+  for (const block of jsonBlocks) {
+    try {
+      const raw = JSON.parse(block);
+      if (raw.decision || raw.selectedOptionId) {
+        return { ...emptyDecision(depts), ...raw };
+      }
+    } catch { /* try next block */ }
+  }
   return { ...emptyDecision(depts), decision: text.slice(0, 500), rationale: text };
 }
 
 function emptyReport(d: Department): DepartmentReport {
-  return { department: d, summary: '', citations: [], risks: [], opportunities: [], recommendedActions: [], proposedPatches: {}, forgedToolsUsed: [], featuredColonistUpdates: [], confidence: 0.7, openQuestions: [] };
+  return { department: d, summary: '', citations: [], risks: [], opportunities: [], recommendedActions: [], proposedPatches: {}, forgedToolsUsed: [], featuredColonistUpdates: [], confidence: 0.7, openQuestions: [], recommendedEffects: [] };
 }
 function emptyDecision(d: Department[]): CommanderDecision {
   return { decision: '', rationale: '', departmentsConsulted: d, selectedPolicies: [], rejectedPolicies: [], expectedTradeoffs: [], watchMetricsNextTurn: [] };
@@ -202,11 +226,37 @@ function emptyDecision(d: Department[]): CommanderDecision {
 
 function decisionToPolicy(decision: CommanderDecision, reports: DepartmentReport[], turn: number, year: number): PolicyEffect {
   const patches: PolicyEffect['patches'] = {};
+
+  // Apply legacy proposedPatches (backward compat)
   for (const r of reports) {
     if (r.proposedPatches.colony) patches.colony = { ...patches.colony, ...r.proposedPatches.colony };
     if (r.proposedPatches.politics) patches.politics = { ...patches.politics, ...r.proposedPatches.politics };
     if (r.proposedPatches.colonistUpdates) patches.colonistUpdates = [...(patches.colonistUpdates || []), ...r.proposedPatches.colonistUpdates];
   }
+
+  // Apply typed effects selected by commander
+  if (decision.selectedEffectIds?.length) {
+    const allEffects = reports.flatMap(r => r.recommendedEffects || []);
+    for (const effectId of decision.selectedEffectIds) {
+      const effect = allEffects.find(e => e.id === effectId);
+      if (!effect) continue;
+      if (effect.colonyDelta) {
+        patches.colony = patches.colony || {};
+        for (const [key, delta] of Object.entries(effect.colonyDelta)) {
+          const current = (patches.colony as any)[key] ?? 0;
+          (patches.colony as any)[key] = current + (delta as number);
+        }
+      }
+      if (effect.politicsDelta) {
+        patches.politics = patches.politics || {};
+        for (const [key, delta] of Object.entries(effect.politicsDelta)) {
+          const current = (patches.politics as any)[key] ?? 0;
+          (patches.politics as any)[key] = current + (delta as number);
+        }
+      }
+    }
+  }
+
   return {
     description: decision.decision,
     patches,
@@ -228,6 +278,7 @@ export type SimEvent = {
 
 export interface RunOptions {
   maxTurns?: number;
+  seed?: number;
   liveSearch?: boolean;
   onEvent?: (event: SimEvent) => void;
 }
@@ -246,7 +297,7 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
   console.log(`  Turns: ${maxTurns} | Live search: ${opts.liveSearch ? 'yes' : 'no'}`);
   console.log(`${'═'.repeat(60)}\n`);
 
-  const seed = Math.abs(leader.hexaco.openness * 1000 | 0);
+  const seed = opts.seed ?? 950;
   const kernel = new SimulationKernel(seed, leader.name, keyPersonnel);
 
   const toolMap = new Map<string, ITool>();
@@ -261,14 +312,15 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
     maxSteps: 5,
   });
   const cmdSess = commander.session(`${sid}-cmd`);
-  await cmdSess.send('You are the colony commander. You receive department reports and make strategic decisions. Return JSON with decision, rationale, selectedPolicies, rejectedPolicies, expectedTradeoffs, watchMetricsNextTurn. Acknowledge.');
+  await cmdSess.send('You are the colony commander. You receive department reports and make strategic decisions. When the crisis includes options with IDs, you MUST include selectedOptionId in your JSON response. Return JSON with selectedOptionId, decision, rationale, selectedPolicies, rejectedPolicies, expectedTradeoffs, watchMetricsNextTurn. Acknowledge.');
 
   // Turn 0: Commander promotes department heads from colonist roster
   console.log('  [Turn 0] Commander evaluating roster for promotions...');
-  const promotionDepts: Department[] = ['medical', 'engineering', 'agriculture', 'psychology'];
+  const promotionDepts: Department[] = ['medical', 'engineering', 'agriculture', 'psychology', 'governance'];
   const roleNames: Record<string, string> = {
     medical: 'Chief Medical Officer', engineering: 'Chief Engineer',
     agriculture: 'Head of Agriculture', psychology: 'Colony Psychologist',
+    governance: 'Governance Advisor',
   };
   const candidateSummaries = promotionDepts.map(dept => {
     const candidates = kernel.getCandidates(dept, 5);
@@ -334,7 +386,7 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
     console.log(`  Turn ${turn}/${maxTurns} — Year ${scenario.year}: ${scenario.title}`);
     console.log(`${'─'.repeat(50)}`);
 
-    const state = kernel.advanceTurn(turn);
+    const state = kernel.advanceTurn(turn, scenario.year);
     const births = state.eventLog.filter(e => e.turn === turn && e.type === 'birth').length;
     const deaths = state.eventLog.filter(e => e.turn === turn && e.type === 'death').length;
     console.log(`  Kernel: +${births} births, -${deaths} deaths → pop ${state.colony.population}`);
@@ -372,7 +424,16 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
     }
 
     const summaries = reports.map(r => `## ${r.department.toUpperCase()} (conf: ${r.confidence})\n${r.summary}\nRisks: ${r.risks.map(x => `[${x.severity}] ${x.description}`).join('; ') || 'none'}\nRecs: ${r.recommendedActions.join('; ') || 'none'}`).join('\n\n');
-    const cmdPrompt = `TURN ${turn} — ${scenario.year}: ${scenario.title}\n\nDEPARTMENT REPORTS:\n${summaries}\n\nColony: Pop ${state.colony.population} | Morale ${Math.round(state.colony.morale * 100)}% | Food ${state.colony.foodMonthsReserve.toFixed(1)}mo\n\nDecide. Return JSON.`;
+    const optionText = scenario.options
+      ? '\n\nOPTIONS:\n' + scenario.options.map(o => `- ${o.id}: ${o.label} — ${o.description}${o.isRisky ? ' [RISKY]' : ''}`).join('\n') + '\n\nYou MUST include "selectedOptionId" in your JSON response.'
+      : '';
+    const effectsList = reports.flatMap(r => (r.recommendedEffects || []).map(e =>
+      `  - ${e.id} (${e.type}): ${e.description}${e.colonyDelta ? ' | Delta: ' + JSON.stringify(e.colonyDelta) : ''}`
+    ));
+    const effectsText = effectsList.length
+      ? '\n\nAVAILABLE POLICY EFFECTS (include "selectedEffectIds" array in your JSON to apply):\n' + effectsList.join('\n')
+      : '';
+    const cmdPrompt = `TURN ${turn} — ${scenario.year}: ${scenario.title}\n\nDEPARTMENT REPORTS:\n${summaries}\n\nColony: Pop ${state.colony.population} | Morale ${Math.round(state.colony.morale * 100)}% | Food ${state.colony.foodMonthsReserve.toFixed(1)}mo${optionText}${effectsText}\n\nDecide. Return JSON.`;
 
     console.log(`  [commander] Deciding...`);
     emit('commander_deciding', { turn, year: scenario.year });
@@ -383,14 +444,36 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
 
     kernel.applyPolicy(decisionToPolicy(decision, reports, turn, scenario.year));
 
+    // Apply featured colonist updates from department reports
+    const colonistUpdates = reports.flatMap(r =>
+      r.featuredColonistUpdates.map(u => ({
+        colonistId: u.colonistId,
+        health: u.updates.health,
+        career: u.updates.career,
+        narrativeEvent: u.updates.narrative?.event,
+      }))
+    );
+    if (colonistUpdates.length) {
+      kernel.applyColonistUpdates(colonistUpdates);
+    }
+
     // Classify outcome and apply personality drift
     const prevYear = turn === 1 ? 2035 : scenarios[scenarios.indexOf(scenario) - 1]?.year ?? 2035;
     const yearDelta = scenario.year - prevYear;
     const outcomeRng = new SeededRng(seed).turnSeed(turn + 1000);
-    const outcome = classifyOutcome(
-      decision.decision, scenario.riskyOption, scenario.riskSuccessProbability,
-      kernel.getState().colony, outcomeRng,
-    );
+
+    let outcome: TurnOutcome;
+    if (scenario.options && decision.selectedOptionId) {
+      outcome = classifyOutcomeById(
+        decision.selectedOptionId, scenario.options,
+        scenario.riskSuccessProbability, kernel.getState().colony, outcomeRng,
+      );
+    } else {
+      outcome = classifyOutcome(
+        decision.decision, scenario.riskyOption, scenario.riskSuccessProbability,
+        kernel.getState().colony, outcomeRng,
+      );
+    }
     kernel.applyDrift(leader.hexaco, outcome, Math.max(1, yearDelta));
     outcomeLog.push({ turn, year: scenario.year, outcome });
     console.log(`  [outcome] ${outcome} (risky: "${scenario.riskyOption}")`);
