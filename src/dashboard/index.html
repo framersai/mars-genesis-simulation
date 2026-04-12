@@ -66,8 +66,8 @@
 
   .gauges{display:flex;gap:5px}
   .g{flex:1;background:var(--bg-card);padding:5px 7px;border-radius:4px;border:1px solid var(--border)}
-  .gl{color:var(--text-3);font-size:7px;text-transform:uppercase;letter-spacing:.5px}
-  .gv{font-size:18px;font-weight:800;line-height:1.2}
+  .gl{color:var(--text-3);font-size:8px;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px}
+  .gv{font-size:22px;font-weight:800;line-height:1}
   .gb{height:3px;background:var(--bg-deep);margin-top:3px;border-radius:2px;overflow:hidden}
   .gf{height:100%;border-radius:2px;animation:barGrow .8s ease both;transition:width .5s ease}
 
@@ -149,17 +149,30 @@
   </div>
 </div>
 
-<!-- Consolidated status bar: crisis + stats + divergence in one row -->
-<div style="display:flex;align-items:center;padding:4px 16px;background:var(--bg-panel);border-bottom:1px solid var(--border);gap:16px;flex-wrap:nowrap;overflow:hidden">
-  <div id="crisis" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px"><b style="color:var(--rust)">⚡ Waiting...</b></div>
-  <div style="display:flex;gap:12px;flex-shrink:0;font-size:11px">
-    <span><span class="st-v v" id="s-v-pop" style="font-size:16px;font-weight:800">—</span><span style="color:var(--text-3);font-size:9px"> vs </span><span class="st-v e" id="s-e-pop" style="font-size:16px;font-weight:800">—</span> <span style="color:var(--text-3);font-size:8px">POP</span></span>
-    <span><span id="s-v-morale" style="font-size:16px;font-weight:800;color:var(--amber)">—</span><span style="color:var(--text-3);font-size:9px"> vs </span><span id="s-e-morale" style="font-size:16px;font-weight:800;color:var(--green)">—</span> <span style="color:var(--text-3);font-size:8px">MORALE</span></span>
-    <span><span id="s-v-deaths" style="font-size:16px;font-weight:800;color:var(--rust)">—</span><span style="color:var(--text-3);font-size:9px"> vs </span><span id="s-e-deaths" style="font-size:16px;font-weight:800;color:var(--green)">—</span> <span style="color:var(--text-3);font-size:8px">DEATHS</span></span>
-    <span><span class="st-v v" id="s-v-tools" style="font-size:16px;font-weight:800">0</span><span style="color:var(--text-3);font-size:9px">/</span><span class="st-v e" id="s-e-tools" style="font-size:16px;font-weight:800">0</span> <span style="color:var(--text-3);font-size:8px">TOOLS</span></span>
-  </div>
-  <div id="div-count" style="flex-shrink:0;font-size:9px;color:var(--text-3)">Waiting</div>
+<!-- Crisis banner (own row) -->
+<div id="crisis" style="padding:6px 20px;background:linear-gradient(90deg,rgba(196,90,44,.12),rgba(196,90,44,.06),rgba(196,90,44,.12));border-bottom:1px solid var(--rust-dim);text-align:center;font-size:13px">
+  <b style="color:var(--rust)">⚡ Waiting for simulation...</b>
 </div>
+<!-- Stats bar (own row, centered, spacious) -->
+<div style="display:flex;justify-content:center;gap:40px;padding:8px 20px;background:var(--bg-panel);border-bottom:1px solid var(--border)">
+  <div style="text-align:center">
+    <div><span id="s-v-pop" style="font-size:24px;font-weight:800;color:var(--vis)">—</span><span style="color:var(--text-3);font-size:13px;margin:0 8px">vs</span><span id="s-e-pop" style="font-size:24px;font-weight:800;color:var(--eng)">—</span></div>
+    <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:1.5px;margin-top:3px">Population</div>
+  </div>
+  <div style="text-align:center">
+    <div><span id="s-v-morale" style="font-size:24px;font-weight:800;color:var(--amber)">—</span><span style="color:var(--text-3);font-size:13px;margin:0 8px">vs</span><span id="s-e-morale" style="font-size:24px;font-weight:800;color:var(--green)">—</span></div>
+    <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:1.5px;margin-top:3px">Morale</div>
+  </div>
+  <div style="text-align:center">
+    <div><span id="s-v-deaths" style="font-size:24px;font-weight:800;color:var(--rust)">—</span><span style="color:var(--text-3);font-size:13px;margin:0 8px">vs</span><span id="s-e-deaths" style="font-size:24px;font-weight:800;color:var(--green)">—</span></div>
+    <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:1.5px;margin-top:3px">Deaths</div>
+  </div>
+  <div style="text-align:center">
+    <div><span id="s-v-tools" style="font-size:24px;font-weight:800;color:var(--vis)">0</span><span style="color:var(--text-3);font-size:13px;margin:0 6px">/</span><span id="s-e-tools" style="font-size:24px;font-weight:800;color:var(--eng)">0</span></div>
+    <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:1.5px;margin-top:3px">Tools Forged</div>
+  </div>
+</div>
+<div id="div-count" style="display:none"></div>
 
 <div class="main">
   <!-- LEFT: VISIONARY -->
