@@ -1,0 +1,30 @@
+{
+  "name": "@framers/mars-genesis-simulation",
+  "version": "0.1.0",
+  "description": "Multi-agent Mars colony simulation with emergent tool forging, HEXACO personality evolution, and deterministic kernel. Built with AgentOS.",
+  "type": "module",
+  "scripts": {
+    "visionary": "npx tsx src/run-visionary.ts",
+    "engineer": "npx tsx src/run-engineer.ts",
+    "smoke": "npx tsx src/run-visionary.ts 3",
+    "compare": "npx tsx src/run-visionary.ts && npx tsx src/run-engineer.ts"
+  },
+  "dependencies": {
+    "@framers/agentos": "^0.1.211"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0",
+    "typescript": "^5.4.0"
+  },
+  "keywords": [
+    "agentos", "ai-agents", "simulation", "mars", "emergent-behavior",
+    "tool-forging", "hexaco", "personality", "multi-agent", "typescript"
+  ],
+  "author": "Manic Agency LLC <team@frame.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/framersai/mars-genesis-simulation"
+  },
+  "homepage": "https://agentos.sh"
+}
