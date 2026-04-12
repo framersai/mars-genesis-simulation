@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mars Genesis — Setup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0806; --bg2: #14110e; --bg3: #1c1915;
+    --border: #302a22; --text-1: #f0e8d8; --text-2: #c4b89c; --text-3: #8a7e6c;
+    --rust: #e06530; --amber: #e8b44a; --teal: #4ca8a8; --green: #6aad48;
+    --vis: #e8b44a; --eng: #4ca8a8;
+    --sans: 'Inter',system-ui,sans-serif;
+    --mono: 'SF Mono',Menlo,'Cascadia Code','JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text-1);font-family:var(--sans);min-height:100vh}
+  a{color:var(--amber);text-decoration:none}
+
+  .top{display:flex;justify-content:space-between;align-items:center;padding:8px 20px;background:var(--bg2);border-bottom:1px solid var(--border)}
+  .logo{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:14px;font-weight:700}
+  .logo small{color:var(--rust);font-size:10px;letter-spacing:1px;margin-left:4px}
+
+  .wrap{max-width:1100px;margin:0 auto;padding:20px 24px}
+  h1{font-size:18px;color:var(--amber);margin-bottom:4px;font-family:var(--mono)}
+  .sub{color:var(--text-3);font-size:12px;margin-bottom:16px}
+
+  /* Preset bar */
+  .preset-bar{display:flex;gap:8px;align-items:center;margin-bottom:16px}
+  .preset-bar label{font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+  .preset-bar select{background:var(--bg3);color:var(--text-1);border:1px solid var(--border);padding:5px 10px;border-radius:4px;font-family:var(--sans);font-size:12px}
+
+  /* Leaders grid */
+  .leaders-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+  .leader-panel{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px}
+  .leader-panel h2{font-size:14px;margin-bottom:10px;font-family:var(--mono)}
+  .leader-panel h2.v{color:var(--vis)}.leader-panel h2.e{color:var(--eng)}
+
+  /* Form elements */
+  .field{margin-bottom:8px}
+  .field label{display:block;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:3px}
+  .field input,.field textarea,.field select{width:100%;background:var(--bg3);color:var(--text-1);border:1px solid var(--border);padding:6px 10px;border-radius:4px;font-family:var(--sans);font-size:12px}
+  .field textarea{min-height:48px;resize:vertical;font-size:11px}
+  .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--amber)}
+
+  /* HEXACO sliders */
+  .hexaco-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
+  .slider-row{display:flex;align-items:center;gap:6px}
+  .slider-row label{font-size:10px;color:var(--text-2);min-width:110px;font-weight:600}
+  .slider-row input[type=range]{flex:1;accent-color:var(--amber);height:4px}
+  .slider-row .sv{font-size:11px;color:var(--text-1);font-family:var(--mono);min-width:30px;text-align:right}
+  .slider-row.eng input[type=range]{accent-color:var(--teal)}
+
+  /* Settings section */
+  .settings{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:16px}
+  .settings h2{font-size:14px;color:var(--text-1);margin-bottom:10px;font-family:var(--mono)}
+  .settings-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
+
+  /* Custom events */
+  .events{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:16px}
+  .events h2{font-size:14px;color:var(--text-1);margin-bottom:10px;font-family:var(--mono)}
+  .event-row{display:grid;grid-template-columns:60px 1fr 2fr 30px;gap:6px;margin-bottom:6px;align-items:start}
+  .event-row input,.event-row textarea{background:var(--bg3);color:var(--text-1);border:1px solid var(--border);padding:5px 8px;border-radius:4px;font-family:var(--sans);font-size:11px}
+  .event-row textarea{min-height:32px;resize:none}
+  .rm-btn{background:none;border:none;color:var(--rust);cursor:pointer;font-size:16px;padding:4px}
+  .add-btn{background:var(--bg3);color:var(--amber);border:1px solid var(--border);padding:5px 14px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer}
+  .add-btn:hover{border-color:var(--amber)}
+
+  /* API section */
+  .api{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:16px}
+  .api h2{font-size:14px;color:var(--text-1);margin-bottom:10px;font-family:var(--mono)}
+  .api-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px}
+
+  /* Launch */
+  .launch{text-align:center;padding:12px 0}
+  .launch-btn{background:linear-gradient(135deg,var(--rust),#c44a1e);color:white;border:none;padding:12px 40px;border-radius:6px;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--sans);letter-spacing:.5px;transition:transform .1s}
+  .launch-btn:hover{transform:scale(1.02)}
+  .launch-btn:active{transform:scale(.98)}
+  .launch-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .launch-status{margin-top:8px;font-size:12px;color:var(--text-3)}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="logo">AgentOS <small>MARS GENESIS</small></div>
+  <a href="/">← Back to Dashboard</a>
+</div>
+
+<div class="wrap">
+  <h1>Simulation Setup</h1>
+  <div class="sub">Configure leaders, personality traits, simulation parameters, and models. Then launch.</div>
+
+  <!-- Presets -->
+  <div class="preset-bar">
+    <label>Preset:</label>
+    <select id="preset" onchange="applyPreset(this.value)">
+      <option value="default">Default (Visionary vs Engineer)</option>
+      <option value="balanced">Balanced Founders</option>
+      <option value="extreme">High Risk vs Ultra Cautious</option>
+      <option value="custom">Custom</option>
+    </select>
+  </div>
+
+  <!-- Leaders -->
+  <div class="leaders-grid">
+    <div class="leader-panel" id="ldr-a">
+      <h2 class="v">Leader A (Visionary)</h2>
+      <div class="field"><label>Name</label><input id="a-name" value="Aria Chen"></div>
+      <div class="field"><label>Archetype</label><input id="a-arch" value="The Visionary"></div>
+      <div class="field"><label>Colony Name</label><input id="a-colony" value="Ares Horizon"></div>
+      <div class="hexaco-grid" id="a-hexaco">
+        <div class="slider-row"><label>Openness</label><input type="range" min="0" max="1" step="0.01" value="0.95" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">0.95</span></div>
+        <div class="slider-row"><label>Conscientiousness</label><input type="range" min="0" max="1" step="0.01" value="0.35" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">0.35</span></div>
+        <div class="slider-row"><label>Extraversion</label><input type="range" min="0" max="1" step="0.01" value="0.85" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">0.85</span></div>
+        <div class="slider-row"><label>Agreeableness</label><input type="range" min="0" max="1" step="0.01" value="0.55" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">0.55</span></div>
+        <div class="slider-row"><label>Emotionality</label><input type="range" min="0" max="1" step="0.01" value="0.30" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">0.30</span></div>
+        <div class="slider-row"><label>Honesty-Humility</label><input type="range" min="0" max="1" step="0.01" value="0.65" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">0.65</span></div>
+      </div>
+      <div class="field" style="margin-top:8px"><label>Commander Instructions</label><textarea id="a-instr">You are Commander Aria Chen. Bold expansion, calculated risks. Favor higher upside. Respond with JSON.</textarea></div>
+    </div>
+    <div class="leader-panel" id="ldr-b">
+      <h2 class="e">Leader B (Engineer)</h2>
+      <div class="field"><label>Name</label><input id="b-name" value="Dietrich Voss"></div>
+      <div class="field"><label>Archetype</label><input id="b-arch" value="The Engineer"></div>
+      <div class="field"><label>Colony Name</label><input id="b-colony" value="Meridian Base"></div>
+      <div class="hexaco-grid" id="b-hexaco">
+        <div class="slider-row eng"><label>Openness</label><input type="range" min="0" max="1" step="0.01" value="0.25" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">0.25</span></div>
+        <div class="slider-row eng"><label>Conscientiousness</label><input type="range" min="0" max="1" step="0.01" value="0.97" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">0.97</span></div>
+        <div class="slider-row eng"><label>Extraversion</label><input type="range" min="0" max="1" step="0.01" value="0.30" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">0.30</span></div>
+        <div class="slider-row eng"><label>Agreeableness</label><input type="range" min="0" max="1" step="0.01" value="0.45" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">0.45</span></div>
+        <div class="slider-row eng"><label>Emotionality</label><input type="range" min="0" max="1" step="0.01" value="0.70" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">0.70</span></div>
+        <div class="slider-row eng"><label>Honesty-Humility</label><input type="range" min="0" max="1" step="0.01" value="0.90" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">0.90</span></div>
+      </div>
+      <div class="field" style="margin-top:8px"><label>Commander Instructions</label><textarea id="b-instr">You are Commander Dietrich Voss. Engineering discipline, safety margins. Favor lower risk. Respond with JSON.</textarea></div>
+    </div>
+  </div>
+
+  <!-- Simulation Settings -->
+  <div class="settings">
+    <h2>Simulation</h2>
+    <div class="settings-grid">
+      <div class="field"><label>Turns</label><input id="turns" type="number" min="1" max="12" value="12"></div>
+      <div class="field"><label>Seed</label><input id="seed" type="number" value="950"></div>
+      <div class="field"><label>Start Year</label><input id="start-year" type="number" value="2035"></div>
+      <div class="field"><label>Live Web Search</label><select id="live-search"><option value="false">Disabled</option><option value="true">Enabled (requires SERPER_API_KEY)</option></select></div>
+    </div>
+  </div>
+
+  <!-- Custom Events -->
+  <div class="events">
+    <h2>Custom Events <span style="font-size:11px;color:var(--text-3);font-weight:400">(injected into crisis context at specific turns)</span></h2>
+    <div id="events-list"></div>
+    <button class="add-btn" onclick="addEvent()">+ Add Event</button>
+  </div>
+
+  <!-- API & Models -->
+  <div class="api">
+    <h2>API & Models</h2>
+    <div class="api-grid">
+      <div class="field"><label>OpenAI API Key</label><input id="api-key" type="password" placeholder="sk-..." value="__SERVER_API_KEY__"></div>
+      <div class="field"><label>Commander Model</label><select id="model-cmd"><option value="gpt-5.4" selected>gpt-5.4</option><option value="gpt-4o">gpt-4o</option><option value="gpt-4o-mini">gpt-4o-mini</option></select></div>
+      <div class="field"><label>Department Model</label><select id="model-dept"><option value="gpt-5.4-mini" selected>gpt-5.4-mini</option><option value="gpt-4o-mini">gpt-4o-mini</option><option value="gpt-4o">gpt-4o</option></select></div>
+      <div class="field"><label>Judge Model</label><select id="model-judge"><option value="gpt-5.4" selected>gpt-5.4</option><option value="gpt-4o">gpt-4o</option></select></div>
+    </div>
+  </div>
+
+  <!-- Launch -->
+  <div class="launch">
+    <button class="launch-btn" id="launch-btn" onclick="launch()">Start Simulation</button>
+    <div class="launch-status" id="launch-status"></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+function getHexaco(prefix) {
+  const sliders = document.querySelectorAll(`#${prefix}-hexaco input[type=range]`);
+  const traits = ['openness','conscientiousness','extraversion','agreeableness','emotionality','honestyHumility'];
+  const h = {};
+  sliders.forEach((s, i) => h[traits[i]] = parseFloat(s.value));
+  return h;
+}
+
+function setHexaco(prefix, h) {
+  const sliders = document.querySelectorAll(`#${prefix}-hexaco input[type=range]`);
+  const traits = ['openness','conscientiousness','extraversion','agreeableness','emotionality','honestyHumility'];
+  sliders.forEach((s, i) => { s.value = h[traits[i]]; s.nextElementSibling.textContent = h[traits[i]].toFixed(2); });
+}
+
+const PRESETS = {
+  default: {
+    a: { name:'Aria Chen', arch:'The Visionary', colony:'Ares Horizon', hexaco:{openness:.95,conscientiousness:.35,extraversion:.85,agreeableness:.55,emotionality:.3,honestyHumility:.65}, instr:'You are Commander Aria Chen. Bold expansion, calculated risks. Favor higher upside. Respond with JSON.' },
+    b: { name:'Dietrich Voss', arch:'The Engineer', colony:'Meridian Base', hexaco:{openness:.25,conscientiousness:.97,extraversion:.3,agreeableness:.45,emotionality:.7,honestyHumility:.9}, instr:'You are Commander Dietrich Voss. Engineering discipline, safety margins. Favor lower risk. Respond with JSON.' },
+    turns:12, seed:950
+  },
+  balanced: {
+    a: { name:'Maya Torres', arch:'The Diplomat', colony:'Concordia Station', hexaco:{openness:.6,conscientiousness:.55,extraversion:.65,agreeableness:.7,emotionality:.5,honestyHumility:.6}, instr:'You are Commander Maya Torres. Seek consensus, balance risks. Favor solutions that unite the colony. Respond with JSON.' },
+    b: { name:'Kenji Nakamura', arch:'The Pragmatist', colony:'Olympus Landing', hexaco:{openness:.5,conscientiousness:.6,extraversion:.45,agreeableness:.55,emotionality:.55,honestyHumility:.65}, instr:'You are Commander Kenji Nakamura. Practical, data-informed. Favor proven approaches with measurable outcomes. Respond with JSON.' },
+    turns:12, seed:950
+  },
+  extreme: {
+    a: { name:'Zara Okafor', arch:'The Gambler', colony:'Frontier Prime', hexaco:{openness:.99,conscientiousness:.15,extraversion:.9,agreeableness:.3,emotionality:.1,honestyHumility:.4}, instr:'You are Commander Zara Okafor. Maximum risk, maximum reward. You believe fortune favors the bold. Respond with JSON.' },
+    b: { name:'Heinrich Weber', arch:'The Fortress', colony:'Bastion Colony', hexaco:{openness:.05,conscientiousness:.99,extraversion:.1,agreeableness:.6,emotionality:.95,honestyHumility:.95}, instr:'You are Commander Heinrich Weber. Zero tolerance for unnecessary risk. Triple safety margins. Every decision is reversible or it does not happen. Respond with JSON.' },
+    turns:12, seed:950
+  }
+};
+
+function applyPreset(name) {
+  const p = PRESETS[name];
+  if (!p) return;
+  $('a-name').value = p.a.name; $('a-arch').value = p.a.arch; $('a-colony').value = p.a.colony; $('a-instr').value = p.a.instr;
+  setHexaco('a', p.a.hexaco);
+  $('b-name').value = p.b.name; $('b-arch').value = p.b.arch; $('b-colony').value = p.b.colony; $('b-instr').value = p.b.instr;
+  setHexaco('b', p.b.hexaco);
+  $('turns').value = p.turns; $('seed').value = p.seed;
+}
+
+let eventCount = 0;
+function addEvent(turn='', title='', desc='') {
+  eventCount++;
+  const id = eventCount;
+  const div = document.createElement('div');
+  div.className = 'event-row';
+  div.id = `ev-${id}`;
+  div.innerHTML = `<input type="number" min="1" max="12" placeholder="Turn" value="${turn}"><input placeholder="Title" value="${title}"><textarea placeholder="Description">${desc}</textarea><button class="rm-btn" onclick="document.getElementById('ev-${id}').remove()">✕</button>`;
+  $('events-list').appendChild(div);
+}
+
+function getEvents() {
+  const rows = document.querySelectorAll('.event-row');
+  return Array.from(rows).map(r => {
+    const inputs = r.querySelectorAll('input');
+    const ta = r.querySelector('textarea');
+    return { turn: parseInt(inputs[0].value) || 0, title: inputs[1].value, description: ta.value };
+  }).filter(e => e.turn > 0 && e.title);
+}
+
+async function launch() {
+  const btn = $('launch-btn');
+  const status = $('launch-status');
+  btn.disabled = true;
+  status.textContent = 'Starting simulation...';
+
+  const config = {
+    leaders: [
+      { name: $('a-name').value, archetype: $('a-arch').value, colony: $('a-colony').value, hexaco: getHexaco('a'), instructions: $('a-instr').value },
+      { name: $('b-name').value, archetype: $('b-arch').value, colony: $('b-colony').value, hexaco: getHexaco('b'), instructions: $('b-instr').value },
+    ],
+    turns: parseInt($('turns').value) || 12,
+    seed: parseInt($('seed').value) || 950,
+    liveSearch: $('live-search').value === 'true',
+    customEvents: getEvents(),
+    apiKey: $('api-key').value,
+    models: {
+      commander: $('model-cmd').value,
+      departments: $('model-dept').value,
+      judge: $('model-judge').value,
+    },
+  };
+
+  try {
+    const res = await fetch('/setup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(config),
+    });
+    const data = await res.json();
+    if (data.redirect) {
+      status.textContent = 'Redirecting to dashboard...';
+      window.location.href = data.redirect;
+    } else if (data.error) {
+      status.textContent = 'Error: ' + data.error;
+      btn.disabled = false;
+    }
+  } catch (err) {
+    status.textContent = 'Failed: ' + err;
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>

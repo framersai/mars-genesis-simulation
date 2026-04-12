@@ -281,6 +281,7 @@ export interface RunOptions {
   seed?: number;
   liveSearch?: boolean;
   onEvent?: (event: SimEvent) => void;
+  customEvents?: Array<{ turn: number; title: string; description: string }>;
 }
 
 export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPersonnel[], opts: RunOptions = {}) {
