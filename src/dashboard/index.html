@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mars Genesis — AgentOS Live Simulation</title>
+<title>Mars Genesis — AgentOS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -18,197 +18,184 @@
     --mono: 'SF Mono',Menlo,'Cascadia Code','JetBrains Mono',monospace;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg-deep);color:var(--text-1);font-family:var(--sans);height:100vh;width:100vw;display:flex;flex-direction:column;overflow:hidden}
+  body{background:var(--bg-deep);color:var(--text-1);font-family:var(--sans);height:100vh;width:100vw;display:flex;flex-direction:column;overflow:hidden;font-size:12px}
   a{color:var(--amber);text-decoration:none}
-  @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   @keyframes barGrow{from{width:0}}
-  @keyframes glow{0%,100%{box-shadow:0 0 0 transparent}50%{box-shadow:0 0 8px rgba(196,90,44,.3)}}
-  .af{animation:fadeUp .4s ease both}
+  @keyframes glow{0%,100%{box-shadow:0 0 0 transparent}50%{box-shadow:0 0 6px rgba(196,90,44,.3)}}
+  .af{animation:fadeUp .3s ease both}
 
-  /* Top bar */
-  .top{display:flex;justify-content:space-between;align-items:center;padding:8px 20px;background:var(--bg-panel);border-bottom:1px solid var(--border)}
-  .logo{display:flex;align-items:center;gap:10px}
-  .logo svg{width:28px;height:28px}
-  .logo h1{font-size:16px;color:var(--text-1);letter-spacing:-.5px;line-height:1;font-family:var(--mono)}
-  .logo small{font-size:10px;color:var(--rust);font-weight:700;letter-spacing:1.5px;font-family:var(--mono)}
-  .top-c{text-align:center}.top-c h2{color:var(--amber);font-size:13px;font-weight:700}.top-c p{color:var(--text-3);font-size:11px}
-  .meta{display:flex;gap:16px;font-size:12px;color:var(--text-2)}.meta b{color:var(--text-1);font-size:14px;font-family:var(--mono)}
+  /* Top bar - single compact row */
+  .top{display:flex;justify-content:space-between;align-items:center;padding:4px 16px;background:var(--bg-panel);border-bottom:1px solid var(--border);gap:16px}
+  .logo{display:flex;align-items:center;gap:6px;flex-shrink:0}
+  .logo svg{width:20px;height:20px}
+  .logo-text{font-size:13px;color:var(--text-1);font-family:var(--mono);font-weight:700}
+  .logo-sub{font-size:9px;color:var(--rust);font-weight:700;letter-spacing:1px;font-family:var(--mono);margin-left:4px}
+  .top-c{color:var(--text-3);font-size:11px;white-space:nowrap}
+  .meta{display:flex;gap:12px;font-size:11px;color:var(--text-2);flex-shrink:0}.meta b{color:var(--text-1);font-family:var(--mono)}
   .live{color:var(--green);animation:pulse 2s infinite;font-weight:700}
 
-  /* Leaders */
+  /* Leaders - compact row */
   .leaders{display:flex;gap:1px;background:var(--border)}
-  .ldr{flex:1;padding:10px 16px;background:var(--bg-panel);display:flex;gap:12px;align-items:center}
+  .ldr{flex:1;padding:5px 12px;background:var(--bg-panel);display:flex;gap:8px;align-items:center}
   .ldr-info{flex:1;min-width:0}
-  .ldr-name{font-size:16px;font-weight:800}.ldr-name.v{color:var(--vis)}.ldr-name.e{color:var(--eng)}
-  .ldr-sub{color:var(--text-2);font-size:11px;margin-top:2px}
-  .ldr-quote{color:var(--text-2);font-size:11px;font-style:italic;margin-top:3px}
-  .traits{font-size:11px;color:var(--text-2);white-space:pre;line-height:1.4;flex-shrink:0;font-family:var(--mono)}
+  .ldr-name{font-size:13px;font-weight:800}.ldr-name.v{color:var(--vis)}.ldr-name.e{color:var(--eng)}
+  .ldr-sub{color:var(--text-3);font-size:10px}
+  .ldr-quote{color:var(--text-2);font-size:10px;font-style:italic}
+  .traits{font-size:9px;color:var(--text-2);white-space:pre;line-height:1.3;flex-shrink:0;font-family:var(--mono)}
   .traits .hi{font-weight:700}.traits .v{color:var(--vis)}.traits .e{color:var(--eng)}
-  .sparks{flex-shrink:0;text-align:right}
-  .sp-l{color:var(--text-3);font-size:10px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
-  .arch{font-size:10px;padding:3px 10px;border-radius:4px;font-weight:800;flex-shrink:0;letter-spacing:.5px;font-family:var(--mono)}
+  .sparks{flex-shrink:0;text-align:right;font-family:var(--mono);font-size:11px}
+  .sp-l{color:var(--text-3);font-size:8px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+  .arch{font-size:9px;padding:2px 8px;border-radius:3px;font-weight:800;flex-shrink:0;font-family:var(--mono)}
   .arch.v{color:var(--vis);background:rgba(232,180,74,.1);border:1px solid var(--amber-dim)}
   .arch.e{color:var(--eng);background:rgba(76,168,168,.1);border:1px solid var(--teal-dim)}
 
-  /* Crisis banner */
-  .crisis-banner{padding:8px 20px;background:linear-gradient(90deg,rgba(224,101,48,.15),rgba(224,101,48,.06),rgba(224,101,48,.15));border-bottom:1px solid var(--rust-dim);text-align:center;font-size:15px;font-weight:700}
+  /* Crisis banner - compact */
+  .crisis-banner{padding:4px 16px;background:linear-gradient(90deg,rgba(224,101,48,.12),rgba(224,101,48,.05),rgba(224,101,48,.12));border-bottom:1px solid var(--rust-dim);text-align:center;font-size:13px;font-weight:700}
 
-  /* Stats bar */
-  .stats-bar{display:flex;justify-content:center;gap:48px;padding:10px 20px;background:var(--bg-panel);border-bottom:1px solid var(--border)}
+  /* Stats bar - compact single row */
+  .stats-bar{display:flex;justify-content:center;gap:32px;padding:5px 16px;background:var(--bg-panel);border-bottom:1px solid var(--border)}
   .stat{text-align:center}
-  .stat-values{font-family:var(--mono)}
-  .stat-num{font-size:26px;font-weight:800;line-height:1}
-  .stat-vs{color:var(--text-3);font-size:14px;margin:0 8px}
-  .stat-label{font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:1.5px;margin-top:4px;font-weight:600}
+  .stat-num{font-size:18px;font-weight:800;font-family:var(--mono)}
+  .stat-vs{color:var(--text-3);font-size:11px;margin:0 6px}
+  .stat-label{font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;font-weight:600}
 
   /* Main columns */
   .main{display:flex;gap:1px;background:var(--border);flex:1;min-height:0}
   .col{flex:1;background:var(--bg-deep);display:flex;flex-direction:column;overflow:hidden}
-  .col-h{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--bg-panel);border-bottom:1px solid var(--border)}
-  .cn{font-weight:800;font-size:14px;font-family:var(--mono)}.cn.v{color:var(--vis)}.cn.e{color:var(--eng)}
-  .cl{color:var(--text-2);font-size:12px;margin-left:8px}
-  .col-body{flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:8px}
-  .col-body::-webkit-scrollbar{width:4px}.col-body::-webkit-scrollbar-thumb{background:var(--border-hl);border-radius:2px}
+  .col-h{display:flex;justify-content:space-between;align-items:center;padding:4px 10px;background:var(--bg-panel);border-bottom:1px solid var(--border)}
+  .cn{font-weight:800;font-size:12px;font-family:var(--mono)}.cn.v{color:var(--vis)}.cn.e{color:var(--eng)}
+  .cl{color:var(--text-3);font-size:10px;margin-left:6px}
+  .col-body{flex:1;overflow-y:auto;padding:5px 8px;display:flex;flex-direction:column;gap:5px}
+  .col-body::-webkit-scrollbar{width:3px}.col-body::-webkit-scrollbar-thumb{background:var(--border-hl);border-radius:2px}
 
-  /* Gauges */
-  .gauges{display:flex;gap:6px}
-  .g{flex:1;background:var(--bg-card);padding:8px 10px;border-radius:6px;border:1px solid var(--border)}
-  .gl{color:var(--text-2);font-size:11px;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;font-weight:600}
-  .gv{font-size:24px;font-weight:800;line-height:1;font-family:var(--mono)}
-  .gb{height:4px;background:var(--bg-deep);margin-top:4px;border-radius:2px;overflow:hidden}
-  .gf{height:100%;border-radius:2px;animation:barGrow .8s ease both;transition:width .5s ease}
+  /* Gauges - compact row */
+  .gauges{display:flex;gap:4px}
+  .g{flex:1;background:var(--bg-card);padding:4px 6px;border-radius:4px;border:1px solid var(--border)}
+  .gl{color:var(--text-2);font-size:9px;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:2px;font-weight:600}
+  .gv{font-size:18px;font-weight:800;line-height:1;font-family:var(--mono)}
+  .gb{height:3px;background:var(--bg-deep);margin-top:3px;border-radius:2px;overflow:hidden}
+  .gf{height:100%;border-radius:2px;animation:barGrow .6s ease both;transition:width .4s ease}
 
-  /* Cards */
-  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:13px}
-  .card-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-  .card-title{font-weight:700;font-size:14px;color:var(--amber)}
-  .card-badge{font-size:11px;color:var(--text-3);background:var(--bg-deep);padding:2px 8px;border-radius:3px;font-family:var(--mono)}
-  .card-text{color:var(--text-1);line-height:1.6;font-size:13px}
-  .risk{margin-top:4px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
-  .rd{width:8px;height:8px;border-radius:50%}.rd.cr{background:var(--rust)}.rd.hi{background:var(--amber)}.rd.lo{background:var(--green)}
+  /* Cards - compact */
+  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:6px 10px}
+  .card-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+  .card-title{font-weight:700;font-size:12px;color:var(--amber)}
+  .card-badge{font-size:10px;color:var(--text-3);background:var(--bg-deep);padding:1px 6px;border-radius:3px;font-family:var(--mono)}
+  .card-text{color:var(--text-1);line-height:1.5;font-size:12px}
+  .risk{margin-top:3px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px}
+  .rd{width:6px;height:6px;border-radius:50%}.rd.cr{background:var(--rust)}.rd.hi{background:var(--amber)}.rd.lo{background:var(--green)}
 
-  /* Forge tool cards */
-  .forge{border-radius:6px;padding:8px 12px;font-size:12px;display:flex;align-items:center;gap:10px}
-  .forge.ok{background:rgba(106,173,72,.06);border:1px solid rgba(106,173,72,.25)}
-  .forge.no{background:rgba(224,101,48,.04);border:1px solid rgba(224,101,48,.15);opacity:.55}
-  .fn{font-weight:600;font-size:11px;color:var(--text-3);font-family:var(--mono)}
-  .fd{font-size:13px;color:var(--text-1);font-weight:600}
-  .fm{color:var(--text-3);font-size:11px;margin-top:2px}
-  .jb{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:800;white-space:nowrap;font-family:var(--mono)}
+  /* Forge cards - compact */
+  .forge{border-radius:4px;padding:5px 8px;font-size:11px;display:flex;align-items:center;gap:8px}
+  .forge.ok{background:rgba(106,173,72,.06);border:1px solid rgba(106,173,72,.2)}
+  .forge.no{background:rgba(224,101,48,.04);border:1px solid rgba(224,101,48,.12);opacity:.5}
+  .fn{font-size:9px;color:var(--text-3);font-family:var(--mono)}
+  .fd{font-size:12px;color:var(--text-1);font-weight:600}
+  .jb{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:800;white-space:nowrap;font-family:var(--mono)}
   .jb.p{background:rgba(106,173,72,.15);color:var(--green);border:1px solid rgba(106,173,72,.3)}
   .jb.f{background:rgba(224,101,48,.1);color:var(--rust);border:1px solid rgba(224,101,48,.2)}
 
   /* Decision cards */
-  .dec{border-radius:6px;padding:10px 12px;font-size:13px}
+  .dec{border-radius:4px;padding:6px 10px;font-size:12px}
   .dec.v{background:rgba(232,180,74,.06);border:1px solid var(--amber-dim)}
   .dec.e{background:rgba(76,168,168,.06);border:1px solid var(--teal-dim)}
-  .dl{font-weight:800;font-size:12px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}.dl.v{color:var(--vis)}.dl.e{color:var(--eng)}
-  .ddt{color:var(--text-1);line-height:1.6}
-  .out{margin-top:6px;display:flex;align-items:center;gap:8px}
-  .ob{padding:3px 10px;border-radius:4px;font-size:11px;font-weight:800;font-family:var(--mono)}
+  .dl{font-weight:800;font-size:10px;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}.dl.v{color:var(--vis)}.dl.e{color:var(--eng)}
+  .ddt{color:var(--text-1);line-height:1.5}
+  .out{margin-top:4px;display:flex;align-items:center;gap:6px}
+  .ob{padding:2px 8px;border-radius:3px;font-size:10px;font-weight:800;font-family:var(--mono)}
   .rs{background:rgba(232,180,74,.12);color:var(--vis);border:1px solid var(--amber-dim)}
   .rf{background:rgba(224,101,48,.12);color:var(--rust);border:1px solid var(--rust-dim)}
   .cs{background:rgba(106,173,72,.12);color:var(--green);border:1px solid rgba(106,173,72,.25)}
   .cf{background:rgba(224,101,48,.08);color:var(--rust);border:1px solid var(--rust-dim)}
-  /* Drift summary inside decision card */
-  .drift-inline{margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:11px;color:var(--text-2);font-family:var(--mono);line-height:1.6}
-  .drift-inline b{color:var(--text-3);font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+  .drift-inline{margin-top:4px;padding-top:4px;border-top:1px solid var(--border);font-size:10px;color:var(--text-2);font-family:var(--mono);line-height:1.5}
+  .drift-inline b{color:var(--text-3);font-size:9px;text-transform:uppercase;letter-spacing:.5px}
 
-  /* Turn separator */
-  .turn-sep{text-align:center;padding:6px 0;font-size:11px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:2px;border-top:1px solid var(--border);margin-top:4px}
+  .turn-sep{text-align:center;padding:4px 0;font-size:10px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;border-top:1px solid var(--border);margin-top:2px}
 
-  .waiting{color:var(--text-3);font-size:13px;text-align:center;padding:30px;opacity:.6}
+  .waiting{color:var(--text-3);font-size:12px;text-align:center;padding:20px;opacity:.5}
   .waiting .spinner{display:inline-block;animation:pulse 1.5s infinite}
 
   /* Timeline */
-  .tl{border-top:2px solid var(--border);background:var(--bg-panel);display:flex;gap:1px;max-height:120px;overflow:hidden}
-  .tl-col{flex:1;background:var(--bg-panel);padding:6px 10px;overflow-y:auto}
+  .tl{border-top:1px solid var(--border);background:var(--bg-panel);display:flex;gap:1px;max-height:90px;overflow:hidden}
+  .tl-col{flex:1;background:var(--bg-panel);padding:3px 8px;overflow-y:auto}
   .tl-col::-webkit-scrollbar{width:3px}.tl-col::-webkit-scrollbar-thumb{background:var(--border-hl);border-radius:2px}
-  .tl-label{font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;margin-bottom:4px;display:inline-block;font-family:var(--mono)}
+  .tl-label{font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;margin-bottom:3px;display:inline-block;font-family:var(--mono)}
   .tl-label.v{color:var(--vis);background:rgba(232,180,74,.08)}.tl-label.e{color:var(--eng);background:rgba(76,168,168,.08)}
-  .tr{padding:4px 8px;background:var(--bg-card);border:1px solid var(--border);border-radius:4px;display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:3px}
-  .tr.now{animation:glow 2s infinite}.tr.now.v{border-color:var(--amber-dim);background:rgba(232,180,74,.05)}.tr.now.e{border-color:var(--teal-dim);background:rgba(76,168,168,.05)}
-  .ty{font-weight:800;min-width:36px;font-family:var(--mono)}.ty.v{color:var(--vis)}.ty.e{color:var(--eng)}
-  .tt{flex:1;margin:0 8px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tr{padding:3px 6px;background:var(--bg-card);border:1px solid var(--border);border-radius:3px;display:flex;justify-content:space-between;align-items:center;font-size:10px;margin-bottom:2px}
+  .tr.now{animation:glow 2s infinite}
+  .ty{font-weight:800;min-width:30px;font-family:var(--mono)}.ty.v{color:var(--vis)}.ty.e{color:var(--eng)}
+  .tt{flex:1;margin:0 6px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
   /* Debug log */
-  .debug{border-top:1px solid var(--border);background:var(--bg-input);max-height:80px;overflow-y:auto;padding:6px 14px;font-size:11px;color:var(--text-3);line-height:1.6;font-family:var(--mono)}
+  .debug{border-top:1px solid var(--border);background:var(--bg-input);max-height:80px;overflow-y:auto;padding:4px 12px;font-size:10px;color:var(--text-3);line-height:1.5;font-family:var(--mono)}
   .debug::-webkit-scrollbar{width:3px}.debug::-webkit-scrollbar-thumb{background:var(--border-hl);border-radius:2px}
   .debug .ok{color:var(--green)}.debug .no{color:var(--rust)}.debug .info{color:var(--amber)}.debug .dim{color:var(--text-3)}
 
   /* Tab bar */
   .tab-bar{display:flex;background:var(--bg-panel);border-top:1px solid var(--border)}
-  .tab-bar button{flex:1;padding:6px;background:var(--bg-panel);color:var(--text-3);border:none;border-bottom:2px solid transparent;font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
+  .tab-bar button{flex:1;padding:4px;background:var(--bg-panel);color:var(--text-3);border:none;border-bottom:2px solid transparent;font-family:var(--sans);font-size:10px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
   .tab-bar button.active{background:var(--bg-card);color:var(--amber);border-bottom-color:var(--amber)}
 
-  .footer{padding:5px 20px;background:var(--bg-panel);border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:11px;color:var(--text-3)}
-  .fl{display:flex;gap:14px}.fl a{color:var(--rust);font-weight:600}
+  .footer{padding:3px 16px;background:var(--bg-panel);border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:10px;color:var(--text-3)}
+  .fl{display:flex;gap:12px}.fl a{color:var(--rust);font-weight:600}
 
-  /* About page */
-  .about-panel{display:none;flex:1;overflow-y:auto;padding:24px 40px;background:var(--bg-deep)}
-  .about-panel h2{font-size:20px;color:var(--amber);margin:24px 0 8px 0;font-family:var(--mono)}
+  /* About */
+  .about-panel{display:none;flex:1;overflow-y:auto;padding:20px 32px;background:var(--bg-deep)}
+  .about-panel h2{font-size:16px;color:var(--amber);margin:20px 0 6px 0;font-family:var(--mono)}
   .about-panel h2:first-child{margin-top:0}
-  .about-panel p{color:var(--text-2);line-height:1.8;margin-bottom:10px;font-size:14px;max-width:800px}
-  .about-panel ul{color:var(--text-2);line-height:1.8;margin-bottom:12px;padding-left:24px;font-size:14px}
-  .about-panel code{color:var(--rust);background:var(--bg-card);padding:2px 6px;border-radius:3px;font-family:var(--mono);font-size:13px}
+  .about-panel p{color:var(--text-2);line-height:1.7;margin-bottom:8px;font-size:13px;max-width:800px}
+  .about-panel ul{color:var(--text-2);line-height:1.7;margin-bottom:10px;padding-left:20px;font-size:13px}
+  .about-panel code{color:var(--rust);background:var(--bg-card);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:12px}
   .about-panel a{color:var(--amber)}
-  .about-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
-  .about-links a{color:var(--eng);font-weight:600;padding:8px 16px;border:1px solid var(--border);border-radius:6px;font-size:13px;transition:border-color .2s}
-  .about-links a:hover{border-color:var(--eng);text-decoration:none}
+  .about-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .about-links a{color:var(--eng);font-weight:600;padding:6px 14px;border:1px solid var(--border);border-radius:4px;font-size:12px}
 </style>
 </head>
 <body>
 
+<!-- Top bar: single compact line -->
 <div class="top">
-  <div class="logo"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#e06530"/><stop offset="50%" style="stop-color:#e8b44a"/><stop offset="100%" style="stop-color:#4ca8a8"/></linearGradient></defs><circle cx="32" cy="32" r="8" fill="url(#g)"/><circle cx="32" cy="12" r="4" fill="#e06530" opacity=".9"/><circle cx="48" cy="20" r="4" fill="#e8b44a" opacity=".9"/><circle cx="48" cy="44" r="4" fill="#4ca8a8" opacity=".9"/><circle cx="32" cy="52" r="4" fill="#4ca8a8" opacity=".9"/><circle cx="16" cy="44" r="4" fill="#e8b44a" opacity=".9"/><circle cx="16" cy="20" r="4" fill="#e06530" opacity=".9"/><path d="M32 32L32 12M32 32L48 20M32 32L48 44M32 32L32 52M32 32L16 44M32 32L16 20" stroke="url(#g)" stroke-width="1.5" opacity=".5"/></svg><div><h1>AgentOS</h1><small>MARS GENESIS</small></div></div>
-  <div class="top-c"><h2>Live Emergent Agent Simulation</h2><p>Runtime tool forging · Personality evolution · Deterministic kernel</p></div>
+  <div class="logo">
+    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#e06530"/><stop offset="50%" style="stop-color:#e8b44a"/><stop offset="100%" style="stop-color:#4ca8a8"/></linearGradient></defs><circle cx="32" cy="32" r="8" fill="url(#g)"/><circle cx="32" cy="12" r="4" fill="#e06530" opacity=".9"/><circle cx="48" cy="20" r="4" fill="#e8b44a" opacity=".9"/><circle cx="48" cy="44" r="4" fill="#4ca8a8" opacity=".9"/><circle cx="32" cy="52" r="4" fill="#4ca8a8" opacity=".9"/><circle cx="16" cy="44" r="4" fill="#e8b44a" opacity=".9"/><circle cx="16" cy="20" r="4" fill="#e06530" opacity=".9"/><path d="M32 32L32 12M32 32L48 20M32 32L48 44M32 32L32 52M32 32L16 44M32 32L16 20" stroke="url(#g)" stroke-width="1.5" opacity=".5"/></svg>
+    <span class="logo-text">AgentOS</span><span class="logo-sub">MARS GENESIS</span>
+  </div>
+  <span class="top-c">Live Emergent Simulation · Tool Forging · Personality Evolution · Deterministic Kernel</span>
   <div class="meta"><span>Turn <b id="m-turn">—</b>/12</span><span>Year <b id="m-year">—</b></span><span>Seed <b>950</b></span><span class="live" id="m-status">● Waiting</span></div>
 </div>
 
+<!-- Leaders: compact side-by-side -->
 <div class="leaders">
   <div class="ldr">
-    <div class="ldr-info"><div class="ldr-name v">Aria Chen</div><div class="ldr-sub">Commander · Ares Horizon</div><div class="ldr-quote">"We didn't cross 55 million kilometers to play it safe."</div></div>
-    <div class="traits"><span class="v hi">O</span><span class="v">████████░░</span><span class="v hi"> .95</span>  <span class="v">C</span><span class="v">███░░░░░░░</span> <span class="v">.35</span>
-<span class="v">E</span><span class="v">████████░░</span> <span class="v">.85</span>  <span class="v">A</span><span class="v">█████░░░░░</span> <span class="v">.55</span></div>
-    <div class="sparks"><div class="sp-l">Pop</div><span id="spark-v-pop" style="color:var(--vis);font-size:13px;font-family:var(--mono)">—</span><br><div class="sp-l">Morale</div><span id="spark-v-morale" style="color:var(--amber);font-size:13px;font-family:var(--mono)">—</span></div>
+    <div class="ldr-info"><span class="ldr-name v">Aria Chen</span> <span class="ldr-sub">· Ares Horizon</span><div class="ldr-quote">"We didn't cross 55 million km to play it safe."</div></div>
+    <div class="traits"><span class="v hi">O</span><span class="v">█████░</span><span class="v">.95</span> <span class="v">C</span><span class="v">██░░░</span><span class="v">.35</span> <span class="v">E</span><span class="v">████░</span><span class="v">.85</span> <span class="v">A</span><span class="v">███░░</span><span class="v">.55</span></div>
+    <div class="sparks"><div class="sp-l">Pop</div><span id="spark-v-pop" style="color:var(--vis)">—</span><br><div class="sp-l">Morale</div><span id="spark-v-morale" style="color:var(--amber)">—</span></div>
     <span class="arch v">VISIONARY</span>
   </div>
   <div class="ldr">
-    <div class="ldr-info"><div class="ldr-name e">Dietrich Voss</div><div class="ldr-sub">Commander · Meridian Base</div><div class="ldr-quote">"Every gram of oxygen is accounted for."</div></div>
-    <div class="traits"><span class="e">O</span><span class="e">██░░░░░░░░</span> <span class="e">.25</span>  <span class="e hi">C</span><span class="e">█████████░</span><span class="e hi"> .97</span>
-<span class="e">E</span><span class="e">███░░░░░░░</span> <span class="e">.30</span>  <span class="e hi">H</span><span class="e">█████████░</span><span class="e hi"> .90</span></div>
-    <div class="sparks"><div class="sp-l">Pop</div><span id="spark-e-pop" style="color:var(--eng);font-size:13px;font-family:var(--mono)">—</span><br><div class="sp-l">Morale</div><span id="spark-e-morale" style="color:var(--green);font-size:13px;font-family:var(--mono)">—</span></div>
+    <div class="ldr-info"><span class="ldr-name e">Dietrich Voss</span> <span class="ldr-sub">· Meridian Base</span><div class="ldr-quote">"Every gram of oxygen is accounted for."</div></div>
+    <div class="traits"><span class="e">O</span><span class="e">█░░░░</span><span class="e">.25</span> <span class="e hi">C</span><span class="e">█████</span><span class="e hi">.97</span> <span class="e">E</span><span class="e">██░░░</span><span class="e">.30</span> <span class="e hi">H</span><span class="e">████░</span><span class="e hi">.90</span></div>
+    <div class="sparks"><div class="sp-l">Pop</div><span id="spark-e-pop" style="color:var(--eng)">—</span><br><div class="sp-l">Morale</div><span id="spark-e-morale" style="color:var(--green)">—</span></div>
     <span class="arch e">ENGINEER</span>
   </div>
 </div>
 
-<div id="crisis" class="crisis-banner">
-  <span style="color:var(--rust)">⚡ Waiting for simulation...</span>
-</div>
+<!-- Crisis banner -->
+<div id="crisis" class="crisis-banner"><span style="color:var(--rust)">⚡ Waiting for simulation...</span></div>
 
+<!-- Stats bar -->
 <div class="stats-bar">
-  <div class="stat">
-    <div class="stat-values"><span id="s-v-pop" class="stat-num" style="color:var(--vis)">—</span><span class="stat-vs">vs</span><span id="s-e-pop" class="stat-num" style="color:var(--eng)">—</span></div>
-    <div class="stat-label">Population</div>
-  </div>
-  <div class="stat">
-    <div class="stat-values"><span id="s-v-morale" class="stat-num" style="color:var(--amber)">—</span><span class="stat-vs">vs</span><span id="s-e-morale" class="stat-num" style="color:var(--green)">—</span></div>
-    <div class="stat-label">Morale</div>
-  </div>
-  <div class="stat">
-    <div class="stat-values"><span id="s-v-deaths" class="stat-num" style="color:var(--rust)">—</span><span class="stat-vs">vs</span><span id="s-e-deaths" class="stat-num" style="color:var(--green)">—</span></div>
-    <div class="stat-label">Deaths</div>
-  </div>
-  <div class="stat">
-    <div class="stat-values"><span id="s-v-tools" class="stat-num" style="color:var(--vis)">0</span><span class="stat-vs">/</span><span id="s-e-tools" class="stat-num" style="color:var(--eng)">0</span></div>
-    <div class="stat-label">Tools Forged</div>
-  </div>
+  <div class="stat"><span id="s-v-pop" class="stat-num" style="color:var(--vis)">—</span><span class="stat-vs">vs</span><span id="s-e-pop" class="stat-num" style="color:var(--eng)">—</span><div class="stat-label">Population</div></div>
+  <div class="stat"><span id="s-v-morale" class="stat-num" style="color:var(--amber)">—</span><span class="stat-vs">vs</span><span id="s-e-morale" class="stat-num" style="color:var(--green)">—</span><div class="stat-label">Morale</div></div>
+  <div class="stat"><span id="s-v-deaths" class="stat-num" style="color:var(--rust)">—</span><span class="stat-vs">vs</span><span id="s-e-deaths" class="stat-num" style="color:var(--green)">—</span><div class="stat-label">Deaths</div></div>
+  <div class="stat"><span id="s-v-tools" class="stat-num" style="color:var(--vis)">0</span><span class="stat-vs">/</span><span id="s-e-tools" class="stat-num" style="color:var(--eng)">0</span><div class="stat-label">Tools Forged</div></div>
 </div>
 
+<!-- Main columns -->
 <div class="main" id="main-view">
   <div class="col" id="col-v">
-    <div class="col-h"><div><span class="cn v">ARES HORIZON</span><span class="cl">Aria Chen</span></div><span class="arch v" style="font-size:10px">VISIONARY</span></div>
+    <div class="col-h"><div><span class="cn v">ARES HORIZON</span><span class="cl">Aria Chen</span></div><span class="arch v">VIS</span></div>
     <div class="col-body" id="body-v">
       <div class="gauges" id="gauges-v">
         <div class="g"><span class="gl">Pop</span><span class="gv" id="gv-v-pop" style="color:var(--text-3)">···</span><div class="gb"><div class="gf" id="gf-v-pop" style="width:0;background:var(--vis)"></div></div></div>
@@ -216,11 +203,11 @@
         <div class="g"><span class="gl">Food</span><span class="gv" id="gv-v-food" style="color:var(--text-3)">···</span></div>
         <div class="g"><span class="gl">Deaths</span><span class="gv" id="gv-v-deaths" style="color:var(--text-3)">0</span></div>
       </div>
-      <div class="waiting"><span class="spinner">◉</span> Waiting for Visionary simulation...</div>
+      <div class="waiting"><span class="spinner">◉</span> Waiting for Visionary...</div>
     </div>
   </div>
   <div class="col" id="col-e">
-    <div class="col-h"><div><span class="cn e">MERIDIAN BASE</span><span class="cl">Dietrich Voss</span></div><span class="arch e" style="font-size:10px">ENGINEER</span></div>
+    <div class="col-h"><div><span class="cn e">MERIDIAN BASE</span><span class="cl">Dietrich Voss</span></div><span class="arch e">ENG</span></div>
     <div class="col-body" id="body-e">
       <div class="gauges" id="gauges-e">
         <div class="g"><span class="gl">Pop</span><span class="gv" id="gv-e-pop" style="color:var(--text-3)">···</span><div class="gb"><div class="gf" id="gf-e-pop" style="width:0;background:var(--eng)"></div></div></div>
@@ -228,7 +215,7 @@
         <div class="g"><span class="gl">Food</span><span class="gv" id="gv-e-food" style="color:var(--text-3)">···</span></div>
         <div class="g"><span class="gl">Deaths</span><span class="gv" id="gv-e-deaths" style="color:var(--text-3)">0</span></div>
       </div>
-      <div class="waiting"><span class="spinner">◉</span> Waiting for Engineer simulation...</div>
+      <div class="waiting"><span class="spinner">◉</span> Waiting for Engineer...</div>
     </div>
   </div>
 </div>
@@ -239,58 +226,48 @@
   <div class="tl-col" id="tl-e"><div class="tl-label e">MERIDIAN BASE</div></div>
 </div>
 
-<!-- About Panel (hidden by default) -->
+<!-- About Panel -->
 <div class="about-panel" id="about-panel">
   <h2>What Is This?</h2>
-  <p>Mars Genesis is a live multi-agent simulation. Two AI commanders lead the same colony of 100 colonists through crises spanning 50 years on Mars. Their HEXACO personality profiles drive different decisions, different tool inventions, and different civilizational outcomes. The simulation is deterministic: same seed, same starting colony. Only leadership differs.</p>
-
+  <p>Mars Genesis is a live multi-agent simulation. Two AI commanders lead the same colony of 100 colonists through crises spanning 50 years on Mars. Their HEXACO personality profiles drive different decisions, different tool inventions, and different civilizational outcomes. Same seed, same starting colony. Only leadership differs.</p>
   <h2>How It Works</h2>
   <ul>
-    <li><strong>Deterministic kernel</strong> handles colonist generation, aging, births, deaths, career progression, and resource accounting. Seeded RNG (Mulberry32) ensures reproducibility.</li>
+    <li><strong>Deterministic kernel</strong> handles colonist generation, aging, births, deaths, career progression, and resource accounting via seeded RNG.</li>
     <li><strong>Department agents</strong> (Medical, Engineering, Agriculture, Psychology, Governance) analyze each crisis using real Mars science with DOI-linked citations.</li>
-    <li><strong>Tool forging</strong> lets department agents invent computational tools at runtime (radiation models, food projectors, structural analyzers). An LLM judge reviews each tool for safety and correctness before approval.</li>
+    <li><strong>Tool forging</strong> lets agents invent computational tools at runtime (radiation models, food projectors). An LLM judge reviews each tool for safety and correctness.</li>
     <li><strong>Personality drift</strong> evolves promoted colonists' HEXACO traits over time via leader pull, role pull, and outcome feedback.</li>
-    <li><strong>Commanders decide</strong> which policies to enact. Their personality shapes risk tolerance, expansion pace, and resource allocation.</li>
+    <li><strong>Commanders decide</strong> which policies to enact. Personality shapes risk tolerance and strategy.</li>
   </ul>
-
   <h2>What Do The Numbers Mean?</h2>
   <ul>
-    <li><strong>Pop</strong> = alive colonists. Starts at 100. Changes from births, deaths, and immigration decisions.</li>
-    <li><strong>Morale</strong> = colony-wide wellbeing (0-100%). Affected by food reserves, overcrowding, and policy decisions.</li>
-    <li><strong>Food</strong> = months of food reserves remaining.</li>
-    <li><strong>Deaths</strong> = cumulative colonist deaths from aging, radiation, and crisis outcomes.</li>
-    <li><strong>Tools Forged</strong> = computational tools invented by department agents during the simulation.</li>
-    <li><strong>HEXACO bars</strong> = personality traits: Openness, Conscientiousness, Extraversion, Agreeableness, Emotionality, Honesty-Humility.</li>
+    <li><strong>Pop</strong> = alive colonists (starts at 100). <strong>Morale</strong> = colony wellbeing 0-100%. <strong>Food</strong> = months of reserves. <strong>Deaths</strong> = cumulative.</li>
+    <li><strong>Tools Forged</strong> = computational tools invented by department agents during the run.</li>
+    <li><strong>HEXACO bars</strong> = O(penness) C(onscientiousness) E(xtraversion) A(greeableness) H(onesty-Humility).</li>
+    <li><strong>Personality Drift</strong> = how colonist traits shifted this turn from leadership influence and crisis outcomes.</li>
   </ul>
-
-  <h2>What Is Personality Drift?</h2>
-  <p>Promoted colonists' HEXACO traits change over time through three forces: leader pull (traits converge toward the commander), role pull (department roles activate specific traits), and outcome pull (successful risks boost openness, failed risks boost conscientiousness). Grounded in real personality psychology research.</p>
-
   <h2>Built With</h2>
-  <p>Mars Genesis runs on <a href="https://agentos.sh">AgentOS</a>, an open-source TypeScript runtime for autonomous AI agents. Install: <code>npm i @framers/agentos</code></p>
+  <p>Runs on <a href="https://agentos.sh">AgentOS</a>, an open-source TypeScript runtime for autonomous AI agents. <code>npm i @framers/agentos</code></p>
   <div class="about-links">
     <a href="https://agentos.sh">AgentOS</a>
-    <a href="https://docs.agentos.sh">Documentation</a>
-    <a href="https://docs.agentos.sh/api">API Reference</a>
+    <a href="https://docs.agentos.sh">Docs</a>
     <a href="https://github.com/framersai/agentos">GitHub</a>
     <a href="https://www.npmjs.com/package/@framers/agentos">npm</a>
     <a href="https://discord.gg/VXXC4SJMKh">Discord</a>
+    <a href="mailto:team@frame.dev">Contact</a>
   </div>
-
-  <h2>Contact</h2>
-  <p>Built by <a href="https://manic.agency">Manic Agency</a> / <a href="https://frame.dev">Frame.dev</a>. Questions? <a href="mailto:team@frame.dev">team@frame.dev</a></p>
+  <p style="margin-top:16px;color:var(--text-3);font-size:11px">Built by <a href="https://manic.agency">Manic Agency</a> / <a href="https://frame.dev">Frame.dev</a></p>
 </div>
 
-<!-- Tab bar -->
+<!-- Tabs -->
 <div class="tab-bar">
   <button id="tab-sim" class="active" onclick="switchTab('sim')">Simulation</button>
   <button id="tab-log" onclick="switchTab('log')">Debug Log</button>
   <button id="tab-about" onclick="switchTab('about')">About</button>
 </div>
-<div class="debug" id="debug" style="display:none"><span class="dim">[Mars Genesis] Dashboard loaded. Connecting to SSE...</span></div>
+<div class="debug" id="debug" style="display:none"><span class="dim">[Mars Genesis] Connecting...</span></div>
 
 <div class="footer">
-  <div>Built with <a href="https://agentos.sh">AgentOS</a> · <code style="color:var(--rust);font-family:var(--mono);font-size:11px">npm i @framers/agentos</code></div>
+  <div>Built with <a href="https://agentos.sh">AgentOS</a> · <code style="color:var(--rust);font-family:var(--mono);font-size:10px">npm i @framers/agentos</code></div>
   <div class="fl"><a href="https://agentos.sh">agentos.sh</a><a href="https://docs.agentos.sh">docs</a><a href="https://github.com/framersai/agentos">github</a><a href="https://discord.gg/VXXC4SJMKh">discord</a></div>
 </div>
 
@@ -299,22 +276,17 @@ const $ = id => document.getElementById(id);
 const log = (cls, msg) => { const d = $('debug'); d.innerHTML += `<br><span class="${cls}">${msg}</span>`; d.scrollTop = d.scrollHeight; };
 
 function switchTab(tab) {
-  const mainView = $('main-view');
-  const tlView = $('tl-view');
-  const debug = $('debug');
-  const about = $('about-panel');
+  const mainView = $('main-view'), tlView = $('tl-view'), debug = $('debug'), about = $('about-panel');
   document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
-
+  mainView.style.display = 'none'; tlView.style.display = 'none'; debug.style.display = 'none'; about.style.display = 'none';
   if (tab === 'log') {
-    mainView.style.display = 'none'; tlView.style.display = 'none'; about.style.display = 'none';
-    debug.style.display = 'block'; debug.style.flex = '1'; debug.style.maxHeight = 'none'; debug.style.fontSize = '12px'; debug.style.lineHeight = '1.8'; debug.style.padding = '12px 20px';
+    debug.style.display = 'block'; debug.style.flex = '1'; debug.style.maxHeight = 'none'; debug.style.padding = '10px 16px';
     $('tab-log').classList.add('active');
   } else if (tab === 'about') {
-    mainView.style.display = 'none'; tlView.style.display = 'none'; debug.style.display = 'none';
     about.style.display = 'block'; about.style.flex = '1';
     $('tab-about').classList.add('active');
   } else {
-    mainView.style.display = 'flex'; tlView.style.display = 'flex'; debug.style.display = 'none'; about.style.display = 'none';
+    mainView.style.display = 'flex'; tlView.style.display = 'flex';
     $('tab-sim').classList.add('active');
   }
 }
@@ -325,143 +297,101 @@ const sparkChars = '▁▂▃▄▅▆▇█';
 const spark = arr => arr.map(v => sparkChars[Math.min(7, Math.floor(v / (Math.max(...arr) || 1) * 7.99))]).join('');
 
 function updateGauges(s, colony) {
-  const pop = colony.population ?? 0;
-  const morale = Math.round((colony.morale ?? 0) * 100);
-  const food = (colony.foodMonthsReserve ?? 0).toFixed(0);
+  const pop = colony.population ?? 0, morale = Math.round((colony.morale ?? 0) * 100), food = (colony.foodMonthsReserve ?? 0).toFixed(0);
   $(`gv-${s}-pop`).textContent = pop;
   $(`gf-${s}-pop`).style.width = Math.min(100, pop / 4) + '%';
   $(`gv-${s}-morale`).textContent = morale + '%';
   $(`gv-${s}-morale`).style.color = morale > 70 ? 'var(--green)' : morale > 50 ? 'var(--amber)' : 'var(--rust)';
   $(`gf-${s}-morale`).style.width = morale + '%';
   $(`gv-${s}-food`).textContent = food + 'mo';
-  state[s].pop.push(pop);
-  state[s].morale.push(morale);
+  state[s].pop.push(pop); state[s].morale.push(morale);
   $(`spark-${s}-pop`).textContent = spark(state[s].pop) + ' ' + pop;
   $(`spark-${s}-morale`).textContent = spark(state[s].morale) + ' ' + morale + '%';
-  $(`s-${s}-pop`).textContent = pop;
-  $(`s-${s}-morale`).textContent = morale + '%';
+  $(`s-${s}-pop`).textContent = pop; $(`s-${s}-morale`).textContent = morale + '%';
 }
 
 function clearWaiting(s) { const w = $(`body-${s}`).querySelector('.waiting'); if (w) w.remove(); }
 function addToBody(s, html) {
   clearWaiting(s);
-  const body = $(`body-${s}`);
-  const div = document.createElement('div');
-  div.className = 'af';
-  div.innerHTML = html;
-  body.appendChild(div);
-  body.scrollTop = body.scrollHeight;
+  const body = $(`body-${s}`), div = document.createElement('div');
+  div.className = 'af'; div.innerHTML = html;
+  body.appendChild(div); body.scrollTop = body.scrollHeight;
 }
-
 function addTimeline(s, year, text, badgeCls, badge) {
   const tl = $(`tl-${s}`);
   tl.querySelectorAll('.tr.now').forEach(el => el.classList.remove('now'));
   const div = document.createElement('div');
-  div.className = `tr now ${s}`;
-  div.innerHTML = `<span class="ty ${s}">${year}</span><span class="tt">${text}</span><span class="ob ${badgeCls}" style="font-size:9px;padding:2px 6px">${badge}</span>`;
-  tl.appendChild(div);
-  tl.scrollTop = tl.scrollHeight;
+  div.className = `tr now`; div.innerHTML = `<span class="ty ${s}">${year}</span><span class="tt">${text}</span><span class="ob ${badgeCls}" style="font-size:8px;padding:1px 5px">${badge}</span>`;
+  tl.appendChild(div); tl.scrollTop = tl.scrollHeight;
 }
 
 try {
   const es = new EventSource('/events');
-  es.addEventListener('connected', () => { log('ok', '✓ SSE connected'); $('m-status').textContent = '● Connected'; });
-
+  es.addEventListener('connected', () => { log('ok', '✓ Connected'); $('m-status').textContent = '● Connected'; });
   es.addEventListener('status', e => {
     const d = JSON.parse(e.data);
-    log('info', `Phase: ${d.phase} ${d.leader || ''}`);
+    log('info', `Phase: ${d.phase}`);
     if (d.phase === 'parallel') { $('m-status').textContent = '● Running'; $('m-status').style.color = 'var(--green)'; }
   });
 
   es.addEventListener('sim', e => {
-    const d = JSON.parse(e.data);
-    const s = side(d.leader);
+    const d = JSON.parse(e.data), s = side(d.leader);
     if (!s) return;
     const dd = d.data || {};
 
     switch (d.type) {
       case 'turn_start':
-        $('m-turn').textContent = dd.turn;
-        $('m-year').textContent = dd.year;
-        $('crisis').innerHTML = `<span style="color:var(--rust)">⚡ Turn ${dd.turn} — Year ${dd.year}: ${dd.title || 'Crisis'}</span>`;
+        $('m-turn').textContent = dd.turn; $('m-year').textContent = dd.year;
+        $('crisis').innerHTML = `<span style="color:var(--rust)">⚡ Turn ${dd.turn} — ${dd.year}: ${dd.title || 'Crisis'}</span>`;
         if (dd.colony) updateGauges(s, dd.colony);
-        if (dd.deaths) {
-          state[s].deaths += dd.deaths;
-          $(`gv-${s}-deaths`).textContent = state[s].deaths;
-          $(`s-${s}-deaths`).textContent = state[s].deaths;
-        }
+        if (dd.deaths) { state[s].deaths += dd.deaths; $(`gv-${s}-deaths`).textContent = state[s].deaths; $(`s-${s}-deaths`).textContent = state[s].deaths; }
         log('info', `[${d.leader}] Turn ${dd.turn} — ${dd.year}: ${dd.title}`);
-        if (dd.births) log('ok', `  +${dd.births} births`);
-        if (dd.deaths) log('no', `  -${dd.deaths} deaths`);
         break;
 
       case 'promotion':
-        addToBody(s, `<div class="card"><div class="card-h"><span class="card-title">✦ Promoted</span></div><div class="card-text"><b>${dd.colonistId}</b> → ${dd.role}<br><span style="color:var(--text-2);font-size:12px">${(dd.reason || '').slice(0, 150)}</span></div></div>`);
-        log('info', `[${d.leader}] ✦ ${dd.colonistId} → ${dd.role}`);
-        break;
-
-      case 'dept_start':
-        log('dim', `[${d.leader}] ${dd.department} analyzing...`);
+        addToBody(s, `<div class="card"><div class="card-h"><span class="card-title">✦ Promoted</span></div><div class="card-text"><b>${dd.colonistId}</b> → ${dd.role}<br><span style="color:var(--text-2);font-size:11px">${(dd.reason || '').slice(0, 120)}</span></div></div>`);
         break;
 
       case 'dept_done': {
-        const deptName = (dd.department || '').toUpperCase();
-        const deptIcon = dd.department === 'medical' ? '🏥' : dd.department === 'engineering' ? '⚙️' : dd.department === 'agriculture' ? '🌾' : dd.department === 'psychology' ? '🧠' : dd.department === 'governance' ? '🏛️' : '📋';
+        const dept = (dd.department || '').toUpperCase();
+        const icon = {medical:'🏥',engineering:'⚙️',agriculture:'🌾',psychology:'🧠',governance:'🏛️'}[dd.department] || '📋';
         const summary = dd.summary || '';
+        const risks = (dd.risks || []).slice(0, 2).map(r => `<div class="risk"><span class="rd ${r.severity==='critical'?'cr':r.severity==='high'?'hi':'lo'}"></span>${r.severity.toUpperCase()}: ${(r.description||'').slice(0,120)}</div>`).join('');
         const recs = (dd.recommendedActions || []).slice(0, 2);
-        const risks = (dd.risks || []).slice(0, 2).map(r =>
-          `<div class="risk"><span class="rd ${r.severity === 'critical' ? 'cr' : r.severity === 'high' ? 'hi' : 'lo'}"></span>${r.severity.toUpperCase()}: ${(r.description || '').slice(0, 140)}</div>`
-        ).join('');
-        const recsHtml = recs.length ? `<div style="margin-top:6px;color:var(--amber);font-size:12px">→ ${recs.join('<br>→ ')}</div>` : '';
+        const recsHtml = recs.length ? `<div style="margin-top:4px;color:var(--amber);font-size:11px">→ ${recs.join('<br>→ ')}</div>` : '';
         const tools = (dd.forgedTools || []).filter(t => t.name && t.name !== 'unnamed');
+        const showSummary = summary && summary.length > 10 && !summary.startsWith('{') && !summary.endsWith('complete.');
 
-        // Skip useless fallback summaries
-        const showSummary = summary && summary.length > 10 && !summary.startsWith('{') && !summary.endsWith('analysis complete.') && !summary.endsWith('complete.');
-
-        if (showSummary) {
-          addToBody(s, `<div class="card"><div class="card-h"><span class="card-title">${deptIcon} ${deptName}</span><span class="card-badge">${dd.citations || 0} cites</span></div><div class="card-text">${summary}</div>${risks}${recsHtml}</div>`);
-        } else if (risks || tools.length) {
-          addToBody(s, `<div class="card"><div class="card-h"><span class="card-title">${deptIcon} ${deptName}</span><span class="card-badge">${dd.citations || 0} cites · ${tools.length} tools</span></div>${risks || ''}${recsHtml}</div>`);
+        if (showSummary || risks) {
+          addToBody(s, `<div class="card"><div class="card-h"><span class="card-title">${icon} ${dept}</span><span class="card-badge">${dd.citations||0} cites</span></div>${showSummary ? `<div class="card-text">${summary}</div>` : ''}${risks}${recsHtml}</div>`);
         }
-        // Tools: description first, code name secondary
         for (const t of tools) {
-          const desc = t.description || t.name.replace(/_v\d+$/, '').replace(/_/g, ' ');
-          const codeName = t.name;
-          addToBody(s, `<div class="forge ok"><span style="font-size:16px">🔧</span><div style="flex:1"><div class="fd">${desc}</div><div class="fn">${codeName} · ${t.mode || 'sandbox'}</div></div><span class="jb p">✓ ${(t.confidence || .85).toFixed(2)}</span></div>`);
+          const desc = t.description || t.name.replace(/_v\d+$/,'').replace(/_/g,' ');
+          addToBody(s, `<div class="forge ok"><span style="font-size:14px">🔧</span><div style="flex:1"><div class="fd">${desc}</div><div class="fn">${t.name} · ${t.mode||'sandbox'}</div></div><span class="jb p">✓ ${(t.confidence||.85).toFixed(2)}</span></div>`);
         }
-        state[s].tools += tools.length;
-        $(`s-${s}-tools`).textContent = state[s].tools;
-        log('ok', `[${d.leader}] ${deptIcon} ${deptName}: ${dd.citations || 0} cites, ${tools.length} tools`);
+        state[s].tools += tools.length; $(`s-${s}-tools`).textContent = state[s].tools;
+        log('ok', `[${d.leader}] ${icon} ${dept}: ${dd.citations||0} cites, ${tools.length} tools`);
         break;
       }
 
       case 'forge_attempt':
-        if (dd.approved) {
-          log('ok', `  🔧 ✓ ${dd.name} approved (${(dd.confidence || 0).toFixed(2)})`);
-        } else {
-          log('no', `  🔧 ✗ ${dd.name} rejected: ${(dd.reason || '').slice(0, 80)}`);
-        }
-        break;
-
-      case 'commander_deciding':
-        log('dim', `[${d.leader}] Commander deciding...`);
+        if (dd.approved) log('ok', `  🔧 ✓ ${dd.name}`);
+        else log('no', `  🔧 ✗ ${dd.name}: ${(dd.reason||'').slice(0,60)}`);
         break;
 
       case 'commander_decided':
         state[s].pendingDecision = dd.decision;
-        state[s].pendingPolicies = dd.selectedPolicies;
-        log('info', `[${d.leader}] Decision: ${(dd.decision || '').slice(0, 80)}`);
+        log('info', `[${d.leader}] ${(dd.decision||'').slice(0,60)}`);
         break;
 
       case 'outcome': {
-        const dec = (state[s].pendingDecision || '').slice(0, 250);
+        const dec = (state[s].pendingDecision || '').slice(0, 200);
         const oc = dd.outcome || '';
         const cls = oc === 'risky_success' ? 'rs' : oc === 'conservative_success' ? 'cs' : 'rf';
         const badge = oc === 'risky_success' ? 'RISKY WIN' : oc === 'risky_failure' ? 'RISKY LOSS' : oc === 'conservative_success' ? 'SAFE WIN' : 'SAFE LOSS';
-        const badgeIcon = oc.includes('success') ? '✓' : '✗';
-        addToBody(s, `<div class="dec ${s}"><div class="dl ${s}">⚡ Commander Decision</div><div class="ddt">${dec}</div><div class="out"><span class="ob ${cls}">${badgeIcon} ${badge}</span></div><div id="drift-slot-${s}-${dd.turn}" class="drift-inline" style="display:none"></div></div>`);
-        const tlBadge = oc.includes('success') ? '✓' : '✗';
-        addTimeline(s, dd.year, dec.slice(0, 50), cls, tlBadge);
+        const icon = oc.includes('success') ? '✓' : '✗';
+        addToBody(s, `<div class="dec ${s}"><div class="dl ${s}">⚡ Commander Decision</div><div class="ddt">${dec}</div><div class="out"><span class="ob ${cls}">${icon} ${badge}</span></div><div id="drift-slot-${s}-${dd.turn}" class="drift-inline" style="display:none"></div></div>`);
+        addTimeline(s, dd.year, dec.slice(0, 40), cls, icon);
         log(oc.includes('success') ? 'ok' : 'no', `  → ${oc}`);
         break;
       }
@@ -469,13 +399,9 @@ try {
       case 'drift': {
         const entries = Object.values(dd.colonists || {});
         if (entries.length) {
-          // Merge drift into the decision card instead of a separate row
           const slot = $(`drift-slot-${s}-${dd.turn}`);
           if (slot) {
-            const text = entries.map(c =>
-              `${c.name}: <span style="color:var(--${s === 'v' ? 'vis' : 'eng'})">O ${c.hexaco?.O ?? '?'} · C ${c.hexaco?.C ?? '?'} · E ${c.hexaco?.E ?? '?'} · A ${c.hexaco?.A ?? '?'}</span>`
-            ).join('<br>');
-            slot.innerHTML = `<b>Personality Drift</b><br>${text}`;
+            slot.innerHTML = `<b>Personality Drift</b><br>` + entries.map(c => `${c.name}: <span style="color:var(--${s==='v'?'vis':'eng'})">O${c.hexaco?.O??'?'} C${c.hexaco?.C??'?'} E${c.hexaco?.E??'?'} A${c.hexaco?.A??'?'}</span>`).join(' · ');
             slot.style.display = 'block';
           }
         }
@@ -485,31 +411,15 @@ try {
       case 'turn_done':
         if (dd.colony) updateGauges(s, dd.colony);
         addToBody(s, `<div class="turn-sep">Turn ${dd.turn} complete</div>`);
-        log('dim', `[${d.leader}] Turn complete. Pop: ${dd.colony?.population}`);
         break;
     }
   });
 
-  es.addEventListener('result', e => {
-    const d = JSON.parse(e.data);
-    log('ok', `✓ ${d.leader} complete. Pop: ${d.summary?.population}, Tools: ${d.summary?.toolsForged}, Citations: ${d.summary?.citations}`);
-  });
-
-  es.addEventListener('complete', () => {
-    $('m-status').textContent = '● Complete';
-    $('m-status').style.color = 'var(--amber)';
-    $('m-status').style.animation = 'none';
-    log('ok', '✓ All simulations complete');
-  });
-
-  es.addEventListener('sim_error', e => {
-    try { const d = JSON.parse(e.data); log('no', `✗ Error: ${d.error}`); } catch { log('no', '✗ Unknown error'); }
-  });
-
-  es.onerror = () => { log('dim', 'SSE connection lost, retrying...'); };
-} catch (e) {
-  log('dim', 'Static mode — no SSE server');
-}
+  es.addEventListener('result', e => { const d = JSON.parse(e.data); log('ok', `✓ ${d.leader} done: pop ${d.summary?.population}, ${d.summary?.toolsForged} tools`); });
+  es.addEventListener('complete', () => { $('m-status').textContent = '● Complete'; $('m-status').style.color = 'var(--amber)'; $('m-status').style.animation = 'none'; log('ok', '✓ All complete'); });
+  es.addEventListener('sim_error', e => { try { log('no', `✗ ${JSON.parse(e.data).error}`); } catch { log('no', '✗ Error'); } });
+  es.onerror = () => { log('dim', 'SSE reconnecting...'); };
+} catch (e) { log('dim', 'Static mode'); }
 </script>
 </body>
 </html>
