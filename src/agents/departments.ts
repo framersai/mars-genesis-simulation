@@ -20,7 +20,7 @@ You MUST use forge_tool at least once per turn to create a computational model r
 
 After forging the tool, report what it computed in forgedToolsUsed.
 
-Return your analysis as JSON: {"department":"medical","summary":"...","citations":[{"text":"...","url":"...","context":"..."}],"risks":[{"severity":"low|medium|high|critical","description":"..."}],"opportunities":[{"impact":"low|medium|high","description":"..."}],"recommendedActions":["..."],"proposedPatches":{},"forgedToolsUsed":[{"name":"tool_name","mode":"sandbox","description":"what it does","output":{},"confidence":0.9}],"featuredColonistUpdates":[],"confidence":0.85,"openQuestions":[]}`,
+Return your analysis as JSON: {"department":"medical","summary":"...","citations":[{"text":"...","url":"...","context":"..."}],"risks":[{"severity":"low|medium|high|critical","description":"..."}],"opportunities":[{"impact":"low|medium|high","description":"..."}],"recommendedActions":["..."],"proposedPatches":{},"forgedToolsUsed":[{"name":"tool_name","mode":"sandbox","description":"what it does","output":{},"confidence":0.9}],"featuredColonistUpdates":[],"confidence":0.85,"openQuestions":[],"recommendedEffects":[{"id":"effect_1","type":"resource_shift|capacity_expansion|risk_mitigation|social_investment|research_bet","description":"...","colonyDelta":{"morale":0.05}}]}`,
   },
   {
     department: 'engineering',
