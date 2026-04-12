@@ -36,19 +36,16 @@
   .meta{display:flex;gap:12px;font-size:11px;color:var(--text-2);flex-shrink:0}.meta b{color:var(--text-1);font-family:var(--mono)}
   .live{color:var(--green);animation:pulse 2s infinite;font-weight:700}
 
-  /* Leaders - compact row */
+  /* Leaders - single compact row each */
   .leaders{display:flex;gap:1px;background:var(--border)}
-  .ldr{flex:1;padding:5px 12px;background:var(--bg-panel);display:flex;gap:8px;align-items:center}
-  .ldr-info{flex:1;min-width:0}
-  .ldr-name{font-size:13px;font-weight:800}.ldr-name.v{color:var(--vis)}.ldr-name.e{color:var(--eng)}
-  .ldr-sub{color:var(--text-3);font-size:10px}
-  .ldr-quote{color:var(--text-2);font-size:10px;font-style:italic}
-  .traits{font-size:9px;color:var(--text-2);white-space:pre;line-height:1.2;flex-shrink:0;font-family:var(--mono);letter-spacing:.5px}
+  .ldr{flex:1;padding:3px 10px;background:var(--bg-panel);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .ldr-name{font-size:12px;font-weight:800;white-space:nowrap}.ldr-name.v{color:var(--vis)}.ldr-name.e{color:var(--eng)}
+  .ldr-quote{color:var(--text-3);font-size:9px;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .traits{font-size:9px;color:var(--text-2);white-space:nowrap;font-family:var(--mono);letter-spacing:.3px}
   .traits .hi{font-weight:700}.traits .v{color:var(--vis)}.traits .e{color:var(--eng)}
-  .tl-sep{color:var(--text-3);opacity:.4}
-  .sparks{flex-shrink:0;text-align:right;font-family:var(--mono);font-size:10px;line-height:1.4}
-  .sp-l{color:var(--text-3);font-size:8px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;display:inline}
-  .arch{font-size:9px;padding:2px 8px;border-radius:3px;font-weight:800;flex-shrink:0;font-family:var(--mono)}
+  .sparks{font-family:var(--mono);font-size:9px;white-space:nowrap}
+  .sp-l{color:var(--text-3);font-size:8px;text-transform:uppercase;letter-spacing:.3px;font-weight:600}
+  .arch{font-size:8px;padding:1px 6px;border-radius:3px;font-weight:800;flex-shrink:0;font-family:var(--mono)}
   .arch.v{color:var(--vis);background:rgba(232,180,74,.1);border:1px solid var(--amber-dim)}
   .arch.e{color:var(--eng);background:rgba(76,168,168,.1);border:1px solid var(--teal-dim)}
 
@@ -141,6 +138,58 @@
   .footer{padding:3px 16px;background:var(--bg-panel);border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:10px;color:var(--text-3)}
   .fl{display:flex;gap:12px}.fl a{color:var(--rust);font-weight:600}
 
+  /* Settings panel */
+  .settings-panel{display:none;flex:1;overflow-y:auto;padding:16px 20px;background:var(--bg-deep)}
+  .settings-panel h2{font-size:14px;color:var(--amber);margin:16px 0 6px 0;font-family:var(--mono)}
+  .settings-panel h2:first-child{margin-top:0}
+  .srow{display:flex;gap:8px;margin-bottom:6px}
+  .srow .sf{flex:1}
+  .sf label{display:block;font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:2px}
+  .sf input,.sf textarea,.sf select{width:100%;background:var(--bg-card);color:var(--text-1);border:1px solid var(--border);padding:4px 8px;border-radius:4px;font-family:var(--sans);font-size:11px}
+  .sf textarea{min-height:36px;resize:vertical;font-size:10px}
+  .sf input:focus,.sf textarea:focus{outline:none;border-color:var(--amber)}
+  .s-leaders{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .s-ldr{background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:10px 12px}
+  .s-ldr h3{font-size:12px;font-family:var(--mono);margin-bottom:8px}
+  .s-ldr h3.v{color:var(--vis)}.s-ldr h3.e{color:var(--eng)}
+  .s-hex{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px 10px;margin:6px 0}
+  .s-sr{display:flex;align-items:center;gap:4px}
+  .s-sr label{font-size:9px;color:var(--text-2);min-width:28px;font-weight:600}
+  .s-sr input[type=range]{flex:1;height:3px}
+  .s-sr .sv{font-size:10px;font-family:var(--mono);min-width:28px;text-align:right;color:var(--text-1)}
+  .s-sr.va input[type=range]{accent-color:var(--vis)}
+  .s-sr.vb input[type=range]{accent-color:var(--eng)}
+  .s-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .s-section{background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:10px 12px}
+  .s-section h3{font-size:11px;font-family:var(--mono);color:var(--text-2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+  .s-personnel{margin-top:4px}
+  .s-person{display:flex;gap:4px;margin-bottom:3px;align-items:center;font-size:10px}
+  .s-person input{background:var(--bg-card);color:var(--text-1);border:1px solid var(--border);padding:2px 6px;border-radius:3px;font-size:10px}
+  .s-person input:first-child{width:130px}
+  .s-person input:nth-child(2){width:100px}
+  .s-person input:nth-child(3){width:50px}
+  .s-person select{background:var(--bg-card);color:var(--text-1);border:1px solid var(--border);padding:2px 4px;border-radius:3px;font-size:10px;width:90px}
+  .s-evrow{display:flex;gap:4px;margin-bottom:3px;align-items:center}
+  .s-evrow input{background:var(--bg-card);color:var(--text-1);border:1px solid var(--border);padding:2px 6px;border-radius:3px;font-size:10px}
+  .s-evrow input:first-child{width:40px}
+  .s-evrow input:nth-child(2){flex:1}
+  .s-evrow input:nth-child(3){flex:2}
+  .s-rm{background:none;border:none;color:var(--rust);cursor:pointer;font-size:11px}
+  .s-add{background:none;color:var(--amber);border:1px solid var(--border);padding:2px 10px;border-radius:3px;font-size:10px;cursor:pointer}
+  .s-add:hover{border-color:var(--amber)}
+  .s-launch{display:flex;align-items:center;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+  .s-launch-btn{background:linear-gradient(135deg,var(--rust),#c44a1e);color:white;border:none;padding:8px 28px;border-radius:4px;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--sans)}
+  .s-launch-btn:disabled{opacity:.5;cursor:not-allowed}
+  .s-launch-status{font-size:11px;color:var(--text-3)}
+  .s-preset{display:flex;gap:6px;align-items:center;margin-bottom:10px}
+  .s-preset label{font-size:10px;color:var(--text-3);font-weight:600}
+  .s-preset select{background:var(--bg-card);color:var(--text-1);border:1px solid var(--border);padding:3px 8px;border-radius:3px;font-size:11px}
+  .s-io{display:flex;gap:6px}
+  .s-io-btn{background:var(--bg-card);color:var(--text-2);border:1px solid var(--border);padding:3px 10px;border-radius:3px;font-size:10px;cursor:pointer}
+  .s-io-btn:hover{border-color:var(--amber);color:var(--text-1)}
+  .s-tooltip{color:var(--text-3);font-size:9px;font-style:italic;margin-top:2px}
+  .s-resources{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px}
+
   /* About */
   .about-panel{display:none;flex:1;overflow-y:auto;padding:20px 32px;background:var(--bg-deep)}
   .about-panel h2{font-size:16px;color:var(--amber);margin:20px 0 6px 0;font-family:var(--mono)}
@@ -162,22 +211,24 @@
     <span class="logo-text">AgentOS</span><span class="logo-sub">MARS GENESIS</span>
   </div>
   <span class="top-c">Same colony, same crises, two different leaders. 12 turns spanning 50 years on Mars.</span>
-  <div class="meta"><span title="Each turn is a crisis event the colony must respond to">Turn <b id="m-turn">—</b>/12</span><span title="Simulation year on Mars">Year <b id="m-year">—</b></span><span title="Deterministic seed: same seed = same colonist roster">Seed <b>950</b></span><span class="live" id="m-status">● Waiting</span></div>
+  <div class="meta"><span title="Each turn is a crisis event the colony must respond to">Turn <b id="m-turn">—</b>/<b id="m-max-turns">12</b></span><span title="Simulation year on Mars">Year <b id="m-year">—</b></span><span title="Deterministic seed: same seed = same colonist roster">Seed <b>950</b></span><span class="live" id="m-status">● Waiting</span></div>
 </div>
 
-<!-- Leaders: compact 2-row max -->
+<!-- Leaders: single row each -->
 <div class="leaders">
   <div class="ldr">
-    <div class="ldr-info"><span class="ldr-name v">Aria Chen</span> <span class="ldr-sub">· Ares Horizon</span> <span class="ldr-quote">"We didn't cross 55M km to play it safe."</span></div>
-    <div class="traits"><span class="v hi">O </span><span class="v">█████░ </span><span class="v hi">.95</span>  <span class="v">C </span><span class="v">██░░░ </span><span class="v">.35</span>  <span class="v">E </span><span class="v">████░ </span><span class="v">.85</span>  <span class="v">A </span><span class="v">███░░ </span><span class="v">.55</span></div>
-    <div class="sparks"><span class="sp-l" style="color:var(--vis)">Pop</span> <span id="spark-v-pop" style="color:var(--vis)">—</span>  <span class="sp-l" style="color:var(--amber)">Morale</span> <span id="spark-v-morale" style="color:var(--amber)">—</span></div>
-    <span class="arch v">VISIONARY</span>
+    <span class="arch v">VIS</span>
+    <span class="ldr-name v">Aria Chen</span>
+    <span class="traits"><span class="v">O</span><span class="v">█████░</span><span class="v hi">.95</span> <span class="v">C</span><span class="v">██░░░</span><span class="v">.35</span> <span class="v">E</span><span class="v">████░</span><span class="v">.85</span> <span class="v">A</span><span class="v">███░░</span><span class="v">.55</span></span>
+    <span class="sparks"><span class="sp-l" style="color:var(--vis)">Pop</span> <span id="spark-v-pop" style="color:var(--vis)">—</span> <span class="sp-l" style="color:var(--amber)">Mor</span> <span id="spark-v-morale" style="color:var(--amber)">—</span></span>
+    <span class="ldr-quote">"We didn't cross 55M km to play it safe."</span>
   </div>
   <div class="ldr">
-    <div class="ldr-info"><span class="ldr-name e">Dietrich Voss</span> <span class="ldr-sub">· Meridian Base</span> <span class="ldr-quote">"Every gram of oxygen is accounted for."</span></div>
-    <div class="traits"><span class="e">O </span><span class="e">█░░░░ </span><span class="e">.25</span>  <span class="e hi">C </span><span class="e">█████ </span><span class="e hi">.97</span>  <span class="e">E </span><span class="e">██░░░ </span><span class="e">.30</span>  <span class="e hi">H </span><span class="e">████░ </span><span class="e hi">.90</span></div>
-    <div class="sparks"><span class="sp-l" style="color:var(--eng)">Pop</span> <span id="spark-e-pop" style="color:var(--eng)">—</span>  <span class="sp-l" style="color:var(--green)">Morale</span> <span id="spark-e-morale" style="color:var(--green)">—</span></div>
-    <span class="arch e">ENGINEER</span>
+    <span class="arch e">ENG</span>
+    <span class="ldr-name e">Dietrich Voss</span>
+    <span class="traits"><span class="e">O</span><span class="e">█░░░░</span><span class="e">.25</span> <span class="e hi">C</span><span class="e">█████</span><span class="e hi">.97</span> <span class="e">E</span><span class="e">██░░░</span><span class="e">.30</span> <span class="e hi">H</span><span class="e">████░</span><span class="e hi">.90</span></span>
+    <span class="sparks"><span class="sp-l" style="color:var(--eng)">Pop</span> <span id="spark-e-pop" style="color:var(--eng)">—</span> <span class="sp-l" style="color:var(--green)">Mor</span> <span id="spark-e-morale" style="color:var(--green)">—</span></span>
+    <span class="ldr-quote">"Every gram of oxygen is accounted for."</span>
   </div>
 </div>
 
@@ -228,6 +279,111 @@
   <div class="tl-col" id="tl-e"><div class="tl-label e">MERIDIAN BASE</div></div>
 </div>
 
+<!-- Settings Panel -->
+<div class="settings-panel" id="settings-panel">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <h2 style="margin:0">Simulation Setup</h2>
+    <div style="display:flex;gap:6px;align-items:center">
+      <div class="s-preset">
+        <label>Preset:</label>
+        <select id="s-preset" onchange="applySetupPreset(this.value)">
+          <option value="default">Default (Visionary vs Engineer)</option>
+          <option value="balanced">Balanced Founders</option>
+          <option value="extreme">High Risk vs Ultra Cautious</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div class="s-io">
+        <button class="s-io-btn" onclick="exportSetup()">Export</button>
+        <button class="s-io-btn" onclick="document.getElementById('s-imp').click()">Import</button>
+        <input type="file" id="s-imp" accept=".json" style="display:none" onchange="importSetup(event)">
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaders -->
+  <div class="s-leaders" style="margin-top:8px">
+    <div class="s-ldr">
+      <h3 class="v">Leader A</h3>
+      <div class="srow"><div class="sf"><label>Name</label><input id="sa-name" value="Aria Chen"></div><div class="sf"><label>Archetype</label><input id="sa-arch" value="The Visionary"></div><div class="sf"><label>Colony</label><input id="sa-colony" value="Ares Horizon"></div></div>
+      <div class="s-hex" id="sa-hex">
+        <div class="s-sr va"><label title="Openness: creativity, curiosity, willingness to experiment">O</label><input type="range" min="0" max="1" step=".01" value=".95" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">.95</span></div>
+        <div class="s-sr va"><label title="Conscientiousness: discipline, thoroughness, planning">C</label><input type="range" min="0" max="1" step=".01" value=".35" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">.35</span></div>
+        <div class="s-sr va"><label title="Extraversion: sociability, assertiveness, leadership visibility">E</label><input type="range" min="0" max="1" step=".01" value=".85" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">.85</span></div>
+        <div class="s-sr va"><label title="Agreeableness: cooperation, trust, conflict avoidance">A</label><input type="range" min="0" max="1" step=".01" value=".55" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">.55</span></div>
+        <div class="s-sr va"><label title="Emotionality: anxiety, vulnerability, empathy">Em</label><input type="range" min="0" max="1" step=".01" value=".30" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">.30</span></div>
+        <div class="s-sr va"><label title="Honesty-Humility: sincerity, fairness, modesty">HH</label><input type="range" min="0" max="1" step=".01" value=".65" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">.65</span></div>
+      </div>
+      <div class="s-tooltip">O=Openness C=Conscientiousness E=Extraversion A=Agreeableness Em=Emotionality HH=Honesty-Humility. Hover for details.</div>
+      <div class="sf" style="margin-top:4px"><label>Commander Instructions</label><textarea id="sa-instr">You are Commander Aria Chen. Bold expansion, calculated risks. Favor higher upside. Respond with JSON.</textarea></div>
+    </div>
+    <div class="s-ldr">
+      <h3 class="e">Leader B</h3>
+      <div class="srow"><div class="sf"><label>Name</label><input id="sb-name" value="Dietrich Voss"></div><div class="sf"><label>Archetype</label><input id="sb-arch" value="The Engineer"></div><div class="sf"><label>Colony</label><input id="sb-colony" value="Meridian Base"></div></div>
+      <div class="s-hex" id="sb-hex">
+        <div class="s-sr vb"><label title="Openness: creativity, curiosity, willingness to experiment">O</label><input type="range" min="0" max="1" step=".01" value=".25" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">.25</span></div>
+        <div class="s-sr vb"><label title="Conscientiousness: discipline, thoroughness, planning">C</label><input type="range" min="0" max="1" step=".01" value=".97" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">.97</span></div>
+        <div class="s-sr vb"><label title="Extraversion: sociability, assertiveness, leadership visibility">E</label><input type="range" min="0" max="1" step=".01" value=".30" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">.30</span></div>
+        <div class="s-sr vb"><label title="Agreeableness: cooperation, trust, conflict avoidance">A</label><input type="range" min="0" max="1" step=".01" value=".45" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">.45</span></div>
+        <div class="s-sr vb"><label title="Emotionality: anxiety, vulnerability, empathy">Em</label><input type="range" min="0" max="1" step=".01" value=".70" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">.70</span></div>
+        <div class="s-sr vb"><label title="Honesty-Humility: sincerity, fairness, modesty">HH</label><input type="range" min="0" max="1" step=".01" value=".90" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">.90</span></div>
+      </div>
+      <div class="s-tooltip">O=Openness C=Conscientiousness E=Extraversion A=Agreeableness Em=Emotionality HH=Honesty-Humility. Hover for details.</div>
+      <div class="sf" style="margin-top:4px"><label>Commander Instructions</label><textarea id="sb-instr">You are Commander Dietrich Voss. Engineering discipline, safety margins. Favor lower risk. Respond with JSON.</textarea></div>
+    </div>
+  </div>
+
+  <div class="s-grid3" style="margin-top:8px">
+    <!-- Simulation -->
+    <div class="s-section">
+      <h3>Simulation</h3>
+      <div class="srow"><div class="sf"><label>Turns (1-12)</label><input id="s-turns" type="number" min="1" max="12" value="12"></div><div class="sf"><label>Seed</label><input id="s-seed" type="number" value="950"></div></div>
+      <div class="srow"><div class="sf"><label>Population</label><input id="s-pop" type="number" value="100"></div><div class="sf"><label>Start Year</label><input id="s-year" type="number" value="2035"></div></div>
+      <h3 style="margin-top:8px">Starting Resources</h3>
+      <div class="s-resources">
+        <div class="sf"><label>Food (mo)</label><input id="s-food" type="number" value="18"></div>
+        <div class="sf"><label>Water (L/d)</label><input id="s-water" type="number" value="800"></div>
+        <div class="sf"><label>Power (kW)</label><input id="s-power" type="number" value="400"></div>
+        <div class="sf"><label>Morale %</label><input id="s-morale" type="number" min="0" max="100" value="85"></div>
+      </div>
+    </div>
+
+    <!-- Custom Events -->
+    <div class="s-section">
+      <h3>Custom Events</h3>
+      <div style="font-size:9px;color:var(--text-3);margin-bottom:4px">Injected at specific turns alongside generated crises</div>
+      <div id="s-events"></div>
+      <button class="s-add" onclick="addSetupEvent()">+ Add Event</button>
+      <h3 style="margin-top:10px">Key Personnel</h3>
+      <div style="font-size:9px;color:var(--text-3);margin-bottom:4px">Name · Specialization · Age · Department</div>
+      <div class="s-personnel" id="s-personnel">
+        <div class="s-person"><input value="Dr. Yuki Tanaka"><input value="Radiation Medicine"><input value="38" type="number"><select><option value="medical" selected>Medical</option><option value="engineering">Engineering</option><option value="agriculture">Agriculture</option><option value="psychology">Psychology</option><option value="science">Science</option></select></div>
+        <div class="s-person"><input value="Erik Lindqvist"><input value="Structural Engineering"><input value="45" type="number"><select><option value="medical">Medical</option><option value="engineering" selected>Engineering</option><option value="agriculture">Agriculture</option><option value="psychology">Psychology</option><option value="science">Science</option></select></div>
+        <div class="s-person"><input value="Amara Osei"><input value="Hydroponics"><input value="34" type="number"><select><option value="medical">Medical</option><option value="engineering">Engineering</option><option value="agriculture" selected>Agriculture</option><option value="psychology">Psychology</option><option value="science">Science</option></select></div>
+        <div class="s-person"><input value="Dr. Priya Singh"><input value="Clinical Psychology"><input value="41" type="number"><select><option value="medical">Medical</option><option value="engineering">Engineering</option><option value="agriculture">Agriculture</option><option value="psychology" selected>Psychology</option><option value="science">Science</option></select></div>
+        <div class="s-person"><input value="Carlos Fernandez"><input value="Geology"><input value="50" type="number"><select><option value="medical">Medical</option><option value="engineering">Engineering</option><option value="agriculture">Agriculture</option><option value="psychology">Psychology</option><option value="science" selected>Science</option></select></div>
+      </div>
+    </div>
+
+    <!-- API & Models -->
+    <div class="s-section">
+      <h3>API & Models</h3>
+      <div class="sf"><label>OpenAI API Key</label><input id="s-apikey" type="password" placeholder="sk-..." value=""></div>
+      <div class="sf" style="margin-top:4px"><label>Serper API Key (web search)</label><input id="s-serper" type="password" placeholder="optional"></div>
+      <div class="srow" style="margin-top:6px"><div class="sf"><label>Commander</label><select id="s-model-cmd"><option value="gpt-5.4">gpt-5.4</option><option value="gpt-4o">gpt-4o</option><option value="gpt-4o-mini">gpt-4o-mini</option></select></div><div class="sf"><label>Dept</label><select id="s-model-dept"><option value="gpt-5.4-mini">gpt-5.4-mini</option><option value="gpt-4o-mini">gpt-4o-mini</option></select></div></div>
+      <div class="srow"><div class="sf"><label>Judge</label><select id="s-model-judge"><option value="gpt-5.4">gpt-5.4</option><option value="gpt-4o">gpt-4o</option></select></div><div class="sf"><label>Search</label><select id="s-search"><option value="false">Off</option><option value="true">On</option></select></div></div>
+    </div>
+  </div>
+
+  <!-- Launch -->
+  <div class="s-launch">
+    <button class="s-launch-btn" id="s-launch-btn" onclick="launchFromSettings()">Start Simulation</button>
+    <span class="s-launch-status" id="s-launch-status"></span>
+    <span style="flex:1"></span>
+    <span style="font-size:10px;color:var(--text-3)">Starts fresh. Current simulation data will be replaced.</span>
+  </div>
+</div>
+
 <!-- About Panel -->
 <div class="about-panel" id="about-panel">
   <h2>What Is This?</h2>
@@ -264,6 +420,7 @@
 <div class="tab-bar">
   <button id="tab-sim" class="active" onclick="switchTab('sim')">Simulation</button>
   <button id="tab-log" onclick="switchTab('log')">Debug Log</button>
+  <button id="tab-settings" onclick="switchTab('settings')">Settings</button>
   <button id="tab-about" onclick="switchTab('about')">About</button>
 </div>
 <div class="debug" id="debug" style="display:none"><span class="dim">[Mars Genesis] Connecting...</span></div>
@@ -279,22 +436,21 @@ const $ = id => document.getElementById(id);
 const log = (cls, msg) => { const d = $('debug'); d.innerHTML += `<br><span class="${cls}">${msg}</span>`; d.scrollTop = d.scrollHeight; };
 
 function switchTab(tab) {
-  const mainView = $('main-view'), tlView = $('tl-view'), debug = $('debug'), about = $('about-panel');
+  const panels = { sim: ['main-view','tl-view'], log: ['debug'], settings: ['settings-panel'], about: ['about-panel'] };
   document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
-  // Hide all content panels
-  mainView.style.display = 'none'; tlView.style.display = 'none';
-  debug.style.display = 'none'; debug.style.flex = ''; debug.style.maxHeight = '';
-  about.style.display = 'none'; about.style.flex = '';
-  if (tab === 'log') {
-    debug.style.display = 'block'; debug.style.flex = '1'; debug.style.maxHeight = 'none'; debug.style.overflow = 'auto'; debug.style.padding = '10px 16px';
-    $('tab-log').classList.add('active');
-  } else if (tab === 'about') {
-    about.style.display = 'block'; about.style.flex = '1'; about.style.overflow = 'auto';
-    $('tab-about').classList.add('active');
-  } else {
-    mainView.style.display = 'flex'; tlView.style.display = 'flex';
-    $('tab-sim').classList.add('active');
-  }
+  // Hide all
+  for (const ids of Object.values(panels)) ids.forEach(id => { const el = $(id); if (el) { el.style.display = 'none'; el.style.flex = ''; } });
+  // Show selected
+  const ids = panels[tab] || panels.sim;
+  ids.forEach(id => {
+    const el = $(id);
+    if (!el) return;
+    if (id === 'main-view') { el.style.display = 'flex'; }
+    else if (id === 'tl-view') { el.style.display = 'flex'; }
+    else { el.style.display = 'block'; el.style.flex = '1'; el.style.overflow = 'auto'; }
+    if (id === 'debug') { el.style.maxHeight = 'none'; el.style.padding = '10px 16px'; }
+  });
+  $(`tab-${tab}`).classList.add('active');
 }
 
 const side = leader => leader === 'Aria Chen' ? 'v' : leader === 'Dietrich Voss' ? 'e' : null;
@@ -331,12 +487,89 @@ function addTimeline(s, year, text, badgeCls, badge) {
   tl.appendChild(div); tl.scrollTop = tl.scrollHeight;
 }
 
+// --- Settings tab logic ---
+const STRAITS = ['openness','conscientiousness','extraversion','agreeableness','emotionality','honestyHumility'];
+function getSHex(p) { const s=document.querySelectorAll(`#s${p}-hex input[type=range]`);const h={};s.forEach((el,i)=>h[STRAITS[i]]=parseFloat(el.value));return h; }
+function setSHex(p, h) { const s=document.querySelectorAll(`#s${p}-hex input[type=range]`);s.forEach((el,i)=>{el.value=h[STRAITS[i]];el.nextElementSibling.textContent=Number(h[STRAITS[i]]).toFixed(2);}); }
+
+const SETUP_PRESETS = {
+  default:{a:{name:'Aria Chen',arch:'The Visionary',colony:'Ares Horizon',hexaco:{openness:.95,conscientiousness:.35,extraversion:.85,agreeableness:.55,emotionality:.3,honestyHumility:.65},instr:'You are Commander Aria Chen. Bold expansion, calculated risks. Favor higher upside. Respond with JSON.'},b:{name:'Dietrich Voss',arch:'The Engineer',colony:'Meridian Base',hexaco:{openness:.25,conscientiousness:.97,extraversion:.3,agreeableness:.45,emotionality:.7,honestyHumility:.9},instr:'You are Commander Dietrich Voss. Engineering discipline, safety margins. Favor lower risk. Respond with JSON.'},turns:12,seed:950},
+  balanced:{a:{name:'Maya Torres',arch:'The Diplomat',colony:'Concordia',hexaco:{openness:.6,conscientiousness:.55,extraversion:.65,agreeableness:.7,emotionality:.5,honestyHumility:.6},instr:'You are Commander Maya Torres. Seek consensus. Respond with JSON.'},b:{name:'Kenji Nakamura',arch:'The Pragmatist',colony:'Olympus Landing',hexaco:{openness:.5,conscientiousness:.6,extraversion:.45,agreeableness:.55,emotionality:.55,honestyHumility:.65},instr:'You are Commander Kenji Nakamura. Data-informed pragmatist. Respond with JSON.'},turns:12,seed:950},
+  extreme:{a:{name:'Zara Okafor',arch:'The Gambler',colony:'Frontier Prime',hexaco:{openness:.99,conscientiousness:.15,extraversion:.9,agreeableness:.3,emotionality:.1,honestyHumility:.4},instr:'You are Commander Zara Okafor. Maximum risk, maximum reward. Respond with JSON.'},b:{name:'Heinrich Weber',arch:'The Fortress',colony:'Bastion Colony',hexaco:{openness:.05,conscientiousness:.99,extraversion:.1,agreeableness:.6,emotionality:.95,honestyHumility:.95},instr:'You are Commander Heinrich Weber. Zero tolerance for risk. Respond with JSON.'},turns:12,seed:950},
+};
+
+function applySetupPreset(name) {
+  const p=SETUP_PRESETS[name]; if(!p) return;
+  $('sa-name').value=p.a.name;$('sa-arch').value=p.a.arch;$('sa-colony').value=p.a.colony;$('sa-instr').value=p.a.instr;setSHex('a',p.a.hexaco);
+  $('sb-name').value=p.b.name;$('sb-arch').value=p.b.arch;$('sb-colony').value=p.b.colony;$('sb-instr').value=p.b.instr;setSHex('b',p.b.hexaco);
+  $('s-turns').value=p.turns;$('s-seed').value=p.seed;
+}
+
+let sec=0;
+function addSetupEvent(t='',ti='') {
+  sec++;const d=document.createElement('div');d.className='s-evrow';d.id=`sev-${sec}`;
+  d.innerHTML=`<input type="number" min="1" max="12" placeholder="T" value="${t}"><input placeholder="Title" value="${ti}"><input placeholder="Description"><button class="s-rm" onclick="this.parentElement.remove()">x</button>`;
+  $('s-events').appendChild(d);
+}
+function getSetupEvents() {
+  return Array.from(document.querySelectorAll('.s-evrow')).map(r=>{const ins=r.querySelectorAll('input');return{turn:parseInt(ins[0].value)||0,title:ins[1].value,description:ins[2].value};}).filter(e=>e.turn>0&&e.title);
+}
+function getSetupPersonnel() {
+  return Array.from(document.querySelectorAll('.s-person')).map(r=>{const ins=r.querySelectorAll('input');const sel=r.querySelector('select');return{name:ins[0].value,specialization:ins[1].value,age:parseInt(ins[2].value)||35,department:sel.value,role:'Specialist',featured:true};});
+}
+
+function buildSetupConfig() {
+  return {
+    leaders:[
+      {name:$('sa-name').value,archetype:$('sa-arch').value,colony:$('sa-colony').value,hexaco:getSHex('a'),instructions:$('sa-instr').value},
+      {name:$('sb-name').value,archetype:$('sb-arch').value,colony:$('sb-colony').value,hexaco:getSHex('b'),instructions:$('sb-instr').value},
+    ],
+    turns:parseInt($('s-turns').value)||12,seed:parseInt($('s-seed').value)||950,
+    population:parseInt($('s-pop').value)||100,
+    startingResources:{food:parseInt($('s-food').value)||18,water:parseInt($('s-water').value)||800,power:parseInt($('s-power').value)||400,morale:parseInt($('s-morale').value)||85},
+    liveSearch:$('s-search').value==='true',customEvents:getSetupEvents(),
+    keyPersonnel:getSetupPersonnel(),
+    models:{commander:$('s-model-cmd').value,departments:$('s-model-dept').value,judge:$('s-model-judge').value},
+  };
+}
+
+function exportSetup() {
+  const cfg=buildSetupConfig();const blob=new Blob([JSON.stringify(cfg,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mars-genesis-config.json';a.click();
+}
+function importSetup(e) {
+  const file=e.target.files[0];if(!file)return;const r=new FileReader();
+  r.onload=()=>{try{
+    const cfg=JSON.parse(r.result);
+    if(cfg.leaders?.length>=2){const a=cfg.leaders[0],b=cfg.leaders[1];
+      $('sa-name').value=a.name||'';$('sa-arch').value=a.archetype||'';$('sa-colony').value=a.colony||'';$('sa-instr').value=a.instructions||'';if(a.hexaco)setSHex('a',a.hexaco);
+      $('sb-name').value=b.name||'';$('sb-arch').value=b.archetype||'';$('sb-colony').value=b.colony||'';$('sb-instr').value=b.instructions||'';if(b.hexaco)setSHex('b',b.hexaco);
+    }
+    if(cfg.turns)$('s-turns').value=cfg.turns;if(cfg.seed)$('s-seed').value=cfg.seed;
+    $('s-preset').value='custom';
+  }catch(err){alert('Invalid config file');}};r.readAsText(file);
+}
+
+async function launchFromSettings() {
+  const btn=$('s-launch-btn'),st=$('s-launch-status');
+  btn.disabled=true;st.textContent='Starting...';
+  const cfg=buildSetupConfig();cfg.apiKey=$('s-apikey').value;cfg.serperKey=$('s-serper').value;
+  try{
+    const res=await fetch('/setup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)});
+    const data=await res.json();
+    if(data.redirect){st.textContent='Running...';switchTab('sim');}
+    else{st.textContent='Error: '+(data.error||'unknown');btn.disabled=false;}
+  }catch(err){st.textContent='Failed: '+err;btn.disabled=false;}
+}
+
+// --- SSE ---
 try {
   const es = new EventSource('/events');
   es.addEventListener('connected', () => { log('ok', '✓ Connected'); $('m-status').textContent = '● Connected'; });
   es.addEventListener('status', e => {
     const d = JSON.parse(e.data);
     log('info', `Phase: ${d.phase}`);
+    if (d.maxTurns) $('m-max-turns').textContent = d.maxTurns;
     if (d.phase === 'parallel') { $('m-status').textContent = '● Running'; $('m-status').style.color = 'var(--green)'; }
   });
 
