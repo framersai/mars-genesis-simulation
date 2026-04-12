@@ -44,8 +44,9 @@
   .ldr-name{font-size:13px;font-weight:800;white-space:nowrap}.ldr-name.v{color:var(--vis)}.ldr-name.e{color:var(--eng)}
   .ldr-sep{color:var(--border);margin:0 2px}
   .ldr-quote{color:var(--text-3);font-size:9px;font-style:italic;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .traits{font-size:9px;color:var(--text-2);white-space:nowrap;font-family:var(--mono);letter-spacing:.3px}
+  .traits{font-size:9px;color:var(--text-2);white-space:nowrap;font-family:var(--mono);letter-spacing:0;overflow:hidden;text-overflow:ellipsis}
   .traits .hi{font-weight:700}.traits .v{color:var(--vis)}.traits .e{color:var(--eng)}
+  .traits .tl{margin-right:1px}.traits .tv{margin-right:4px}
   .sparks{font-family:var(--mono);font-size:9px;white-space:nowrap}
   .sp-l{color:var(--text-3);font-size:8px;text-transform:uppercase;letter-spacing:.3px;font-weight:600}
   .arch{font-size:8px;padding:1px 6px;border-radius:3px;font-weight:800;flex-shrink:0;font-family:var(--mono)}
@@ -224,7 +225,7 @@
       <span class="arch v">VIS</span>
       <span class="ldr-name v">Aria Chen</span>
       <span class="ldr-sep">|</span>
-      <span class="traits"><span class="v">O </span><span class="v">█████░ </span><span class="v hi">.95</span> &nbsp;<span class="v">C </span><span class="v">██░░░ </span><span class="v">.35</span> &nbsp;<span class="v">E </span><span class="v">████░ </span><span class="v">.85</span> &nbsp;<span class="v">A </span><span class="v">███░░ </span><span class="v">.55</span></span>
+      <span class="traits"><span class="v tl">O</span><span class="v">████░</span><span class="v tv">.95</span><span class="v tl">C</span><span class="v">█░░░</span><span class="v tv">.35</span><span class="v tl">E</span><span class="v">████░</span><span class="v tv">.85</span><span class="v tl">A</span><span class="v">██░░</span><span class="v tv">.55</span></span>
     </div>
     <div class="ldr-row2">
       <span class="ldr-quote">"We didn't cross 55M km to play it safe."</span>
@@ -236,7 +237,7 @@
       <span class="arch e">ENG</span>
       <span class="ldr-name e">Dietrich Voss</span>
       <span class="ldr-sep">|</span>
-      <span class="traits"><span class="e">O </span><span class="e">█░░░░ </span><span class="e">.25</span> &nbsp;<span class="e hi">C </span><span class="e">█████ </span><span class="e hi">.97</span> &nbsp;<span class="e">E </span><span class="e">██░░░ </span><span class="e">.30</span> &nbsp;<span class="e hi">H </span><span class="e">████░ </span><span class="e hi">.90</span></span>
+      <span class="traits"><span class="e tl">O</span><span class="e">█░░░</span><span class="e tv">.25</span><span class="e hi tl">C</span><span class="e">████░</span><span class="e hi tv">.97</span><span class="e tl">E</span><span class="e">█░░░</span><span class="e tv">.30</span><span class="e hi tl">H</span><span class="e">████░</span><span class="e hi tv">.90</span></span>
     </div>
     <div class="ldr-row2">
       <span class="ldr-quote">"Every gram of oxygen is accounted for."</span>
@@ -354,6 +355,18 @@
         <div class="sf"><label>Power (kW)</label><input id="s-power" type="number" value="400"></div>
         <div class="sf"><label>Morale %</label><input id="s-morale" type="number" min="0" max="100" value="85"></div>
       </div>
+      <h3 style="margin-top:8px">Departments</h3>
+      <div style="font-size:9px;color:var(--text-3);margin-bottom:3px">Which departments are active</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        <label style="font-size:10px;display:flex;align-items:center;gap:3px;color:var(--text-2)"><input type="checkbox" checked disabled> Medical</label>
+        <label style="font-size:10px;display:flex;align-items:center;gap:3px;color:var(--text-2)"><input type="checkbox" checked disabled> Engineering</label>
+        <label style="font-size:10px;display:flex;align-items:center;gap:3px;color:var(--text-2)"><input type="checkbox" checked> Agriculture</label>
+        <label style="font-size:10px;display:flex;align-items:center;gap:3px;color:var(--text-2)"><input type="checkbox" checked> Psychology</label>
+        <label style="font-size:10px;display:flex;align-items:center;gap:3px;color:var(--text-2)"><input type="checkbox" checked> Governance</label>
+      </div>
+      <h3 style="margin-top:8px">Advanced</h3>
+      <div class="srow"><div class="sf"><label>Life Support Cap</label><input id="s-lifesup" type="number" value="120"></div><div class="sf"><label>Infra Modules</label><input id="s-infra" type="number" value="3"></div></div>
+      <div class="srow"><div class="sf"><label>Volume (m3)</label><input id="s-volume" type="number" value="3000"></div><div class="sf"><label>Earth Dep %</label><input id="s-earthdep" type="number" value="95"></div></div>
     </div>
 
     <!-- Custom Events -->
@@ -375,11 +388,16 @@
 
     <!-- API & Models -->
     <div class="s-section">
-      <h3>API & Models</h3>
+      <h3>API Keys</h3>
       <div class="sf"><label>OpenAI API Key</label><input id="s-apikey" type="password" placeholder="sk-..." value=""></div>
       <div class="sf" style="margin-top:4px"><label>Serper API Key (web search)</label><input id="s-serper" type="password" placeholder="optional"></div>
-      <div class="srow" style="margin-top:6px"><div class="sf"><label>Commander</label><select id="s-model-cmd"><option value="gpt-5.4">gpt-5.4</option><option value="gpt-4o">gpt-4o</option><option value="gpt-4o-mini">gpt-4o-mini</option></select></div><div class="sf"><label>Dept</label><select id="s-model-dept"><option value="gpt-5.4-mini">gpt-5.4-mini</option><option value="gpt-4o-mini">gpt-4o-mini</option></select></div></div>
-      <div class="srow"><div class="sf"><label>Judge</label><select id="s-model-judge"><option value="gpt-5.4">gpt-5.4</option><option value="gpt-4o">gpt-4o</option></select></div><div class="sf"><label>Search</label><select id="s-search"><option value="false">Off</option><option value="true">On</option></select></div></div>
+      <div style="margin-top:4px"><button class="s-add" onclick="testApiKey()" id="s-test-btn">Test Connection</button> <span id="s-test-status" style="font-size:10px;color:var(--text-3)"></span></div>
+      <h3 style="margin-top:8px">Models</h3>
+      <div class="srow"><div class="sf"><label>Commander</label><select id="s-model-cmd"><option value="gpt-5.4">gpt-5.4</option><option value="gpt-4o">gpt-4o</option><option value="gpt-4o-mini">gpt-4o-mini</option><option value="o4-mini">o4-mini</option></select></div><div class="sf"><label>Dept</label><select id="s-model-dept"><option value="gpt-5.4-mini">gpt-5.4-mini</option><option value="gpt-4o-mini">gpt-4o-mini</option><option value="gpt-4o">gpt-4o</option></select></div></div>
+      <div class="srow"><div class="sf"><label>Judge</label><select id="s-model-judge"><option value="gpt-5.4">gpt-5.4</option><option value="gpt-4o">gpt-4o</option><option value="gpt-4o-mini">gpt-4o-mini</option></select></div><div class="sf"><label>Search</label><select id="s-search"><option value="false">Off</option><option value="true">On</option></select></div></div>
+      <h3 style="margin-top:8px">Generation</h3>
+      <div class="srow"><div class="sf"><label>Cmd Max Steps</label><input id="s-cmd-steps" type="number" value="5" min="1" max="20"></div><div class="sf"><label>Dept Max Steps</label><input id="s-dept-steps" type="number" value="8" min="1" max="20"></div></div>
+      <div class="srow"><div class="sf"><label>Sandbox Timeout (ms)</label><input id="s-sandbox-timeout" type="number" value="10000"></div><div class="sf"><label>Sandbox Memory (MB)</label><input id="s-sandbox-mem" type="number" value="128"></div></div>
     </div>
   </div>
 
@@ -658,6 +676,19 @@ function importSetup(e) {
     if(cfg.turns)$('s-turns').value=cfg.turns;if(cfg.seed)$('s-seed').value=cfg.seed;
     $('s-preset').value='custom';
   }catch(err){alert('Invalid config file');}};r.readAsText(file);
+}
+
+async function testApiKey() {
+  const st=$('s-test-status'), btn=$('s-test-btn');
+  const key=$('s-apikey').value;
+  if(!key||key.includes('...')){st.textContent='Enter a full API key first';st.style.color='var(--rust)';return;}
+  btn.disabled=true;st.textContent='Testing...';st.style.color='var(--text-3)';
+  try{
+    const res=await fetch('https://api.openai.com/v1/models',{headers:{'Authorization':`Bearer ${key}`}});
+    if(res.ok){st.textContent='Connected. Models available.';st.style.color='var(--green)';}
+    else{const d=await res.json().catch(()=>({}));st.textContent='Failed: '+(d.error?.message||res.status);st.style.color='var(--rust)';}
+  }catch(err){st.textContent='Network error: '+err;st.style.color='var(--rust)';}
+  btn.disabled=false;
 }
 
 async function launchFromSettings() {
