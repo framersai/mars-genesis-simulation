@@ -1,0 +1,89 @@
+# Mars Genesis Simulation Configuration
+# Copy to config.yaml and customize
+
+leaders:
+  - name: "Aria Chen"
+    archetype: "The Visionary"
+    colony: "Ares Horizon"
+    hexaco:
+      openness: 0.95
+      conscientiousness: 0.35
+      extraversion: 0.85
+      agreeableness: 0.55
+      emotionality: 0.30
+      honestyHumility: 0.65
+    instructions: "You believe in bold expansion. Accept calculated risks. Favor higher upside."
+
+  - name: "Dietrich Voss"
+    archetype: "The Engineer"
+    colony: "Meridian Base"
+    hexaco:
+      openness: 0.25
+      conscientiousness: 0.97
+      extraversion: 0.30
+      agreeableness: 0.45
+      emotionality: 0.70
+      honestyHumility: 0.90
+    instructions: "You believe in engineering discipline. Demand data. Favor lower risk."
+
+timeline:
+  turns: 12
+  startYear: 2035
+  # Years per turn. Length must match turns count.
+  schedule: [2035, 2037, 2040, 2043, 2046, 2049, 2053, 2058, 2063, 2068, 2075, 2085]
+
+seed: 950
+
+# Custom events injected at specific turns.
+# The LLM incorporates these organically into the crisis response.
+# Tagged as "user-injected" in the output.
+customEvents:
+  # - turn: 3
+  #   title: "Meteor Strike"
+  #   description: "A small meteorite impacts 2km from the colony, creating a 50m crater and damaging the solar array."
+  #
+  # - turn: 6
+  #   title: "Earth Goes Silent"
+  #   description: "All communication from Earth ceases abruptly. No explanation. Colony must decide whether to continue as planned or assume the worst."
+  #
+  # - turn: 9
+  #   title: "First Contact Signal"
+  #   description: "Deep space antenna detects a repeating signal from Proxima Centauri. Not natural. Colony must decide how to respond."
+
+# Model configuration
+models:
+  commander: "gpt-5.4"
+  departments: "gpt-5.4-mini"
+  judge: "gpt-5.4"
+
+# Key personnel (first 5 are always promoted as department heads)
+keyPersonnel:
+  - name: "Dr. Yuki Tanaka"
+    department: medical
+    role: "Chief Medical Officer"
+    specialization: "Radiation Medicine"
+    age: 38
+
+  - name: "Erik Lindqvist"
+    department: engineering
+    role: "Chief Engineer"
+    specialization: "Structural Engineering"
+    age: 45
+
+  - name: "Amara Osei"
+    department: agriculture
+    role: "Head of Agriculture"
+    specialization: "Hydroponics"
+    age: 34
+
+  - name: "Dr. Priya Singh"
+    department: psychology
+    role: "Colony Psychologist"
+    specialization: "Clinical Psychology"
+    age: 41
+
+  - name: "Carlos Fernandez"
+    department: science
+    role: "Chief Scientist"
+    specialization: "Geology"
+    age: 50

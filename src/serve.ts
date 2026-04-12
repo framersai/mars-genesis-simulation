@@ -44,6 +44,13 @@ const server = createServer((req, res) => {
     return;
   }
 
+  if (req.url === '/about') {
+    const html = readFileSync(resolve(__dirname, 'dashboard/about.html'), 'utf-8');
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(html);
+    return;
+  }
+
   if (req.url === '/' || req.url === '/index.html') {
     // Serve dashboard with SSE client script injected
     const html = readFileSync(resolve(__dirname, 'dashboard/index.html'), 'utf-8');

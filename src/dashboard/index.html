@@ -340,21 +340,33 @@ try {
       case 'dept_done': {
         const deptName = (dd.department || '').toUpperCase();
         const deptIcon = dd.department === 'medical' ? '🏥' : dd.department === 'engineering' ? '⚙️' : dd.department === 'agriculture' ? '🌾' : dd.department === 'psychology' ? '🧠' : '📋';
-        const summary = dd.summary || 'Analysis complete.';
+        const summary = dd.summary || '';
         const recs = (dd.recommendedActions || []).slice(0, 2);
         const risks = (dd.risks || []).slice(0, 2).map(r =>
-          `<div class="risk"><span class="rd ${r.severity === 'critical' ? 'cr' : r.severity === 'high' ? 'hi' : 'lo'}"></span><b>${r.severity.toUpperCase()}:</b> ${(r.description || '').slice(0, 100)}</div>`
+          `<div class="risk"><span class="rd ${r.severity === 'critical' ? 'cr' : r.severity === 'high' ? 'hi' : 'lo'}"></span><b>${r.severity.toUpperCase()}:</b> ${(r.description || '').slice(0, 120)}</div>`
         ).join('');
-        const recsHtml = recs.length ? `<div style="margin-top:4px;font-size:9px;color:var(--amber)">→ ${recs.join(' → ')}</div>` : '';
-        addToBody(s, `<div class="card"><div class="card-h"><span class="card-title">${deptIcon} ${deptName}</span><span class="card-badge">${dd.citations || 0} cites</span></div><div class="card-text">${summary}</div>${risks}${recsHtml}</div>`);
-        for (const t of (dd.forgedTools || [])) {
-          if (!t.name || t.name === 'unnamed') continue;
-          const desc = t.description || t.name.replace(/_v\d+$/, '').replace(/_/g, ' ');
-          addToBody(s, `<div class="forge ok"><span style="font-size:14px">🔧</span><div style="flex:1"><div class="fn ${s === 'v' ? 'v' : 'e'}">${t.name}</div><div class="fm">${desc} · ${t.mode || 'sandbox'}</div></div><span class="jb p">✓ ${(t.confidence || .85).toFixed(2)}</span></div>`);
-          state[s].tools++;
-          $(`s-${s}-tools`).textContent = state[s].tools;
+        const recsHtml = recs.length ? `<div style="margin-top:6px;font-size:10px;color:var(--amber)">→ ${recs.join('<br>→ ')}</div>` : '';
+        const tools = (dd.forgedTools || []).filter(t => t.name && t.name !== 'unnamed');
+
+        // If no summary but has tools, show tools inline with dept
+        if (!summary || summary === 'Analysis complete.' || summary.startsWith('{')) {
+          // Compact: dept name + tools only
+          const toolList = tools.map(t => {
+            const desc = t.description || t.name.replace(/_v\d+$/, '').replace(/_/g, ' ');
+            return `<div class="forge ok" style="margin-top:4px"><span style="font-size:14px">🔧</span><div style="flex:1"><div class="fn ${s === 'v' ? 'v' : 'e'}">${t.name}</div><div class="fm">${desc} · ${t.mode}</div></div><span class="jb p">✓ ${(t.confidence || .85).toFixed(2)}</span></div>`;
+          }).join('');
+          addToBody(s, `<div class="card"><div class="card-h"><span class="card-title">${deptIcon} ${deptName}</span><span class="card-badge">${dd.citations || 0} cites · ${tools.length} tools</span></div>${risks || '<div class="card-text" style="color:var(--text-3)">No critical issues identified.</div>'}${toolList}${recsHtml}</div>`);
+        } else {
+          // Full: summary + risks + recs, then tools below
+          addToBody(s, `<div class="card"><div class="card-h"><span class="card-title">${deptIcon} ${deptName}</span><span class="card-badge">${dd.citations || 0} cites</span></div><div class="card-text">${summary}</div>${risks}${recsHtml}</div>`);
+          for (const t of tools) {
+            const desc = t.description || t.name.replace(/_v\d+$/, '').replace(/_/g, ' ');
+            addToBody(s, `<div class="forge ok"><span style="font-size:14px">🔧</span><div style="flex:1"><div class="fn ${s === 'v' ? 'v' : 'e'}">${t.name}</div><div class="fm">${desc} · ${t.mode || 'sandbox'}</div></div><span class="jb p">✓ ${(t.confidence || .85).toFixed(2)}</span></div>`);
+          }
         }
-        log('ok', `[${d.leader}] ${deptIcon} ${deptName}: ${dd.citations || 0} cites, ${(dd.forgedTools || []).length} tools`);
+        state[s].tools += tools.length;
+        $(`s-${s}-tools`).textContent = state[s].tools;
+        log('ok', `[${d.leader}] ${deptIcon} ${deptName}: ${dd.citations || 0} cites, ${tools.length} tools`);
         break;
       }
 
