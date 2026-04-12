@@ -141,13 +141,26 @@ function wrapForgeTool(raw: ForgeToolMetaTool, agentId: string, sessionId: strin
 // Parsing
 // ---------------------------------------------------------------------------
 
+function cleanSummary(raw: string): string {
+  // Extract first actionable sentence, skip preamble
+  const s = raw.replace(/^(Based on|After|I recommend|My analysis|The data|Looking at|Given)\s/i, '');
+  const firstSentence = s.match(/^[^.!?]+[.!?]/)?.[0] || s.slice(0, 150);
+  return firstSentence.slice(0, 150);
+}
+
 function parseDeptReport(text: string, dept: Department): DepartmentReport {
   const jsonMatch = text.match(/\{[\s\S]*"department"[\s\S]*\}/);
-  if (jsonMatch) try { return { ...emptyReport(dept), ...JSON.parse(jsonMatch[0]), department: dept }; } catch {}
+  if (jsonMatch) {
+    try {
+      const parsed = { ...emptyReport(dept), ...JSON.parse(jsonMatch[0]), department: dept };
+      parsed.summary = cleanSummary(parsed.summary);
+      return parsed;
+    } catch {}
+  }
   const cites: DepartmentReport['citations'] = [];
   let m; const re = /\[([^\]]+)\]\(([^)]+)\)/g;
   while ((m = re.exec(text))) if (m[2].startsWith('http')) cites.push({ text: m[1], url: m[2], context: m[1] });
-  return { ...emptyReport(dept), summary: text.slice(0, 500), citations: cites };
+  return { ...emptyReport(dept), summary: cleanSummary(text), citations: cites };
 }
 
 function parseCmdDecision(text: string, depts: Department[]): CommanderDecision {
@@ -320,7 +333,10 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
         const report = parseDeptReport(r.text, dept);
         reports.push(report);
         console.log(`  [${dept}] Done: ${report.citations.length} citations, ${report.risks.length} risks, ${report.forgedToolsUsed.length} tools`);
-        emit('dept_done', { turn, year: scenario.year, department: dept, summary: report.summary.slice(0, 200), citations: report.citations.length, risks: report.risks, forgedTools: report.forgedToolsUsed.map(t => ({ name: t.name, mode: t.mode, confidence: t.confidence })) });
+        const validTools = report.forgedToolsUsed
+          .filter(t => t && (t.name || t.description))
+          .map(t => ({ name: t.name || t.description || 'tool', mode: t.mode || 'sandbox', confidence: t.confidence ?? 0.85 }));
+        emit('dept_done', { turn, year: scenario.year, department: dept, summary: report.summary, citations: report.citations.length, risks: report.risks, forgedTools: validTools, recommendedActions: report.recommendedActions?.slice(0, 2) });
         if (report.forgedToolsUsed.length) {
           const names = report.forgedToolsUsed.map(t => t?.name || t?.description || 'unnamed').filter(Boolean);
           if (names.length) toolRegs[dept] = [...(toolRegs[dept] || []), ...names];

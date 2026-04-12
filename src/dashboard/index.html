@@ -296,15 +296,22 @@ try {
         break;
 
       case 'dept_done': {
-        const risks = (dd.risks || []).map(r => `<div class="risk"><span class="rd ${r.severity === 'critical' ? 'cr' : r.severity === 'high' ? 'hi' : 'lo'}"></span>${r.severity.toUpperCase()}: ${r.description}</div>`).join('');
-        addToBody(s, `<div class="card"><div class="card-h"><span class="card-title">📋 ${dd.department}</span><span class="card-badge">${dd.citations || 0} citations</span></div><div class="card-text">${dd.summary || ''}</div>${risks}</div>`);
-        // Forge cards
+        const deptName = (dd.department || '').toUpperCase();
+        const deptIcon = dd.department === 'medical' ? '🏥' : dd.department === 'engineering' ? '⚙️' : dd.department === 'agriculture' ? '🌾' : dd.department === 'psychology' ? '🧠' : '📋';
+        const summary = dd.summary || 'Analysis complete.';
+        const recs = (dd.recommendedActions || []).slice(0, 2);
+        const risks = (dd.risks || []).slice(0, 2).map(r =>
+          `<div class="risk"><span class="rd ${r.severity === 'critical' ? 'cr' : r.severity === 'high' ? 'hi' : 'lo'}"></span><b>${r.severity.toUpperCase()}:</b> ${(r.description || '').slice(0, 100)}</div>`
+        ).join('');
+        const recsHtml = recs.length ? `<div style="margin-top:4px;font-size:9px;color:var(--amber)">→ ${recs.join(' → ')}</div>` : '';
+        addToBody(s, `<div class="card"><div class="card-h"><span class="card-title">${deptIcon} ${deptName}</span><span class="card-badge">${dd.citations || 0} cites</span></div><div class="card-text">${summary}</div>${risks}${recsHtml}</div>`);
         for (const t of (dd.forgedTools || [])) {
-          addToBody(s, `<div class="forge ok"><span style="font-size:12px">🔧</span><div style="flex:1"><div class="fn ${s === 'v' ? 'v' : 'e'}">${t.name || 'unnamed'}</div><div class="fm">${t.mode || 'sandbox'}</div></div><span class="jb p">✓ ${(t.confidence || .85).toFixed(2)}</span></div>`);
+          if (!t.name || t.name === 'unnamed') continue;
+          addToBody(s, `<div class="forge ok"><span style="font-size:12px">🔧</span><div style="flex:1"><div class="fn ${s === 'v' ? 'v' : 'e'}">${t.name}</div><div class="fm">${t.mode || 'sandbox'}</div></div><span class="jb p">✓ ${(t.confidence || .85).toFixed(2)}</span></div>`);
           state[s].tools++;
           $(`s-${s}-tools`).textContent = state[s].tools;
         }
-        log('ok', `[${d.leader}] ${dd.department}: ${dd.citations || 0} citations, ${(dd.forgedTools || []).length} tools`);
+        log('ok', `[${d.leader}] ${deptIcon} ${deptName}: ${dd.citations || 0} cites, ${(dd.forgedTools || []).length} tools`);
         break;
       }
 
@@ -327,13 +334,13 @@ try {
         break;
 
       case 'outcome': {
-        const dec = state[s].pendingDecision || '';
+        const dec = (state[s].pendingDecision || '').slice(0, 200);
         const oc = dd.outcome || '';
         const cls = oc.includes('success') ? 'cs' : 'rf';
         const badge = oc === 'risky_success' ? '✓ RISKY SUCCESS' : oc === 'risky_failure' ? '⚠ RISKY FAILURE' : oc === 'conservative_success' ? '✓ CONSERVATIVE SUCCESS' : '✗ CONSERVATIVE FAILURE';
         addToBody(s, `<div class="dec ${s === 'v' ? 'v' : 'e'}"><div class="dl ${s === 'v' ? 'v' : 'e'}">⚡ DECISION</div><div class="ddt">${dec}</div><div class="out"><span class="ob ${cls}">${badge}</span></div></div>`);
         const tlBadge = oc.includes('success') ? '✓' : '⚠';
-        addTimeline(s, dd.year, dec.slice(0, 30), cls, tlBadge);
+        addTimeline(s, dd.year, dec.slice(0, 40), cls, tlBadge);
         log(oc.includes('success') ? 'ok' : 'no', `  → ${oc}`);
         break;
       }
