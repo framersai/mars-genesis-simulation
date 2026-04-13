@@ -37,15 +37,44 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // ---------------------------------------------------------------------------
 
 const webSearchTool: ITool = {
-  id: 'tool.web_search', name: 'web_search', displayName: 'Web Search',
-  description: 'Search for scientific papers and NASA data.',
+  id: 'tool.web_search', name: 'web_search', displayName: 'Multi-Provider Web Search',
+  description: 'Search for scientific papers, NASA data, and Mars research using AgentOS WebSearchService with multi-provider fusion (Serper, Tavily, Firecrawl, Brave) and Cohere neural reranking.',
   inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] },
   hasSideEffects: false,
   async execute(args: Record<string, unknown>) {
     const query = String(args.query || '');
-    const key = process.env.SERPER_API_KEY;
-    if (!key) return { success: false, error: 'SERPER_API_KEY not set' };
+
+    // Try AgentOS WebSearchService first (multi-provider with RRF fusion)
     try {
+      const { WebSearchService, FirecrawlProvider, TavilyProvider, SerperProvider, BraveProvider } = await import('@framers/agentos/web-search');
+      const service = new WebSearchService();
+
+      if (process.env.FIRECRAWL_API_KEY) service.registerProvider(new FirecrawlProvider(process.env.FIRECRAWL_API_KEY));
+      if (process.env.TAVILY_API_KEY) service.registerProvider(new TavilyProvider(process.env.TAVILY_API_KEY));
+      if (process.env.SERPER_API_KEY) service.registerProvider(new SerperProvider(process.env.SERPER_API_KEY));
+      if (process.env.BRAVE_API_KEY) service.registerProvider(new BraveProvider(process.env.BRAVE_API_KEY));
+
+      if (!service.hasProviders()) {
+        return { success: false, error: 'No search API keys configured. Set SERPER_API_KEY, TAVILY_API_KEY, FIRECRAWL_API_KEY, or BRAVE_API_KEY.' };
+      }
+
+      const results = await service.search(query, { limit: 5, rerank: !!process.env.COHERE_API_KEY });
+      return {
+        success: true,
+        output: {
+          results: results.map(r => ({
+            title: r.title, url: r.url, snippet: r.snippet,
+            providers: (r as any).providerSources || [],
+            relevance: (r as any).rerankScore || (r as any).rrfScore || r.relevanceScore,
+          })),
+          query,
+          reranked: !!process.env.COHERE_API_KEY,
+        },
+      };
+    } catch {
+      // Fallback to direct Serper if AgentOS web-search module not available
+      const key = process.env.SERPER_API_KEY;
+      if (!key) return { success: false, error: 'No search API keys configured' };
       const res = await fetch('https://google.serper.dev/search', {
         method: 'POST', headers: { 'X-API-KEY': key, 'Content-Type': 'application/json' },
         body: JSON.stringify({ q: query, num: 5 }),
