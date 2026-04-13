@@ -2,8 +2,10 @@ import { useState, createContext, useContext } from 'react';
 import { ThemeProvider } from './theme/ThemeProvider';
 import { useScenario, type ScenarioClientPayload } from './hooks/useScenario';
 import { useSSE } from './hooks/useSSE';
+import { useGameState } from './hooks/useGameState';
 import { TopBar } from './components/layout/TopBar';
 import { TabBar } from './components/layout/TabBar';
+import { SimView } from './components/sim/SimView';
 
 // Scenario context available to all components
 const ScenarioContext = createContext<ScenarioClientPayload | null>(null);
@@ -18,36 +20,17 @@ type Tab = 'sim' | 'settings' | 'reports' | 'chat' | 'log' | 'about';
 function AppContent() {
   const { scenario } = useScenario();
   const sse = useSSE();
+  const gameState = useGameState(sse.events, sse.isComplete);
   const [activeTab, setActiveTab] = useState<Tab>('sim');
 
   return (
     <ScenarioContext.Provider value={scenario}>
       <div className="flex flex-col h-screen w-screen overflow-hidden" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-        <TopBar scenario={scenario} sse={sse} />
+        <TopBar scenario={scenario} sse={sse} gameState={gameState} />
         <TabBar active={activeTab} onTabChange={setActiveTab} scenario={scenario} />
 
         <div className="flex-1 overflow-hidden">
-          {activeTab === 'sim' && (
-            <div className="flex h-full gap-px" style={{ background: 'var(--border-primary)' }}>
-              <div className="flex-1 overflow-y-auto p-4" style={{ background: 'var(--bg-primary)' }}>
-                <div className="text-center py-20" style={{ color: 'var(--text-muted)' }}>
-                  <div className="text-4xl mb-4">⚡</div>
-                  <div className="text-lg font-semibold mb-2">Ready to simulate</div>
-                  <div className="text-sm">Configure leaders in Settings, then launch a simulation.</div>
-                  <div className="mt-4 text-xs font-mono" style={{ color: 'var(--text-placeholder)' }}>
-                    SSE: {sse.status} | Events: {sse.events.length}
-                  </div>
-                </div>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4" style={{ background: 'var(--bg-primary)' }}>
-                <div className="text-center py-20" style={{ color: 'var(--text-muted)' }}>
-                  <div className="text-4xl mb-4">⚡</div>
-                  <div className="text-lg font-semibold mb-2">Ready to simulate</div>
-                  <div className="text-sm">Two commanders will run in parallel.</div>
-                </div>
-              </div>
-            </div>
-          )}
+          {activeTab === 'sim' && <SimView state={gameState} />}
 
           {activeTab === 'settings' && (
             <div className="flex-1 overflow-y-auto p-6">
