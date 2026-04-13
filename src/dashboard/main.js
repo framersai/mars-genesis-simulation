@@ -390,7 +390,7 @@ function handleSimEvent(d) {
       }
       for (const t of tools) {
         const desc = t.description || t.name.replace(/_v\d+$/, '').replace(/_/g, ' ');
-        const outputHtml = t.output ? `<div style="margin-top:3px;font-size:10px;color:var(--text-2);background:var(--bg-deep);padding:3px 6px;border-radius:3px;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b style="color:var(--text-3)">OUTPUT:</b> ${String(t.output).slice(0, 150)}</div>` : '';
+        const outputHtml = t.output ? `<div style="margin-top:3px;font-size:10px;color:var(--text-2);background:var(--bg-deep);padding:3px 6px;border-radius:3px;font-family:var(--mono);max-height:40px;overflow-y:auto;overflow-x:hidden;word-break:break-all;white-space:pre-wrap;line-height:1.3"><b style="color:var(--text-3)">OUTPUT:</b> ${String(t.output).slice(0, 200)}</div>` : '';
         addToBody(s, `<div class="forge ok"><span style="font-size:14px">\uD83D\uDD27</span><div style="flex:1"><div class="fd">${desc}</div><div class="fn">${t.name} \u00B7 ${t.mode || 'sandbox'}</div>${outputHtml}</div><span class="jb p">\u2713 ${(t.confidence || .85).toFixed(2)}</span></div>`);
       }
       state[s].tools += tools.length; $(`s-${s}-tools`).textContent = state[s].tools;
