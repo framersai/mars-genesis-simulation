@@ -6,6 +6,9 @@ function switchTab(tab) {
   const panels = { sim: ['main-view','tl-view'], reports: ['reports-panel'], log: ['debug'], settings: ['settings-panel'], about: ['about-panel'] };
   document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
   for (const ids of Object.values(panels)) ids.forEach(id => { const el = $(id); if (el) { el.style.display = 'none'; el.style.flex = ''; } });
+  // Hide sim-only elements (intro, divergence) when not on sim tab
+  const dr = $('diverge-rail'); if (dr) dr.style.display = tab === 'sim' ? (dr.innerHTML ? 'block' : 'none') : 'none';
+  const ib = $('intro-bar'); if (ib && tab !== 'sim') ib.style.display = 'none';
   const ids = panels[tab] || panels.sim;
   ids.forEach(id => {
     const el = $(id);
