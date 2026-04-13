@@ -14,6 +14,7 @@ import type { KnowledgeBundle } from '../../engine/types.js';
 let _memory: any = null;
 let _initialized = false;
 let _initPromise: Promise<void> | null = null;
+let _lastKnowledge: KnowledgeBundle | null = null;
 
 /** Flatten a KnowledgeBundle into ingestion entries */
 function flattenKnowledgeBundle(
@@ -42,6 +43,7 @@ export async function initResearchMemory(knowledge?: KnowledgeBundle): Promise<b
   if (_initPromise) return _initPromise.then(() => _initialized);
 
   _initPromise = (async () => {
+    _lastKnowledge = knowledge || null;
     try {
       const { AgentMemory } = await import('@framers/agentos');
       _memory = await AgentMemory.sqlite({ path: ':memory:' });
@@ -76,7 +78,12 @@ export async function initResearchMemory(knowledge?: KnowledgeBundle): Promise<b
 /** Recall research relevant to a crisis query */
 export async function recallResearch(query: string, keywords: string[] = [], category: string = 'infrastructure'): Promise<CrisisResearchPacket> {
   if (!_memory || !_initialized) {
-    // Fallback to static with the actual crisis category
+    // Fallback to scenario-aware research from knowledge bundle
+    const { getResearchFromBundle } = await import('./scenario-research.js');
+    // Use stored knowledge bundle if available, otherwise fall back to legacy
+    if (_lastKnowledge) {
+      return getResearchFromBundle(_lastKnowledge, category, keywords);
+    }
     const { getResearchForCategory } = await import('./knowledge-base.js');
     return getResearchForCategory(category, keywords);
   }
@@ -116,5 +123,6 @@ export async function closeResearchMemory(): Promise<void> {
     _memory = null;
     _initialized = false;
     _initPromise = null;
+    _lastKnowledge = null;
   }
 }

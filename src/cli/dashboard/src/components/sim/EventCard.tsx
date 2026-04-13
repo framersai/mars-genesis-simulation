@@ -74,6 +74,20 @@ export function EventCard({ event, side }: EventCardProps) {
             </span>
           </div>
 
+          {/* Citation links */}
+          {Array.isArray(dd.citationList) && (dd.citationList as Array<Record<string, string>>).length > 0 && (
+            <div className="px-3 pb-1">
+              {(dd.citationList as Array<Record<string, string>>).map((c, i) => (
+                <div key={i} className="text-[11px] my-0.5">
+                  <a href={c.url} target="_blank" rel="noopener" className="underline" style={{ color: 'var(--accent-primary)' }}>
+                    {c.text}
+                  </a>
+                  {c.doi && <span className="ml-1 font-mono text-[10px]" style={{ color: 'var(--text-placeholder)' }}>DOI:{c.doi}</span>}
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Tool forge cards */}
           {tools.map((t: any, i: number) => (
             <div key={i} className="mx-3 mb-1.5 rounded-lg px-3 py-2 text-xs" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)' }}>
