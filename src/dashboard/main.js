@@ -482,6 +482,7 @@ async function launchFromSettings() {
       gameData.startedAt = new Date().toISOString();
       gameData.completedAt = null;
       resetSimulationView(cfg);
+      localStorage.removeItem('mars-game-data'); // Clear cache for fresh run
       const pf = $('progress-fill'); if (pf) pf.style.width = '0';
       st.textContent = 'Running...';
       switchTab('sim');
@@ -656,6 +657,8 @@ try {
       const d = JSON.parse(e.data);
       gameData.events.push(d);
       handleSimEvent(d);
+      // Cache to localStorage for refresh persistence
+      try { localStorage.setItem('mars-game-data', JSON.stringify(gameData)); } catch {}
     } catch (err) { log('no', 'Event parse error: ' + err); }
   });
 
@@ -669,6 +672,7 @@ try {
   es.addEventListener('complete', () => {
     $('m-status').textContent = '\u25CF Complete'; $('m-status').style.color = 'var(--amber)'; $('m-status').style.animation = 'none';
     const pf = $('progress-fill'); if (pf) pf.style.width = '100%';
+    try { localStorage.setItem('mars-game-data', JSON.stringify(gameData)); } catch {}
     gameData.completedAt = new Date().toISOString();
     $('save-game-btn').style.display = 'inline-block';
     const launchBtn = $('s-launch-btn'); if (launchBtn) launchBtn.disabled = false;
@@ -755,7 +759,15 @@ function handleSimEvent(d) {
       const risks = (dd.risks || []).slice(0, 2).map(r => `<div class="risk"><span class="rd ${r.severity === 'critical' ? 'cr' : r.severity === 'high' ? 'hi' : 'lo'}"></span>${r.severity.toUpperCase()}: ${(r.description || '').slice(0, 120)}</div>`).join('');
       const recs = (dd.recommendedActions || []).slice(0, 2);
       const recsHtml = recs.length ? `<div style="margin-top:4px;color:var(--amber);font-size:11px">\u2192 ${recs.join('<br>\u2192 ')}</div>` : '';
-      const tools = (dd.forgedTools || []).filter(t => t.name && t.name !== 'unnamed');
+      // Deduplicate tools by name (same tool can appear in multiple forge attempts)
+      const seenTools = state[s]._shownTools || new Set();
+      state[s]._shownTools = seenTools;
+      const tools = (dd.forgedTools || []).filter(t => {
+        if (!t.name || t.name === 'unnamed') return false;
+        if (seenTools.has(t.name)) return false;
+        seenTools.add(t.name);
+        return true;
+      });
       const showSummary = summary && summary.length > 10 && !summary.startsWith('{') && !summary.endsWith('complete.');
 
       if (showSummary || risks) {
@@ -883,6 +895,40 @@ if (localStorage.getItem('mars-intro-dismissed') === '1') {
   if (intro) intro.style.display = 'none';
 }
 
+// Restore cached game data on page load (survives refresh)
+function restoreFromCache() {
+  try {
+    const cached = localStorage.getItem('mars-game-data');
+    if (!cached) return false;
+    const saved = JSON.parse(cached);
+    if (!saved.events || !saved.events.length) return false;
+    // Restore game data
+    gameData.events = saved.events;
+    gameData.results = saved.results || [];
+    gameData.config = saved.config || null;
+    gameData.startedAt = saved.startedAt || '';
+    gameData.completedAt = saved.completedAt || null;
+    // Replay all events instantly (no delay)
+    for (const evt of saved.events) {
+      if (evt.leader) side(evt.leader); // ensure leader mapping
+      handleSimEvent(evt);
+    }
+    // Show save button if completed
+    if (saved.completedAt) {
+      $('m-status').textContent = '\u25CF Complete'; $('m-status').style.color = 'var(--amber)'; $('m-status').style.animation = 'none';
+      $('save-game-btn').style.display = 'inline-block';
+      const pf = $('progress-fill'); if (pf) pf.style.width = '100%';
+    } else {
+      $('m-status').textContent = '\u25CF Restored'; $('m-status').style.color = 'var(--vis)';
+    }
+    log('ok', `Restored ${saved.events.length} events from cache`);
+    return true;
+  } catch (err) {
+    log('dim', 'Cache restore failed: ' + err);
+    return false;
+  }
+}
+
 // Load config from URL params on startup
 if (loadFromParams()) {
   syncProviderDefaults();
@@ -892,4 +938,6 @@ if (loadFromParams()) {
   switchTab('settings');
 } else {
   syncProviderDefaults();
+  // Try restoring cached game data
+  restoreFromCache();
 }
