@@ -94,14 +94,6 @@
   .cl{color:var(--text-3);font-size:10px;margin-left:6px}
   .col-body{flex:1;overflow-y:auto;padding:5px 8px;display:flex;flex-direction:column;gap:5px}
 
-  /* Gauges - compact row */
-  .gauges{display:flex;gap:4px}
-  .g{flex:1;background:var(--bg-card);padding:4px 6px;border-radius:4px;border:1px solid var(--border)}
-  .gl{color:var(--text-2);font-size:9px;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:2px;font-weight:600}
-  .gv{font-size:18px;font-weight:800;line-height:1;font-family:var(--mono)}
-  .gb{height:3px;background:var(--bg-deep);margin-top:3px;border-radius:2px;overflow:hidden}
-  .gf{height:100%;border-radius:2px;animation:barGrow .6s ease both;transition:width .4s ease}
-
   /* Cards - compact */
   .card{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:6px 10px}
   .card-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
@@ -339,12 +331,6 @@
     <div class="col-h"><div><span class="cn v">ARES HORIZON</span><span class="cl">Aria Chen</span></div><span class="arch v">VIS</span></div>
     <div class="col-crisis" id="crisis-v"><span class="cc-title" id="crisis-v-title"></span><span class="cc-cat" id="crisis-v-cat"></span><div class="cc-summary" id="crisis-v-summary"></div></div>
     <div class="col-body" id="body-v">
-      <div class="gauges" id="gauges-v">
-        <div class="g"><span class="gl">Pop</span><span class="gv" id="gv-v-pop" style="color:var(--text-3)">···</span><div class="gb"><div class="gf" id="gf-v-pop" style="width:0;background:var(--vis)"></div></div></div>
-        <div class="g"><span class="gl">Morale</span><span class="gv" id="gv-v-morale" style="color:var(--text-3)">···</span><div class="gb"><div class="gf" id="gf-v-morale" style="width:0;background:var(--amber)"></div></div></div>
-        <div class="g"><span class="gl">Food</span><span class="gv" id="gv-v-food" style="color:var(--text-3)">···</span></div>
-        <div class="g"><span class="gl">Deaths</span><span class="gv" id="gv-v-deaths" style="color:var(--text-3)">0</span></div>
-      </div>
       <div class="waiting"><span class="spinner">◉</span> Waiting for Visionary...</div>
     </div>
   </div>
@@ -352,12 +338,6 @@
     <div class="col-h"><div><span class="cn e">MERIDIAN BASE</span><span class="cl">Dietrich Voss</span></div><span class="arch e">ENG</span></div>
     <div class="col-crisis" id="crisis-e"><span class="cc-title" id="crisis-e-title"></span><span class="cc-cat" id="crisis-e-cat"></span><div class="cc-summary" id="crisis-e-summary"></div></div>
     <div class="col-body" id="body-e">
-      <div class="gauges" id="gauges-e">
-        <div class="g"><span class="gl">Pop</span><span class="gv" id="gv-e-pop" style="color:var(--text-3)">···</span><div class="gb"><div class="gf" id="gf-e-pop" style="width:0;background:var(--eng)"></div></div></div>
-        <div class="g"><span class="gl">Morale</span><span class="gv" id="gv-e-morale" style="color:var(--text-3)">···</span><div class="gb"><div class="gf" id="gf-e-morale" style="width:0;background:var(--green)"></div></div></div>
-        <div class="g"><span class="gl">Food</span><span class="gv" id="gv-e-food" style="color:var(--text-3)">···</span></div>
-        <div class="g"><span class="gl">Deaths</span><span class="gv" id="gv-e-deaths" style="color:var(--text-3)">0</span></div>
-      </div>
       <div class="waiting"><span class="spinner">◉</span> Waiting for Engineer...</div>
     </div>
   </div>
