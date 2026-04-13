@@ -385,17 +385,14 @@
 <!-- Progress bar -->
 <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0"></div></div>
 
-<!-- Intro overlay (dismissible) -->
+<!-- Content area (flex:1, holds all swappable panels) -->
+<div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">
+<!-- Intro + Divergence (inside content area, only on sim tab) -->
 <div class="intro" id="intro-bar">
   <div class="intro-text"><b>How to read this:</b> Same colony, two AI commanders with different personalities. Left column = Visionary (bold, risk-taking). Right column = Engineer (cautious, disciplined). Each turn is a crisis. Departments analyze, commanders decide, colony state changes. Tools are computational models the AI invents at runtime. Hover anything for details.</div>
   <button class="intro-dismiss" onclick="$('intro-bar').style.display='none';localStorage.setItem('mars-intro-dismissed','1')">Got it</button>
 </div>
-
-<!-- Divergence rail (shown when crises differ between timelines) -->
 <div class="diverge" id="diverge-rail"></div>
-
-<!-- Content area (flex:1, holds all swappable panels) -->
-<div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">
 <!-- Main columns -->
 <div class="main" id="main-view">
   <div class="col" id="col-v">
