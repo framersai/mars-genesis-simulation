@@ -64,7 +64,7 @@ export type { LeaderConfig, LlmProvider, SimulationModelConfig, Scenario, Crisis
 // Registry types
 export type { ScenarioMetric } from './mars/metrics.js';
 export type { ScenarioEventDef } from './mars/events.js';
-export type { OutcomeModifiers, TurnOutcome } from './effect-registry.js';
+export type { OutcomeModifiers } from './effect-registry.js';
 
 // Scenario packages
 export { marsScenario } from './mars/index.js';
