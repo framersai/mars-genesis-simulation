@@ -1,5 +1,7 @@
 <p align="center">
   <a href="https://agentos.sh"><img src="assets/agentos-logo.png" alt="AgentOS" height="48" /></a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://frame.dev"><img src="https://img.shields.io/badge/Frame.dev-frame.dev-0a0a0a?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHJ4PSI0IiBmaWxsPSIjMjJjNTVlIi8+PHBhdGggZD0iTTcgN2gxMHYySDl2M2g2djJIOXYzaDh2Mkg3VjdaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg==" alt="Frame.dev" height="28" /></a>
 </p>
 
 <h1 align="center">Paracosm</h1>
@@ -178,12 +180,21 @@ const myScenario: ScenarioPackage = {
 
 ## License
 
-Apache-2.0. Built by [Manic Agency](https://manic.agency) / [Frame.dev](https://frame.dev).
+Apache-2.0
+
+---
 
 <p align="center">
-  <a href="https://frame.dev"><img src="https://img.shields.io/badge/Frame.dev-team%40frame.dev-blue?style=flat-square" alt="Frame.dev" /></a>
-  &nbsp;&middot;&nbsp;
-  <a href="https://manic.agency"><img src="https://img.shields.io/badge/Manic_Agency-manic.agency-purple?style=flat-square" alt="Manic Agency" /></a>
-  &nbsp;&middot;&nbsp;
-  <a href="https://agentos.sh"><img src="assets/agentos-logo.png" alt="AgentOS" height="20" /></a>
+  <a href="https://agentos.sh"><img src="assets/agentos-logo.png" alt="AgentOS" height="36" /></a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://frame.dev"><img src="https://img.shields.io/badge/Frame.dev-frame.dev-0a0a0a?style=flat-square" alt="Frame.dev" height="28" /></a>
+</p>
+
+<p align="center">
+  Built by <a href="https://manic.agency">Manic Agency LLC</a> / <a href="https://frame.dev">Frame.dev</a><br>
+  Contact: <a href="mailto:team@frame.dev">team@frame.dev</a>
+</p>
+
+<p align="center">
+  <sub>Copyright 2026 Manic Agency LLC. Licensed under Apache-2.0.</sub>
 </p>
