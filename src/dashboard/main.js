@@ -42,20 +42,19 @@ function delta(curr, prev) {
 }
 
 function updateGauges(s, colony) {
-  const pop = colony.population ?? 0, morale = Math.round((colony.morale ?? 0) * 100), food = (colony.foodMonthsReserve ?? 0).toFixed(0);
+  const pop = colony.population ?? 0, morale = Math.round((colony.morale ?? 0) * 100);
   const prev = state[s].prevColony;
-  const prevPop = prev?.population, prevMorale = prev ? Math.round((prev.morale ?? 0) * 100) : null, prevFood = prev ? (prev.foodMonthsReserve ?? 0).toFixed(0) : null;
+  const prevPop = prev?.population, prevMorale = prev ? Math.round((prev.morale ?? 0) * 100) : null;
 
-  $(`gv-${s}-pop`).textContent = pop + delta(pop, prevPop);
-  $(`gf-${s}-pop`).style.width = Math.min(100, pop / 4) + '%';
-  $(`gv-${s}-morale`).textContent = morale + '%' + delta(morale, prevMorale);
-  $(`gv-${s}-morale`).style.color = morale > 70 ? 'var(--green)' : morale > 50 ? 'var(--amber)' : 'var(--rust)';
-  $(`gf-${s}-morale`).style.width = morale + '%';
-  $(`gv-${s}-food`).textContent = food + 'mo' + delta(Number(food), Number(prevFood));
+  // Stats bar with deltas
+  $(`s-${s}-pop`).textContent = pop + delta(pop, prevPop);
+  $(`s-${s}-morale`).textContent = morale + '%' + delta(morale, prevMorale);
+
+  // Sparklines in leader bar
   state[s].pop.push(pop); state[s].morale.push(morale);
   $(`spark-${s}-pop`).textContent = spark(state[s].pop) + ' ' + pop;
   $(`spark-${s}-morale`).textContent = spark(state[s].morale) + ' ' + morale + '%';
-  $(`s-${s}-pop`).textContent = pop; $(`s-${s}-morale`).textContent = morale + '%';
+
   state[s].prevColony = { ...colony };
 }
 
@@ -137,15 +136,21 @@ function loadGame(e) {
     try {
       const saved = JSON.parse(reader.result);
       if (!saved.events || !saved.events.length) { alert('No game events found in file'); return; }
+      gameData.config = saved.config || null;
+      gameData.events = saved.events || [];
+      gameData.results = saved.results || [];
+      gameData.startedAt = saved.startedAt || '';
+      gameData.completedAt = saved.completedAt || '';
       state.v = { pop: [], morale: [], deaths: 0, tools: 0, crisis: null, decision: null, outcome: null, prevColony: null, prevDrift: {} };
       state.e = { pop: [], morale: [], deaths: 0, tools: 0, crisis: null, decision: null, outcome: null, prevColony: null, prevDrift: {} };
-      $('body-v').innerHTML = '<div class="gauges" id="gauges-v"><div class="g"><span class="gl">Pop</span><span class="gv" id="gv-v-pop">···</span><div class="gb"><div class="gf" id="gf-v-pop" style="width:0;background:var(--vis)"></div></div></div><div class="g"><span class="gl">Morale</span><span class="gv" id="gv-v-morale">···</span><div class="gb"><div class="gf" id="gf-v-morale" style="width:0;background:var(--amber)"></div></div></div><div class="g"><span class="gl">Food</span><span class="gv" id="gv-v-food">···</span></div><div class="g"><span class="gl">Deaths</span><span class="gv" id="gv-v-deaths">0</span></div></div>';
-      $('body-e').innerHTML = '<div class="gauges" id="gauges-e"><div class="g"><span class="gl">Pop</span><span class="gv" id="gv-e-pop">···</span><div class="gb"><div class="gf" id="gf-e-pop" style="width:0;background:var(--eng)"></div></div></div><div class="g"><span class="gl">Morale</span><span class="gv" id="gv-e-morale">···</span><div class="gb"><div class="gf" id="gf-e-morale" style="width:0;background:var(--green)"></div></div></div><div class="g"><span class="gl">Food</span><span class="gv" id="gv-e-food">···</span></div><div class="g"><span class="gl">Deaths</span><span class="gv" id="gv-e-deaths">0</span></div></div>';
+      Object.keys(leaderMap).forEach(k => delete leaderMap[k]);
+      $('body-v').innerHTML = '';
+      $('body-e').innerHTML = '';
       switchTab('sim');
       let i = 0;
       function replayNext() {
-        if (i >= saved.events.length) { $('m-status').textContent = '● Replay Complete'; $('m-status').style.color = 'var(--amber)'; return; }
-        handleSimEvent(saved.events[i++]);
+        if (i >= gameData.events.length) { $('m-status').textContent = '● Replay Complete'; $('m-status').style.color = 'var(--amber)'; return; }
+        handleSimEvent(gameData.events[i++]);
         setTimeout(replayNext, 50);
       }
       $('m-status').textContent = '● Replaying...'; $('m-status').style.color = 'var(--vis)';
@@ -193,6 +198,7 @@ function buildSetupConfig() {
       { name: $('sb-name').value, archetype: $('sb-arch').value, colony: $('sb-colony').value, hexaco: getSHex('b'), instructions: $('sb-instr').value },
     ],
     turns: parseInt($('s-turns').value) || 12, seed: parseInt($('s-seed').value) || 950,
+    startYear: parseInt($('s-year').value) || 2035,
     population: parseInt($('s-pop').value) || 100,
     startingResources: { food: parseInt($('s-food').value) || 18, water: parseInt($('s-water').value) || 800, power: parseInt($('s-power').value) || 400, morale: parseInt($('s-morale').value) || 85 },
     liveSearch: $('s-search').value === 'true', customEvents: getSetupEvents(),
@@ -213,7 +219,32 @@ function importSetup(e) {
       $('sa-name').value = a.name || ''; $('sa-arch').value = a.archetype || ''; $('sa-colony').value = a.colony || ''; $('sa-instr').value = a.instructions || ''; if (a.hexaco) setSHex('a', a.hexaco);
       $('sb-name').value = b.name || ''; $('sb-arch').value = b.archetype || ''; $('sb-colony').value = b.colony || ''; $('sb-instr').value = b.instructions || ''; if (b.hexaco) setSHex('b', b.hexaco);
     }
-    if (cfg.turns) $('s-turns').value = cfg.turns; if (cfg.seed) $('s-seed').value = cfg.seed;
+    if (cfg.turns) $('s-turns').value = cfg.turns;
+    if (cfg.seed) $('s-seed').value = cfg.seed;
+    if (cfg.startYear) $('s-year').value = cfg.startYear;
+    if (cfg.population) $('s-pop').value = cfg.population;
+    if (cfg.startingResources) {
+      if (cfg.startingResources.food) $('s-food').value = cfg.startingResources.food;
+      if (cfg.startingResources.water) $('s-water').value = cfg.startingResources.water;
+      if (cfg.startingResources.power) $('s-power').value = cfg.startingResources.power;
+      if (cfg.startingResources.morale) $('s-morale').value = cfg.startingResources.morale;
+    }
+    if (cfg.models) {
+      if (cfg.models.commander) $('s-model-cmd').value = cfg.models.commander;
+      if (cfg.models.departments) $('s-model-dept').value = cfg.models.departments;
+      if (cfg.models.judge) $('s-model-judge').value = cfg.models.judge;
+    }
+    if (typeof cfg.liveSearch === 'boolean') $('s-search').value = String(cfg.liveSearch);
+    if (Array.isArray(cfg.customEvents)) {
+      $('s-events').innerHTML = '';
+      sec = 0;
+      cfg.customEvents.forEach(event => addSetupEvent(event.turn, event.title));
+      const rows = Array.from(document.querySelectorAll('.s-evrow'));
+      cfg.customEvents.forEach((event, index) => {
+        const inputs = rows[index]?.querySelectorAll('input');
+        if (inputs?.[2]) inputs[2].value = event.description || '';
+      });
+    }
     $('s-preset').value = 'custom';
   } catch (err) { alert('Invalid config file'); } }; r.readAsText(file);
 }
@@ -234,11 +265,19 @@ async function testApiKey() {
 async function launchFromSettings() {
   const btn = $('s-launch-btn'), st = $('s-launch-status');
   btn.disabled = true; st.textContent = 'Starting...';
-  const cfg = buildSetupConfig(); cfg.apiKey = $('s-apikey').value; cfg.serperKey = $('s-serper').value;
+  const cfg = buildSetupConfig(); cfg.apiKey = $('s-apikey').value; cfg.anthropicKey = $('s-anthropic').value; cfg.serperKey = $('s-serper').value;
   try {
     const res = await fetch('/setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg) });
     const data = await res.json();
-    if (data.redirect) { st.textContent = 'Running...'; switchTab('sim'); }
+    if (data.redirect) {
+      gameData.config = cfg;
+      gameData.events = [];
+      gameData.results = [];
+      gameData.startedAt = new Date().toISOString();
+      gameData.completedAt = null;
+      st.textContent = 'Running...';
+      switchTab('sim');
+    }
     else { st.textContent = 'Error: ' + (data.error || 'unknown'); btn.disabled = false; }
   } catch (err) { st.textContent = 'Failed: ' + err; btn.disabled = false; }
 }
@@ -340,8 +379,8 @@ function replayInSim() {
   state.v = { pop: [], morale: [], deaths: 0, tools: 0, crisis: null, decision: null, outcome: null, prevColony: null, prevDrift: {} };
   state.e = { pop: [], morale: [], deaths: 0, tools: 0, crisis: null, decision: null, outcome: null, prevColony: null, prevDrift: {} };
   Object.keys(leaderMap).forEach(k => delete leaderMap[k]);
-  $('body-v').innerHTML = '<div class="gauges" id="gauges-v"><div class="g"><span class="gl">Pop</span><span class="gv" id="gv-v-pop">...</span><div class="gb"><div class="gf" id="gf-v-pop" style="width:0;background:var(--vis)"></div></div></div><div class="g"><span class="gl">Morale</span><span class="gv" id="gv-v-morale">...</span><div class="gb"><div class="gf" id="gf-v-morale" style="width:0;background:var(--amber)"></div></div></div><div class="g"><span class="gl">Food</span><span class="gv" id="gv-v-food">...</span></div><div class="g"><span class="gl">Deaths</span><span class="gv" id="gv-v-deaths">0</span></div></div>';
-  $('body-e').innerHTML = '<div class="gauges" id="gauges-e"><div class="g"><span class="gl">Pop</span><span class="gv" id="gv-e-pop">...</span><div class="gb"><div class="gf" id="gf-e-pop" style="width:0;background:var(--eng)"></div></div></div><div class="g"><span class="gl">Morale</span><span class="gv" id="gv-e-morale">...</span><div class="gb"><div class="gf" id="gf-e-morale" style="width:0;background:var(--green)"></div></div></div><div class="g"><span class="gl">Food</span><span class="gv" id="gv-e-food">...</span></div><div class="g"><span class="gl">Deaths</span><span class="gv" id="gv-e-deaths">0</span></div></div>';
+  $('body-v').innerHTML = '';
+  $('body-e').innerHTML = '';
   switchTab('sim');
   let i = 0;
   function next() {
@@ -351,6 +390,7 @@ function replayInSim() {
   }
   $('m-status').textContent = '\u25CF Replaying...'; $('m-status').style.color = 'var(--vis)';
   next();
+}
 
 function loadGameForReport(e) {
   const file = e.target.files[0]; if (!file) return;
@@ -383,6 +423,9 @@ try {
     const d = JSON.parse(e.data);
     log('info', `Phase: ${d.phase}`);
     if (d.maxTurns) $('m-max-turns').textContent = d.maxTurns;
+    if (Array.isArray(d.customEvents) && d.customEvents.length) {
+      log('info', `Custom events: ${d.customEvents.map(event => event.title).join(', ')}`);
+    }
     if (d.phase === 'parallel') { $('m-status').textContent = '● Running'; $('m-status').style.color = 'var(--green)'; }
   });
 
