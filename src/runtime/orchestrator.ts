@@ -13,7 +13,7 @@ import type { DepartmentReport, CommanderDecision, TurnArtifact } from './contra
 import { SimulationKernel, type PolicyEffect } from '../engine/core/kernel.js';
 import type { KeyPersonnel } from '../engine/core/colonist-generator.js';
 import { getResearchPacket } from './research/research.js';
-import { getResearchForCategory } from './research/knowledge-base.js';
+import { getResearchFromBundle } from './research/scenario-research.js';
 import { initResearchMemory, recallResearch, closeResearchMemory } from './research/research-memory.js';
 import { buildDepartmentContext, getDepartmentsForTurn } from './departments.js';
 import { CrisisDirector, type DirectorCrisis, type DirectorContext } from './director.js';
@@ -512,9 +512,13 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
     // Get research: memory recall > live web search > static fallback
     let packet: import('./contracts.js').CrisisResearchPacket;
     if (milestone) {
-      packet = getResearchPacket(turn);
+      // Milestone research: try scenario knowledge bundle first, fall back to legacy static
+      packet = getResearchFromBundle(sc.knowledge, crisis.category, crisis.researchKeywords);
+      if (packet.canonicalFacts.length === 0) {
+        packet = getResearchPacket(turn);
+      }
     } else {
-      // Try research memory first (semantic recall from ingested DOI citations)
+      // Try research memory first (semantic recall from ingested scenario citations)
       const memPacket = await recallResearch(crisis.title + ' ' + crisis.crisis.slice(0, 100), crisis.researchKeywords, crisis.category);
       if (memPacket.canonicalFacts.length >= 2) {
         packet = memPacket;
@@ -522,7 +526,7 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
       } else if (opts.liveSearch && crisis.researchKeywords.length) {
         // Live web search using AgentOS WebSearchService
         try {
-          const query = crisis.researchKeywords.slice(0, 3).join(' ') + ' mars colony science';
+          const query = crisis.researchKeywords.slice(0, 3).join(' ') + ' ' + sc.labels.settlementNoun + ' science';
           console.log(`  [research] Live search: "${query}"`);
           const searchResult = await webSearchTool.execute({ query }, { gmiId: sid, personaId: sid, userContext: {} } as any);
           const results = (searchResult as any)?.output?.results || [];
@@ -537,11 +541,12 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
           };
           console.log(`  [research] ${packet.canonicalFacts.length} live results`);
         } catch (err) {
-          console.log(`  [research] Live search failed, using static: ${err}`);
-          packet = getResearchForCategory(crisis.category, crisis.researchKeywords);
+          console.log(`  [research] Live search failed, using scenario bundle: ${err}`);
+          packet = getResearchFromBundle(sc.knowledge, crisis.category, crisis.researchKeywords);
         }
       } else {
-        packet = getResearchForCategory(crisis.category, crisis.researchKeywords);
+        // Fallback to scenario knowledge bundle (not hardcoded Mars)
+        packet = getResearchFromBundle(sc.knowledge, crisis.category, crisis.researchKeywords);
       }
     }
 
