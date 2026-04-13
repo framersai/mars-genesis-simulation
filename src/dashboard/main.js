@@ -540,12 +540,21 @@ async function launchFromSettings() {
 function generateReport() {
   if (!gameData.events.length) { alert('No simulation data. Run a simulation first or load a saved game.'); return; }
   const content = $('rpt-content');
-  // Auto-switch to reports tab
   switchTab('reports');
 
-  // Group events by turn and side
+  // Deduplicate events by creating a unique key per event
+  const seen = new Set();
+  const uniqueEvents = gameData.events.filter(evt => {
+    const dd = evt.data || {};
+    const key = `${evt.type}-${evt.leader}-${dd.turn}-${dd.department || ''}-${dd.outcome || ''}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  // Group by turn and side
   const turns = {};
-  for (const evt of gameData.events) {
+  for (const evt of uniqueEvents) {
     const s = side(evt.leader);
     if (!s) continue;
     const dd = evt.data || {};
@@ -553,50 +562,70 @@ function generateReport() {
     if (!turn) continue;
     if (!turns[turn]) turns[turn] = { v: {}, e: {} };
     const t = turns[turn][s];
-    if (evt.type === 'turn_start') { t.title = dd.title; t.year = dd.year; t.category = dd.category; t.emergent = dd.emergent; t.colony = dd.colony; t.births = dd.births; t.deaths = dd.deaths; }
-    if (evt.type === 'commander_decided') { t.decision = dd.decision; }
-    if (evt.type === 'outcome') { t.outcome = dd.outcome; }
-    if (evt.type === 'dept_done') { t.depts = t.depts || []; t.depts.push({ dept: dd.department, summary: dd.summary, tools: (dd.forgedTools || []).length, citations: dd.citations }); }
+    if (evt.type === 'turn_start' && dd.title) { t.title = dd.title; t.year = dd.year; t.category = dd.category; t.emergent = dd.emergent; t.colony = dd.colony; }
+    if (evt.type === 'commander_decided' && dd.decision) { t.decision = dd.decision; }
+    if (evt.type === 'outcome' && dd.outcome) { t.outcome = dd.outcome; }
+    if (evt.type === 'dept_done') {
+      t.depts = t.depts || {};
+      t.depts[dd.department] = { summary: dd.summary, tools: (dd.forgedTools || []).length, citations: dd.citations };
+    }
+    if (evt.type === 'colonist_reactions') { t.reactions = (dd.reactions || []).slice(0, 3); t.totalReactions = dd.totalReactions; }
   }
 
   let html = '';
-  const vLabel = gameData.config?.leaders?.[0]?.colony || 'Ares Horizon';
-  const eLabel = gameData.config?.leaders?.[1]?.colony || 'Meridian Base';
+  const vName = gameData.config?.leaders?.[0]?.name || Object.keys(leaderMap).find(k => leaderMap[k] === 'v') || 'Leader A';
+  const eName = gameData.config?.leaders?.[1]?.name || Object.keys(leaderMap).find(k => leaderMap[k] === 'e') || 'Leader B';
+
   for (const [turnNum, sides] of Object.entries(turns).sort((a, b) => Number(a[0]) - Number(b[0]))) {
     const v = sides.v || {}, e = sides.e || {};
     const year = v.year || e.year || '?';
-    const sameCrisis = v.title === e.title;
+    const diverged = v.title && e.title && v.title !== e.title;
+
+    const renderSide = (data, name, color) => {
+      if (!data.title) return `<div class="rpt-col"><h4 class="${color}">${name}</h4><div style="color:var(--text-3);font-size:11px">Awaiting data...</div></div>`;
+      const outcomeColor = (data.outcome || '').includes('success') ? 'var(--green)' : 'var(--rust)';
+      const outcomeLabel = data.outcome ? data.outcome.replace(/_/g, ' ').toUpperCase() : 'PENDING';
+      const deptList = data.depts ? Object.entries(data.depts).map(([dept, d]) => `<span style="color:var(--text-2)">${dept}</span> ${d.citations}c ${d.tools}t`).join(' \u00B7 ') : '';
+      const colony = data.colony ? `Pop ${data.colony.population} \u00B7 Morale ${Math.round((data.colony.morale||0)*100)}% \u00B7 Food ${(data.colony.foodMonthsReserve||0).toFixed(0)}mo` : '';
+      const topQuotes = (data.reactions || []).map(r => `<div style="font-size:10px;color:var(--text-2);font-style:italic;margin-top:2px">"${r.quote.slice(0,80)}${r.quote.length>80?'...':''}" <span style="color:var(--text-3)">— ${r.name}</span></div>`).join('');
+
+      return `<div class="rpt-col">
+        <h4 class="${color}">${name}</h4>
+        <div class="rpt-crisis">\u26A1 ${data.title} <span style="font-size:9px;color:var(--text-3)">${data.category || ''}</span></div>
+        <div class="rpt-decision">${(data.decision || '').slice(0, 250)}</div>
+        <div class="rpt-outcome" style="color:${outcomeColor}">${outcomeLabel}</div>
+        ${deptList ? `<div style="font-size:10px;margin-top:3px;font-family:var(--mono)">${deptList}</div>` : ''}
+        ${colony ? `<div style="font-size:10px;color:var(--text-3);margin-top:2px">${colony}</div>` : ''}
+        ${topQuotes}
+      </div>`;
+    };
 
     html += `<div class="rpt-turn">
-      <div class="rpt-turn-h"><span class="rpt-turn-title">Turn ${turnNum} \u2014 Year ${year}</span><span class="rpt-turn-meta">${sameCrisis ? 'MILESTONE' : 'DIVERGENT'}</span></div>
-      <div class="rpt-cols">
-        <div class="rpt-col">
-          <h4 class="v">${vLabel.toUpperCase()}</h4>
-          <div class="rpt-crisis">\u26A1 ${v.title || 'N/A'}${v.category ? ` <span style="font-size:9px;color:var(--text-3)">${v.category}</span>` : ''}</div>
-          <div class="rpt-decision">${(v.decision || 'No decision recorded').slice(0, 300)}</div>
-          <div class="rpt-outcome" style="color:${(v.outcome || '').includes('success') ? 'var(--green)' : 'var(--rust)'}">${v.outcome || '?'}</div>
-          ${v.depts ? `<div class="rpt-tools">${v.depts.map(d => `${d.dept}: ${d.citations} cites, ${d.tools} tools`).join(' | ')}</div>` : ''}
-          ${v.colony ? `<div class="rpt-tools">Pop ${v.colony.population} | Morale ${Math.round((v.colony.morale || 0) * 100)}% | Food ${(v.colony.foodMonthsReserve || 0).toFixed(0)}mo</div>` : ''}
-        </div>
-        <div class="rpt-col">
-          <h4 class="e">${eLabel.toUpperCase()}</h4>
-          <div class="rpt-crisis">\u26A1 ${e.title || 'N/A'}${e.category ? ` <span style="font-size:9px;color:var(--text-3)">${e.category}</span>` : ''}</div>
-          <div class="rpt-decision">${(e.decision || 'No decision recorded').slice(0, 300)}</div>
-          <div class="rpt-outcome" style="color:${(e.outcome || '').includes('success') ? 'var(--green)' : 'var(--rust)'}">${e.outcome || '?'}</div>
-          ${e.depts ? `<div class="rpt-tools">${e.depts.map(d => `${d.dept}: ${d.citations} cites, ${d.tools} tools`).join(' | ')}</div>` : ''}
-          ${e.colony ? `<div class="rpt-tools">Pop ${e.colony.population} | Morale ${Math.round((e.colony.morale || 0) * 100)}% | Food ${(e.colony.foodMonthsReserve || 0).toFixed(0)}mo</div>` : ''}
-        </div>
+      <div class="rpt-turn-h">
+        <span class="rpt-turn-title">Turn ${turnNum} \u2014 ${year}</span>
+        <span class="rpt-turn-meta" style="color:${diverged ? 'var(--rust)' : 'var(--text-3)'}">${diverged ? 'DIVERGENT' : 'MILESTONE'}</span>
       </div>
+      <div class="rpt-cols">${renderSide(v, vName, 'v')}${renderSide(e, eName, 'e')}</div>
     </div>`;
   }
 
-  // Summary
-  if (gameData.results.length) {
-    html += `<div class="rpt-analysis"><h3>Final Summary</h3>`;
-    for (const r of gameData.results) {
+  // Deduplicated final summary
+  const resultsSeen = new Set();
+  const uniqueResults = (gameData.results || []).filter(r => {
+    const key = `${r.leader}-${r.summary?.population}`;
+    if (resultsSeen.has(key)) return false;
+    resultsSeen.add(key);
+    return true;
+  });
+  if (uniqueResults.length) {
+    html += `<div class="rpt-analysis"><h3>Final Comparison</h3><div class="rpt-cols">`;
+    for (const r of uniqueResults) {
       const s = r.summary || {};
-      html += `<p><b>${r.leader}</b>: Pop ${s.population || '?'} | Morale ${s.morale ? Math.round(s.morale * 100) + '%' : '?'} | ${s.toolsForged || 0} tools forged | ${s.citations || 0} citations</p>`;
+      const color = r.leader === 'visionary' ? 'v' : 'e';
+      const name = r.leader === 'visionary' ? vName : eName;
+      html += `<div class="rpt-col"><h4 class="${color}">${name}</h4><div style="font-size:12px;line-height:1.8"><b>Population:</b> ${s.population || '?'}<br><b>Morale:</b> ${s.morale ? Math.round(s.morale*100)+'%' : '?'}<br><b>Tools Forged:</b> ${s.toolsForged || 0}<br><b>Citations:</b> ${s.citations || 0}</div></div>`;
     }
+    html += `</div></div>`;
     html += `</div>`;
   }
 
