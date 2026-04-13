@@ -64,11 +64,23 @@ Return JSON matching DepartmentReport schema with department "governance". Inclu
   },
 ];
 
+/** Summary of a department's previous turn for session continuity */
+export interface DepartmentTurnMemory {
+  turn: number;
+  year: number;
+  crisis: string;
+  summary: string;
+  recommendedActions: string[];
+  outcome: string;
+  toolsForged: string[];
+}
+
 export function buildDepartmentContext(
   dept: Department,
   state: SimulationState,
   scenario: Scenario,
   researchPacket: CrisisResearchPacket,
+  previousTurns?: DepartmentTurnMemory[],
 ): string {
   const alive = state.colonists.filter(c => c.health.alive);
   const featured = alive.filter(c => c.narrative.featured);
@@ -89,9 +101,23 @@ export function buildDepartmentContext(
     );
   }
 
+  // Build memory block from previous turns
+  const memoryBlock: string[] = [];
+  if (previousTurns?.length) {
+    memoryBlock.push('', 'YOUR PREVIOUS ANALYSES (remember what you recommended and what happened):');
+    for (const m of previousTurns.slice(-3)) {
+      memoryBlock.push(`  Turn ${m.turn} (${m.year}): "${m.crisis}" → ${m.outcome}`);
+      if (m.summary) memoryBlock.push(`    Your analysis: ${m.summary.slice(0, 120)}`);
+      if (m.recommendedActions.length) memoryBlock.push(`    You recommended: ${m.recommendedActions.slice(0, 2).join('; ')}`);
+      if (m.toolsForged.length) memoryBlock.push(`    Tools you forged: ${m.toolsForged.join(', ')}`);
+    }
+    memoryBlock.push('Build on your previous work. Reference your past tools and recommendations where relevant.', '');
+  }
+
   const lines = [
     `TURN ${state.metadata.currentTurn} — YEAR ${state.metadata.currentYear}: ${scenario.title}`,
     ...hexacoBlock,
+    ...memoryBlock,
     '', scenario.crisis, '',
     'RESEARCH:',
     ...researchPacket.canonicalFacts.map(f => `- ${f.claim} [${f.source}](${f.url})`),

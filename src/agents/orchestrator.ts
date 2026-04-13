@@ -452,7 +452,11 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
   const yearSchedule = buildYearSchedule(startYear, maxTurns);
   const outcomeLog: Array<{ turn: number; year: number; outcome: TurnOutcome }> = [];
   const crisisHistory: DirectorContext['previousCrises'] = [];
+  let lastTurnToolOutputs: Array<{ name: string; department: string; output: string }> = [];
+  let lastTurnMoodSummary: string | undefined;
   const director = new CrisisDirector();
+  // Department memory: stores previous turn summaries per department for session continuity
+  const deptMemory = new Map<Department, import('./departments.js').DepartmentTurnMemory[]>();
   const activeDepartments = new Set<Department>(opts.activeDepartments ?? ['medical', 'engineering', 'agriculture', 'psychology', 'governance']);
 
   for (let turn = 1; turn <= maxTurns; turn++) {
@@ -479,6 +483,8 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
         toolsForged: Object.values(toolRegs).flat(),
         driftSummary: preState.colonists.filter(c => c.promotion && c.health.alive).slice(0, 4)
           .map(c => ({ name: c.core.name, role: c.core.role, openness: c.hexaco.openness, conscientiousness: c.hexaco.conscientiousness })),
+        recentToolOutputs: lastTurnToolOutputs,
+        colonistMoodSummary: lastTurnMoodSummary,
       };
       emit('turn_start', { turn, year, title: 'Director generating...', crisis: '', births: 0, deaths: 0, colony: preState.colony });
       crisis = await director.generateCrisis(dirCtx, provider, modelConfig.director);
@@ -497,8 +503,34 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
 
     emit('turn_start', { turn, year, title: crisis.title, crisis: crisis.crisis.slice(0, 200), category: crisis.category, births, deaths, colony: state.colony, emergent: !milestone, turnSummary: crisis.turnSummary });
 
-    // Get research: topic-indexed for emergent crises, turn-indexed for milestones
-    const packet = milestone ? getResearchPacket(turn) : getResearchForCategory(crisis.category, crisis.researchKeywords);
+    // Get research: live search for emergent crises when enabled, static fallback otherwise
+    let packet: import('./contracts.js').CrisisResearchPacket;
+    if (milestone) {
+      packet = getResearchPacket(turn);
+    } else if (opts.liveSearch && crisis.researchKeywords.length) {
+      // Live web search using AgentOS WebSearchService
+      try {
+        const query = crisis.researchKeywords.slice(0, 3).join(' ') + ' mars colony science';
+        console.log(`  [research] Live search: "${query}"`);
+        const searchResult = await webSearchTool.execute({ query }, { gmiId: sid, personaId: sid, userContext: {} } as any);
+        const results = (searchResult as any)?.output?.results || [];
+        packet = {
+          canonicalFacts: results.slice(0, 5).map((r: any) => ({
+            claim: r.snippet || r.title || '',
+            source: r.title || 'web search',
+            url: r.url || '',
+          })),
+          counterpoints: [],
+          departmentNotes: {},
+        };
+        console.log(`  [research] ${packet.canonicalFacts.length} live results`);
+      } catch (err) {
+        console.log(`  [research] Live search failed, using static: ${err}`);
+        packet = getResearchForCategory(crisis.category, crisis.researchKeywords);
+      }
+    } else {
+      packet = getResearchForCategory(crisis.category, crisis.researchKeywords);
+    }
 
     // Departments: from director for emergent, from schedule for milestones
     const validDepts: Department[] = ['medical', 'engineering', 'agriculture', 'psychology', 'governance'];
@@ -520,7 +552,7 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
     for (const dept of depts) {
       const sess = deptSess.get(dept);
       if (!sess) continue;
-      const ctx = buildDepartmentContext(dept, state, scenario, packet);
+      const ctx = buildDepartmentContext(dept, state, scenario, packet, deptMemory.get(dept));
       console.log(`  [${dept}] Analyzing...`);
       emit('dept_start', { turn, year, department: dept });
       try {
@@ -579,6 +611,27 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
       }
     }
 
+    // Collect tool outputs for next turn's director context
+    lastTurnToolOutputs = reports.flatMap(r =>
+      (r.forgedToolsUsed || []).filter(t => t?.output).map(t => ({
+        name: t.name || 'unnamed',
+        department: r.department,
+        output: typeof t.output === 'string' ? t.output.slice(0, 200) : JSON.stringify(t.output).slice(0, 200),
+      }))
+    );
+
+    // Store department memories for session continuity (will be completed with outcome after decision)
+    const pendingDeptMemories = new Map<Department, import('./departments.js').DepartmentTurnMemory>();
+    for (const r of reports) {
+      pendingDeptMemories.set(r.department, {
+        turn, year, crisis: crisis.title,
+        summary: r.summary,
+        recommendedActions: r.recommendedActions?.slice(0, 3) || [],
+        outcome: '', // filled after outcome classification
+        toolsForged: (r.forgedToolsUsed || []).map(t => t?.name || '').filter(Boolean),
+      });
+    }
+
     const summaries = reports.map(r => `## ${r.department.toUpperCase()} (conf: ${r.confidence})\n${r.summary}\nRisks: ${r.risks.map(x => `[${x.severity}] ${x.description}`).join('; ') || 'none'}\nRecs: ${r.recommendedActions.join('; ') || 'none'}`).join('\n\n');
     const optionText = crisis.options.length
       ? '\n\nOPTIONS:\n' + crisis.options.map(o => `- ${o.id}: ${o.label} — ${o.description}${o.isRisky ? ' [RISKY]' : ''}`).join('\n') + '\n\nYou MUST include "selectedOptionId" in your JSON response.'
@@ -613,9 +666,61 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
 
     // Classify outcome using structured option IDs
     const outcomeRng = new SeededRng(seed).turnSeed(turn + 1000);
-    const outcome = decision.selectedOptionId
-      ? classifyOutcomeById(decision.selectedOptionId, crisis.options, crisis.riskSuccessProbability, kernel.getState().colony, outcomeRng)
+    // Determine selected option: prefer explicit ID, then try to infer from decision text matching option labels
+    let resolvedOptionId = decision.selectedOptionId;
+    if (!resolvedOptionId && crisis.options.length) {
+      const decLower = (decision.decision || '').toLowerCase();
+      for (const opt of crisis.options) {
+        if (decLower.includes(opt.id) || decLower.includes(opt.label.toLowerCase())) {
+          resolvedOptionId = opt.id;
+          break;
+        }
+      }
+    }
+    const outcome = resolvedOptionId
+      ? classifyOutcomeById(resolvedOptionId, crisis.options, crisis.riskSuccessProbability, kernel.getState().colony, outcomeRng)
       : classifyOutcome(decision.decision, scenario.riskyOption, crisis.riskSuccessProbability, kernel.getState().colony, outcomeRng);
+
+    // Apply outcome-driven colony effects so decisions materially change state.
+    // This ensures the two timelines diverge when commanders choose differently.
+    const outcomeEffectRng = new SeededRng(seed).turnSeed(turn + 2000);
+    const categoryEffects: Record<string, Partial<import('../kernel/state.js').ColonySystems>> = {
+      environmental:   { powerKw: 50, morale: 0.08, foodMonthsReserve: 1 },
+      resource:        { foodMonthsReserve: 4, waterLitersPerDay: 100, morale: 0.05 },
+      medical:         { morale: 0.10, lifeSupportCapacity: 5 },
+      psychological:   { morale: 0.15 },
+      political:       { morale: 0.08, infrastructureModules: 1 },
+      infrastructure:  { infrastructureModules: 2, powerKw: 60, pressurizedVolumeM3: 200 },
+      social:          { morale: 0.12 },
+      technological:   { powerKw: 50, scienceOutput: 3, morale: 0.05 },
+    };
+    const baseEffect = categoryEffects[crisis.category] || { morale: 0.08 };
+    const effectMultiplier =
+      outcome === 'risky_success'        ?  2.5 :
+      outcome === 'risky_failure'        ? -2.0 :
+      outcome === 'conservative_success' ?  1.0 :
+                                           -1.0;
+    // Per-timeline variance from leader personality: visionary gets bigger swings, engineer gets steadier results
+    const personalityBonus = (leader.hexaco.openness - 0.5) * 0.08 + (leader.hexaco.conscientiousness - 0.5) * 0.04;
+    const colonyDeltas: Partial<import('../kernel/state.js').ColonySystems> = {};
+    for (const [k, v] of Object.entries(baseEffect)) {
+      if (typeof v === 'number') {
+        const noise = outcomeEffectRng.next() * 0.2 - 0.1; // ±10% variance
+        (colonyDeltas as any)[k] = Math.round((v * (effectMultiplier + personalityBonus + noise)) * 100) / 100;
+      }
+    }
+    kernel.applyColonyDeltas(colonyDeltas, [{
+      turn, year, type: 'system',
+      description: `Outcome effect (${outcome}): ${Object.entries(colonyDeltas).map(([k, v]) => `${k} ${(v as number) >= 0 ? '+' : ''}${v}`).join(', ')}`,
+    }]);
+
+    // Apply politics deltas for political/governance crises
+    if (['political', 'social'].includes(crisis.category)) {
+      const polDelta = outcome.includes('success')
+        ? { independencePressure: 0.05, earthDependencyPct: -3 }
+        : { independencePressure: -0.03, earthDependencyPct: 2 };
+      kernel.applyPoliticsDeltas(polDelta);
+    }
 
     const prevYear = turn === 1 ? startYear : yearSchedule[turn - 2] ?? startYear;
     kernel.applyDrift(leader.hexaco, outcome, Math.max(1, year - prevYear));
@@ -624,8 +729,16 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
     // Track crisis history for director context
     crisisHistory.push({ turn, title: crisis.title, category: crisis.category, selectedOptionId: decision.selectedOptionId, decision: decision.decision.slice(0, 100), outcome });
 
-    console.log(`  [outcome] ${outcome} (${crisis.category}${milestone ? ', milestone' : ', emergent'})`);
-    emit('outcome', { turn, year, outcome, riskyOption: scenario.riskyOption, category: crisis.category, emergent: !milestone });
+    // Finalize department memories with outcome and store
+    for (const [dept, mem] of pendingDeptMemories) {
+      mem.outcome = outcome;
+      const existing = deptMemory.get(dept) || [];
+      existing.push(mem);
+      deptMemory.set(dept, existing);
+    }
+
+    console.log(`  [outcome] ${outcome} (${crisis.category}${milestone ? ', milestone' : ', emergent'}) effects: ${JSON.stringify(colonyDeltas)}`);
+    emit('outcome', { turn, year, outcome, riskyOption: scenario.riskyOption, category: crisis.category, emergent: !milestone, colonyDeltas });
 
     // Log drift
     const drifted = kernel.getState().colonists.filter(c => c.promotion && c.health.alive);
@@ -660,6 +773,11 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
           })),
           totalReactions: reactions.length,
         });
+        // Summarize mood for next turn's director
+        const moodCounts: Record<string, number> = {};
+        for (const r of reactions) moodCounts[r.mood] = (moodCounts[r.mood] || 0) + 1;
+        const moodParts = Object.entries(moodCounts).sort((a, b) => b[1] - a[1]).map(([m, c]) => `${Math.round(c / reactions.length * 100)}% ${m}`);
+        lastTurnMoodSummary = `${reactions.length} colonists: ${moodParts.join(', ')}`;
       }
     } catch (err) {
       console.log(`  [colonists] Reaction generation failed: ${err}`);
@@ -695,11 +813,37 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
       }])
   );
 
+  // Compute timeline fingerprint: classify the colony based on final state
+  const riskyWins = outcomeLog.filter(o => o.outcome === 'risky_success').length;
+  const riskyLosses = outcomeLog.filter(o => o.outcome === 'risky_failure').length;
+  const conservativeWins = outcomeLog.filter(o => o.outcome === 'conservative_success').length;
+  const aliveCount = final.colonists.filter(c => c.health.alive).length;
+  const marsBorn = final.colonists.filter(c => c.health.alive && c.core.marsborn).length;
+
+  const fingerprint = {
+    // Resilience: high morale + survived losses = antifragile; low morale = brittle
+    resilience: final.colony.morale > 0.6 ? 'antifragile' : final.colony.morale > 0.35 ? 'resilient' : 'brittle',
+    // Autonomy: low earth dependency = autonomous
+    autonomy: final.politics.earthDependencyPct < 40 ? 'autonomous' : final.politics.earthDependencyPct < 70 ? 'transitioning' : 'Earth-tethered',
+    // Governance style: based on commander personality
+    governance: leader.hexaco.extraversion > 0.7 ? 'charismatic' : leader.hexaco.conscientiousness > 0.7 ? 'technocratic' : 'communal',
+    // Risk profile: based on actual outcomes
+    riskProfile: riskyWins + riskyLosses > conservativeWins ? 'expansionist' : 'conservative',
+    // Identity: Mars-born majority = Martian identity
+    identity: marsBorn > aliveCount * 0.3 ? 'Martian' : 'Earth-diaspora',
+    // Innovation: tools forged as a measure
+    innovation: Object.values(toolRegs).flat().length > maxTurns * 2 ? 'innovative' : Object.values(toolRegs).flat().length > maxTurns ? 'adaptive' : 'conventional',
+    // Summary line
+    summary: '',
+  };
+  fingerprint.summary = `${fingerprint.resilience} · ${fingerprint.autonomy} · ${fingerprint.governance} · ${fingerprint.riskProfile} · ${fingerprint.identity} · ${fingerprint.innovation}`;
+
   const output = {
     simulation: 'mars-genesis-v3', leader: { name: leader.name, archetype: leader.archetype, colony: leader.colony, hexaco: leader.hexaco },
     turnArtifacts: artifacts, finalState: final, toolRegistries: toolRegs,
     colonistTrajectories: trajectories,
     outcomeClassifications: outcomeLog,
+    fingerprint,
     totalCitations: artifacts.reduce((s, t) => s + t.departmentReports.reduce((s2, r) => s2 + r.citations.length, 0), 0),
     totalToolsForged: Object.values(toolRegs).flat().length,
   };

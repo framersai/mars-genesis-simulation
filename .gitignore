@@ -3,3 +3,7 @@ dist/
 output/*.json
 .superpowers/
 .env
+docs/plans/
+docs/specs/
+AUDIT-*.md
+NEXT-SESSION*.md

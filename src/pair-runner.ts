@@ -49,6 +49,7 @@ export async function runPairSimulations(
             toolsForged: result.totalToolsForged,
             citations: result.totalCitations,
           },
+          fingerprint: (result as any).fingerprint || null,
         });
       },
       error => {
