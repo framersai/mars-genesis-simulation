@@ -1025,25 +1025,29 @@ function handleSimEvent(d) {
   }
 }
 
-// Position fixed tooltips near mouse
+// Position fixed tooltips near hovered element
 document.addEventListener('mouseover', e => {
   const tip = e.target.closest('.hover-tip');
   if (!tip) return;
   const htip = tip.querySelector('.htip');
   if (!htip) return;
+  // Briefly show to measure, then position
+  htip.style.visibility = 'hidden';
+  htip.style.display = 'block';
   const rect = tip.getBoundingClientRect();
-  const tipW = 340;
+  const tipH = htip.offsetHeight;
+  const tipW = htip.offsetWidth;
   let left = rect.left;
-  let top = rect.top - 10; // above by default
-  // Flip down if too close to top
-  if (top < 200) top = rect.bottom + 10;
-  else top = top - htip.offsetHeight || top - 200;
-  // Keep on screen
-  if (left + tipW > window.innerWidth) left = window.innerWidth - tipW - 10;
+  let top = rect.top - tipH - 8;
+  // Flip below if not enough room above
+  if (top < 10) top = rect.bottom + 8;
+  // Clamp to viewport
+  if (left + tipW > window.innerWidth - 10) left = window.innerWidth - tipW - 10;
   if (left < 10) left = 10;
-  if (top < 10) top = 10;
+  if (top + tipH > window.innerHeight - 10) top = window.innerHeight - tipH - 10;
   htip.style.left = left + 'px';
   htip.style.top = top + 'px';
+  htip.style.visibility = 'visible';
 });
 
 // Dismiss intro if previously dismissed
