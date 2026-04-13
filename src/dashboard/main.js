@@ -1,9 +1,27 @@
 const $ = id => document.getElementById(id);
-let replaySpeed = 500; // ms between events during replay (default: readable pace)
+let replaySpeed = 50; // ms between events during replay (default: fast)
+let liveEventCount = 0; // tracks SSE events received to skip server buffer replay
 const log = (cls, msg) => { const d = $('debug'); d.innerHTML += `<br><span class="${cls}">${msg}</span>`; d.scrollTop = d.scrollHeight; };
 
+/** Show a toast notification */
+function toast(type, title, message, durationMs = 6000) {
+  const container = $('toast-container');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<b>${esc(title)}</b>${esc(message)}`;
+  container.appendChild(el);
+  setTimeout(() => { el.classList.add('removing'); setTimeout(() => el.remove(), 300); }, durationMs);
+}
+
+/** Escape HTML special characters to prevent broken templates */
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 function switchTab(tab) {
-  const panels = { sim: ['main-view','tl-view'], reports: ['reports-panel'], log: ['debug'], settings: ['settings-panel'], about: ['about-panel'] };
+  const panels = { sim: ['main-view','tl-view'], reports: ['reports-panel'], log: ['debug'], settings: ['settings-panel'], about: ['about-panel'], chat: ['chat-panel'] };
   document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
   for (const ids of Object.values(panels)) ids.forEach(id => { const el = $(id); if (el) { el.style.display = 'none'; el.style.flex = ''; } });
   // Hide sim-only elements (intro, divergence) when not on sim tab
@@ -19,6 +37,20 @@ function switchTab(tab) {
     if (id === 'debug') { el.style.maxHeight = 'none'; el.style.padding = '10px 16px'; }
   });
   $(`tab-${tab}`).classList.add('active');
+  // Scroll all visible panels to bottom after tab switch
+  requestAnimationFrame(() => {
+    if (tab === 'sim') {
+      const bv = $('body-v'); if (bv) bv.scrollTo({ top: bv.scrollHeight, behavior: 'smooth' });
+      const be = $('body-e'); if (be) be.scrollTo({ top: be.scrollHeight, behavior: 'smooth' });
+      const tv = $('tl-v'); if (tv) tv.scrollTo({ top: tv.scrollHeight, behavior: 'smooth' });
+      const te = $('tl-e'); if (te) te.scrollTo({ top: te.scrollHeight, behavior: 'smooth' });
+    } else {
+      ids.forEach(id => {
+        const el = $(id);
+        if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+      });
+    }
+  });
 }
 
 // Track leader names dynamically
@@ -32,17 +64,16 @@ function side(leader) {
   return null;
 }
 const state = {
-  v: { pop: [], morale: [], deaths: 0, tools: 0, cites: 0, crisis: null, decision: null, outcome: null, prevColony: null, prevDrift: {} },
-  e: { pop: [], morale: [], deaths: 0, tools: 0, cites: 0, crisis: null, decision: null, outcome: null, prevColony: null, prevDrift: {} }
+  v: { pop: [], morale: [], deaths: 0, tools: 0, cites: 0, decisions: 0, crisis: null, decision: null, outcome: null, prevColony: null, prevDrift: {} },
+  e: { pop: [], morale: [], deaths: 0, tools: 0, cites: 0, decisions: 0, crisis: null, decision: null, outcome: null, prevColony: null, prevDrift: {} }
 };
 const sparkChars = '\u2581\u2582\u2583\u2584\u2585\u2586\u2587\u2588';
-const spark = arr => arr.map(v => sparkChars[Math.min(7, Math.floor(v / (Math.max(...arr) || 1) * 7.99))]).join('');
+const spark = arr => { if (!arr.length) return ''; const mx = Math.max(...arr) || 1; return arr.map(v => sparkChars[Math.min(7, Math.floor((Number(v) || 0) / mx * 7.99))]).join(''); };
 
 function delta(curr, prev) {
-  if (prev == null) return '';
-  const d = curr - prev;
+  if (prev == null || isNaN(curr) || isNaN(prev)) return '';
+  const d = Math.round((curr - prev) * 100) / 100;
   if (d === 0) return '';
-  // Return as a small superscript-style suffix, not a line break
   const sign = d > 0 ? '+' : '';
   return `<span style="font-size:10px;opacity:.7;margin-left:2px">${sign}${d}</span>`;
 }
@@ -102,18 +133,22 @@ function addToBody(s, html) {
   const body = $(`body-${s}`), div = document.createElement('div');
   div.className = 'af'; div.innerHTML = html;
   body.appendChild(div);
+  // Bind tooltips on any .hover-tip / .tip-wrap inside the new content
+  if (typeof bindTip === 'function') div.querySelectorAll('.hover-tip, .tip-wrap').forEach(bindTip);
   body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' });
 }
-function addTimeline(s, year, text, badgeCls, badge) {
+function addTimeline(s, year, text, badgeCls, badge, fullText) {
   const tl = $(`tl-${s}`);
-  const key = `${year}-${text.slice(0,20)}`;
+  const key = `${year}-${(text||'').slice(0,20)}`;
   if (tl.dataset.lastEntry === key) return;
   tl.dataset.lastEntry = key;
   tl.querySelectorAll('.tr.now').forEach(el => el.classList.remove('now'));
+  const full = esc(fullText || text || '');
   const div = document.createElement('div');
   div.className = 'tr now hover-tip';
-  div.innerHTML = `<span class="ty ${s}">${year}</span><span class="tt">${text}</span><span class="ob ${badgeCls}" style="font-size:9px;padding:1px 5px">${badge}</span><div class="htip"><b>Year ${year}</b><div style="margin-top:6px">${text}</div></div>`;
+  div.innerHTML = `<span class="ty ${s}">${year}</span><span class="tt">${esc(text || '')}</span><span class="ob ${badgeCls}" style="font-size:9px;padding:1px 5px">${badge}</span><div class="htip"><b>Year ${year}</b><div style="margin-top:4px;font-size:12px;line-height:1.6">${full}</div></div>`;
   tl.appendChild(div);
+  if (typeof bindTip === 'function') bindTip(div);
   tl.scrollTo({ top: tl.scrollHeight, behavior: 'smooth' });
 }
 
@@ -129,7 +164,7 @@ const DEFAULT_SETUP_PERSONNEL = [
 ];
 
 function defaultSideState() {
-  return { pop: [], morale: [], deaths: 0, tools: 0, crisis: null, decision: null, outcome: null, prevColony: null, prevDrift: {} };
+  return { pop: [], morale: [], deaths: 0, tools: 0, cites: 0, decisions: 0, crisis: null, decision: null, outcome: null, prevColony: null, prevDrift: {} };
 }
 
 function updateTimelineLabels(config = gameData.config) {
@@ -312,6 +347,44 @@ function loadFromParams() {
   return true;
 }
 
+function clearAll() {
+  if (!confirm('Clear all simulation data, reports, and cached game? This cannot be undone.')) return;
+  // Clear server event buffer
+  fetch('/clear', { method: 'POST' }).catch(() => {});
+  localStorage.removeItem('mars-game-data');
+  localStorage.removeItem('mars-settings');
+  localStorage.setItem('mars-cleared', Date.now().toString()); // flag to skip SSE replay on reload
+  gameData.config = null;
+  gameData.events = [];
+  gameData.results = [];
+  gameData.startedAt = '';
+  gameData.completedAt = null;
+  gameData._restoredCount = 0;
+  gameData._cleared = true;
+  Object.keys(leaderMap).forEach(k => delete leaderMap[k]);
+  resetSimulationView();
+  // Reset nav title and tagline
+  const tag = $('top-tagline');
+  if (tag) tag.textContent = 'Same colony, two different leaders. Watch emergent civilizations diverge on Mars.';
+  $('crisis').textContent = '\u26A1 Waiting...';
+  $('m-turn').textContent = '\u2014';
+  $('m-year').textContent = '\u2014';
+  $('m-max-turns').textContent = '12';
+  $('m-seed').textContent = '950';
+  $('m-status').textContent = '\u25CF Cleared';
+  $('m-status').style.color = 'var(--text-3)';
+  $('m-status').style.animation = '';
+  const pf = $('progress-fill'); if (pf) pf.style.width = '0';
+  // Reset leader bars to defaults
+  populateLeader('v', { name: 'Aria Chen', archetype: 'The Visionary', colony: 'Ares Horizon', hexaco: { openness: .95, conscientiousness: .35, extraversion: .85, agreeableness: .55, emotionality: .3, honestyHumility: .65 } });
+  populateLeader('e', { name: 'Dietrich Voss', archetype: 'The Engineer', colony: 'Meridian Base', hexaco: { openness: .25, conscientiousness: .97, extraversion: .3, agreeableness: .45, emotionality: .7, honestyHumility: .9 } });
+  $('rpt-content').innerHTML = '<div class="rpt-empty">Run a simulation or load a saved game to see the full report.</div>';
+  $('debug').innerHTML = '';
+  $('save-game-btn').style.display = 'none';
+  applySetupPreset('default');
+  switchTab('settings');
+}
+
 function saveGame() {
   gameData.completedAt = new Date().toISOString();
   const blob = new Blob([JSON.stringify(gameData, null, 2)], { type: 'application/json' });
@@ -336,15 +409,22 @@ function loadGame(e) {
       if (gameData.config) applySetupConfig(gameData.config);
       resetSimulationView(gameData.config);
       switchTab('sim');
+      // Replay in batches for speed (process multiple events per frame)
+      const total = gameData.events.length;
+      const batchSize = Math.max(10, Math.ceil(total / 100)); // ~100 frames total
       let i = 0;
-      function replayNext() {
-        if (i >= gameData.events.length) { $('m-status').textContent = '\u25CF Replay Complete'; $('m-status').style.color = 'var(--amber)'; $('save-game-btn').style.display = 'inline-block'; return; }
-        handleSimEvent(gameData.events[i++]);
-        $('m-status').textContent = `\u25CF Replaying ${i}/${gameData.events.length}...`;
-        setTimeout(replayNext, replaySpeed);
+      function replayBatch() {
+        const end = Math.min(i + batchSize, total);
+        while (i < end) handleSimEvent(gameData.events[i++]);
+        $('m-status').textContent = `\u25CF Replaying ${i}/${total}...`;
+        if (i >= total) {
+          $('m-status').textContent = '\u25CF Replay Complete'; $('m-status').style.color = 'var(--amber)'; $('save-game-btn').style.display = 'inline-block';
+          return;
+        }
+        requestAnimationFrame(replayBatch);
       }
       $('m-status').textContent = '\u25CF Replaying...'; $('m-status').style.color = 'var(--vis)';
-      replayNext();
+      replayBatch();
     } catch (err) { alert('Invalid game file: ' + err); }
   };
   reader.readAsText(file);
@@ -481,6 +561,29 @@ async function testApiKey() {
   btn.disabled = false;
 }
 
+// Check and display rate limit status
+async function checkRateLimit() {
+  try {
+    const res = await fetch('/rate-limit');
+    const data = await res.json();
+    const info = $('s-rate-info');
+    if (!info) return;
+    if (data.unlimited) {
+      info.textContent = 'Unlimited (local dev mode). No rate limit.';
+      info.style.color = 'var(--green)';
+    } else {
+      const color = data.remaining > 0 ? 'var(--text-2)' : 'var(--rust)';
+      info.innerHTML = `<span style="color:${color}">${data.remaining}/${data.limit} simulations remaining today.</span> Resets at midnight UTC.`;
+      if (data.remaining === 0) {
+        const btn = $('s-launch-btn');
+        if (btn) btn.disabled = true;
+        toast('info', 'Rate Limit', `You have used all ${data.limit} simulations for today. Resets at midnight UTC.`, 8000);
+      }
+    }
+  } catch {}
+}
+checkRateLimit();
+
 function saveSettingsToStorage() {
   const cfg = buildSetupConfig();
   try {
@@ -525,12 +628,21 @@ async function launchFromSettings() {
   try {
     const res = await fetch('/setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg) });
     const data = await res.json();
+    if (res.status === 429) {
+      toast('error', 'Rate Limit Reached', data.error || `Maximum ${data.limit || 3} simulations per day. Resets at midnight UTC.`, 10000);
+      st.textContent = 'Rate limited'; btn.disabled = false;
+      return;
+    }
     if (data.redirect) {
       gameData.config = cfg;
       gameData.events = [];
       gameData.results = [];
       gameData.startedAt = new Date().toISOString();
       gameData.completedAt = null;
+      gameData._cleared = false; // Allow SSE events for new sim
+      gameData._restoredCount = 0;
+      liveEventCount = 0;
+      localStorage.removeItem('mars-cleared');
       resetSimulationView(cfg);
       localStorage.removeItem('mars-game-data'); // Clear cache for fresh run
       const pf = $('progress-fill'); if (pf) pf.style.width = '0';
@@ -590,21 +702,42 @@ function generateReport() {
     const diverged = v.title && e.title && v.title !== e.title;
 
     const renderSide = (data, name, color) => {
-      if (!data.title) return `<div class="rpt-col"><h4 class="${color}">${name}</h4><div style="color:var(--text-3);font-size:11px">Awaiting data...</div></div>`;
+      if (!data.title) return `<div class="rpt-col"><h4 class="${color}">${name}</h4><div style="color:var(--text-3);font-size:14px;padding:12px 0">Awaiting data...</div></div>`;
       const outcomeColor = (data.outcome || '').includes('success') ? 'var(--green)' : 'var(--rust)';
+      const outcomeBg = (data.outcome || '').includes('success') ? 'rgba(106,173,72,.12)' : 'rgba(224,101,48,.12)';
       const outcomeLabel = data.outcome ? data.outcome.replace(/_/g, ' ').toUpperCase() : 'PENDING';
-      const deptList = data.depts ? Object.entries(data.depts).map(([dept, d]) => `<span style="color:var(--text-2)">${dept}</span> ${d.citations}c ${d.tools}t`).join(' \u00B7 ') : '';
+      const deptList = data.depts ? Object.entries(data.depts).map(([dept, d]) => `<span style="color:var(--text-1);font-weight:600">${dept.charAt(0).toUpperCase()+dept.slice(1)}</span> <span style="color:var(--text-3)">${d.citations}c ${d.tools}t</span>`).join(' \u00B7 ') : '';
       const colony = data.colony ? `Pop ${data.colony.population} \u00B7 Morale ${Math.round((data.colony.morale||0)*100)}% \u00B7 Food ${(data.colony.foodMonthsReserve||0).toFixed(0)}mo` : '';
-      const topQuotes = (data.reactions || []).map(r => `<div style="font-size:10px;color:var(--text-2);font-style:italic;margin-top:2px">"${r.quote.slice(0,80)}${r.quote.length>80?'...':''}" <span style="color:var(--text-3)">— ${r.name}</span></div>`).join('');
+      const topQuotes = (data.reactions || []).map(r => {
+        const q = esc(r.quote);
+        return `<div class="rpt-quote hover-tip">\u201C${q.slice(0,100)}${q.length>100?'...':''}\u201D <span class="rpt-quote-name">\u2014 ${esc(r.name)}</span><div class="htip"><b>${esc(r.name)}</b><div class="ht-quote">\u201C${q}\u201D</div></div></div>`;
+      }).join('');
+
+      // Causality inspector: department summaries and tools
+      const deptDetails = data.depts ? Object.entries(data.depts).map(([dept, d]) =>
+        `<div style="margin:4px 0"><span style="color:var(--amber);font-weight:700;font-size:11px">${dept.charAt(0).toUpperCase()+dept.slice(1)}</span>: ${esc(d.summary || 'No summary').slice(0, 200)}</div>`
+      ).join('') : '';
 
       return `<div class="rpt-col">
-        <h4 class="${color}">${name}</h4>
-        <div class="rpt-crisis">\u26A1 ${data.title} <span style="font-size:9px;color:var(--text-3)">${data.category || ''}</span></div>
-        <div class="rpt-decision">${(data.decision || '').slice(0, 250)}</div>
-        <div class="rpt-outcome" style="color:${outcomeColor}">${outcomeLabel}</div>
-        ${deptList ? `<div style="font-size:10px;margin-top:3px;font-family:var(--mono)">${deptList}</div>` : ''}
-        ${colony ? `<div style="font-size:10px;color:var(--text-3);margin-top:2px">${colony}</div>` : ''}
-        ${topQuotes}
+        <h4 class="${color}">${esc(name)}</h4>
+        <div class="rpt-crisis">\u26A1 ${esc(data.title)} <span style="font-size:11px;color:var(--text-3);background:var(--bg-deep);padding:2px 8px;border-radius:3px;margin-left:6px;font-family:var(--mono)">${data.category || ''}</span></div>
+        <div class="rpt-decision">${esc((data.decision || '').slice(0, 350))}</div>
+        <div class="rpt-outcome" style="color:${outcomeColor};background:${outcomeBg};border:1px solid ${outcomeColor}">${outcomeLabel}</div>
+        ${deptList ? `<div style="font-size:12px;margin-top:8px;font-family:var(--mono);line-height:1.6">${deptList}</div>` : ''}
+        ${colony ? `<div style="font-size:12px;color:var(--text-3);margin-top:4px">${colony}</div>` : ''}
+        ${topQuotes ? `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">${topQuotes}</div>` : ''}
+        <details style="margin-top:8px">
+          <summary style="font-size:11px;color:var(--${color});cursor:pointer;font-weight:600">Causal chain</summary>
+          <div style="margin-top:6px;padding:8px 10px;background:var(--bg-deep);border-radius:4px;font-size:12px;line-height:1.6">
+            <div style="color:var(--text-3);font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:4px">Crisis \u2192 Department Analysis \u2192 Decision \u2192 Outcome \u2192 Colony Effect</div>
+            <div style="color:var(--rust);font-weight:600">\u26A1 ${esc(data.title)} (${data.category || '?'})</div>
+            ${data.emergent ? `<div style="color:var(--text-3);font-size:11px;font-style:italic">Emergent: generated by Crisis Director based on colony state</div>` : `<div style="color:var(--text-3);font-size:11px;font-style:italic">Milestone: fixed narrative event</div>`}
+            ${deptDetails ? `<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">${deptDetails}</div>` : ''}
+            <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)"><span style="color:var(--amber);font-weight:700;font-size:11px">Commander:</span> ${esc((data.decision || '').slice(0, 250))}</div>
+            <div style="margin-top:4px"><span style="color:${outcomeColor};font-weight:700">\u2192 ${outcomeLabel}</span></div>
+            ${colony ? `<div style="margin-top:4px;color:var(--text-3)">\u2192 ${colony}</div>` : ''}
+          </div>
+        </details>
       </div>`;
     };
 
@@ -631,22 +764,21 @@ function generateReport() {
       const s = r.summary || {};
       const color = r.leader === 'visionary' ? 'v' : 'e';
       const name = r.leader === 'visionary' ? vName : eName;
-      html += `<div class="rpt-col"><h4 class="${color}">${name}</h4><div style="font-size:12px;line-height:1.8"><b>Population:</b> ${s.population || '?'}<br><b>Morale:</b> ${s.morale ? Math.round(s.morale*100)+'%' : '?'}<br><b>Tools Forged:</b> ${s.toolsForged || 0}<br><b>Citations:</b> ${s.citations || 0}</div></div>`;
+      html += `<div class="rpt-col"><h4 class="${color}">${esc(name)}</h4><div style="font-size:15px;line-height:2.2"><b>Population:</b> ${s.population || '?'}<br><b>Morale:</b> ${s.morale ? Math.round(s.morale*100)+'%' : '?'}<br><b>Tools Forged:</b> ${s.toolsForged || 0}<br><b>Citations:</b> ${s.citations || 0}</div></div>`;
     }
     html += `</div></div>`;
-    html += `</div>`;
   }
 
   // Replay controls
   const turnNums = Object.keys(turns).sort((a, b) => Number(a) - Number(b));
-  html += `<div style="margin-top:10px;padding:10px 14px;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-    <b style="font-size:11px;color:var(--text-2);font-family:var(--mono)">REPLAY</b>
-    <input type="range" id="rpt-scrubber" min="0" max="${turnNums.length - 1}" value="${turnNums.length - 1}" style="flex:1;min-width:80px;accent-color:var(--amber)" oninput="scrubToTurn(this.value)">
-    <span id="rpt-scrub-label" style="font-size:11px;color:var(--text-1);font-family:var(--mono);min-width:50px">Turn ${turnNums[turnNums.length - 1] || '?'}</span>
-    <span style="color:var(--text-3);font-size:10px">Speed:</span>
-    <input type="range" min="50" max="1000" value="500" step="50" style="width:80px;accent-color:var(--rust)" oninput="setReplaySpeed(this.value)">
-    <span id="replay-speed-label" style="font-size:10px;color:var(--text-2);font-family:var(--mono);min-width:40px">Slow</span>
-    <button class="act-btn" onclick="replayInSim()">Replay in Sim</button>
+  html += `<div style="margin-top:16px;padding:14px 20px;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <b style="font-size:13px;color:var(--text-2);font-family:var(--mono)">REPLAY</b>
+    <input type="range" id="rpt-scrubber" min="0" max="${turnNums.length - 1}" value="${turnNums.length - 1}" style="flex:1;min-width:100px;accent-color:var(--amber);height:6px" oninput="scrubToTurn(this.value)">
+    <span id="rpt-scrub-label" style="font-size:14px;color:var(--text-1);font-family:var(--mono);min-width:60px;font-weight:600">Turn ${turnNums[turnNums.length - 1] || '?'}</span>
+    <span style="color:var(--text-3);font-size:12px">Speed:</span>
+    <input type="range" min="50" max="1000" value="500" step="50" style="width:100px;accent-color:var(--rust);height:6px" oninput="setReplaySpeed(this.value)">
+    <span id="replay-speed-label" style="font-size:12px;color:var(--text-2);font-family:var(--mono);min-width:50px">Slow</span>
+    <button class="act-btn" style="font-size:13px;padding:6px 16px" onclick="replayInSim()">Replay in Sim</button>
   </div>`;
 
   content.innerHTML = html || '<div class="rpt-empty">No turn data found.</div>';
@@ -673,15 +805,21 @@ function replayInSim() {
   if (!gameData.events.length) return;
   resetSimulationView(gameData.config);
   switchTab('sim');
+  const total = gameData.events.length;
+  const batchSize = Math.max(10, Math.ceil(total / 100));
   let i = 0;
-  function next() {
-    if (i >= gameData.events.length) { $('m-status').textContent = '\u25CF Replay Complete'; $('m-status').style.color = 'var(--amber)'; $('save-game-btn').style.display = 'inline-block'; return; }
-    handleSimEvent(gameData.events[i++]);
-    $('m-status').textContent = `\u25CF Replaying ${i}/${gameData.events.length}...`;
-    setTimeout(next, replaySpeed);
+  function batch() {
+    const end = Math.min(i + batchSize, total);
+    while (i < end) handleSimEvent(gameData.events[i++]);
+    $('m-status').textContent = `\u25CF Replaying ${i}/${total}...`;
+    if (i >= total) {
+      $('m-status').textContent = '\u25CF Replay Complete'; $('m-status').style.color = 'var(--amber)'; $('save-game-btn').style.display = 'inline-block';
+      return;
+    }
+    requestAnimationFrame(batch);
   }
   $('m-status').textContent = '\u25CF Replaying...'; $('m-status').style.color = 'var(--vis)';
-  next();
+  batch();
 }
 
 function setReplaySpeed(val) {
@@ -743,11 +881,13 @@ try {
     }
   });
 
-  let liveEventCount = 0;
+  liveEventCount = 0;
   es.addEventListener('sim', e => {
     try {
       const d = JSON.parse(e.data);
       liveEventCount++;
+      // Skip if cleared (ignore server buffer replay after user cleared)
+      if (gameData._cleared) return;
       // Skip if this event was already replayed from server buffer during cache restore
       const cachedLen = gameData._restoredCount || 0;
       if (liveEventCount <= cachedLen) return; // Already rendered from cache
@@ -762,6 +902,24 @@ try {
       const d = JSON.parse(e.data);
       gameData.results.push(d);
       log('ok', `\u2713 ${d.leader} done: pop ${d.summary?.population}, ${d.summary?.toolsForged} tools`);
+      // Display fingerprint in the simulation column
+      if (d.fingerprint) {
+        const s = d.leader === 'visionary' || Object.keys(leaderMap).find(k => leaderMap[k] === 'v' && d.leader) ? 'v' : 'e';
+        const fp = d.fingerprint;
+        const color = s === 'v' ? 'vis' : 'eng';
+        addToBody(s, `<div style="background:linear-gradient(135deg,rgba(232,180,74,.06),rgba(76,168,168,.06));border:2px solid var(--${color});border-radius:8px;padding:12px 16px;margin-top:6px">
+          <div style="font-size:11px;color:var(--${color});font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">\u2605 COLONY FINGERPRINT</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <span style="background:var(--bg-deep);padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;color:var(--text-1)">${esc(fp.resilience)}</span>
+            <span style="background:var(--bg-deep);padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;color:var(--text-1)">${esc(fp.autonomy)}</span>
+            <span style="background:var(--bg-deep);padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;color:var(--text-1)">${esc(fp.governance)}</span>
+            <span style="background:var(--bg-deep);padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;color:var(--text-1)">${esc(fp.riskProfile)}</span>
+            <span style="background:var(--bg-deep);padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;color:var(--text-1)">${esc(fp.identity)}</span>
+            <span style="background:var(--bg-deep);padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;color:var(--text-1)">${esc(fp.innovation)}</span>
+          </div>
+        </div>`);
+        log('ok', `  Fingerprint: ${fp.summary}`);
+      }
     } catch (err) { log('no', 'Result parse error: ' + err); }
   });
   es.addEventListener('complete', () => {
@@ -772,9 +930,10 @@ try {
     $('save-game-btn').style.display = 'inline-block';
     const launchBtn = $('s-launch-btn'); if (launchBtn) launchBtn.disabled = false;
     const launchSt = $('s-launch-status'); if (launchSt) launchSt.textContent = 'Complete.';
-    log('ok', '\u2713 All complete. Click Reports tab for full analysis. Click Save Game to download.');
-    // Auto-generate report data
+    log('ok', '\u2713 All complete. Click Reports tab for full analysis. Click Chat to talk to colonists. Click Save Game to download.');
+    // Auto-generate report data and populate chat sidebar
     if (typeof generateReport === 'function') try { generateReport(); switchTab('sim'); } catch {}
+    if (typeof populateChatSidebar === 'function') try { populateChatSidebar(); } catch {}
   });
   es.addEventListener('sim_error', e => {
     try { log('no', '\u2717 ' + JSON.parse(e.data).error); } catch { log('no', '\u2717 Error'); }
@@ -808,7 +967,7 @@ function handleSimEvent(d) {
       }
       state[s].crisis = { turn: dd.turn, title: dd.title, category: dd.category, emergent: dd.emergent };
       if (dd.colony) updateGauges(s, dd.colony);
-      if (dd.deaths) { state[s].deaths += dd.deaths; $(`s-${s}-deaths`).textContent = state[s].deaths; }
+      if (dd.deaths) { state[s].deaths += Number(dd.deaths) || 0; $(`s-${s}-deaths`).textContent = state[s].deaths; }
       log('info', `[${d.leader}] Turn ${dd.turn} \u2014 ${dd.year}: ${dd.title}${dd.emergent ? ' [EMERGENT]' : ''}`);
       break;
     }
@@ -817,14 +976,33 @@ function handleSimEvent(d) {
       // Accumulate promotions into a single compact list
       let promoList = $(`promo-list-${s}`);
       if (!promoList) {
-        addToBody(s, `<div class="card" style="padding:5px 10px"><div style="font-size:10px;color:var(--amber);font-weight:700;margin-bottom:3px">\u2726 DEPARTMENT HEADS PROMOTED</div><div id="promo-list-${s}" style="font-size:11px;line-height:1.6"></div></div>`);
+        addToBody(s, `<div class="card" style="padding:8px 12px"><div style="font-size:12px;color:var(--amber);font-weight:700;margin-bottom:6px">\u2726 DEPARTMENT HEADS PROMOTED</div><div id="promo-list-${s}" style="font-size:12px;line-height:1.8"></div></div>`);
         promoList = $(`promo-list-${s}`);
       }
       if (promoList) {
-        const name = (dd.colonistId || '').replace('col-', '').replace(/-/g, ' ');
-        const capName = name.replace(/\b\w/g, c => c.toUpperCase());
-        const reasonShort = dd.reason ? dd.reason.slice(0, 60) : '';
-        promoList.innerHTML += `<div class="hover-tip" style="display:flex;gap:4px;align-items:baseline;font-size:11px"><span style="color:var(--text-1);font-weight:600">${capName}</span><span style="color:var(--text-3)">\u2192</span><span style="color:var(--amber)">${dd.role}</span>${reasonShort ? `<span style="color:var(--text-3);font-size:9px;font-style:italic"> ${reasonShort}...</span>` : ''}<div class="htip"><b>${capName}</b><br>Promoted to: <b style="color:var(--amber)">${dd.role}</b><br>Department: ${dd.department || 'N/A'}<div style="margin-top:4px;padding-top:4px;border-top:1px solid var(--border)"><b>Commander reasoning:</b><br>${dd.reason || 'No reason provided'}</div></div></div>`;
+        const rawName = (dd.colonistId || '').replace('col-', '').replace(/-/g, ' ');
+        const capName = esc(rawName.replace(/\b\w/g, c => c.toUpperCase()));
+        const role = esc(dd.role || '');
+        const dept = esc(dd.department || 'N/A');
+        const reason = esc(dd.reason || 'No reason provided');
+        const reasonShort = reason.length > 60 ? reason.slice(0, 60) + '...' : reason;
+        promoList.insertAdjacentHTML('beforeend', `<div class="hover-tip" style="display:flex;gap:6px;align-items:baseline;font-size:12px;padding:2px 0">
+          <span style="color:var(--text-1);font-weight:600">${capName}</span>
+          <span style="color:var(--text-3)">\u2192</span>
+          <span style="color:var(--amber);font-weight:600">${role}</span>
+          <span style="color:var(--text-3);font-size:10px;font-style:italic;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${reasonShort}</span>
+          <div class="htip">
+            <b>${capName}</b>
+            <div style="font-size:12px;color:var(--text-2);margin:4px 0">Promoted to: <span style="color:var(--amber);font-weight:700">${role}</span></div>
+            <div style="font-size:12px;color:var(--text-2);margin:2px 0">Department: <span style="color:var(--text-1)">${dept}</span></div>
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:12px;line-height:1.6">
+              <span style="color:var(--amber);font-weight:600">Commander reasoning:</span><br>
+              ${reason}
+            </div>
+          </div>
+        </div>`);
+        // Bind tooltips on newly added promo rows
+        promoList.querySelectorAll('.hover-tip').forEach(el => { if (typeof bindTip === 'function') bindTip(el); });
       }
       break;
     }
@@ -855,7 +1033,8 @@ function handleSimEvent(d) {
       const seenTools = state[s]._shownTools || new Set();
       state[s]._shownTools = seenTools;
       const tools = (dd.forgedTools || []).filter(t => { if (!t.name || t.name === 'unnamed' || seenTools.has(t.name)) return false; seenTools.add(t.name); return true; });
-      const severity = (dd.risks || []).some(r => r.severity === 'critical') ? 'critical' : (dd.risks || []).some(r => r.severity === 'high') ? 'high' : '';
+      const risksArr = Array.isArray(dd.risks) ? dd.risks : [];
+      const severity = risksArr.some(r => r.severity === 'critical') ? 'critical' : risksArr.some(r => r.severity === 'high') ? 'high' : '';
 
       // Department pill (accumulate into a row)
       let pillRow = $(`dept-pills-${s}-${dd.turn}`);
@@ -867,8 +1046,13 @@ function handleSimEvent(d) {
         const sevColor = severity === 'critical' ? 'rgba(224,101,48,.2)' : severity === 'high' ? 'rgba(232,180,74,.15)' : 'rgba(48,42,34,.6)';
         const sevText = severity === 'critical' ? 'color:var(--rust)' : severity === 'high' ? 'color:var(--amber)' : 'color:var(--text-2)';
         const sevLabel = severity ? ` \u00B7 ${severity.toUpperCase()}` : '';
-        const pillPop = `<div class="htip" style="width:320px"><b>${icon} ${deptUp}</b><div class="ht-stats">Citations: ${dd.citations || 0} | Tools: ${tools.length}</div>${summary ? `<div style="margin:4px 0;color:var(--text-1)">${summary}</div>` : ''}${(dd.risks || []).map(r => `<div style="font-size:11px;margin:2px 0"><span style="color:${r.severity === 'critical' ? 'var(--rust)' : 'var(--amber)'};font-weight:700">${r.severity.toUpperCase()}</span>: ${r.description}</div>`).join('')}${(dd.recommendedActions || []).map(r => `<div style="font-size:11px;color:var(--amber)">\u2192 ${r}</div>`).join('')}</div>`;
-        pillRow.innerHTML += `<span class="hover-tip" style="background:${sevColor};${sevText};padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;cursor:help">${icon} ${dept.charAt(0).toUpperCase() + dept.slice(1)} \u00B7 ${dd.citations || 0}c ${tools.length}t${sevLabel}${pillPop}</span>`;
+        const recActions = Array.isArray(dd.recommendedActions) ? dd.recommendedActions : [];
+        const citeList = Array.isArray(dd.citationList) ? dd.citationList : [];
+        const citesHtml = citeList.map(c => `<div style="font-size:11px;margin:2px 0"><a href="${esc(c.url)}" target="_blank" rel="noopener" style="color:var(--amber);text-decoration:underline">${esc(c.text)}</a>${c.doi ? ` <span style="color:var(--text-3);font-size:10px">DOI:${esc(c.doi)}</span>` : ''}</div>`).join('');
+        const pillPop = `<div class="htip"><b>${icon} ${deptUp}</b><div class="ht-stats">Citations: ${dd.citations || 0} | Tools: ${tools.length}</div>${summary ? `<div style="margin:4px 0;color:var(--text-1);font-size:12px">${esc(summary)}</div>` : ''}${risksArr.map(r => `<div style="font-size:11px;margin:2px 0"><span style="color:${r.severity === 'critical' ? 'var(--rust)' : 'var(--amber)'};font-weight:700">${esc((r.severity||'').toUpperCase())}</span>: ${esc(r.description||'')}</div>`).join('')}${recActions.map(r => `<div style="font-size:11px;color:var(--amber)">\u2192 ${esc(r)}</div>`).join('')}${citesHtml ? `<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)"><span style="font-size:10px;color:var(--text-3);font-weight:700">CITATIONS:</span>${citesHtml}</div>` : ''}</div>`;
+        pillRow.innerHTML += `<span class="hover-tip tip-dot" style="background:${sevColor};${sevText};padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600">${icon} ${dept.charAt(0).toUpperCase() + dept.slice(1)} \u00B7 ${dd.citations || 0}c ${tools.length}t${sevLabel}${pillPop}</span>`;
+        // innerHTML += destroys+recreates all children, rebind all tips
+        pillRow.querySelectorAll('.hover-tip').forEach(el => { if (typeof bindTip === 'function') bindTip(el); });
       }
 
       // Tool cards with collapsible details
@@ -884,28 +1068,29 @@ function handleSimEvent(d) {
             if (p && typeof p === 'object') {
               parsedValues = Object.entries(p).slice(0, 4).map(([k, v]) => {
                 const val = typeof v === 'number' ? (v % 1 ? v.toFixed(1) : v) : String(v).slice(0, 15);
-                return `<span style="color:var(--text-3)">${k}:</span><b style="color:var(--text-1)">${val}</b>`;
-              }).join(' \u00B7 ');
+                return `<span style="color:var(--text-3);font-size:10px">${esc(k)}:</span> <b style="color:var(--text-1)">${esc(String(val))}</b>`;
+              }).join('<span style="color:var(--border);margin:0 6px">\u00B7</span>');
             }
           } catch {}
         }
-        const toolPop = `<div class="htip" style="width:360px"><b>\uD83D\uDD27 ${t.name}</b><div style="margin:4px 0;color:var(--text-1)">${desc}</div><div class="ht-stats">Mode: ${t.mode || 'sandbox'} | Confidence: ${(t.confidence || .85).toFixed(2)} | ${whyDept} dept</div>${outFields ? `<div class="ht-hexaco">OUTPUTS: ${outFields}</div>` : ''}${t.output ? `<div style="margin-top:4px;padding-top:4px;border-top:1px solid var(--border);font-size:10px;font-family:var(--mono);color:var(--text-2);max-height:100px;overflow-y:auto;word-break:break-all">${String(t.output).slice(0, 500)}</div>` : ''}</div>`;
+        const toolPop = `<div class="htip"><b>\uD83D\uDD27 ${esc(t.name)}</b><div style="margin:6px 0;color:var(--text-1);font-size:12px;line-height:1.5">${esc(desc)}</div><div class="ht-stats">Mode: ${t.mode || 'sandbox'} | Confidence: ${(t.confidence || .85).toFixed(2)} | ${whyDept} dept</div>${outFields ? `<div class="ht-hexaco">OUTPUTS: ${esc(outFields)}</div>` : ''}${t.output ? `<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:11px;font-family:var(--mono);color:var(--text-2);max-height:100px;overflow-y:auto;word-break:break-all;line-height:1.5">${esc(String(t.output).slice(0, 400))}</div>` : ''}</div>`;
 
-        addToBody(s, `<div class="forge ok" style="padding:8px 12px" title="${desc.replace(/"/g,'&quot;')} | ${t.name} | ${whyDept} dept | confidence ${(t.confidence||.85).toFixed(2)}${parsedValues ? ' | ' + parsedValues.replace(/<[^>]*>/g,'') : ''}">
-          <span style="font-size:14px">\uD83D\uDD27</span>
+        addToBody(s, `<div class="forge ok hover-tip" style="padding:10px 14px">
+          <span style="font-size:16px">\uD83D\uDD27</span>
           <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap">
-              <span style="font-size:8px;color:var(--green);text-transform:uppercase;letter-spacing:.5px;font-weight:800;flex-shrink:0">FORGED</span>
-              <span style="font-size:12px;font-weight:600;color:var(--text-1)">${desc.length > 80 ? desc.slice(0,80)+'...' : desc}</span>
-              <span style="color:var(--green);font-weight:800;font-family:var(--mono);font-size:11px">\u2713${(t.confidence || .85).toFixed(2)}</span>
+            <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+              <span style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.5px;font-weight:800;flex-shrink:0">FORGED</span>
+              <span style="font-size:13px;font-weight:600;color:var(--text-1)">${esc(desc.length > 80 ? desc.slice(0,80)+'...' : desc)}</span>
+              <span style="color:var(--green);font-weight:800;font-family:var(--mono);font-size:11px">\u2713 ${(t.confidence || .85).toFixed(2)}</span>
             </div>
-            ${parsedValues ? `<div style="font-size:11px;color:var(--text-2);margin-top:3px;font-family:var(--mono)">${parsedValues}</div>` : ''}
-            <details style="margin-top:3px"><summary style="font-size:10px;color:var(--text-3);cursor:pointer">${t.name} \u00B7 ${t.mode || 'sandbox'} \u00B7 ${whyDept}</summary><div style="margin-top:3px;font-family:var(--mono);font-size:10px;color:var(--text-3);background:var(--bg-deep);padding:4px 6px;border-radius:3px;max-height:60px;overflow:auto;word-break:break-all">${t.output ? String(t.output).slice(0, 400) : 'No output'}</div></details>
+            ${parsedValues ? `<div style="font-size:12px;color:var(--text-2);margin-top:6px;padding:4px 0;font-family:var(--mono);display:flex;align-items:baseline;flex-wrap:wrap;gap:2px">${parsedValues}</div>` : ''}
+            <details style="margin-top:6px"><summary style="font-size:11px;color:var(--text-3);cursor:pointer">${esc(t.name)} \u00B7 ${t.mode || 'sandbox'} \u00B7 ${whyDept}</summary><div style="margin-top:4px;font-family:var(--mono);font-size:11px;color:var(--text-3);background:var(--bg-deep);padding:6px 8px;border-radius:4px;max-height:80px;overflow:auto;word-break:break-all;line-height:1.5">${t.output ? esc(String(t.output).slice(0, 400)) : '<span style="color:var(--text-3);font-style:italic">Tool approved by judge but produced no computed output. The model created the tool definition without executing it against colony data.</span>'}</div></details>
           </div>
+          ${toolPop}
         </div>`);
       }
-      state[s].tools += tools.length; $(`s-${s}-tools`).textContent = state[s].tools;
-      state[s].cites += (dd.citations || 0); const citesEl = $(`s-${s}-cites`); if (citesEl) citesEl.textContent = state[s].cites;
+      state[s].tools += tools.length; $(`s-${s}-tools`).textContent = state[s].tools || 0;
+      state[s].cites += (Number(dd.citations) || 0); const citesEl = $(`s-${s}-cites`); if (citesEl) citesEl.textContent = state[s].cites || 0;
       log('ok', `[${d.leader}] ${icon} ${deptUp}: ${dd.citations || 0} cites, ${tools.length} tools`);
       break;
     }
@@ -919,31 +1104,49 @@ function handleSimEvent(d) {
       const loadEl3 = $(`loading-${s}`);
       if (loadEl3) loadEl3.remove();
       state[s].pendingDecision = dd.decision;
+      state[s].pendingRationale = dd.rationale || '';
+      state[s].pendingPolicies = dd.selectedPolicies || [];
       log('info', `[${d.leader}] ${(dd.decision || '').slice(0, 60)}`);
       break;
     }
 
     case 'outcome': {
-      const dec = (state[s].pendingDecision || '').slice(0, 500);
+      const dec = state[s].pendingDecision || '';
+      const rationale = state[s].pendingRationale || '';
+      const policies = state[s].pendingPolicies || [];
       const oc = dd.outcome || '';
       const cls = oc === 'risky_success' ? 'rs' : oc === 'conservative_success' ? 'cs' : 'rf';
       const badge = oc === 'risky_success' ? 'RISKY WIN' : oc === 'risky_failure' ? 'RISKY LOSS' : oc === 'conservative_success' ? 'SAFE WIN' : 'SAFE LOSS';
       const icon = oc.includes('success') ? '\u2713' : '\u2717';
       const outcomeColor = oc.includes('success') ? 'var(--green)' : 'var(--rust)';
-      const decShort = dec.length > 120 ? dec.slice(0, 120) + '...' : dec;
-      const decPop = `<div class="htip" style="width:400px"><b>\u26A1 Commander Decision</b><div class="ht-stats">Outcome: <span style="color:${outcomeColor};font-weight:700">${oc.replace(/_/g,' ').toUpperCase()}</span></div><div style="margin-top:6px;color:var(--text-1);line-height:1.6;font-size:12px">${dec}</div></div>`;
-      addToBody(s, `<div class="dec ${s} hover-tip" style="padding:8px 12px">
+      const decShort = dec.length > 150 ? esc(dec.slice(0, 150)) + '...' : esc(dec);
+      const decFull = esc(dec);
+      const ratFull = esc(rationale);
+      const polList = policies.length ? policies.map(p => `<div style="font-size:11px;color:var(--amber);margin:2px 0">\u2192 ${esc(p)}</div>`).join('') : '';
+      state[s].decisions = (state[s].decisions || 0) + 1;
+      const decNum = state[s].decisions;
+      const colDeltas = dd.colonyDeltas ? Object.entries(dd.colonyDeltas).map(([k, v]) => `<span style="color:${(v > 0) ? 'var(--green)' : 'var(--rust)'};font-family:var(--mono)">${esc(k)} ${v > 0 ? '+' : ''}${v}</span>`).join(' \u00B7 ') : '';
+      addToBody(s, `<div class="dec ${s}" style="padding:10px 14px">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
           <div style="flex:1;min-width:0">
-            <span style="color:var(--${s === 'v' ? 'vis' : 'eng'});font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px">\u26A1 DECISION</span>
-            <div style="color:var(--text-1);font-size:12px;margin-top:3px;line-height:1.4">${decShort}</div>
+            <span style="color:var(--${s === 'v' ? 'vis' : 'eng'});font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px">\u26A1 DECISION #${decNum}</span>
+            <span style="color:var(--text-3);font-size:10px;margin-left:8px;font-family:var(--mono)">${state[s].tools} tools \u00B7 ${state[s].cites} citations</span>
+            <div style="color:var(--text-1);font-size:13px;margin-top:4px;line-height:1.5">${decShort}</div>
           </div>
           <span class="ob ${cls}" style="flex-shrink:0">${icon} ${badge}</span>
         </div>
+        ${colDeltas ? `<div style="margin-top:6px;font-size:11px">${colDeltas}</div>` : ''}
+        <details style="margin-top:6px">
+          <summary style="font-size:11px;color:var(--${s === 'v' ? 'vis' : 'eng'});cursor:pointer;font-weight:600">Full reasoning &amp; policies</summary>
+          <div style="margin-top:6px;padding:8px 10px;background:var(--bg-deep);border-radius:4px;font-size:12px;line-height:1.6">
+            <div style="color:var(--text-1);margin-bottom:6px">${decFull}</div>
+            ${ratFull ? `<div style="border-top:1px solid var(--border);padding-top:6px;margin-top:6px"><span style="color:var(--amber);font-weight:700;font-size:10px;text-transform:uppercase">Rationale:</span><div style="color:var(--text-2);margin-top:2px">${ratFull}</div></div>` : ''}
+            ${polList ? `<div style="border-top:1px solid var(--border);padding-top:6px;margin-top:6px"><span style="color:var(--amber);font-weight:700;font-size:10px;text-transform:uppercase">Selected Policies:</span>${polList}</div>` : ''}
+          </div>
+        </details>
         <div id="drift-slot-${s}-${dd.turn}" class="drift-inline" style="display:none"></div>
-        ${decPop}
       </div>`);
-      addTimeline(s, dd.year, dec.slice(0, 40), cls, icon);
+      addTimeline(s, dd.year, dec, cls, icon, dec);
       state[s].outcome = oc; state[s].decision = dec;
       // Divergence check
       const other = s === 'v' ? 'e' : 'v';
@@ -951,7 +1154,22 @@ function handleSimEvent(d) {
         const vC = state.v.crisis, eC = state.e.crisis;
         if (vC.title !== eC.title || state.v.outcome !== state.e.outcome) {
           const rail = $('diverge-rail');
-          rail.innerHTML = `<div class="diverge-title">TURN ${vC.turn} DIVERGENCE</div><div class="diverge-row"><div class="diverge-side v"><b style="color:var(--vis)">${vC.title}</b> <span>${vC.category || ''}</span><br><span>${(state.v.decision || '').slice(0, 80)}</span><br><b>${state.v.outcome}</b></div><div class="diverge-side e"><b style="color:var(--eng)">${eC.title}</b> <span>${eC.category || ''}</span><br><span>${(state.e.decision || '').slice(0, 80)}</span><br><b>${state.e.outcome}</b></div></div>`;
+          const fmtOutcome = o => (o || '').replace(/_/g, ' ').toUpperCase();
+          const outcomeStyle = o => (o || '').includes('success') ? 'color:var(--green)' : 'color:var(--rust)';
+          const sameCrisis = vC.title === eC.title;
+          rail.innerHTML = `<div class="diverge-title">\u26A1 TURN ${vC.turn} DIVERGENCE ${sameCrisis ? '(same crisis, different outcome)' : '(different crises)'}</div>
+            <div class="diverge-row">
+              <div class="diverge-side v">
+                <b style="color:var(--vis)">${esc(vC.title)}</b>
+                <div style="font-size:11px;color:var(--text-2);margin:2px 0">${esc((state.v.decision || '').slice(0, 100))}${(state.v.decision || '').length > 100 ? '...' : ''}</div>
+                <span style="${outcomeStyle(state.v.outcome)};font-weight:800;font-family:var(--mono);font-size:12px">${fmtOutcome(state.v.outcome)}</span>
+              </div>
+              <div class="diverge-side e">
+                <b style="color:var(--eng)">${esc(eC.title)}</b>
+                <div style="font-size:11px;color:var(--text-2);margin:2px 0">${esc((state.e.decision || '').slice(0, 100))}${(state.e.decision || '').length > 100 ? '...' : ''}</div>
+                <span style="${outcomeStyle(state.e.outcome)};font-weight:800;font-family:var(--mono);font-size:12px">${fmtOutcome(state.e.outcome)}</span>
+              </div>
+            </div>`;
           rail.style.display = 'block';
         }
       }
@@ -995,11 +1213,15 @@ function handleSimEvent(d) {
         const barHtml = moodBarSegments.map(m => `<div style="flex:${m.pct};background:${m.bgColor}" title="${m.pct}% ${m.mood}"></div>`).join('');
         const legendHtml = moodBarSegments.slice(0, 3).map(m => `<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${m.bgColor};margin-right:3px"></span>${m.pct}% ${m.mood}</span>`).join(' ');
 
-        // Individual quotes (collapsible)
+        // Individual quotes with tooltip popovers
+        // Key: the .htip must NOT be inside the flex row. It sits as a sibling below the flex row,
+        // both wrapped by the .hover-tip container which is display:block (not flex).
         const quotesHtml = reactions.slice(0, 6).map(r => {
           const moodColor = moodColors[r.mood] || 'var(--text-2)';
           const h = r.hexaco || {};
-          return `<div class="hover-tip" style="display:flex;gap:8px;align-items:baseline;padding:4px 0;border-bottom:1px solid rgba(48,42,34,.5)"><span style="font-weight:600;color:var(--${color});font-size:12px;min-width:100px;flex-shrink:0">${r.name}</span><span style="font-style:italic;color:var(--text-1);font-size:12px;flex:1">"${r.quote.slice(0, 90)}${r.quote.length > 90 ? '...' : ''}"</span><span style="font-size:10px;color:${moodColor};font-weight:700;flex-shrink:0">${r.mood.toUpperCase()}</span><div class="htip"><b>${r.name}</b>, age ${r.age}${r.marsborn ? ' (Mars-born)' : ''}<br>${r.role} \u2014 ${r.specialization || r.department}<div class="ht-hexaco">O=${h.O} C=${h.C} E=${h.E} A=${h.A} Em=${h.Em} HH=${h.HH}</div><div class="ht-stats">Psych: ${r.psychScore} | Bone: ${r.boneDensity}% | Rad: ${r.radiation} mSv</div><div class="ht-mood" style="color:${moodColor}">${r.mood.toUpperCase()} (intensity: ${(r.intensity||0).toFixed(2)})</div><div class="ht-quote">"${r.quote}"</div></div></div>`;
+          const q = esc(r.quote || '');
+          const n = esc(r.name || '');
+          return `<div class="hover-tip" style="display:block;padding:5px 0;border-bottom:1px solid rgba(48,42,34,.5)"><div style="display:flex;gap:8px;align-items:baseline"><span style="font-weight:600;color:var(--${color});font-size:12px;min-width:100px;flex-shrink:0">${n}</span><span style="font-style:italic;color:var(--text-1);font-size:12px;flex:1">\u201C${esc((r.quote||'').slice(0, 90))}${(r.quote||'').length > 90 ? '...' : ''}\u201D</span><span style="font-size:10px;color:${moodColor};font-weight:700;flex-shrink:0">${(r.mood||'').toUpperCase()}</span></div><div class="htip"><b>${n}</b><div style="font-size:11px;color:var(--text-2);margin:4px 0">Age ${r.age || '?'}${r.marsborn ? ' (Mars-born)' : ''} \u00B7 ${esc(r.role||'')} \u00B7 ${esc(r.specialization || r.department || '')}</div><div class="ht-hexaco">O=${h.O||'?'} C=${h.C||'?'} E=${h.E||'?'} A=${h.A||'?'} Em=${h.Em||'?'} HH=${h.HH||'?'}</div><div class="ht-stats">Psych: ${r.psychScore||'?'} | Bone: ${r.boneDensity||'?'}% | Rad: ${r.radiation||'?'} mSv</div><div class="ht-mood" style="color:${moodColor}">${(r.mood||'').toUpperCase()} (intensity: ${(r.intensity||0).toFixed(2)})</div><div class="ht-quote">\u201C${q}\u201D</div></div></div>`;
         }).join('');
 
         addToBody(s, `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-top:2px">
@@ -1013,6 +1235,10 @@ function handleSimEvent(d) {
             <div style="margin-top:4px">${quotesHtml}</div>
           </details>
         </div>`);
+        // Track colonists for post-sim chat
+        for (const r of reactions) {
+          if (r.name) chatColonists.set(r.name, r);
+        }
         log('ok', `[${d.leader}] ${total} colonist reactions`);
       }
       break;
@@ -1025,14 +1251,111 @@ function handleSimEvent(d) {
   }
 }
 
-// Position ALL fixed tooltips (.htip and .tip-pop) near hovered element
-function positionTooltip(trigger, popup) {
+// --- Colonist Chat ---
+let chatColonistId = null;
+let chatHistory = [];
+const chatColonists = new Map(); // name -> last reaction data
+
+function populateChatSidebar() {
+  const list = $('chat-colonist-list');
+  if (!list) return;
+  if (!chatColonists.size) {
+    list.innerHTML = '<div style="color:var(--text-3);font-size:12px">Run a simulation to chat with colonists.</div>';
+    return;
+  }
+  const moodColors = { positive: 'var(--green)', negative: 'var(--rust)', anxious: 'var(--amber)', defiant: 'var(--rust)', hopeful: 'var(--green)', resigned: 'var(--text-3)', neutral: 'var(--text-2)' };
+  let html = '';
+  for (const [name, r] of chatColonists) {
+    const moodColor = moodColors[r.mood] || 'var(--text-2)';
+    html += `<div class="chat-colonist${chatColonistId === name ? ' active' : ''}" onclick="selectChatColonist('${esc(name)}')">
+      <span class="cc-name">${esc(name)}</span>
+      <span class="cc-role">${esc(r.role || '')} · ${esc(r.department || '')}</span>
+      <span class="cc-mood" style="color:${moodColor}">${(r.mood || '').toUpperCase()}</span>
+    </div>`;
+  }
+  list.innerHTML = html;
+}
+
+function selectChatColonist(name) {
+  chatColonistId = name;
+  chatHistory = [];
+  const msgs = $('chat-messages');
+  const colonist = chatColonists.get(name);
+  msgs.innerHTML = `<div class="chat-msg colonist"><div class="cm-name">${esc(name)}</div>${colonist ? `${esc(colonist.role)} in ${esc(colonist.department)}. ${colonist.marsborn ? 'Mars-born.' : 'Earth-born.'} Age ${colonist.age || '?'}.` : ''} Ask me anything about life on Mars.</div>`;
+  $('chat-input').disabled = false;
+  $('chat-send-btn').disabled = false;
+  $('chat-input').focus();
+  populateChatSidebar();
+}
+
+async function sendChat() {
+  const input = $('chat-input');
+  const message = input.value.trim();
+  if (!message || !chatColonistId) return;
+  input.value = '';
+  input.disabled = true;
+  $('chat-send-btn').disabled = true;
+
+  const msgs = $('chat-messages');
+  msgs.innerHTML += `<div class="chat-msg user">${esc(message)}</div>`;
+  msgs.innerHTML += `<div class="chat-msg colonist" id="chat-pending" style="opacity:.5">Thinking...</div>`;
+  msgs.scrollTo({ top: msgs.scrollHeight, behavior: 'smooth' });
+
+  chatHistory.push({ role: 'user', content: message });
+
+  try {
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ colonistId: chatColonistId, message, history: chatHistory }),
+    });
+    const data = await res.json();
+    const pending = $('chat-pending');
+    if (pending) pending.remove();
+    if (data.reply) {
+      chatHistory.push({ role: 'assistant', content: data.reply });
+      msgs.innerHTML += `<div class="chat-msg colonist"><div class="cm-name">${esc(data.colonist || chatColonistId)}</div>${esc(data.reply)}</div>`;
+    } else {
+      msgs.innerHTML += `<div class="chat-msg colonist" style="color:var(--rust)">${esc(data.error || 'No response')}</div>`;
+    }
+  } catch (err) {
+    const pending = $('chat-pending');
+    if (pending) pending.remove();
+    msgs.innerHTML += `<div class="chat-msg colonist" style="color:var(--rust)">Chat failed: ${esc(String(err))}</div>`;
+  }
+
+  input.disabled = false;
+  $('chat-send-btn').disabled = false;
+  input.focus();
+  msgs.scrollTo({ top: msgs.scrollHeight, behavior: 'smooth' });
+}
+
+// Tooltip system: uses mouseenter/mouseleave which do NOT fire for child transitions.
+// MutationObserver auto-attaches listeners to dynamically added .hover-tip and .tip-wrap elements.
+let _activeTip = null;
+
+// Shared floating tooltip container appended to body (escapes all overflow/transform ancestors)
+const _tipContainer = document.createElement('div');
+_tipContainer.id = 'tip-float';
+_tipContainer.style.cssText = 'position:fixed;z-index:99999;pointer-events:none;top:0;left:0';
+document.body.appendChild(_tipContainer);
+
+function showTip(trigger, popup) {
+  if (_activeTip && _activeTip !== popup) {
+    // Return previous tip to its original parent
+    if (_activeTip._origParent) { _activeTip._origParent.appendChild(_activeTip); }
+    _activeTip.style.display = 'none';
+  }
+  _activeTip = popup;
+  // Move popup to the floating container so it escapes overflow/transform ancestors
+  if (!popup._origParent) popup._origParent = popup.parentNode;
+  _tipContainer.appendChild(popup);
   popup.style.left = '-9999px';
   popup.style.top = '-9999px';
   popup.style.display = 'block';
   const rect = trigger.getBoundingClientRect();
   const tipH = popup.offsetHeight || 300;
-  const tipW = popup.offsetWidth || 640;
+  const tipW = popup.offsetWidth || 380;
   let left = rect.left;
   let top = rect.top - tipH - 12;
   if (top < 10) top = rect.bottom + 12;
@@ -1043,20 +1366,37 @@ function positionTooltip(trigger, popup) {
   popup.style.left = left + 'px';
   popup.style.top = top + 'px';
 }
-document.addEventListener('mouseover', e => {
-  // .hover-tip + .htip
-  const ht = e.target.closest('.hover-tip');
-  if (ht) { const p = ht.querySelector('.htip'); if (p) positionTooltip(ht, p); }
-  // .tip-wrap + .tip-pop
-  const tw = e.target.closest('.tip-wrap');
-  if (tw) { const p = tw.querySelector('.tip-pop'); if (p) positionTooltip(tw, p); }
-});
-document.addEventListener('mouseout', e => {
-  const ht = e.target.closest('.hover-tip');
-  if (ht) { const p = ht.querySelector('.htip'); if (p) p.style.display = 'none'; }
-  const tw = e.target.closest('.tip-wrap');
-  if (tw) { const p = tw.querySelector('.tip-pop'); if (p) p.style.display = 'none'; }
-});
+
+function bindTip(el) {
+  if (el._tipBound) return; // already bound
+  el._tipBound = true;
+  const popup = el.querySelector(':scope > .htip') || el.querySelector('.htip') || el.querySelector('.tip-pop');
+  if (!popup) {
+    console.warn('[tooltip] bindTip: no .htip/.tip-pop found in', el.className, el.textContent?.slice(0, 40));
+    return;
+  }
+  el.addEventListener('mouseenter', () => showTip(el, popup));
+  el.addEventListener('mouseleave', () => {
+    popup.style.display = 'none';
+    // Return to original parent so querySelector still finds it next time
+    if (popup._origParent && popup.parentNode !== popup._origParent) popup._origParent.appendChild(popup);
+    if (_activeTip === popup) _activeTip = null;
+  });
+}
+
+// Bind all existing elements
+document.querySelectorAll('.hover-tip, .tip-wrap').forEach(bindTip);
+
+// Auto-bind dynamically added elements
+new MutationObserver(mutations => {
+  for (const m of mutations) {
+    for (const node of m.addedNodes) {
+      if (node.nodeType !== 1) continue;
+      if (node.matches?.('.hover-tip, .tip-wrap')) bindTip(node);
+      if (node.querySelectorAll) node.querySelectorAll('.hover-tip, .tip-wrap').forEach(bindTip);
+    }
+  }
+}).observe(document.body, { childList: true, subtree: true });
 
 // Dismiss intro if previously dismissed
 if (localStorage.getItem('mars-intro-dismissed') === '1') {
@@ -1067,6 +1407,8 @@ if (localStorage.getItem('mars-intro-dismissed') === '1') {
 // Restore cached game data on page load (survives refresh)
 function restoreFromCache() {
   try {
+    // Skip restore if user explicitly cleared
+    if (localStorage.getItem('mars-cleared')) return false;
     const cached = localStorage.getItem('mars-game-data');
     if (!cached) return false;
     const saved = JSON.parse(cached);

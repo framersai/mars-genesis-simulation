@@ -4,14 +4,17 @@
   "description": "Multi-agent Mars colony simulation with emergent tool forging, HEXACO personality evolution, and deterministic kernel. Built with AgentOS.",
   "type": "module",
   "scripts": {
-    "visionary": "npx tsx src/run-visionary.ts",
-    "engineer": "npx tsx src/run-engineer.ts",
-    "smoke": "npx tsx src/run-visionary.ts 3",
-    "compare": "npx tsx src/run-visionary.ts && npx tsx src/run-engineer.ts",
+    "run": "npx tsx src/run.ts",
+    "run:a": "npx tsx src/run-a.ts",
+    "run:b": "npx tsx src/run-b.ts",
+    "smoke": "npx tsx src/run-a.ts 3",
+    "compare": "npx tsx src/run-a.ts && npx tsx src/run-b.ts",
     "dashboard": "npx tsx src/serve.ts",
     "dashboard:smoke": "npx tsx src/serve.ts 3",
     "check:dashboard": "node --check src/dashboard/main.js",
-    "test": "node --import tsx --test src/*.test.ts src/**/*.test.ts"
+    "test": "node --import tsx --test src/*.test.ts src/**/*.test.ts",
+    "leader:a": "npx tsx src/run-a.ts",
+    "leader:b": "npx tsx src/run-b.ts"
   },
   "dependencies": {
     "@framers/agentos": "^0.1.211"

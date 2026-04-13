@@ -50,19 +50,39 @@ function buildColonistPrompt(c: Colonist, ctx: ReactionContext): string {
   const h = c.hexaco;
   const marsborn = c.core.marsborn ? 'Mars-born, never seen Earth.' : `Earth-born, ${ctx.year - 2035} years on Mars.`;
 
+  // Recent life events give the colonist a personal history that shapes their reaction
+  const recentEvents = c.narrative.lifeEvents
+    .slice(-4)
+    .map(e => `- Year ${e.year}: ${e.event}`)
+    .join('\n');
+  const lifeHistory = recentEvents ? `\nYOUR RECENT HISTORY:\n${recentEvents}` : '';
+
+  // Social context
+  const socialContext: string[] = [];
+  if (c.social.partnerId) socialContext.push('Has a partner in the colony');
+  if (c.social.childrenIds.length) socialContext.push(`${c.social.childrenIds.length} children`);
+  if (c.social.earthContacts > 3) socialContext.push(`Still in touch with ${c.social.earthContacts} people on Earth`);
+  if (c.social.earthContacts === 0 && !c.core.marsborn) socialContext.push('Lost all contact with Earth');
+  if (c.health.conditions.length) socialContext.push(`Health issues: ${c.health.conditions.join(', ')}`);
+  if (c.health.boneDensityPct < 70) socialContext.push('Suffering significant bone density loss');
+  if (c.health.cumulativeRadiationMsv > 1500) socialContext.push('High cumulative radiation exposure');
+  if (c.health.psychScore < 0.4) socialContext.push('Struggling with depression');
+  const socialLine = socialContext.length ? socialContext.join('. ') + '.' : '';
+
   return `${REACTION_PROMPT}
 
 YOU: ${c.core.name}, age ${age}, ${c.core.role} in ${c.core.department}. ${marsborn}
+${c.career.specialization !== 'Undetermined' ? `Specialization: ${c.career.specialization}. ${c.career.yearsExperience} years experience.` : ''}
 Personality: O=${h.openness.toFixed(2)} C=${h.conscientiousness.toFixed(2)} E=${h.extraversion.toFixed(2)} A=${h.agreeableness.toFixed(2)} Em=${h.emotionality.toFixed(2)} HH=${h.honestyHumility.toFixed(2)}
 Health: bone density ${c.health.boneDensityPct.toFixed(0)}%, radiation ${c.health.cumulativeRadiationMsv.toFixed(0)} mSv, psych ${c.health.psychScore.toFixed(2)}
-${c.social.partnerId ? 'Has a partner.' : 'Single.'} ${c.social.childrenIds.length} children. ${c.social.earthContacts} Earth contacts.
-${c.promotion ? `Promoted to ${c.promotion.role} by ${c.promotion.promotedBy}.` : ''}
+${socialLine}
+${c.promotion ? `Promoted to ${c.promotion.role} by ${c.promotion.promotedBy}.` : ''}${lifeHistory}
 
 WHAT HAPPENED: Turn ${ctx.turn}, Year ${ctx.year}. Crisis: "${ctx.crisisTitle}" (${ctx.crisisCategory}).
-Commander decided: ${ctx.decision.slice(0, 150)}
+Commander decided: ${ctx.decision.slice(0, 200)}
 Outcome: ${ctx.outcome}. Colony morale: ${Math.round(ctx.colonyMorale * 100)}%. Population: ${ctx.colonyPopulation}.
 
-React as this person. JSON only.`;
+React as this specific person given YOUR history and personality. Do NOT start with "I can't believe". Be distinctive. JSON only.`;
 }
 
 function parseReaction(text: string, c: Colonist, year: number): ColonistReaction | null {

@@ -61,6 +61,10 @@ export interface DirectorContext {
   }>;
   toolsForged: string[];
   driftSummary: Array<{ name: string; role: string; openness: number; conscientiousness: number }>;
+  /** Key outputs from forged tools last turn, so director can generate crises that follow from computed analysis */
+  recentToolOutputs: Array<{ name: string; department: string; output: string }>;
+  /** Colonist mood summary from last turn */
+  colonistMoodSummary?: string;
 }
 
 const DIRECTOR_INSTRUCTIONS = `You are the Crisis Director for a Mars colony simulation. You observe colony state and generate crises that test the colony's weaknesses, exploit consequences of prior decisions, and create interesting narrative tension.
@@ -128,10 +132,12 @@ A: ${ctx.leaderHexaco.agreeableness.toFixed(2)} Em: ${ctx.leaderHexaco.emotional
 
 DECISION HISTORY:
 ${prevCrises}
+${ctx.recentToolOutputs.length ? `\nTOOL INTELLIGENCE (what department agents computed last turn):\n${ctx.recentToolOutputs.slice(0, 4).map(t => `  [${t.department}] ${t.name}: ${t.output.slice(0, 120)}`).join('\n')}\nUse these findings to generate a crisis that follows from what the tools revealed.` : ''}
+${ctx.colonistMoodSummary ? `\nCOLONIST MOOD: ${ctx.colonistMoodSummary}` : ''}
 
 CONSTRAINT: Do NOT use category "${lastCategory}" (used last turn). Pick a different category.
 
-Generate a crisis that tests this colony based on its current state and past decisions. Return JSON only.`;
+Generate a crisis that tests this colony based on its current state, past decisions, and tool intelligence. The crisis should feel like a consequence of what happened before. Return JSON only.`;
 }
 
 /** Parse director LLM response into DirectorCrisis. */
@@ -256,7 +262,7 @@ export class CrisisDirector {
         category: 'infrastructure',
         researchKeywords: s.researchKeywords,
         relevantDepartments: ['medical', 'engineering'],
-        turnSummary: 'First landing on Mars. Choose where to build.',
+        turnSummary: 'Colony ship in orbit. Safe plains or mineral-rich canyon rim: the first decision shapes everything.',
       };
     }
 
@@ -274,7 +280,7 @@ export class CrisisDirector {
         category: 'political',
         researchKeywords: ['Mars colony long-term projections'],
         relevantDepartments: ['governance', 'psychology', 'medical', 'engineering'],
-        turnSummary: 'Final assessment after decades of colony development.',
+        turnSummary: 'Earth demands a full status report. The commander must decide: honest accounting of failures, or bold vision for the next century.',
       };
     }
 

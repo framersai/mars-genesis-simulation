@@ -242,15 +242,88 @@ export function progressBetweenTurns(
     }
   }
 
-  // 5. Morale drift
+  // 5. Relationship-driven psych effects
+  // Deaths cause grief in partners, children, and friends
+  const deadThisTurn = new Set(events.filter(e => e.type === 'death' && e.colonistId).map(e => e.colonistId!));
+  for (const c of colonists) {
+    if (!c.health.alive) continue;
+
+    // Partner died this turn: major psych hit
+    if (c.social.partnerId && deadThisTurn.has(c.social.partnerId)) {
+      c.health.psychScore = Math.max(0, c.health.psychScore - 0.25);
+      c.narrative.lifeEvents.push({ year, event: `Partner died. Grief.`, source: 'kernel' });
+      c.social.partnerId = undefined;
+    }
+
+    // Friend died: moderate psych hit
+    const friendIds = c.social.friendIds || [];
+    const deadFriends = friendIds.filter(id => deadThisTurn.has(id));
+    if (deadFriends.length) {
+      c.health.psychScore = Math.max(0, c.health.psychScore - 0.08 * deadFriends.length);
+      c.social.friendIds = friendIds.filter(id => !deadThisTurn.has(id));
+    }
+
+    // Parent of dead child: devastating
+    const childIds = c.social.childrenIds || [];
+    const deadChildren = childIds.filter(id => deadThisTurn.has(id));
+    if (deadChildren.length) {
+      c.health.psychScore = Math.max(0, c.health.psychScore - 0.35);
+      c.narrative.lifeEvents.push({ year, event: `Lost a child. Devastated.`, source: 'kernel' });
+    }
+
+    // Having a partner provides a psych buffer
+    if (c.social.partnerId) {
+      c.health.psychScore = Math.min(1, c.health.psychScore + 0.02 * yearDelta);
+    }
+
+    // Earth contacts provide comfort but decay over time
+    if (c.social.earthContacts > 0) {
+      c.health.psychScore = Math.min(1, c.health.psychScore + 0.01 * yearDelta);
+    }
+
+    // Isolation penalty: no partner, no friends, no earth contacts
+    if (!c.social.partnerId && (c.social.friendIds || []).length === 0 && c.social.earthContacts === 0) {
+      c.health.psychScore = Math.max(0, c.health.psychScore - 0.04 * yearDelta);
+    }
+  }
+
+  // 5b. Form new relationships (partnerships and friendships)
+  const singles = colonists.filter(c => c.health.alive && !c.social.partnerId && (year - c.core.birthYear) >= 20);
+  for (let i = 0; i < singles.length - 1; i += 2) {
+    if (turnRng.chance(0.05 * yearDelta)) {
+      singles[i].social.partnerId = singles[i + 1].core.id;
+      singles[i + 1].social.partnerId = singles[i].core.id;
+      singles[i].narrative.lifeEvents.push({ year, event: `Partnered with ${singles[i + 1].core.name}`, source: 'kernel' });
+      singles[i + 1].narrative.lifeEvents.push({ year, event: `Partnered with ${singles[i].core.name}`, source: 'kernel' });
+      events.push({ turn, year, type: 'relationship', description: `${singles[i].core.name} and ${singles[i + 1].core.name} partnered`, colonistId: singles[i].core.id });
+    }
+  }
+
+  // 5c. Form friendships within departments
+  const alive = colonists.filter(c => c.health.alive && (c.social.friendIds || []).length < 5);
+  for (let i = 0; i < alive.length - 1; i++) {
+    const a = alive[i], b = alive[i + 1];
+    if (!a.social.friendIds) a.social.friendIds = [];
+    if (!b.social.friendIds) b.social.friendIds = [];
+    if (a.core.department === b.core.department && !a.social.friendIds.includes(b.core.id) && turnRng.chance(0.08 * yearDelta)) {
+      a.social.friendIds.push(b.core.id);
+      b.social.friendIds.push(a.core.id);
+    }
+  }
+
+  // 6. Morale drift (now informed by average psych scores)
+  const aliveColonists = colonists.filter(c => c.health.alive);
+  const avgPsych = aliveColonists.length ? aliveColonists.reduce((s, c) => s + c.health.psychScore, 0) / aliveColonists.length : 0.5;
+  const psychPressure = avgPsych < 0.4 ? -0.06 : avgPsych > 0.7 ? 0.03 : 0;
   const foodPressure = colony.foodMonthsReserve < 6 ? -0.05 : 0;
-  const popPressure = colonists.filter(c => c.health.alive).length > colony.lifeSupportCapacity ? -0.08 : 0;
-  colony.morale = Math.max(0, Math.min(1, colony.morale + (0.6 - colony.morale) * 0.1 + foodPressure + popPressure));
+  const popPressure = aliveColonists.length > colony.lifeSupportCapacity ? -0.08 : 0;
+  const deathShock = deadThisTurn.size > 2 ? -0.04 * deadThisTurn.size : 0;
+  colony.morale = Math.max(0, Math.min(1, colony.morale + (0.6 - colony.morale) * 0.1 + foodPressure + popPressure + psychPressure + deathShock));
 
-  // 6. Update population count
-  colony.population = colonists.filter(c => c.health.alive).length;
+  // 7. Update population count
+  colony.population = aliveColonists.length;
 
-  // 7. Resource production
+  // 8. Resource production
   colony.foodMonthsReserve = Math.max(0, colony.foodMonthsReserve - (yearDelta * 0.5) + (colony.infrastructureModules * 0.3 * yearDelta));
   colony.scienceOutput += yearDelta;
 

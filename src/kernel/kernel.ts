@@ -196,6 +196,36 @@ export class SimulationKernel {
     });
   }
 
+  /** Apply additive deltas to colony systems (not absolute values). */
+  applyColonyDeltas(deltas: Partial<ColonySystems>, events: TurnEvent[] = []): void {
+    const c = this.state.colony;
+    for (const [k, v] of Object.entries(deltas)) {
+      if (v !== undefined && typeof v === 'number' && k in c) {
+        (c as any)[k] = (c as any)[k] + v;
+      }
+    }
+    c.morale = Math.max(0, Math.min(1, c.morale));
+    c.foodMonthsReserve = Math.max(0, c.foodMonthsReserve);
+    c.powerKw = Math.max(0, c.powerKw);
+    c.population = Math.max(0, c.population);
+    c.lifeSupportCapacity = Math.max(0, c.lifeSupportCapacity);
+    c.infrastructureModules = Math.max(0, c.infrastructureModules);
+    this.state.eventLog.push(...events);
+  }
+
+  /** Apply additive deltas to colony politics. */
+  applyPoliticsDeltas(deltas: Partial<ColonyPolitics>, events: TurnEvent[] = []): void {
+    const p = this.state.politics;
+    for (const [k, v] of Object.entries(deltas)) {
+      if (v !== undefined && typeof v === 'number' && k in p) {
+        (p as any)[k] = (p as any)[k] + v;
+      }
+    }
+    p.earthDependencyPct = Math.max(0, Math.min(100, p.earthDependencyPct));
+    p.independencePressure = Math.max(0, Math.min(1, p.independencePressure));
+    this.state.eventLog.push(...events);
+  }
+
   /** Apply personality drift to all promoted colonists. */
   applyDrift(commanderHexaco: HexacoProfile, outcome: TurnOutcome | null, yearDelta: number): void {
     applyPersonalityDrift(
