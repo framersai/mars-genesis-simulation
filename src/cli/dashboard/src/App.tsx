@@ -80,15 +80,52 @@ function AppContent() {
     setActiveTab('settings');
   }, [persistence, sse, toast]);
 
+  const handleRun = useCallback(async () => {
+    const defaultPreset = scenario.presets.find(p => p.id === 'default');
+    const leaders = defaultPreset?.leaders?.slice(0, 2).map((l, i) => ({
+      ...l,
+      colony: i === 0 ? 'Colony Alpha' : 'Colony Beta',
+    })) || [
+      { name: 'Leader A', archetype: 'The Visionary', colony: 'Colony Alpha', hexaco: { openness: 0.95, conscientiousness: 0.35, extraversion: 0.85, agreeableness: 0.55, emotionality: 0.3, honestyHumility: 0.65 }, instructions: '' },
+      { name: 'Leader B', archetype: 'The Engineer', colony: 'Colony Beta', hexaco: { openness: 0.25, conscientiousness: 0.97, extraversion: 0.3, agreeableness: 0.6, emotionality: 0.7, honestyHumility: 0.9 }, instructions: '' },
+    ];
+    try {
+      toast('info', 'Launching', 'Starting simulation with default settings...');
+      const res = await fetch('/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          leaders,
+          provider: 'openai',
+          turns: scenario.setup.defaultTurns,
+          seed: scenario.setup.defaultSeed,
+          startYear: scenario.setup.defaultStartYear,
+          population: scenario.setup.defaultPopulation,
+          activeDepartments: scenario.departments.map(d => d.id),
+        }),
+      });
+      const data = await res.json();
+      if (res.status === 429) {
+        toast('error', 'Rate Limited', data.error || 'Too many simulations');
+      } else if (data.redirect) {
+        setActiveTab('sim');
+      } else {
+        toast('error', 'Launch Failed', data.error || 'Unknown error');
+      }
+    } catch (err) {
+      toast('error', 'Launch Failed', String(err));
+    }
+  }, [scenario, toast, setActiveTab]);
+
   return (
     <DashboardNavigationContext.Provider value={setActiveTab}>
       <ScenarioContext.Provider value={scenario}>
         <div className="flex flex-col h-screen w-screen overflow-hidden scanline-overlay" style={{ background: 'var(--bg-deep)', color: 'var(--text-1)' }}>
-          <TopBar scenario={scenario} sse={sse} gameState={gameState} onSave={handleSave} onLoad={handleLoad} onClear={handleClear} />
+          <TopBar scenario={scenario} sse={sse} gameState={gameState} onSave={handleSave} onLoad={handleLoad} onClear={handleClear} onRun={handleRun} />
           <TabBar active={activeTab} onTabChange={setActiveTab} scenario={scenario} />
 
           <main id="main-content" className="flex-1 overflow-hidden" role="main" aria-label={`${activeTab} view`} style={{ background: 'var(--bg-deep)', display: 'flex', flexDirection: 'column' }}>
-            {activeTab === 'sim' && <SimView state={gameState} sseStatus={sse.status} />}
+            {activeTab === 'sim' && <SimView state={gameState} sseStatus={sse.status} onRun={handleRun} />}
 
             {activeTab === 'settings' && <SettingsPanel />}
 

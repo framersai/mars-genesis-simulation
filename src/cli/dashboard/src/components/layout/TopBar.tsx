@@ -9,6 +9,7 @@ interface TopBarProps {
   onSave?: () => void;
   onLoad?: () => void;
   onClear?: () => void;
+  onRun?: () => void;
 }
 
 /**
@@ -43,7 +44,7 @@ const toolBtnStyle: React.CSSProperties = {
   fontFamily: 'var(--mono)',
 };
 
-export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear }: TopBarProps) {
+export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRun }: TopBarProps) {
   const { resolved, setTheme } = useTheme();
   const hasEvents = gameState.a.events.length > 0 || gameState.b.events.length > 0;
 
@@ -103,6 +104,22 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear }: To
 
       {/* Right: Actions + status + theme */}
       <div className="flex items-center gap-2 shrink-0">
+        {/* Run button */}
+        {onRun && !gameState.isRunning && (
+          <button
+            onClick={onRun}
+            style={{
+              background: 'linear-gradient(135deg, var(--rust), #c44a1e)', color: '#fff',
+              border: 'none', padding: '3px 14px', borderRadius: '4px',
+              fontSize: '11px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--mono)',
+              letterSpacing: '0.5px',
+            }}
+            title="Launch simulation with current settings"
+            aria-label="Run simulation"
+          >
+            RUN
+          </button>
+        )}
         {/* Save/Load/Clear */}
         {hasEvents && onSave && (
           <button onClick={onSave} style={toolBtnStyle} title="Export simulation data as .json" aria-label="Save simulation">Save</button>
