@@ -20,7 +20,7 @@ const FAQ: FaqItem[] = [
   },
   {
     q: 'What is the Scenario Compiler?',
-    a: 'The Scenario Compiler is the zero-code direction for Paracosm: a JSON world definition that generates runtime hooks via LLM calls instead of hand-written TypeScript. Core compiler work exists in the codebase, but the polished hosted self-serve experience is still a planned product surface rather than a general-availability workflow.',
+    a: 'The Scenario Compiler is the zero-code authoring path for Paracosm: a JSON world definition that generates runtime hooks via LLM calls instead of hand-written TypeScript. It already works in the open-source CLI and local dashboard today. The polished hosted self-serve product surface is still planned rather than generally available.',
   },
   {
     q: 'How many simulations can I run?',
@@ -52,7 +52,7 @@ const FAQ: FaqItem[] = [
   },
   {
     q: 'Can I create my own scenario?',
-    a: 'Two ways. Write a ScenarioPackage in TypeScript with full control over hooks and progression logic today. Or use the Scenario Compiler flow, which exists in the product direction and early implementation work but is not yet a broadly available hosted self-serve workflow.',
+    a: 'Two ways. Write a ScenarioPackage in TypeScript with full control over hooks and progression logic today. Or use the Scenario Compiler from the open-source CLI or local dashboard to turn JSON into a runnable scenario package. Hosted self-serve packaging for that workflow is still planned rather than broadly available.',
   },
   {
     q: 'What is AgentOS?',
@@ -186,7 +186,7 @@ export function AboutPage() {
               { title: 'Tool Forging', desc: 'Department agents create computational tools at runtime. An LLM judge reviews each for safety and correctness.' },
               { title: 'Personality Drift', desc: 'HEXACO traits evolve through leader pull, role activation, and outcome reinforcement over the simulation.' },
               { title: 'Deterministic Kernel', desc: 'Seeded PRNG ensures reproducibility. Same seed, same roster. Only AI decisions create divergence.' },
-              { title: 'Scenario Compiler', desc: 'Compiler foundations exist now, with the polished zero-code hosted workflow planned as a future product layer.' },
+              { title: 'Scenario Compiler', desc: 'The open-source CLI and dashboard can already compile scenario JSON into runnable packages. The polished hosted zero-code workflow remains a future product layer.' },
               { title: 'Scenario-Driven Engine', desc: 'Mars and lunar are live today. The engine is designed to expand into broader closed-state simulation domains over time.' },
             ].map(item => (
               <div key={item.title} className="hover-glow" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px 16px', boxShadow: 'var(--card-shadow)' }}>
