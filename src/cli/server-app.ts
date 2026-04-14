@@ -513,6 +513,27 @@ Respond in character as this person. Be direct, personal, emotional. Reference y
       }
     }
 
+    // API docs (TypeDoc generated)
+    if (pathname.startsWith('/docs')) {
+      const docsDir = resolve(__dirname, '..', '..', 'docs', 'api');
+      let docPath = pathname === '/docs' || pathname === '/docs/' ? '/index.html' : pathname.replace('/docs', '');
+      const filePath = resolve(docsDir, docPath.startsWith('/') ? docPath.slice(1) : docPath);
+      if (existsSync(filePath)) {
+        const ext = filePath.split('.').pop() || '';
+        const mimeTypes: Record<string, string> = {
+          html: 'text/html', css: 'text/css', js: 'application/javascript',
+          svg: 'image/svg+xml', png: 'image/png', json: 'application/json',
+        };
+        const content = readFileSync(filePath);
+        res.writeHead(200, {
+          'Content-Type': mimeTypes[ext] || 'application/octet-stream',
+          'Cache-Control': 'public, max-age=3600',
+        });
+        res.end(content);
+        return;
+      }
+    }
+
     // Vite assets (CSS, JS, fonts)
     if (req.url?.startsWith('/assets/')) {
       const assetPath = resolve(distDir, req.url.slice(1));
