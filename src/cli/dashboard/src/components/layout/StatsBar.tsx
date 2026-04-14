@@ -52,16 +52,7 @@ export function StatsBar({ colonyA, colonyB, prevColonyA, prevColonyB, deathsA, 
   const scenario = useScenarioContext();
 
   if (!colonyA && !colonyB) {
-    return (
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-        padding: '8px 16px', background: 'var(--bg-panel)', borderBottom: '1px solid var(--border)',
-        fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--text-3)',
-      }}>
-        <span className="spinner" />
-        <span>Waiting for colony metrics. Departments are analyzing the current crisis.</span>
-      </div>
-    );
+    return null;
   }
 
   const metrics = scenario.ui.headerMetrics.slice(0, 4);

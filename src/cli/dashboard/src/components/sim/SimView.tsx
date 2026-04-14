@@ -11,6 +11,7 @@ import { Timeline } from './Timeline';
 interface SimViewProps {
   state: GameState;
   sseStatus?: string;
+  onRun?: () => void;
 }
 
 function SideColumn({ side, sideState, state }: { side: Side; sideState: SideState; state: GameState }) {
@@ -86,7 +87,7 @@ function IntroBar({ onDismiss }: { onDismiss: () => void }) {
   );
 }
 
-export function SimView({ state, sseStatus }: SimViewProps) {
+export function SimView({ state, sseStatus, onRun }: SimViewProps) {
   const scenario = useScenarioContext();
 
   // Fallback leader info from scenario presets when no simulation data yet
@@ -153,22 +154,36 @@ export function SimView({ state, sseStatus }: SimViewProps) {
           <div style={{ fontSize: '13px', color: 'var(--text-3)', maxWidth: '420px', lineHeight: 1.7, marginBottom: '20px' }}>
             Configure two commanders with different HEXACO personality profiles, choose a scenario, and launch from the Settings tab. Or load a previously saved simulation.
           </div>
-          <button
-            onClick={() => {
-              const url = new URL(window.location.href);
-              url.searchParams.set('tab', 'settings');
-              window.history.replaceState({}, '', url.toString());
-              window.location.reload();
-            }}
-            style={{
-              background: 'linear-gradient(135deg, var(--rust), #c44a1e)', color: '#fff',
-              border: 'none', padding: '10px 28px', borderRadius: '6px',
-              fontSize: '14px', fontWeight: 700, cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(224,101,48,.25)',
-            }}
-          >
-            Go to Settings
-          </button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {onRun && (
+              <button
+                onClick={onRun}
+                style={{
+                  background: 'linear-gradient(135deg, var(--rust), #c44a1e)', color: '#fff',
+                  border: 'none', padding: '10px 28px', borderRadius: '6px',
+                  fontSize: '14px', fontWeight: 700, cursor: 'pointer',
+                  boxShadow: '0 4px 16px rgba(224,101,48,.25)',
+                }}
+              >
+                Run Simulation
+              </button>
+            )}
+            <button
+              onClick={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.set('tab', 'settings');
+                window.history.replaceState({}, '', url.toString());
+                window.location.reload();
+              }}
+              style={{
+                background: 'var(--bg-card)', color: 'var(--text-2)',
+                border: '1px solid var(--border)', padding: '10px 28px', borderRadius: '6px',
+                fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              Settings
+            </button>
+          </div>
         </div>
       )}
 
