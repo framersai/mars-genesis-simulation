@@ -11,7 +11,7 @@ import { SimView } from './components/sim/SimView';
 import { SettingsPanel } from './components/settings/SettingsPanel';
 import { ReportView } from './components/reports/ReportView';
 import { ChatPanel } from './components/chat/ChatPanel';
-import { AboutPage } from './components/about/AboutPage';
+// AboutPage consolidated into landing page at /
 import { Footer } from './components/layout/Footer';
 import { ToastProvider, useToast } from './components/shared/Toast';
 import { Analytics } from './components/shared/Analytics';
@@ -49,6 +49,10 @@ function AppContent() {
   };
   const [activeTab, setActiveTabState] = useState<Tab>(getTabFromUrl);
   const setActiveTab = (tab: Tab) => {
+    if (tab === 'about') {
+      window.open('/', '_blank');
+      return;
+    }
     setActiveTabState(tab);
     const url = new URL(window.location.href);
     url.searchParams.set('tab', tab);
@@ -112,7 +116,7 @@ function AppContent() {
             </div>
           )}
 
-          {activeTab === 'about' && <AboutPage />}
+          {/* About tab redirects to the landing page */}
         </main>
         <Footer />
       </div>

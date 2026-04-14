@@ -3,27 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Paracosm — Multi-Agent AI Simulation Engine</title>
-<meta name="description" content="Scenario-driven multi-agent simulation engine with emergent AI crisis generation, runtime tool forging, HEXACO personality evolution, and a deterministic kernel. Two AI commanders. Same settlement. Divergent civilizations.">
-<meta name="keywords" content="paracosm, AgentOS, AI simulation, multi-agent, emergent AI, autonomous agents, HEXACO personality, tool forging, LLM-as-judge, crisis simulation, TypeScript, deterministic kernel">
+<title>Paracosm: Open-Source Multi-Agent AI Simulation Engine | AgentOS</title>
+<meta name="description" content="Open-source TypeScript simulation engine for multi-agent AI scenarios. Define settlement simulations with emergent crisis generation, sandboxed tool forging, HEXACO personality models, and deterministic state kernels. npm install paracosm. Apache-2.0.">
+<meta name="keywords" content="paracosm, agentos, multi-agent simulation engine, AI agent framework, TypeScript AI agents, autonomous agent simulation, open source simulation engine, npm paracosm, HEXACO personality model, emergent AI behavior, runtime tool forging, LLM-as-judge, deterministic simulation kernel, scenario-driven simulation, agentic AI, AI simulation framework, multi-agent system, agent orchestration, sandboxed code execution, personality-driven AI">
 <meta name="author" content="Manic Agency / Frame.dev">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <link rel="canonical" href="https://paracosm.agentos.sh">
-<meta property="og:title" content="Paracosm — Multi-Agent AI Simulation Engine">
-<meta property="og:description" content="Two AI commanders. Same settlement. Different personalities. Emergent crises, runtime tool forging, 100+ agent voices per turn.">
+<meta property="og:title" content="Paracosm: Open-Source Multi-Agent AI Simulation Engine">
+<meta property="og:description" content="Define any settlement simulation as a JSON scenario. The engine handles crisis generation, tool forging in sandboxed V8, HEXACO personality drift, and deterministic state resolution. 100+ autonomous agents per run.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://paracosm.agentos.sh">
-<meta property="og:site_name" content="Paracosm">
+<meta property="og:site_name" content="Paracosm by AgentOS">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Paracosm — Multi-Agent AI Simulation Engine">
-<meta name="twitter:description" content="Two AI commanders. Same settlement. Emergent crises, runtime tool forging, divergent civilizations.">
+<meta name="twitter:title" content="Paracosm: Open-Source Multi-Agent Simulation Engine">
+<meta name="twitter:description" content="TypeScript simulation engine with emergent AI crises, sandboxed tool forging, and HEXACO personality drift. Apache-2.0. npm install paracosm.">
 <meta name="theme-color" content="#0a0806">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='m' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23e06530'/%3E%3Cstop offset='50%25' stop-color='%23e8b44a'/%3E%3Cstop offset='100%25' stop-color='%234ca8a8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='%230a0806'/%3E%3Ccircle cx='32' cy='32' r='10' fill='url(%23m)'/%3E%3Ccircle cx='32' cy='10' r='5' fill='%23e06530'/%3E%3Ccircle cx='51' cy='21' r='5' fill='%23e8b44a'/%3E%3Ccircle cx='51' cy='43' r='5' fill='%23e8b44a'/%3E%3Ccircle cx='32' cy='54' r='5' fill='%234ca8a8'/%3E%3Ccircle cx='13' cy='43' r='5' fill='%23e06530'/%3E%3Ccircle cx='13' cy='21' r='5' fill='%23e06530'/%3E%3Cpath d='M32 32L32 10M32 32L51 21M32 32L51 43M32 32L32 54M32 32L13 43M32 32L13 21' stroke='url(%23m)' stroke-width='2' opacity='.5'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Paracosm","description":"Scenario-driven multi-agent AI simulation engine.","applicationCategory":"Simulation","operatingSystem":"Cross-platform","license":"https://opensource.org/licenses/Apache-2.0","url":"https://paracosm.agentos.sh","author":{"@type":"Organization","name":"Manic Agency / Frame.dev","url":"https://frame.dev"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Paracosm","description":"Open-source TypeScript multi-agent simulation engine with emergent crisis generation, sandboxed runtime tool forging, HEXACO personality evolution, and deterministic state kernels. Built on AgentOS.","applicationCategory":"Simulation","applicationSubCategory":"Multi-Agent AI Framework","operatingSystem":"Cross-platform","programmingLanguage":"TypeScript","license":"https://opensource.org/licenses/Apache-2.0","url":"https://paracosm.agentos.sh","downloadUrl":"https://www.npmjs.com/package/paracosm","softwareVersion":"0.1.0","author":{"@type":"Organization","name":"Manic Agency / Frame.dev","url":"https://frame.dev"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"codeRepository":"https://github.com/framersai/paracosm","runtimePlatform":"Node.js"}
 </script>
 <style>
 :root{--bg:#0a0806;--bg2:#14110e;--bg3:#1c1915;--bg4:#242018;--border:#302a22;--border-hl:#4a3f30;--t1:#f5f0e4;--t2:#d8ccb0;--t3:#a89878;--t4:#6b5f50;--rust:#e06530;--rust-d:#8b3d1e;--amber:#e8b44a;--amber-d:#8b6a2e;--teal:#4ca8a8;--teal-d:#2a5f5f;--green:#6aad48;--mono:'JetBrains Mono','SF Mono',Menlo,monospace;--sans:'Inter',system-ui,-apple-system,sans-serif;--grad:linear-gradient(135deg,#e06530,#e8b44a,#4ca8a8);color-scheme:dark}
@@ -269,8 +269,8 @@ footer{padding:28px 24px;border-top:1px solid var(--border);background:var(--bg2
   </svg>
 
   <h1>PARACOSM</h1>
-  <p class="hero-sub">Scenario-driven multi-agent simulation engine. Define any closed-state world as a ScenarioPackage. The engine handles emergent crisis generation, runtime tool forging, personality evolution, and deterministic state resolution.</p>
-  <p class="hero-mono">OPEN SOURCE &middot; APACHE-2.0 &middot; BUILT ON AGENTOS</p>
+  <p class="hero-sub">Define a world. The engine populates it with autonomous agents, generates crises from colony state, forges computational tools at runtime, and resolves outcomes through a deterministic kernel. Same starting conditions, different AI personalities, divergent civilizations.</p>
+  <p class="hero-mono">OPEN SOURCE &middot; APACHE-2.0 &middot; TYPESCRIPT &middot; NPM INSTALL PARACOSM</p>
 
   <div class="hero-ctas">
     <a href="/sim" class="cta cta-pulse">Launch Simulation <svg><use href="#i-arrow"/></svg></a>
@@ -279,12 +279,12 @@ footer{padding:28px 24px;border-top:1px solid var(--border);background:var(--bg2
   </div>
 
   <div class="hero-chips">
-    <span class="chip">Emergent AI Crises</span>
-    <span class="chip">Runtime Tool Forging</span>
-    <span class="chip">HEXACO Personality Drift</span>
-    <span class="chip">Deterministic Kernel</span>
-    <span class="chip">Multi-Agent Analysis</span>
-    <span class="chip">DOI-Linked Citations</span>
+    <span class="chip">Emergent Crisis Generation</span>
+    <span class="chip">Sandboxed V8 Tool Forging</span>
+    <span class="chip">HEXACO-PI-R Personality Model</span>
+    <span class="chip">Mulberry32 Deterministic PRNG</span>
+    <span class="chip">Multi-Agent Department Analysis</span>
+    <span class="chip">Semantic Research with DOI Citations</span>
   </div>
 </section>
 
@@ -292,45 +292,45 @@ footer{padding:28px 24px;border-top:1px solid var(--border);background:var(--bg2
 <section class="sec sec-alt" id="features">
   <div class="sec-inner">
     <div class="sec-label rv">Core Capabilities</div>
-    <h2 class="sec-title rv">What makes Paracosm different</h2>
-    <p class="sec-desc rv">Not a chatbot wrapper. A simulation engine where AI agents invent tools, evolve personalities, and generate crises nobody programmed.</p>
+    <h2 class="sec-title rv">What Paracosm Does</h2>
+    <p class="sec-desc rv">Paracosm is a simulation engine, not a chat interface. Agents analyze data, write code, cite papers, and forge computational models inside sandboxed V8 isolates. The engine generates crises from colony state, not from a script. Every run produces different outcomes from the same starting conditions.</p>
 
     <div class="feat-grid">
       <div class="feat rv rv-d1">
         <svg class="feat-icon"><use href="#i-forge"/></svg>
         <h3>Runtime Tool Forging</h3>
-        <p>Department agents create computational tools on the fly: radiation calculators, food projectors, morale models. Each tool is sandboxed in V8 and reviewed by an LLM-as-judge for safety and correctness.</p>
-        <div class="feat-ref">Built on AgentOS EmergentCapabilityEngine + EmergentJudge</div>
+        <p>A medical officer invents a radiation dose calculator. An engineer writes a structural load analyzer. These tools don't exist in the codebase. The agent writes them, they execute in an isolated V8 sandbox, and an LLM judge reviews output before it enters the decision pipeline.</p>
+        <div class="feat-ref">AgentOS EmergentCapabilityEngine, sandboxed via isolated-vm</div>
       </div>
       <div class="feat rv rv-d2">
         <svg class="feat-icon"><use href="#i-dna"/></svg>
         <h3>HEXACO Personality Drift</h3>
-        <p>Six-factor personality model from psychology research. Continuous 0-1 traits drift through leader pull, role activation, and outcome reinforcement across turns. Same person, two commanders, measurably different behavior.</p>
-        <div class="feat-ref">Ashton, M.C. &amp; Lee, K. (2007). Personality and Social Psychology Review, 11(2), 150-166</div>
+        <p>Each agent carries six continuous personality traits (Openness, Conscientiousness, Extraversion, Agreeableness, Emotionality, Honesty-Humility). These values shift over time through three mechanisms: leader influence, role-specific pressures, and crisis outcome reinforcement. The same colonist under two different commanders becomes a measurably different person by turn 12.</p>
+        <div class="feat-ref">Ashton &amp; Lee, "Empirical, Theoretical, and Practical Advantages of the HEXACO Model," PSPR 11(2), 2007</div>
       </div>
       <div class="feat rv rv-d3">
         <svg class="feat-icon"><use href="#i-bolt"/></svg>
         <h3>Emergent Crisis Director</h3>
-        <p>An LLM agent observes colony state, resource levels, decision history, and tool intelligence. It generates unique crises per timeline that exploit consequences of prior decisions and escalate over time.</p>
-        <div class="feat-ref">Adaptive narrative generation, cf. Riedl &amp; Bulitko (2013)</div>
+        <p>The Crisis Director reads colony metrics, resource reserves, population health, prior decisions, and the tools agents have built. It generates a crisis that targets the settlement's actual weak points. If a commander neglected agriculture in turn 3, the food crisis in turn 7 is a consequence, not a coincidence.</p>
+        <div class="feat-ref">cf. Riedl &amp; Bulitko, "Interactive Narrative: An Intelligent Systems Approach," AI Magazine 34(1), 2013</div>
       </div>
       <div class="feat rv rv-d1">
         <svg class="feat-icon"><use href="#i-dice"/></svg>
         <h3>Deterministic Kernel</h3>
-        <p>Seeded PRNG (Mulberry32) ensures reproducibility. Same seed produces the same colonist roster, births, deaths, and promotions. Divergence comes entirely from AI-driven decisions.</p>
-        <div class="feat-ref">Law, A.M. &amp; Kelton, W.D. (2000). Simulation Modeling and Analysis. McGraw-Hill</div>
+        <p>The simulation kernel uses Mulberry32, a 32-bit seeded PRNG. Given the same seed, the kernel produces identical colonist rosters, birth/death schedules, and promotion sequences. The only source of variation is the AI commander's decisions. Two runs with the same seed and different personalities produce different civilizations from provably identical starting conditions.</p>
+        <div class="feat-ref">cf. Law &amp; Kelton, Simulation Modeling and Analysis, 5th ed., McGraw-Hill, 2015</div>
       </div>
       <div class="feat rv rv-d2">
         <svg class="feat-icon"><use href="#i-code"/></svg>
         <h3>Scenario Compiler</h3>
-        <p>Define any closed-state settlement as JSON. The compiler generates all runtime hooks via LLM: progression logic, crisis templates, milestone conditions, political dynamics. ~$0.10 per compile, cached to disk.</p>
-        <div class="feat-ref">Zero-code scenario authoring via AgentOS generateText()</div>
+        <p>Write a JSON file describing departments, metrics, and world rules. The compiler calls generateText() to produce TypeScript hooks for progression, crisis generation, milestones, and political dynamics. A Mars colony, a lunar outpost, an Antarctic station, a submarine habitat: same compiler, different JSON, different simulation. Cost is roughly $0.10 per compile. Results cache to disk.</p>
+        <div class="feat-ref">compileScenario() in paracosm/engine/compiler</div>
       </div>
       <div class="feat rv rv-d3">
         <svg class="feat-icon"><use href="#i-search"/></svg>
-        <h3>Research-Backed Decisions</h3>
-        <p>Department agents cite DOI-linked academic papers. Decisions are grounded in domain literature via semantic search across Serper, Tavily, Firecrawl, and Brave with Cohere neural reranking.</p>
-        <div class="feat-ref">Cohere Rerank v3.5 for citation relevance scoring</div>
+        <h3>Semantic Research Pipeline</h3>
+        <p>Department agents search academic literature before making recommendations. The pipeline queries Serper, Tavily, Firecrawl, and Brave in parallel, then applies Cohere Rerank v3.5 for neural relevance scoring. Citations include DOI links. A medical agent recommending radiation shielding cites the actual NASA dosimetry guidelines, not a hallucinated source.</p>
+        <div class="feat-ref">Deep research via AgentOS AgentMemory + Cohere Rerank v3.5</div>
       </div>
     </div>
   </div>
@@ -340,8 +340,8 @@ footer{padding:28px 24px;border-top:1px solid var(--border);background:var(--bg2
 <section class="sec" id="how-it-works">
   <div class="sec-inner sec-center">
     <div class="sec-label rv">Simulation Loop</div>
-    <h2 class="sec-title rv">How a turn works</h2>
-    <p class="sec-desc rv">Each turn is a complete cycle. Crisis generation, multi-department analysis with tool forging, commander decision, deterministic state update, population reaction.</p>
+    <h2 class="sec-title rv">Anatomy of a Turn</h2>
+    <p class="sec-desc rv">A turn takes 30 to 90 seconds. The engine runs four phases in sequence. Each phase feeds data forward. By the end of a turn, the settlement has changed, the population has reacted, and personality traits have shifted.</p>
 
     <div class="flow-wrap rv">
       <div class="flow-line"><div class="flow-line-fill" id="flow-fill"></div></div>
@@ -350,38 +350,38 @@ footer{padding:28px 24px;border-top:1px solid var(--border);background:var(--bg2
           <div class="flow-ring" style="border-color:var(--rust)"><svg style="color:var(--rust)"><use href="#i-eye"/></svg></div>
           <div class="flow-num" style="color:var(--rust)">01</div>
           <h4>Crisis Director</h4>
-          <p>AI observes colony state and generates a unique crisis targeting current weaknesses</p>
+          <p>Reads colony state, prior decisions, and tool intelligence. Generates a crisis that targets actual weaknesses.</p>
         </div>
         <div class="flow-node">
           <div class="flow-ring" style="border-color:var(--amber)"><svg style="color:var(--amber)"><use href="#i-layers"/></svg></div>
           <div class="flow-num" style="color:var(--amber)">02</div>
           <h4>Department Analysis</h4>
-          <p>Agents analyze, cite research, and forge computational tools in sandboxed V8</p>
+          <p>Five department agents analyze the crisis in parallel. Each cites research and can forge new computational tools.</p>
         </div>
         <div class="flow-node">
           <div class="flow-ring" style="border-color:var(--teal)"><svg style="color:var(--teal)"><use href="#i-brain"/></svg></div>
           <div class="flow-num" style="color:var(--teal)">03</div>
           <h4>Commander Decision</h4>
-          <p>HEXACO personality drives the choice. Same crisis, different outcomes per leader</p>
+          <p>The AI commander weighs department input through the lens of their HEXACO personality profile.</p>
         </div>
         <div class="flow-node">
           <div class="flow-ring" style="border-color:var(--green)"><svg style="color:var(--green)"><use href="#i-cpu"/></svg></div>
           <div class="flow-num" style="color:var(--green)">04</div>
           <h4>Kernel Resolution</h4>
-          <p>Deterministic state machine applies effects. Population reacts. Personalities drift.</p>
+          <p>Deterministic state machine applies effects. Agents react, form opinions, update relationships. HEXACO traits drift.</p>
         </div>
       </div>
     </div>
 
     <!-- Divergence visualization -->
     <div class="sec-label rv" style="margin-top:64px">Divergence</div>
-    <h2 class="sec-title rv">Same crisis, different civilizations</h2>
-    <p class="sec-desc rv">Two commanders receive identical starting conditions. Their personality-driven decisions produce measurably different outcomes within 3 turns.</p>
+    <h2 class="sec-title rv">Same seed. Different commander. Different civilization.</h2>
+    <p class="sec-desc rv">The kernel guarantees identical starting conditions. Seed 950 produces the same 100 colonists with the same health profiles, the same resource levels, and the same initial crises. The only variable is the commander's personality. By turn 3, the settlements are measurably different.</p>
 
     <div class="diverge rv">
       <div class="diverge-side" style="border-left:3px solid var(--amber)">
-        <h4 style="color:var(--amber)">The Visionary</h4>
-        <p style="font-size:13px;color:var(--t2)">High openness, low conscientiousness. Bold expansion, calculated risks. Favors innovation over safety margins.</p>
+        <h4 style="color:var(--amber)">The Visionary (O:0.95 C:0.35)</h4>
+        <p style="font-size:13px;color:var(--t2)">High openness drives experimental agriculture, risky habitat expansion, and early independence pushes. Population grows faster but with higher variance in outcomes.</p>
         <div style="font-size:11px;color:var(--t3);font-family:var(--mono);margin-top:8px">
           <div>Population <div class="diverge-bar"><div class="diverge-fill" style="width:78%;background:var(--amber)"></div></div></div>
           <div>Morale <div class="diverge-bar"><div class="diverge-fill" style="width:62%;background:var(--amber)"></div></div></div>
@@ -389,8 +389,8 @@ footer{padding:28px 24px;border-top:1px solid var(--border);background:var(--bg2
         </div>
       </div>
       <div class="diverge-side" style="border-left:3px solid var(--teal)">
-        <h4 style="color:var(--teal)">The Engineer</h4>
-        <p style="font-size:13px;color:var(--t2)">High conscientiousness, low openness. Engineering discipline, safety margins. Favors proven methods over experimentation.</p>
+        <h4 style="color:var(--teal)">The Engineer (O:0.25 C:0.97)</h4>
+        <p style="font-size:13px;color:var(--t2)">High conscientiousness produces conservative resource allocation, redundant life support, and slower expansion. Lower mortality, lower innovation, higher long-term stability.</p>
         <div style="font-size:11px;color:var(--t3);font-family:var(--mono);margin-top:8px">
           <div>Population <div class="diverge-bar"><div class="diverge-fill" style="width:88%;background:var(--teal)"></div></div></div>
           <div>Morale <div class="diverge-bar"><div class="diverge-fill" style="width:71%;background:var(--teal)"></div></div></div>
@@ -404,21 +404,21 @@ footer{padding:28px 24px;border-top:1px solid var(--border);background:var(--bg2
 <!-- SCENARIOS -->
 <section class="sec sec-alt" id="scenarios">
   <div class="sec-inner">
-    <div class="sec-label rv">Live Scenarios</div>
-    <h2 class="sec-title rv">Two worlds, one engine</h2>
-    <p class="sec-desc rv">Each scenario is a self-contained ScenarioPackage. Different departments, metrics, progression, milestones. Same engine, zero code changes.</p>
+    <div class="sec-label rv">Scenarios</div>
+    <h2 class="sec-title rv">Two ScenarioPackages ship with the engine</h2>
+    <p class="sec-desc rv">A ScenarioPackage is a JSON file plus runtime hooks. It defines departments, metrics, crisis templates, progression rules, and milestone conditions. The engine reads the package and runs the simulation. No engine code changes required between scenarios.</p>
 
     <div class="scenarios">
       <div class="sc-card rv rv-d1">
         <span class="sc-badge" style="background:rgba(224,101,48,.1);color:var(--rust);border:1px solid var(--rust-d)">Flagship</span>
         <h3>Mars Genesis</h3>
-        <p>100-colonist Mars colony over 50 simulated years. Medical, engineering, agricultural, social, and science departments. Resource scarcity, radiation events, political factions, and technological breakthroughs.</p>
+        <p>100-person Mars colony across 50 simulated years. Five departments (Medical, Engineering, Agriculture, Psychology, Governance) analyze each crisis. Agents track bone density, radiation exposure, food reserves, morale, and political faction alignment. The Crisis Director uses all of this to generate crises that target the colony's weakest points.</p>
         <div class="sc-stats"><span><b>100</b> colonists</span><span><b>5</b> depts</span><span><b>12</b> turns</span><span><b>50</b> years</span></div>
       </div>
       <div class="sc-card rv rv-d2">
         <span class="sc-badge" style="background:rgba(76,168,168,.1);color:var(--teal);border:1px solid var(--teal-d)">Proven</span>
         <h3>Lunar Outpost</h3>
-        <p>50-person crew at the lunar south pole. Mining, life-support, communications, research. Regolith toxicity, 1/6g atrophy, Earth-relay delays, and crew rotation dynamics.</p>
+        <p>50-person crew at the lunar south pole. Four departments handle mining, life-support, communications, and research. The scenario models regolith toxicity, 1/6g bone atrophy, Earth-relay communication delays, and crew rotation logistics. Proves the engine works across scenario boundaries without engine code changes.</p>
         <div class="sc-stats"><span><b>50</b> crew</span><span><b>4</b> depts</span><span><b>8</b> turns</span><span><b>10</b> years</span></div>
       </div>
     </div>
@@ -428,9 +428,9 @@ footer{padding:28px 24px;border-top:1px solid var(--border);background:var(--bg2
 <!-- ARCHITECTURE -->
 <section class="sec" id="architecture">
   <div class="sec-inner">
-    <div class="sec-label rv">Under the Hood</div>
-    <h2 class="sec-title rv">Architecture</h2>
-    <p class="sec-desc rv">Three clean layers. Engine defines types. Runtime orchestrates. CLI provides the dashboard.</p>
+    <div class="sec-label rv">Architecture</div>
+    <h2 class="sec-title rv">Three layers, strict boundaries</h2>
+    <p class="sec-desc rv">The engine layer owns types and the deterministic kernel (71 source files). The runtime layer orchestrates simulations via 8 hook interfaces (18 files). The CLI layer serves the dashboard, batch runner, and HTTP server (45 files). No circular dependencies. The engine never imports from runtime.</p>
 
     <div class="arch rv">
       <div class="arch-row" style="border-left:3px solid var(--amber)">
@@ -492,14 +492,14 @@ footer{padding:28px 24px;border-top:1px solid var(--border);background:var(--bg2
     <div class="sec-label rv">FAQ</div>
     <h2 class="sec-title rv">Frequently asked questions</h2>
     <div class="faq-list rv">
-      <details class="faq-item"><summary>What is Paracosm?</summary><div class="faq-body">A scenario-driven multi-agent simulation engine. You define a ScenarioPackage describing your world, and the engine runs it with emergent AI crisis generation, multi-agent analysis, runtime tool forging, HEXACO personality drift, and deterministic state transitions.</div></details>
-      <details class="faq-item"><summary>How does tool forging work?</summary><div class="faq-body">Department agents create computational tools at runtime. Each tool is sandboxed in an isolated V8 environment, reviewed by an LLM-as-judge for safety and correctness, and produces real computed output that influences decisions. Nobody pre-programmed these tools.<div class="faq-cite">AgentOS EmergentCapabilityEngine + EmergentJudge</div></div></details>
-      <details class="faq-item"><summary>What is HEXACO personality?</summary><div class="faq-body">A six-factor personality model: Honesty-Humility, Emotionality, Extraversion, Agreeableness, Conscientiousness, and Openness to Experience. Each trait is a continuous 0-1 value that drifts over time through leader pull, role activation, and outcome reinforcement.<div class="faq-cite">Ashton, M.C. &amp; Lee, K. (2007). "Empirical, Theoretical, and Practical Advantages of the HEXACO Model." Personality and Social Psychology Review, 11(2), 150-166.</div></div></details>
-      <details class="faq-item"><summary>Is the simulation deterministic?</summary><div class="faq-body">The kernel is fully deterministic. Same seed produces the same colonist roster, births, deaths, and promotions via Mulberry32 PRNG. Divergence comes entirely from AI-driven decisions.<div class="faq-cite">Law, A.M. &amp; Kelton, W.D. (2000). "Simulation Modeling and Analysis." McGraw-Hill.</div></div></details>
-      <details class="faq-item"><summary>What LLM providers are supported?</summary><div class="faq-body">OpenAI (GPT-5.4, GPT-5.4-mini) and Anthropic (Claude Sonnet 4.6, Claude Haiku 4.5). Different models can be assigned to different roles: commander, departments, judge, and crisis director.</div></details>
-      <details class="faq-item"><summary>Can I create my own scenario?</summary><div class="faq-body">Two ways. Write a ScenarioPackage in TypeScript with full control over hooks. Or use the Scenario Compiler, which generates all runtime hooks from a JSON world definition via LLM (~$0.10 per compile, cached to disk).</div></details>
-      <details class="faq-item"><summary>What verticals does this support?</summary><div class="faq-body">Defense and intelligence (wargaming), corporate strategy (leadership modeling), game studios (procedural civilizations), academic research (AI decision experiments), government (policy simulation). Any domain where testing decisions before making them has value.</div></details>
-      <details class="faq-item"><summary>Is this open source or commercial?</summary><div class="faq-body">Both. The core engine is open source under Apache-2.0. The hosted and enterprise layers are the commercial roadmap: auth, persistence, exports, orchestration, private deployment, and white-label packaging built on top of the open core.</div></details>
+      <details class="faq-item"><summary>What is Paracosm?</summary><div class="faq-body">An open-source TypeScript simulation engine available on npm (<code>npm install paracosm</code>). You define a world as a ScenarioPackage: departments, metrics, crisis templates, progression hooks. The engine populates it with autonomous agents, generates crises from actual colony state, and resolves outcomes through a seeded deterministic kernel. Two scenarios ship with the package. You can compile new ones from JSON.</div></details>
+      <details class="faq-item"><summary>How does tool forging work?</summary><div class="faq-body">When a department agent needs a calculation the codebase doesn't provide, it writes one. A medical officer facing a radiation crisis writes a dose calculator. An engineer writes a structural load model. The code executes in an isolated V8 sandbox with memory and time limits. An LLM judge reviews the output for safety and correctness before it enters the decision pipeline. The tool persists for future turns. None of these tools exist in the source code. The agents invent them at runtime.<div class="faq-cite">Implementation: AgentOS EmergentCapabilityEngine + EmergentJudge, sandboxed via isolated-vm</div></div></details>
+      <details class="faq-item"><summary>What is the HEXACO personality model?</summary><div class="faq-body">HEXACO is a six-factor personality framework from personality psychology: Honesty-Humility, Emotionality, Extraversion, Agreeableness, Conscientiousness, and Openness to Experience. Each agent in Paracosm carries six continuous values between 0 and 1. These values shift across turns through three drift mechanisms: leader influence (agents' traits pull toward their commander's profile), role activation (a chief engineer's conscientiousness trends upward), and outcome reinforcement (surviving a crisis through bold action increases openness).<div class="faq-cite">Ashton, M.C. &amp; Lee, K. (2007). "Empirical, Theoretical, and Practical Advantages of the HEXACO Model of Personality Structure." Personality and Social Psychology Review, 11(2), 150-166. doi:10.1177/1088868306294907</div></div></details>
+      <details class="faq-item"><summary>Is the simulation deterministic?</summary><div class="faq-body">The kernel is fully deterministic. It uses Mulberry32, a 32-bit seeded PRNG. Given seed 950, the kernel produces identical colonist rosters, birth/death schedules, promotion sequences, and resource starting values on every run. The divergence between two parallel simulations comes entirely from the AI commander's decisions. This makes the engine useful for controlled experiments: fix the seed, vary the personality, measure the outcome.<div class="faq-cite">PRNG methodology follows Law, A.M. &amp; Kelton, W.D. Simulation Modeling and Analysis, 5th ed., McGraw-Hill, 2015</div></div></details>
+      <details class="faq-item"><summary>What LLM providers work with Paracosm?</summary><div class="faq-body">OpenAI (GPT-5.4, GPT-5.4-mini) and Anthropic (Claude Sonnet 4.6, Claude Haiku 4.5). You can assign different models to different roles. The crisis director and commander might use GPT-5.4 while department agents and the tool judge use GPT-5.4-mini to manage costs. Configuration is per-role in the setup panel or via the API.</div></details>
+      <details class="faq-item"><summary>Can I build my own scenario?</summary><div class="faq-body">Two paths. If you want full control, write a ScenarioPackage in TypeScript with custom hooks for progression, crisis generation, milestones, and politics. If you want zero-code authoring, write the scenario as JSON and run it through the Scenario Compiler. The compiler calls generateText() to produce all eight hook functions. Compilation costs about $0.10 in API calls and caches results to disk. An Antarctic research station, a submarine habitat, a generation ship: different JSON, same engine.</div></details>
+      <details class="faq-item"><summary>What verticals does this apply to?</summary><div class="faq-body">Defense and intelligence use it for wargaming and scenario planning. Corporate strategy teams model acquisition outcomes and leadership dynamics. Game studios generate procedural NPC civilizations and emergent narratives. Academic researchers run controlled experiments in multi-agent decision-making. Government agencies simulate policy impacts before implementation. The common thread: any domain where testing decisions before making them reduces risk.</div></details>
+      <details class="faq-item"><summary>Is Paracosm free?</summary><div class="faq-body">The engine is open source under Apache-2.0. You can use it in commercial products without restriction. Install from npm, fork the repo, build on it. Hosted tiers for managed deployment, auth, persistence, and scenario authoring are on the roadmap. Contact <a href="mailto:team@frame.dev">team@frame.dev</a> for early access.</div></details>
     </div>
   </div>
 </section>
