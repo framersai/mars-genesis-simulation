@@ -476,18 +476,22 @@ Respond in character as this person. Be direct, personal, emotional. Reference y
       return;
     }
 
-    if (req.url === '/favicon.svg' || req.url === '/favicon.png' || req.url === '/favicon.ico') {
+    if (req.url === '/favicon.svg' || req.url === '/favicon.png' || req.url === '/favicon.ico' || req.url === '/icon.svg') {
       try {
-        const svgPath = resolve(__dirname, '..', '..', 'assets', 'mars-genesis-icon.svg');
+        const svgPath = resolve(__dirname, '..', '..', 'assets', 'favicons', 'icon.svg');
+        const fallbackSvg = resolve(__dirname, '..', '..', 'assets', 'mars-genesis-icon.svg');
         const pngPath = resolve(__dirname, '..', '..', 'assets', 'agentos-icon.png');
-        if (existsSync(svgPath)) {
-          const svg = readFileSync(svgPath, 'utf-8');
+        const iconPath = existsSync(svgPath) ? svgPath : existsSync(fallbackSvg) ? fallbackSvg : null;
+        if (iconPath) {
+          const svg = readFileSync(iconPath, 'utf-8');
           res.writeHead(200, { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=86400' });
           res.end(svg);
-        } else {
+        } else if (existsSync(pngPath)) {
           const icon = readFileSync(pngPath);
           res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' });
           res.end(icon);
+        } else {
+          res.writeHead(404); res.end();
         }
       } catch {
         res.writeHead(404); res.end();

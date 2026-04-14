@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="102" fill="#14110e"/>
+  <g transform="translate(77,77)">
+    <defs>
+      <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#e06530"/>
+        <stop offset="50%" stop-color="#e8b44a"/>
+        <stop offset="100%" stop-color="#4ca8a8"/>
+      </linearGradient>
+    </defs>
+    <!-- Hub-to-node lines -->
+    <line x1="179" y1="179" x2="179" y2="57" stroke="#f5f0e4" stroke-width="4" opacity="0.55"/>
+    <line x1="179" y1="179" x2="285" y2="117" stroke="#f5f0e4" stroke-width="4" opacity="0.55"/>
+    <line x1="179" y1="179" x2="285" y2="240" stroke="#f5f0e4" stroke-width="4" opacity="0.55"/>
+    <line x1="179" y1="179" x2="179" y2="300" stroke="#f5f0e4" stroke-width="4" opacity="0.55"/>
+    <line x1="179" y1="179" x2="73" y2="240" stroke="#f5f0e4" stroke-width="4" opacity="0.55"/>
+    <line x1="179" y1="179" x2="73" y2="117" stroke="#f5f0e4" stroke-width="4" opacity="0.55"/>
+    <!-- Cross connections -->
+    <line x1="179" y1="57" x2="285" y2="240" stroke="#f5f0e4" stroke-width="2.8" opacity="0.25"/>
+    <line x1="285" y1="117" x2="179" y2="300" stroke="#f5f0e4" stroke-width="2.8" opacity="0.25"/>
+    <line x1="285" y1="240" x2="73" y2="117" stroke="#f5f0e4" stroke-width="2.8" opacity="0.25"/>
+    <line x1="179" y1="300" x2="73" y2="117" stroke="#f5f0e4" stroke-width="2.8" opacity="0.25"/>
+    <!-- Hub glow -->
+    <circle cx="179" cy="179" r="46" fill="#e8b44a" opacity="0.08"/>
+    <!-- Hub -->
+    <circle cx="179" cy="179" r="29" fill="#e8b44a"/>
+    <!-- Nodes -->
+    <circle cx="179" cy="57" r="20" fill="#e06530"/>
+    <circle cx="285" cy="117" r="20" fill="#e8b44a"/>
+    <circle cx="285" cy="240" r="20" fill="#4ca8a8"/>
+    <circle cx="179" cy="300" r="20" fill="#e06530"/>
+    <circle cx="73" cy="240" r="20" fill="#4ca8a8"/>
+    <circle cx="73" cy="117" r="20" fill="#e8b44a"/>
+  </g>
+</svg>
