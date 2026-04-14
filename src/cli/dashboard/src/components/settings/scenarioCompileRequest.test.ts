@@ -36,6 +36,26 @@ test('buildScenarioCompileRequest prefers seed URL over seed text', () => {
   });
 });
 
+test('buildScenarioCompileRequest forwards explicit provider and model overrides', () => {
+  const request = buildScenarioCompileRequest({
+    scenario: { id: 'ocean-station' },
+    seedText: '',
+    seedUrl: '',
+    webSearch: true,
+    maxSearches: '5',
+    provider: ' anthropic ',
+    model: ' claude-sonnet-4-6 ',
+  });
+
+  assert.deepEqual(request, {
+    scenario: { id: 'ocean-station' },
+    webSearch: true,
+    maxSearches: 5,
+    provider: 'anthropic',
+    model: 'claude-sonnet-4-6',
+  });
+});
+
 test('buildScenarioCompileRequest omits empty optional enrichment fields', () => {
   const request = buildScenarioCompileRequest({
     scenario: { id: 'ocean-station' },
@@ -43,6 +63,8 @@ test('buildScenarioCompileRequest omits empty optional enrichment fields', () =>
     seedUrl: '   ',
     webSearch: true,
     maxSearches: '0',
+    provider: '   ',
+    model: '   ',
   });
 
   assert.deepEqual(request, {

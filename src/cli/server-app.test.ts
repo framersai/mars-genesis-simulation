@@ -419,6 +419,8 @@ test('POST /compile persists the compiled scenario for later switching and forwa
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         scenario: { id: compiledScenario.id, departments: [] },
+        provider: 'anthropic',
+        model: 'claude-sonnet-4-6',
         seedUrl: 'https://example.com/ocean-station',
         webSearch: false,
         maxSearches: 7,
@@ -430,6 +432,8 @@ test('POST /compile persists the compiled scenario for later switching and forwa
     assert.match(text, /event: complete/);
     assert.ok(captured);
     assert.equal(captured?.scenarioJson.id, compiledScenario.id);
+    assert.equal(captured?.options.provider, 'anthropic');
+    assert.equal(captured?.options.model, 'claude-sonnet-4-6');
     assert.equal(captured?.options.seedUrl, 'https://example.com/ocean-station');
     assert.equal(captured?.options.webSearch, false);
     assert.equal(captured?.options.maxSearches, 7);

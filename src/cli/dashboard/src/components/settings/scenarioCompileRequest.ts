@@ -4,6 +4,8 @@ interface BuildScenarioCompileRequestOptions {
   seedUrl: string;
   webSearch: boolean;
   maxSearches: string;
+  provider?: string;
+  model?: string;
 }
 
 export function buildScenarioCompileRequest(options: BuildScenarioCompileRequestOptions): Record<string, unknown> {
@@ -14,6 +16,8 @@ export function buildScenarioCompileRequest(options: BuildScenarioCompileRequest
 
   const trimmedSeedUrl = options.seedUrl.trim();
   const trimmedSeedText = options.seedText.trim();
+  const trimmedProvider = options.provider?.trim();
+  const trimmedModel = options.model?.trim();
   const maxSearches = Number.parseInt(options.maxSearches, 10);
 
   if (trimmedSeedUrl) {
@@ -24,6 +28,14 @@ export function buildScenarioCompileRequest(options: BuildScenarioCompileRequest
 
   if (Number.isFinite(maxSearches) && maxSearches > 0) {
     request.maxSearches = maxSearches;
+  }
+
+  if (trimmedProvider) {
+    request.provider = trimmedProvider;
+  }
+
+  if (trimmedModel) {
+    request.model = trimmedModel;
   }
 
   return request;

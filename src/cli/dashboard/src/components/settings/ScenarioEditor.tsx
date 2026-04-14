@@ -38,6 +38,8 @@ export function ScenarioEditor() {
   const [seedUrl, setSeedUrl] = useState('');
   const [webSearch, setWebSearch] = useState(true);
   const [maxSearches, setMaxSearches] = useState('5');
+  const [compileProvider, setCompileProvider] = useState('');
+  const [compileModel, setCompileModel] = useState('');
   const [compiling, setCompiling] = useState(false);
   const [storing, setStoring] = useState(false);
   const [progress, setProgress] = useState<CompileProgress[]>([]);
@@ -154,6 +156,8 @@ export function ScenarioEditor() {
         seedUrl,
         webSearch,
         maxSearches,
+        provider: compileProvider,
+        model: compileModel,
       });
 
       const res = await fetch('/compile', {
@@ -194,7 +198,7 @@ export function ScenarioEditor() {
       }
     } catch (err) { setResult({ success: false, message: String(err) }); }
     setCompiling(false);
-  }, [jsonText, parseError, seedText, seedUrl, webSearch, maxSearches]);
+  }, [jsonText, parseError, seedText, seedUrl, webSearch, maxSearches, compileProvider, compileModel]);
 
   const lineCount = jsonText.split('\n').length;
   const byteSize = new Blob([jsonText]).size;
@@ -280,6 +284,24 @@ export function ScenarioEditor() {
               onChange={e => setMaxSearches(e.target.value)}
               inputMode="numeric"
               placeholder="5"
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Compile Provider Override</label>
+            <input
+              value={compileProvider}
+              onChange={e => setCompileProvider(e.target.value)}
+              placeholder="anthropic or openai (optional)"
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Compile Model Override</label>
+            <input
+              value={compileModel}
+              onChange={e => setCompileModel(e.target.value)}
+              placeholder="gpt-5.4-mini, claude-sonnet-4-6, etc. (optional)"
               style={inputStyle}
             />
           </div>

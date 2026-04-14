@@ -309,14 +309,14 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
     if (req.url === '/compile' && req.method === 'POST') {
       try {
         const body = JSON.parse(await readBody(req));
-        const { scenario: scenarioJson, seedText, seedUrl, webSearch, maxSearches } = body;
+        const { scenario: scenarioJson, provider: requestedProvider, model: requestedModel, seedText, seedUrl, webSearch, maxSearches } = body;
         if (!scenarioJson || typeof scenarioJson !== 'object') {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'scenario JSON object required' }));
           return;
         }
-        const provider = (env.ANTHROPIC_API_KEY ? 'anthropic' : 'openai') as any;
-        const model = env.ANTHROPIC_API_KEY ? 'claude-sonnet-4-6' : 'gpt-5.4-mini';
+        const provider = requestedProvider || (env.ANTHROPIC_API_KEY ? 'anthropic' : 'openai');
+        const model = requestedModel || (env.ANTHROPIC_API_KEY ? 'claude-sonnet-4-6' : 'gpt-5.4-mini');
 
         // SSE progress stream
         res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Access-Control-Allow-Origin': '*' });
