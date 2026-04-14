@@ -1,27 +1,32 @@
 <p align="center">
-  <a href="https://agentos.sh"><img src="assets/agentos-logo.png" alt="AgentOS" height="48" /></a>
-  &nbsp;&nbsp;&nbsp;
-  <a href="https://frame.dev"><img src="https://img.shields.io/badge/Frame.dev-frame.dev-0a0a0a?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHJ4PSI0IiBmaWxsPSIjMjJjNTVlIi8+PHBhdGggZD0iTTcgN2gxMHYySDl2M2g2djJIOXYzaDh2Mkg3VjdaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg==" alt="Frame.dev" height="28" /></a>
+  <a href="https://paracosm.agentos.sh"><img src="assets/favicons/icon.svg" alt="Paracosm" height="64" /></a>
 </p>
 
-<h1 align="center">Paracosm</h1>
+<h1 align="center">PARACOSM</h1>
+
+<p align="center">
+  <em>AI Agent Swarm Simulation Engine</em>
+</p>
 
 <p align="center">
   Open-source AI agent swarm simulation engine with emergent crises, runtime tool forging, HEXACO personality evolution, and a deterministic kernel. Define any scenario as JSON.
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/paracosm"><img src="https://img.shields.io/npm/v/paracosm?style=flat-square&color=6366f1" alt="npm" /></a>
-  <a href="https://github.com/framersai/paracosm/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square" alt="License" /></a>
-  <a href="https://docs.agentos.sh"><img src="https://img.shields.io/badge/docs-agentos.sh-orange?style=flat-square" alt="Docs" /></a>
+  <a href="https://www.npmjs.com/package/paracosm"><img src="https://img.shields.io/npm/v/paracosm?style=flat-square&color=e8b44a&labelColor=14110e" alt="npm" /></a>
+  <a href="https://github.com/framersai/paracosm/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-e06530?style=flat-square&labelColor=14110e" alt="License" /></a>
+  <a href="https://docs.agentos.sh"><img src="https://img.shields.io/badge/docs-agentos.sh-4ca8a8?style=flat-square&labelColor=14110e" alt="Docs" /></a>
+  <a href="https://agentos.sh"><img src="https://img.shields.io/badge/built%20on-AgentOS-e06530?style=flat-square&labelColor=14110e" alt="AgentOS" /></a>
 </p>
 
 <p align="center">
-  <a href="https://agentos.sh"><strong>agentos.sh</strong></a> &middot;
+  <a href="https://paracosm.agentos.sh"><strong>paracosm.agentos.sh</strong></a> &middot;
+  <a href="https://agentos.sh">AgentOS</a> &middot;
   <a href="https://docs.agentos.sh">Docs</a> &middot;
   <a href="https://github.com/framersai/paracosm">GitHub</a> &middot;
   <a href="https://www.npmjs.com/package/paracosm">npm</a> &middot;
   <a href="https://frame.dev">Frame.dev</a> &middot;
+  <a href="https://manic.agency">Manic Agency</a> &middot;
   <a href="https://wilds.ai/discord">Discord</a>
 </p>
 

@@ -550,10 +550,13 @@ Respond in character as this person. Be direct, personal, emotional. Reference y
             html = html.replace(/<body[^>]*>/, `$&
 <div class="paracosm-docs-header">
   <div class="pdh-left">
-    <a href="/" class="pdh-brand">PARACOSM</a>
+    <a href="/" style="display:flex;align-items:center;text-decoration:none" aria-label="Paracosm home">
+      <svg viewBox="0 0 64 64" width="22" height="22" style="margin-right:8px;flex-shrink:0"><defs><linearGradient id="pdl" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e06530"/><stop offset="50%" stop-color="#e8b44a"/><stop offset="100%" stop-color="#4ca8a8"/></linearGradient></defs><circle cx="32" cy="32" r="8" fill="url(#pdl)"/><circle cx="32" cy="12" r="4" fill="#e06530" opacity=".9"/><circle cx="48" cy="20" r="4" fill="#e8b44a" opacity=".9"/><circle cx="48" cy="44" r="4" fill="#4ca8a8" opacity=".9"/><circle cx="32" cy="52" r="4" fill="#4ca8a8" opacity=".9"/><circle cx="16" cy="44" r="4" fill="#e8b44a" opacity=".9"/><circle cx="16" cy="20" r="4" fill="#e06530" opacity=".9"/><path d="M32 32L32 12M32 32L48 20M32 32L48 44M32 32L32 52M32 32L16 44M32 32L16 20" stroke="url(#pdl)" stroke-width="1.5" opacity=".4"/></svg>
+      <span class="pdh-brand">PARACOSM</span>
+    </a>
     <a href="https://agentos.sh" target="_blank" rel="noopener" class="pdh-tag">AGENTOS</a>
     <span class="pdh-sep">|</span>
-    <span class="pdh-current">API Reference</span>
+    <span class="pdh-current">API Reference v0.1.0</span>
   </div>
   <div class="pdh-right">
     <a href="/">Home</a>
