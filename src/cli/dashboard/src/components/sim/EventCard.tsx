@@ -26,12 +26,23 @@ export function EventCard({ event, side }: EventCardProps) {
       return null;
 
     case 'promotion': {
+      const reason = String(dd.reason || '');
+      const name = String(dd.name || '');
+      const role = String(dd.role || '');
       return (
-        <div style={{ padding: '1px 10px', fontSize: '11px', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          <span style={{ color: 'var(--text-3)' }}>&rarr; </span>
-          <span style={{ fontWeight: 700, color: sideColor }}>{String(dd.role || '')}</span>
-          <span style={{ color: 'var(--text-3)', marginLeft: '6px' }}>{String(dd.reason || '').slice(0, 60)}...</span>
-        </div>
+        <Tooltip content={
+          <div>
+            <b style={{ color: sideColor, fontSize: '14px', display: 'block', marginBottom: '6px' }}>Promotion: {role}</b>
+            {name && <div style={{ marginBottom: '4px' }}><span style={{ color: '#d8ccb0' }}>Agent:</span> <span style={{ color: '#f5f0e4', fontWeight: 600 }}>{name}</span></div>}
+            {reason && <div style={{ color: '#d8ccb0', lineHeight: 1.6 }}>{reason}</div>}
+          </div>
+        }>
+          <div style={{ padding: '1px 10px', fontSize: '11px', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: 'pointer' }}>
+            <span style={{ color: 'var(--text-3)' }}>&rarr; </span>
+            <span style={{ fontWeight: 700, color: sideColor }}>{role}</span>
+            <span style={{ color: 'var(--text-3)', marginLeft: '6px' }}>{reason.slice(0, 60)}{reason.length > 60 ? '...' : ''}</span>
+          </div>
+        </Tooltip>
       );
     }
 
