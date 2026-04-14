@@ -534,6 +534,48 @@ Respond in character as this person. Be direct, personal, emotional. Reference y
             svg: 'image/svg+xml', png: 'image/png', json: 'application/json',
             jpg: 'image/jpeg', gif: 'image/gif', woff: 'font/woff', woff2: 'font/woff2',
           };
+
+          if (ext === 'html') {
+            // Inject Paracosm theme into TypeDoc HTML
+            let html = readFileSync(filePath, 'utf-8');
+            // Add our CSS override + fonts
+            html = html.replace('</head>',
+              `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="/docs/assets/paracosm-override.css"></head>`
+            );
+            // Inject nav header after <body>
+            html = html.replace(/<body[^>]*>/, `$&
+<div class="paracosm-docs-header">
+  <div class="pdh-left">
+    <a href="/" class="pdh-brand">PARACOSM</a>
+    <a href="https://agentos.sh" target="_blank" rel="noopener" class="pdh-tag">AGENTOS</a>
+    <span class="pdh-sep">|</span>
+    <span class="pdh-current">API Reference</span>
+  </div>
+  <div class="pdh-right">
+    <a href="/">Home</a>
+    <a href="/sim">Simulation</a>
+    <a href="/docs">API Docs</a>
+    <a href="https://github.com/framersai/paracosm" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.npmjs.com/package/paracosm" target="_blank" rel="noopener">npm</a>
+  </div>
+</div>`);
+            // Inject footer before </body>
+            html = html.replace('</body>',
+              `<div class="paracosm-docs-footer">
+  <div class="pdf-links">
+    <a href="https://agentos.sh">agentos.sh</a>
+    <a href="https://github.com/framersai/paracosm">GitHub</a>
+    <a href="https://www.npmjs.com/package/paracosm">npm</a>
+    <a href="https://frame.dev">Frame.dev</a>
+    <a href="https://manic.agency">Manic Agency</a>
+  </div>
+  <span>Apache-2.0 &middot; <a href="https://manic.agency">Manic Agency</a> / <a href="https://frame.dev">Frame.dev</a></span>
+</div></body>`);
+            res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=3600' });
+            res.end(html);
+            return;
+          }
+
           const content = readFileSync(filePath);
           res.writeHead(200, {
             'Content-Type': mimeTypes[ext] || 'application/octet-stream',
