@@ -129,10 +129,13 @@ export interface MarsServer extends Server {
 export function createMarsServer(options: CreateMarsServerOptions = {}): MarsServer {
   const env = options.env ?? process.env;
   const maxSims = options.maxSimsPerDay ?? parseInt(env.RATE_LIMIT || '3', 10);
+  const adminWrite = (env.ADMIN_WRITE || 'false').toLowerCase() === 'true';
   const rateLimiter = maxSims > 0 ? new IpRateLimiter(maxSims) : null;
   let simConfig: NormalizedSimulationConfig | null = null;
   let simRunning = false;
   let activeScenario: any = marsScenario;
+  // In-memory custom scenarios (not persisted to disk unless ADMIN_WRITE=true)
+  const memoryScenarios = new Map<string, any>();
   const clients: Set<ServerResponse> = new Set();
 
   // Event buffer: stores all broadcast events so new clients can catch up
@@ -199,12 +202,56 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         { id: 'mars-genesis', name: 'Mars Genesis', description: '100-colonist Mars colony over 50 years', departments: marsScenario.departments.length },
         { id: 'lunar-outpost', name: 'Lunar Outpost', description: '50-person crew at the lunar south pole', departments: lunarScenario.departments.length },
       ];
-      // Add active custom scenario if it's not one of the built-ins
-      if (activeScenario.id !== 'mars-genesis' && activeScenario.id !== 'lunar-outpost') {
+      // Add in-memory custom scenarios
+      for (const [id, sc] of memoryScenarios) {
+        if (id !== 'mars-genesis' && id !== 'lunar-outpost') {
+          scenarios.push({ id, name: sc.labels?.name || id, description: 'Custom scenario (in-memory)', departments: sc.departments?.length || 0 });
+        }
+      }
+      // Add active compiled scenario if it's not already listed
+      if (activeScenario.id !== 'mars-genesis' && activeScenario.id !== 'lunar-outpost' && !memoryScenarios.has(activeScenario.id)) {
         scenarios.push({ id: activeScenario.id, name: activeScenario.labels?.name || activeScenario.id, description: 'Custom compiled scenario', departments: activeScenario.departments?.length || 0 });
       }
       res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify({ scenarios, active: activeScenario.id }));
+      return;
+    }
+
+    // Admin config: tells client what's enabled
+    if (req.url === '/admin-config' && req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ adminWrite, memoryScenarios: [...memoryScenarios.keys()] }));
+      return;
+    }
+
+    // Store a scenario in memory (always allowed) or save to disk (requires ADMIN_WRITE)
+    if (req.url === '/scenario/store' && req.method === 'POST') {
+      try {
+        const { scenario: scenarioJson, saveToDisk } = JSON.parse(await readBody(req));
+        if (!scenarioJson || !scenarioJson.id) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'scenario with id required' }));
+          return;
+        }
+        // Store in memory
+        memoryScenarios.set(scenarioJson.id, scenarioJson);
+
+        // Optionally save to disk if admin
+        let savedToDisk = false;
+        if (saveToDisk && adminWrite) {
+          const { writeFileSync, mkdirSync } = await import('node:fs');
+          const scenarioDir = resolve(__dirname, '..', '..', 'scenarios');
+          mkdirSync(scenarioDir, { recursive: true });
+          writeFileSync(resolve(scenarioDir, `${scenarioJson.id}.json`), JSON.stringify(scenarioJson, null, 2));
+          savedToDisk = true;
+        }
+
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ stored: true, id: scenarioJson.id, savedToDisk, adminWrite }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: String(err) }));
+      }
       return;
     }
 
@@ -213,9 +260,10 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       const { id } = JSON.parse(await readBody(req));
       if (id === 'mars-genesis') activeScenario = marsScenario;
       else if (id === 'lunar-outpost') activeScenario = lunarScenario;
+      else if (memoryScenarios.has(id)) activeScenario = memoryScenarios.get(id);
       else {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: `Unknown scenario: ${id}. Use /compile for custom scenarios.` }));
+        res.end(JSON.stringify({ error: `Unknown scenario: ${id}. Use /compile or /scenario/store for custom scenarios.` }));
         return;
       }
       eventBuffer.length = 0;

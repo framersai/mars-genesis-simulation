@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useScenarioContext } from '../../App';
 import { LeaderConfig, type LeaderFormData } from './LeaderConfig';
-import { CustomScenario } from './CustomScenario';
+import { ScenarioEditor } from './ScenarioEditor';
+
 
 const DEFAULT_HEXACO: Record<string, number> = {
   openness: 0.5, conscientiousness: 0.5, extraversion: 0.5,
@@ -218,8 +219,8 @@ export function SettingsPanel() {
         </div>
       </fieldset>
 
-      {/* Custom Scenario */}
-      <CustomScenario />
+      {/* Scenario Editor: create, import, export, compile */}
+      <ScenarioEditor />
 
       {/* Launch */}
       <div className="responsive-stack" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
