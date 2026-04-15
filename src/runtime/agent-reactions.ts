@@ -8,7 +8,8 @@
  * Cost: ~$0.00006 per agent per turn. 100 agents x 12 turns = $0.14 total.
  */
 
-import { generateText, extractJson } from '@framers/agentos';
+import { generateText } from '@framers/agentos';
+import { extractJson } from './parse-json.js';
 import type { Agent, TurnOutcome } from '../engine/core/state.js';
 import { buildMemoryContext } from './agent-memory.js';
 
