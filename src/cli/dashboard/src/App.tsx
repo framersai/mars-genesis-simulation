@@ -251,7 +251,7 @@ function AppContent() {
 
             {/* About tab redirects to the landing page */}
           </main>
-          <Footer />
+          <Footer cost={gameState.cost} />
           {tourActive && (
             <GuidedTour
               onTabChange={(tab) => setActiveTab(tab)}

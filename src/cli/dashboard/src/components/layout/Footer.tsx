@@ -1,4 +1,8 @@
-export function Footer() {
+interface FooterProps {
+  cost?: { totalTokens: number; totalCostUSD: number; llmCalls: number };
+}
+
+export function Footer({ cost }: FooterProps) {
   return (
     <footer
       className="shrink-0"
@@ -23,6 +27,21 @@ export function Footer() {
         <a href="/docs" style={{ color: 'var(--rust)', fontWeight: 600 }}>docs</a>
         <a href="https://agentos.sh/blog" target="_blank" rel="noopener" style={{ color: 'var(--rust)', fontWeight: 600 }}>blog</a>
       </nav>
+
+      {cost && cost.llmCalls > 0 && (
+        <span style={{ display: 'flex', alignItems: 'baseline', gap: '4px', fontFamily: 'var(--mono)', fontSize: '10px' }}>
+          <span style={{ color: 'var(--green)', fontWeight: 800 }}>
+            ${cost.totalCostUSD < 0.01 ? cost.totalCostUSD.toFixed(4) : cost.totalCostUSD.toFixed(2)}
+          </span>
+          <span style={{ color: 'var(--text-3)' }}>
+            {(cost.totalTokens / 1000).toFixed(0)}k tok
+          </span>
+          <span style={{ color: 'var(--text-3)' }}>
+            {cost.llmCalls} calls
+          </span>
+        </span>
+      )}
+
       <span>
         <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, letterSpacing: '.08em', fontSize: '10px' }}>PARA<span style={{ color: 'var(--amber)' }}>COSM</span></span>
         {' '}&middot; Apache-2.0 &middot; <a href="https://manic.agency" target="_blank" rel="noopener" style={{ color: 'var(--text-3)' }}>Manic Agency</a> / <a href="https://frame.dev" target="_blank" rel="noopener" style={{ color: 'var(--text-3)' }}>Frame.dev</a>
