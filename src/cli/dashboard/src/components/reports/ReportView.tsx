@@ -263,7 +263,7 @@ function TurnSide({ data, name, sideColor }: { data: TurnData; name: string; sid
                 <div style={{ color: 'var(--text-2)', fontStyle: 'italic' }}>
                   &ldquo;{String(r.quote || '')}&rdquo;
                 </div>
-                {r.role && <div style={{ fontSize: '10px', color: 'var(--text-3)', marginTop: '2px' }}>{String(r.role)} {r.department ? `in ${String(r.department)}` : ''}</div>}
+                {!!r.role && <div style={{ fontSize: '10px', color: 'var(--text-3)', marginTop: '2px' }}>{String(r.role)} {r.department ? `in ${String(r.department)}` : ''}</div>}
               </div>
             ))}
           </div>
