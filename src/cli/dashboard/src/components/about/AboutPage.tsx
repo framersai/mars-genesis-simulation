@@ -24,7 +24,7 @@ const FAQ: FaqItem[] = [
   },
   {
     q: 'How many simulations can I run?',
-    a: 'In the open-source product, you run simulations locally and can batch scenarios and seeds in sequence. The engine is horizontally scalable because each simulation is an independent process, but hosted orchestration, cost tracking, and large concurrent fleets are still planned platform capabilities rather than a public service today.',
+    a: 'The hosted demo at paracosm.sh rate-limits to 3 simulations per IP per day when using the server API keys. Add your own OpenAI or Anthropic key in Settings to remove the rate limit and run unlimited simulations. When running locally with the open-source CLI, there is no rate limit at all.',
   },
   {
     q: 'What scenarios are available?',
