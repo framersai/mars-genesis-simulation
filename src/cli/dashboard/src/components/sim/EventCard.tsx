@@ -67,6 +67,11 @@ export function EventCard({ event, side }: EventCardProps) {
       const summary = String(dd.summary || '');
       const citeCount = Number(dd.citations) || 0;
 
+      // Don't render empty department cards with no content
+      if (!summary && risks.length === 0 && recs.length === 0 && tools.length === 0 && citeCount === 0) {
+        return null;
+      }
+
       return (
         <div style={{ margin: '0 8px 4px' }}>
           <div style={{

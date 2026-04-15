@@ -95,13 +95,39 @@ function AppContent() {
     if (sse.errors.length > lastErrorCount.current) {
       const newErrors = sse.errors.slice(lastErrorCount.current);
       for (const err of newErrors) {
-        // Shorten long provider errors for the toast
         const short = err.length > 120 ? err.slice(0, 120) + '...' : err;
         toast('error', 'Simulation Error', short);
       }
       lastErrorCount.current = sse.errors.length;
     }
   }, [sse.errors, toast]);
+
+  // Show crisis events as toasts so they're visible on any tab
+  const lastEventCount = useRef(0);
+  useEffect(() => {
+    if (effectiveEvents.length > lastEventCount.current) {
+      const newEvents = effectiveEvents.slice(lastEventCount.current);
+      for (const evt of newEvents) {
+        if (evt.type === 'turn_start' && evt.data?.title && evt.data.title !== 'Director generating...') {
+          const title = String(evt.data.title);
+          const crisis = evt.data.crisis ? String(evt.data.crisis) : '';
+          const turn = evt.data.turn ? `T${String(evt.data.turn)}` : '';
+          const year = evt.data.year ? String(evt.data.year) : '';
+          const header = [turn, year, title].filter(Boolean).join(' ');
+          toast('info', header, crisis.length > 200 ? crisis.slice(0, 200) + '...' : crisis);
+        }
+        if (evt.type === 'outcome' && evt.data?.outcome) {
+          const outcome = String(evt.data.outcome);
+          const isSuccess = outcome.includes('success');
+          const isRisky = outcome.includes('risky');
+          const label = isRisky ? (isSuccess ? 'Risky Success' : 'Risky Failure') : (isSuccess ? 'Conservative Success' : 'Conservative Failure');
+          const decision = evt.data._decision ? String(evt.data._decision).slice(0, 150) : '';
+          toast(isSuccess ? 'success' : 'error', `${evt.leader}: ${label}`, decision);
+        }
+      }
+      lastEventCount.current = effectiveEvents.length;
+    }
+  }, [effectiveEvents, toast]);
 
   const handleTourStart = useCallback(() => {
     setTourActive(true);
