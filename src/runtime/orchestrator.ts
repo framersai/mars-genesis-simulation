@@ -5,8 +5,8 @@ import type { ITool } from '@framers/agentos';
 import {
   EmergentCapabilityEngine, EmergentJudge, EmergentToolRegistry,
   ComposableToolBuilder, SandboxedToolForge, ForgeToolMetaTool, generateText,
+  extractJson,
 } from '@framers/agentos';
-import { extractJson } from './parse-json.js';
 import type { Department, TurnOutcome } from '../engine/core/state.js';
 import { SeededRng } from '../engine/core/rng.js';
 import { classifyOutcome, classifyOutcomeById } from '../engine/core/progression.js';
