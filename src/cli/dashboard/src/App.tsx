@@ -229,9 +229,9 @@ function AppContent() {
                         <span style={{ color, fontWeight: 700, minWidth: '120px' }}>{e.type}</span>
                         <span style={{ color: 'var(--text-2)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.leader}</span>
                         {e.data?.turn != null && <span style={{ color: 'var(--text-3)' }}>T{String(e.data.turn)}</span>}
-                        {e.data?.title && <span style={{ color: 'var(--text-2)' }}>{String(e.data.title)}</span>}
-                        {e.data?.department && <span style={{ color: 'var(--teal)' }}>{String(e.data.department)}</span>}
-                        {e.data?.outcome && <span style={{ color: 'var(--amber)', fontWeight: 700 }}>{String(e.data.outcome)}</span>}
+                        {!!e.data?.title && <span style={{ color: 'var(--text-2)' }}>{String(e.data.title)}</span>}
+                        {!!e.data?.department && <span style={{ color: 'var(--teal)' }}>{String(e.data.department)}</span>}
+                        {!!e.data?.outcome && <span style={{ color: 'var(--amber)', fontWeight: 700 }}>{String(e.data.outcome)}</span>}
                       </summary>
                       {hasData && (
                         <pre style={{

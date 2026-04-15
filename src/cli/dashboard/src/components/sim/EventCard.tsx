@@ -186,9 +186,9 @@ export function EventCard({ event, side }: EventCardProps) {
       const rationale = String(dd._rationale || '');
       const policies = (dd._policies as string[]) || [];
       const colonyDeltas = dd.colonyDeltas as Record<string, number> | undefined;
-      const turnNum = dd.turn || '';
-      const toolCount = dd._toolCount ?? 0;
-      const citeCount = dd._citeCount ?? 0;
+      const turnNum = String(dd.turn || '');
+      const toolCount = Number(dd._toolCount ?? 0);
+      const citeCount = Number(dd._citeCount ?? 0);
 
       return (
         <div style={{
@@ -361,7 +361,7 @@ export function EventCard({ event, side }: EventCardProps) {
           borderTop: '1px solid var(--border)', marginTop: '3px',
           fontFamily: 'var(--mono)',
         }}>
-          Turn {dd.turn} complete
+          Turn {String(dd.turn)} complete
         </div>
       );
 

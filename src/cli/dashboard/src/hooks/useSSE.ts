@@ -38,6 +38,7 @@ export function useSSE() {
       events,
       results: (results || []) as SSEState['results'],
       verdict: verdict || null,
+      errors: [],
       isComplete: true,
     });
   }, []);
