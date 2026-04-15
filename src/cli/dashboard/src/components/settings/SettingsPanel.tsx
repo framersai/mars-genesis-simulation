@@ -278,8 +278,11 @@ export function SettingsPanel() {
         <legend style={{ fontSize: '14px', fontFamily: 'var(--mono)', color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px', padding: '0 8px' }}>
           API Keys
         </legend>
-        <p style={{ fontSize: '11px', color: 'var(--text-3)', marginBottom: '12px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: '11px', color: 'var(--text-3)', marginBottom: '8px', lineHeight: 1.6 }}>
           Keys are read from the server .env file first. Override here for this session only. Values entered below are never displayed back for security.
+        </p>
+        <p style={{ fontSize: '11px', color: 'var(--green)', marginBottom: '12px', lineHeight: 1.6, fontWeight: 600 }}>
+          Provide your own OpenAI or Anthropic key to remove the per-IP rate limit and run unlimited simulations.
         </p>
         <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           {([

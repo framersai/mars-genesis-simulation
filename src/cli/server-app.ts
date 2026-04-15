@@ -491,8 +491,11 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
 
     if (req.url === '/setup' && req.method === 'POST') {
       try {
-        // Rate limit check
-        if (rateLimiter) {
+        const config = JSON.parse(await readBody(req));
+
+        // Rate limit check: bypass when user provides their own API keys
+        const hasUserKeys = !!(config.apiKey || config.anthropicKey);
+        if (rateLimiter && !hasUserKeys) {
           const ip = IpRateLimiter.getIp(req);
           const { allowed, remaining, limit } = rateLimiter.check(ip);
           if (!allowed) {
@@ -504,18 +507,17 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
               'X-RateLimit-Remaining': '0',
             });
             res.end(JSON.stringify({
-              error: `Rate limit exceeded. Maximum ${limit} simulations per day. Resets at midnight UTC.`,
+              error: `Rate limit exceeded. Maximum ${limit} simulations per day. Add your own API keys in Settings to remove this limit.`,
               limit,
               remaining: 0,
             }));
             return;
           }
-          // Record the simulation attempt
           rateLimiter.record(ip);
           console.log(`  [rate-limit] ${ip}: ${remaining - 1} remaining of ${limit}`);
+        } else if (hasUserKeys) {
+          console.log(`  [rate-limit] Bypassed — user provided API keys`);
         }
-
-        const config = JSON.parse(await readBody(req));
         if (!config.leaders || config.leaders.length < 2) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Two leaders required' }));
