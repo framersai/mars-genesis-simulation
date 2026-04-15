@@ -123,8 +123,21 @@ function SideTimeline({ turns, side }: { turns: TurnEntry[]; side: Side }) {
               <span style={{ flex: 1, color: 'var(--text-1)', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
                 {t.title}
               </span>
+              {t.category && (
+                <span style={{ fontSize: '9px', padding: '0 4px', borderRadius: '2px', background: 'var(--bg-deep)', color: 'var(--text-3)', fontFamily: 'var(--mono)', flexShrink: 0 }}>
+                  {t.category}
+                </span>
+              )}
+              {t.emergent && (
+                <span style={{ fontSize: '8px', fontWeight: 800, color: 'var(--rust)', fontFamily: 'var(--mono)', flexShrink: 0 }}>EMERGENT</span>
+              )}
               {outcomeBadge(t.outcome)}
             </div>
+            {t.summary && (
+              <div style={{ fontSize: '10px', color: 'var(--text-3)', marginTop: '2px', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, fontStyle: 'italic' }}>
+                {t.summary}
+              </div>
+            )}
             {t.decision && (
               <div style={{ fontSize: '10px', color: 'var(--text-2)', marginTop: '2px', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>
                 {t.decision}
@@ -146,7 +159,7 @@ export function Timeline({ state }: TimelineProps) {
   return (
     <div className="timeline-row" role="region" aria-label="Turn timeline" style={{
       borderTop: '1px solid var(--border)', background: 'var(--bg-panel)',
-      display: 'flex', gap: '4px', height: '160px', overflow: 'hidden', flexShrink: 0,
+      display: 'flex', gap: '4px', height: '200px', overflow: 'hidden', flexShrink: 0,
       padding: '4px 8px', minWidth: 0, maxWidth: '100%',
     }}>
       <SideTimeline turns={turnsA} side="a" />
