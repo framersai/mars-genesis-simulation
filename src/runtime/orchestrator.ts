@@ -5,8 +5,8 @@ import type { ITool } from '@framers/agentos';
 import {
   EmergentCapabilityEngine, EmergentJudge, EmergentToolRegistry,
   ComposableToolBuilder, SandboxedToolForge, ForgeToolMetaTool, generateText,
-  extractJson,
 } from '@framers/agentos';
+import { extractJson } from './parse-json.js';
 import type { Department, TurnOutcome } from '../engine/core/state.js';
 import { SeededRng } from '../engine/core/rng.js';
 import { classifyOutcome, classifyOutcomeById } from '../engine/core/progression.js';
@@ -772,8 +772,9 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
       year, turn, colonyMorale: kernel.getState().colony.morale,
       colonyPopulation: kernel.getState().colony.population,
     };
+    let reactions: import('./agent-reactions.js').AgentReaction[] = [];
     try {
-      const reactions = await generateAgentReactions(
+      reactions = await generateAgentReactions(
         kernel.getState().agents, reactionCtx,
         { provider, model: modelConfig.agentReactions || 'gpt-4o-mini', maxConcurrent: 25, reactionContextHook: sc.hooks.reactionContextHook },
       );
