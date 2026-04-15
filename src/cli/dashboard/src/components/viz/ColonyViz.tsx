@@ -71,12 +71,24 @@ export function ColonyViz({ state }: ColonyVizProps) {
   const leaderB = state.b.leader;
 
   if (maxTurn === 0) {
+    const isRunning = state.isRunning && !state.isComplete;
     return (
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flex: 1, color: 'var(--text-3)', fontSize: 13,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        flex: 1, color: 'var(--text-3)', fontSize: 13, gap: 8,
       }}>
-        Run a simulation to see the colony visualization.
+        {isRunning ? (
+          <>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--rust)', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+              Simulation Running
+            </div>
+            <div>Waiting for first turn to complete...</div>
+            <div style={{ width: 24, height: 24, border: '2px solid var(--border)', borderTop: '2px solid var(--rust)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          </>
+        ) : (
+          'Run a simulation to see the colony visualization.'
+        )}
       </div>
     );
   }
