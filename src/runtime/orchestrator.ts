@@ -351,6 +351,16 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
   let totalCostUSD = 0;
   let llmCalls = 0;
 
+  // Per-million-token pricing estimates for cost tracking
+  const MODEL_PRICING: Record<string, { input: number; output: number }> = {
+    'gpt-5.4': { input: 2.50, output: 10.00 },
+    'gpt-5.4-mini': { input: 0.30, output: 1.20 },
+    'gpt-4o-mini': { input: 0.15, output: 0.60 },
+    'claude-sonnet-4-6': { input: 3.00, output: 15.00 },
+    'claude-haiku-4-5-20251001': { input: 0.80, output: 4.00 },
+  };
+  const defaultPricing = MODEL_PRICING[modelConfig.commander] || { input: 2.50, output: 10.00 };
+
   function trackUsage(result: { usage?: { totalTokens?: number; promptTokens?: number; completionTokens?: number; costUSD?: number } }) {
     if (result?.usage) {
       totalTokens += result.usage.totalTokens ?? 0;
@@ -358,10 +368,9 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
       if (typeof result.usage.costUSD === 'number') {
         totalCostUSD += result.usage.costUSD;
       } else {
-        // Estimate cost from tokens if provider doesn't report it (~$0.15/1M input, ~$0.60/1M output for gpt-4o-mini)
         const input = result.usage.promptTokens ?? 0;
         const output = result.usage.completionTokens ?? 0;
-        totalCostUSD += (input * 0.00000015) + (output * 0.0000006);
+        totalCostUSD += (input * defaultPricing.input / 1_000_000) + (output * defaultPricing.output / 1_000_000);
       }
     }
   }

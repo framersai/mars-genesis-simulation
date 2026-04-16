@@ -15,6 +15,7 @@ interface ColonyCanvasProps {
 
 export function ColonyCanvas({ snapshots, currentTurn, leaderName, leaderArchetype }: ColonyCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const canvasWrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gridRef = useRef<SquareGrid | null>(null);
   const animRef = useRef<number>(0);
@@ -26,9 +27,9 @@ export function ColonyCanvas({ snapshots, currentTurn, leaderName, leaderArchety
 
   // Rebuild grid when turn changes
   useEffect(() => {
-    if (!snap || !containerRef.current) return;
-    const w = containerRef.current.clientWidth;
-    const h = containerRef.current.clientHeight - 40;
+    if (!snap || !canvasWrapRef.current) return;
+    const w = canvasWrapRef.current.clientWidth;
+    const h = canvasWrapRef.current.clientHeight;
     gridRef.current = buildSquareGrid(snap.cells, w, h);
   }, [snap, currentTurn]);
 
@@ -40,11 +41,11 @@ export function ColonyCanvas({ snapshots, currentTurn, leaderName, leaderArchety
     const ctx = canvas.getContext('2d')!;
 
     const render = () => {
-      const container = containerRef.current;
-      if (!container) { animRef.current = requestAnimationFrame(render); return; }
+      const wrap = canvasWrapRef.current;
+      if (!wrap) { animRef.current = requestAnimationFrame(render); return; }
 
-      const w = container.clientWidth;
-      const h = container.clientHeight - 40;
+      const w = wrap.clientWidth;
+      const h = wrap.clientHeight;
       canvas.width = w;
       canvas.height = h;
 
@@ -138,7 +139,7 @@ export function ColonyCanvas({ snapshots, currentTurn, leaderName, leaderArchety
         )}
       </div>
 
-      <div style={{ position: 'relative', flex: 1 }}>
+      <div ref={canvasWrapRef} style={{ position: 'relative', flex: 1 }}>
         <canvas
           ref={canvasRef}
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', cursor: hoveredId ? 'pointer' : 'default' }}
