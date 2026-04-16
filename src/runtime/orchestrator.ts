@@ -222,15 +222,78 @@ function wrapForgeTool(
       for (const k of ['implementation', 'inputSchema', 'outputSchema', 'testCases']) {
         if (typeof (fixed as any)[k] === 'string') try { (fixed as any)[k] = JSON.parse((fixed as any)[k]); } catch (e) { console.warn(`  [forge] Failed to parse ${k}:`, e); }
       }
-      // Normalize implementation: OpenAI models send "code" instead of "sandbox", may omit allowlist
+      // Normalize implementation. LLMs send a wide variety of mode
+      // spellings and sometimes mis-label compose specs as sandbox or
+      // vice versa. AgentOS's engine does a STRICT `mode === 'compose'`
+      // check — anything else falls into the sandbox branch, which then
+      // reads `allowlist` / `code` fields that a compose spec does not
+      // carry. That path crashes with
+      //   TypeError: Cannot read properties of undefined (reading 'includes')
+      // inside SandboxedToolForge.validateCode when it tries
+      // `allowlist.includes('fetch')` on an undefined allowlist.
+      //
+      // Normalize to one of exactly 'sandbox' or 'compose', infer from
+      // field shape when the mode string is unfamiliar, and backstop
+      // every required field so neither engine path can crash on
+      // malformed LLM output.
       if (fixed.implementation && typeof fixed.implementation === 'object') {
         const impl = fixed.implementation as any;
-        if (impl.mode === 'code') impl.mode = 'sandbox';
-        if (impl.mode === 'sandbox' && !Array.isArray(impl.allowlist)) impl.allowlist = [];
-        if (impl.code && typeof impl.code !== 'string') impl.code = String(impl.code);
-        // Ensure code wraps in function execute(input) if missing
-        if (impl.mode === 'sandbox' && impl.code && !impl.code.includes('function execute')) {
-          impl.code = `function execute(input) {\n${impl.code}\n}`;
+
+        // Alias the common variants to their canonical values.
+        if (impl.mode === 'code' || impl.mode === 'javascript' || impl.mode === 'js') {
+          impl.mode = 'sandbox';
+        }
+        if (
+          impl.mode === 'composed' ||
+          impl.mode === 'composition' ||
+          impl.mode === 'composable' ||
+          impl.mode === 'chain' ||
+          impl.mode === 'pipeline'
+        ) {
+          impl.mode = 'compose';
+        }
+
+        // Mode still unrecognized: infer from fields. A spec with a
+        // `steps` array is a compose spec; one with `code` is sandbox.
+        // When neither field is present, default to sandbox since that
+        // is the more common LLM pattern and the safer default (sandbox
+        // code runs in a V8 isolate under an allowlist).
+        if (impl.mode !== 'sandbox' && impl.mode !== 'compose') {
+          if (Array.isArray(impl.steps)) impl.mode = 'compose';
+          else if (typeof impl.code === 'string') impl.mode = 'sandbox';
+          else impl.mode = 'sandbox';
+        }
+
+        // Backstop every required field for the chosen mode so the
+        // engine never hits an undefined-access crash. Missing fields
+        // still produce rejected forges (no valid code or no steps),
+        // but via the judge's normal rejection path with a readable
+        // error, not a TypeError deep in sandbox validation.
+        if (impl.mode === 'sandbox') {
+          if (!Array.isArray(impl.allowlist)) impl.allowlist = [];
+          if (impl.code != null && typeof impl.code !== 'string') impl.code = String(impl.code);
+          if (!impl.code || typeof impl.code !== 'string') {
+            // No code body — synthesize a placeholder the judge will
+            // correctly reject rather than letting the sandbox crash.
+            impl.code = 'function execute(input) { return { error: "No code provided in forge request" }; }';
+          }
+          if (!impl.code.includes('function execute')) {
+            impl.code = `function execute(input) {\n${impl.code}\n}`;
+          }
+        } else if (impl.mode === 'compose') {
+          if (!Array.isArray(impl.steps)) impl.steps = [];
+          // Each step needs a tool name, input mapping, and output name.
+          // Defaulting lets the judge reject structurally-invalid specs
+          // via its normal path instead of throwing deep in the pipeline.
+          for (const step of impl.steps) {
+            if (step && typeof step === 'object') {
+              if (typeof step.tool !== 'string') step.tool = '';
+              if (typeof step.name !== 'string') step.name = step.tool || 'step';
+              if (!step.inputMapping || typeof step.inputMapping !== 'object') {
+                step.inputMapping = {};
+              }
+            }
+          }
         }
       }
       // Ensure schemas are valid objects — use permissive schemas so the judge
