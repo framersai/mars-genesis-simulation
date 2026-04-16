@@ -105,12 +105,14 @@ export const DEFAULT_MODELS: Record<LlmProvider, SimulationModelConfig> = {
     departments: 'gpt-5.4',
     judge: 'gpt-5.4',
     director: 'gpt-5.4',
+    agentReactions: 'gpt-4o-mini',
   },
   anthropic: {
     commander: 'claude-sonnet-4-6',
     departments: 'claude-sonnet-4-6',
     judge: 'claude-sonnet-4-6',
     director: 'claude-sonnet-4-6',
+    agentReactions: 'claude-haiku-4-5-20251001',
   },
 };
 
