@@ -267,6 +267,28 @@ function AppContent() {
     }
   }, [launching, gameState.isRunning, sse.isComplete, sse.status]);
 
+  // End-of-sim toast: fire exactly once when the run transitions to a
+  // terminal state. Distinguishes Complete (all turns finished, verdict
+  // broadcast) from Unfinished (user left, disconnect watchdog aborted
+  // the run). Guarded by a ref so the effect does not re-fire on every
+  // state nudge after the terminal flip (e.g. verdict arriving, further
+  // SSE reconnects). Skipped during tour mode where isComplete is synthetic.
+  const terminalToastFiredRef = useRef(false);
+  useEffect(() => {
+    if (tourActive) return;
+    if (!sse.isComplete && !sse.isAborted) {
+      terminalToastFiredRef.current = false;
+      return;
+    }
+    if (terminalToastFiredRef.current) return;
+    terminalToastFiredRef.current = true;
+    if (sse.isAborted) {
+      toast('info', 'Simulation ended early', 'Partial results saved. Reload to resume from the abort point.');
+    } else {
+      toast('success', 'Simulation complete', 'Open the Reports tab for the verdict + full breakdown.');
+    }
+  }, [sse.isComplete, sse.isAborted, tourActive, toast]);
+
   // Safety timeout: if /setup succeeded but no events arrived in 60s,
   // give up and show the empty state instead of spinning forever.
   useEffect(() => {

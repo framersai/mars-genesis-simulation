@@ -366,15 +366,42 @@ export function SettingsPanel() {
         <div className="responsive-grid-4" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '12px' }}>
           <div>
             <label htmlFor="turns-input" style={labelStyle}>
-              Turns{hostedDemo && !hasSessionLlmKey && turns > 3 && (
-                <span style={{ color: 'var(--amber)', fontSize: 9, fontWeight: 400, marginLeft: 4 }}>→ 3</span>
+              Turns
+              {hostedDemo && !hasSessionLlmKey && (
+                <span style={{ color: 'var(--amber)', fontSize: 9, fontWeight: 400, marginLeft: 4 }} title="Hosted demo caps turns at 3. Add a session API key to unlock.">
+                  {'\u{1F512}'} demo:3
+                </span>
               )}
             </label>
-            <input id="turns-input" type="number" value={turns} onChange={e => setTurns(parseInt(e.target.value) || 12)} min={1} max={20} style={inputStyle} />
+            <input
+              id="turns-input"
+              type="number"
+              value={hostedDemo && !hasSessionLlmKey ? 3 : turns}
+              onChange={e => setTurns(parseInt(e.target.value) || 12)}
+              min={1}
+              max={20}
+              disabled={hostedDemo && !hasSessionLlmKey}
+              style={{
+                ...inputStyle,
+                opacity: hostedDemo && !hasSessionLlmKey ? 0.5 : 1,
+                cursor: hostedDemo && !hasSessionLlmKey ? 'not-allowed' : 'auto',
+              }}
+              title={hostedDemo && !hasSessionLlmKey ? 'Locked at 3 in hosted demo mode. Add your own OpenAI or Anthropic key above to unlock full scope.' : ''}
+            />
           </div>
           <div>
             <label htmlFor="ypt-input" style={labelStyle}>Yrs/Turn</label>
-            <input id="ypt-input" type="number" value={yearsPerTurn} onChange={e => setYearsPerTurn(parseInt(e.target.value) || 0)} min={0} max={50} placeholder="auto" title="Years per turn. 0 = accelerating schedule (default). 1 = 1 year per turn. 5 = 5 years per turn." style={inputStyle} />
+            <input
+              id="ypt-input"
+              type="number"
+              value={yearsPerTurn}
+              onChange={e => setYearsPerTurn(parseInt(e.target.value) || 0)}
+              min={0}
+              max={50}
+              placeholder="auto"
+              title="Years per turn. 0 = accelerating schedule (default). 1 = 1 year per turn. 5 = 5 years per turn."
+              style={inputStyle}
+            />
           </div>
           <div>
             <label htmlFor="seed-input" style={labelStyle}>Seed</label>
@@ -386,11 +413,26 @@ export function SettingsPanel() {
           </div>
           <div>
             <label htmlFor="pop-input" style={labelStyle}>
-              Population{hostedDemo && !hasSessionLlmKey && population > 30 && (
-                <span style={{ color: 'var(--amber)', fontSize: 9, fontWeight: 400, marginLeft: 4 }}>→ 30</span>
+              Population
+              {hostedDemo && !hasSessionLlmKey && (
+                <span style={{ color: 'var(--amber)', fontSize: 9, fontWeight: 400, marginLeft: 4 }} title="Hosted demo caps population at 30. Add a session API key to unlock.">
+                  {'\u{1F512}'} demo:30
+                </span>
               )}
             </label>
-            <input id="pop-input" type="number" value={population} onChange={e => setPopulation(parseInt(e.target.value) || 100)} style={inputStyle} />
+            <input
+              id="pop-input"
+              type="number"
+              value={hostedDemo && !hasSessionLlmKey ? 30 : population}
+              onChange={e => setPopulation(parseInt(e.target.value) || 100)}
+              disabled={hostedDemo && !hasSessionLlmKey}
+              style={{
+                ...inputStyle,
+                opacity: hostedDemo && !hasSessionLlmKey ? 0.5 : 1,
+                cursor: hostedDemo && !hasSessionLlmKey ? 'not-allowed' : 'auto',
+              }}
+              title={hostedDemo && !hasSessionLlmKey ? 'Locked at 30 in hosted demo mode. Add your own OpenAI or Anthropic key above to unlock full scope.' : ''}
+            />
           </div>
         </div>
         <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
