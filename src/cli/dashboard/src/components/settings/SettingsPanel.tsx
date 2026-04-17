@@ -11,6 +11,56 @@ const DEFAULT_HEXACO: Record<string, number> = {
   agreeableness: 0.5, emotionality: 0.5, honestyHumility: 0.5,
 };
 
+/**
+ * Model options per provider, ordered cheapest first. Labels include a
+ * rough price hint so users can eyeball the cost impact before they pick.
+ * Values mirror the keys in the server-side MODEL_PRICING table.
+ */
+const MODEL_OPTIONS: Record<'openai' | 'anthropic', Array<{ value: string; label: string }>> = {
+  openai: [
+    { value: 'gpt-5.4-nano',  label: 'gpt-5.4-nano  ($0.20 / $1.25 per 1M)' },
+    { value: 'gpt-5.4-mini',  label: 'gpt-5.4-mini  ($0.75 / $4.50 per 1M)' },
+    { value: 'gpt-5.4',       label: 'gpt-5.4       ($2.50 / $15.00 per 1M)' },
+    { value: 'gpt-5.4-pro',   label: 'gpt-5.4-pro   ($30 / $180 per 1M — avoid)' },
+  ],
+  anthropic: [
+    { value: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5    ($1 / $5 per 1M)' },
+    { value: 'claude-sonnet-4-6',         label: 'Sonnet 4.6   ($3 / $15 per 1M)' },
+    { value: 'claude-opus-4-7',           label: 'Opus 4.7     ($5 / $25 per 1M)' },
+  ],
+};
+
+type ModelTier = 'departments' | 'commander' | 'director' | 'judge' | 'agentReactions';
+
+/**
+ * Default BYO-key tier selections: flagship for forging, mid-tier for
+ * structured output, cheapest for high-volume reactions.
+ */
+const DEFAULT_TIER_MODELS: Record<'openai' | 'anthropic', Record<ModelTier, string>> = {
+  openai: {
+    departments:    'gpt-5.4',
+    commander:      'gpt-5.4-mini',
+    director:       'gpt-5.4-mini',
+    judge:          'gpt-5.4-mini',
+    agentReactions: 'gpt-5.4-nano',
+  },
+  anthropic: {
+    departments:    'claude-sonnet-4-6',
+    commander:      'claude-haiku-4-5-20251001',
+    director:       'claude-haiku-4-5-20251001',
+    judge:          'claude-haiku-4-5-20251001',
+    agentReactions: 'claude-haiku-4-5-20251001',
+  },
+};
+
+const TIER_LABELS: Record<ModelTier, { label: string; help: string }> = {
+  departments:    { label: 'Departments (forges)',   help: 'Writes code, schemas, test cases. Quality matters — cheap tier produces broken forges.' },
+  commander:      { label: 'Commander',              help: 'Picks option from department reports. Mid-tier is fine.' },
+  director:       { label: 'Event Director',         help: 'Generates crisis events as structured JSON batches.' },
+  judge:          { label: 'Judge (code review)',    help: 'Reviews forged tool code for safety + correctness.' },
+  agentReactions: { label: 'Agent Reactions',        help: 'One to two sentences per colonist per turn. Highest volume — pick cheapest.' },
+};
+
 function defaultLeader(idx: number): LeaderFormData {
   return {
     name: idx === 0 ? 'Leader A' : 'Leader B',
@@ -89,6 +139,25 @@ export function SettingsPanel() {
     openai: '', anthropic: '', serper: '', firecrawl: '', tavily: '', cohere: '',
   });
 
+  // Per-tier model choices for BYO-key users. Initialised from defaults for
+  // the currently selected provider; reset whenever the provider changes so
+  // the UI never shows claude-* values while provider='openai' (or vice
+  // versa). Hidden entirely when no user API key is supplied — the server
+  // forces DEMO_MODELS in that case so user-picked values would be ignored.
+  const [tierModels, setTierModels] = useState<Record<ModelTier, string>>(
+    DEFAULT_TIER_MODELS[provider as 'openai' | 'anthropic'] ?? DEFAULT_TIER_MODELS.openai,
+  );
+  useEffect(() => {
+    const p = (provider as 'openai' | 'anthropic');
+    if (DEFAULT_TIER_MODELS[p]) setTierModels(DEFAULT_TIER_MODELS[p]);
+  }, [provider]);
+
+  // BYO-key mode: user supplied a session-level LLM key, so the run bills
+  // against them and the tier picker is honored. Env-only keys do NOT count
+  // — on the hosted demo those ARE the host keys, which is the path the
+  // server clamps via applyDemoCaps.
+  const hasUserLlmKey = !!keyOverrides.openai || !!keyOverrides.anthropic;
+
   const refreshScenarioCatalog = useCallback(() => {
     fetch('/scenarios')
       .then(r => r.json())
@@ -141,6 +210,12 @@ export function SettingsPanel() {
       if (keyOverrides.firecrawl) config.firecrawlKey = keyOverrides.firecrawl;
       if (keyOverrides.tavily) config.tavilyKey = keyOverrides.tavily;
       if (keyOverrides.cohere) config.cohereKey = keyOverrides.cohere;
+      // Per-tier model overrides only apply when the user is paying. The
+      // server enforces DEMO_MODELS otherwise, so sending these without a
+      // key would be silently overwritten.
+      if (hasUserLlmKey) {
+        config.models = { ...tierModels };
+      }
       const res = await fetch('/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -165,7 +240,7 @@ export function SettingsPanel() {
       setStatus(`Failed: ${err}`);
       setLaunching(false);
     }
-  }, [leaderA, leaderB, turns, seed, startYear, population, provider, liveSearch, navigateTab, scenario, keyOverrides]);
+  }, [leaderA, leaderB, turns, seed, startYear, population, provider, liveSearch, navigateTab, scenario, keyOverrides, tierModels, hasUserLlmKey]);
 
   return (
     <div className="settings-content" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '20px 24px', background: 'var(--bg-deep)' }}>
@@ -330,6 +405,59 @@ export function SettingsPanel() {
           ))}
         </div>
       </fieldset>
+
+      {/* Per-tier model picker. Renders only when the user has supplied
+          their own LLM key in this session, matching the server-side
+          contract: demo runs (host-billed) always use DEMO_MODELS and
+          will ignore anything posted here. */}
+      {hasUserLlmKey && (provider === 'openai' || provider === 'anthropic') && (
+        <fieldset style={{
+          background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: '8px',
+          padding: '16px', marginBottom: '16px', boxShadow: 'var(--card-shadow)',
+        }}>
+          <legend style={{ fontSize: '14px', fontFamily: 'var(--mono)', color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px', padding: '0 8px' }}>
+            Model Tiers
+          </legend>
+          <div style={{ fontSize: '11px', color: 'var(--text-2)', marginBottom: '12px', lineHeight: 1.6 }}>
+            Assign a model to each agent tier. Departments do the forging and benefit most from the flagship class.
+            Agent reactions fan out to hundreds of parallel calls per turn and should be the cheapest class available.
+            These overrides are only used when you run against your own API key.
+          </div>
+          <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            {(Object.keys(TIER_LABELS) as ModelTier[]).map(tier => (
+              <div key={tier}>
+                <label htmlFor={`model-${tier}`} style={labelStyle}>
+                  {TIER_LABELS[tier].label}
+                </label>
+                <select
+                  id={`model-${tier}`}
+                  value={tierModels[tier]}
+                  onChange={e => setTierModels(prev => ({ ...prev, [tier]: e.target.value }))}
+                  style={inputStyle}
+                >
+                  {MODEL_OPTIONS[provider as 'openai' | 'anthropic'].map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <div style={{ fontSize: '10px', color: 'var(--text-3)', marginTop: '3px', lineHeight: 1.4 }}>
+                  {TIER_LABELS[tier].help}
+                </div>
+              </div>
+            ))}
+          </div>
+        </fieldset>
+      )}
+
+      {!hasUserLlmKey && (
+        <div style={{
+          background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: '8px',
+          padding: '12px 16px', marginBottom: '16px', fontSize: '12px', color: 'var(--text-2)',
+        }}>
+          <strong style={{ color: 'var(--amber)' }}>Demo mode.</strong> No session API key detected.
+          Runs are capped to 3 turns, 30 colonists, 3 departments, and forced to the cheapest model class.
+          Add an OpenAI or Anthropic key above to unlock full scope and per-tier model selection.
+        </div>
+      )}
 
       {/* Scenario Editor: create, import, export, compile */}
       <ScenarioEditor />
