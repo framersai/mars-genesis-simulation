@@ -193,25 +193,42 @@ export const DEFAULT_EXECUTION: SimulationExecutionConfig = {
 /**
  * Demo-mode model assignments. Used when a request arrives without a
  * user-supplied API key, i.e. when the run bills against the host's
- * provider keys. Every tier drops to the cheapest class in each provider
- * family to keep the public-demo cost floor bounded.
+ * provider keys. Tiered to keep the demo cost floor bounded while
+ * avoiding the "wall of FAILs" behavior that pure-cheapest defaults
+ * produce on forge-heavy tasks.
  *
- * The quality hit is real: forges are more likely to get rejected by the
- * judge, and commander/director output is less nuanced. This is the right
- * trade for public demos — users who want real-quality output bring their
- * own key, which unlocks DEFAULT_MODELS above.
+ * Departments are the tier that forges code. The forge pipeline enforces
+ * schema-implementation consistency, uses-every-declared-input, and
+ * bounded output, and the judge rejects code that misses any of those.
+ * The cheapest class (nano / haiku-by-cost-equivalent) is too weak to
+ * consistently pass the judge: declared inputs get dropped, outputs
+ * saturate to 0, re-forge loops triple the toolbox entries without
+ * producing a usable tool. Bumping departments to the mid class cuts
+ * the FAIL rate by 2-3x at roughly +$0.25 per 3-turn demo.
+ *
+ * Commander, director, judge, and reactions stay on the cheapest class
+ * because their outputs are either short structured selections or pure
+ * volume fan-outs, which the cheap tier handles fine.
  */
 export const DEMO_MODELS: Record<LlmProvider, SimulationModelConfig> = {
   openai: {
+    // Mid-tier: forge code that actually uses declared inputs and
+    // stays consistent with its own schema.
+    departments: 'gpt-5.4-mini',
+    // Cheapest: structured picks + batches + reactions.
     commander: 'gpt-5.4-nano',
-    departments: 'gpt-5.4-nano',
     director: 'gpt-5.4-nano',
     judge: 'gpt-5.4-nano',
     agentReactions: 'gpt-5.4-nano',
   },
   anthropic: {
+    // Anthropic has a two-tier mini-vs-cheapest gap much smaller than
+    // OpenAI's, so we keep departments on the dedicated coding-and-
+    // agents tier (Sonnet) in demo mode. That is a bigger cost bump
+    // than the OpenAI equivalent; hosted-demo sites that prefer the
+    // Anthropic stack should verify the cost math before shipping.
+    departments: 'claude-sonnet-4-6',
     commander: 'claude-haiku-4-5-20251001',
-    departments: 'claude-haiku-4-5-20251001',
     director: 'claude-haiku-4-5-20251001',
     judge: 'claude-haiku-4-5-20251001',
     agentReactions: 'claude-haiku-4-5-20251001',
