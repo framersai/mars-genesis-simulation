@@ -61,6 +61,11 @@ export interface SideState {
   popHistory: number[];
   moraleHistory: number[];
   deaths: number;
+  /** Accumulated count per attributed death cause across all turns.
+   *  Populated from the `turn_done` event's deathCauses field. Lets
+   *  the UI render "DEATHS 8 (3 radiation · 2 accident · ...)" instead
+   *  of a single faceless number. */
+  deathCauses: Record<string, number>;
   tools: number;
   citations: number;
   decisions: number;
@@ -141,7 +146,7 @@ function emptySide(): SideState {
   return {
     leader: null, colony: null, prevColony: null, crisis: null,
     events: [], popHistory: [], moraleHistory: [],
-    deaths: 0, tools: 0, citations: 0, decisions: 0,
+    deaths: 0, deathCauses: {}, tools: 0, citations: 0, decisions: 0,
     pendingDecision: '', pendingRationale: '', pendingPolicies: [],
     outcome: null, agentSnapshots: [], currentEvents: [],
   };
@@ -377,6 +382,15 @@ export function useGameState(sseEvents: SimEvent[], isComplete: boolean): GameSt
           if (dd.colony) {
             s.prevColony = s.colony ? { ...s.colony } : null;
             s.colony = dd.colony as ColonyState;
+          }
+          // Fold this turn's cause breakdown into the running tally so
+          // the stats bar tooltip can show "3 radiation · 2 accident"
+          // across the full run.
+          if (dd.deathCauses && typeof dd.deathCauses === 'object') {
+            for (const [cause, n] of Object.entries(dd.deathCauses as Record<string, number>)) {
+              if (typeof n !== 'number' || n <= 0) continue;
+              s.deathCauses[cause] = (s.deathCauses[cause] ?? 0) + n;
+            }
           }
           s.events.push(processed);
           break;
