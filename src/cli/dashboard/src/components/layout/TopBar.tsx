@@ -55,10 +55,14 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
   //      pulled the plug). Shown even if isComplete also flipped.
   //   2. Complete — sim finished all turns, verdict broadcast.
   //   3. Live / Reconnecting / Connecting — SSE connection state.
+  // Complete reads as green (success) instead of the earlier rust
+  // which read as failure/error to users. Unfinished stays amber
+  // (interrupted, not failed). Running is a pulsed green; idle-
+  // connected is a steady text color.
   const statusColor = sse.isAborted
     ? 'var(--amber)'
     : sse.isComplete
-    ? 'var(--rust)'
+    ? 'var(--green)'
     : sse.status === 'connected'
     ? 'var(--color-success)'
     : 'var(--text-3)';
@@ -87,11 +91,11 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
         <a href="/" style={{ fontFamily: 'var(--mono)', fontSize: '13px', fontWeight: 700, color: 'var(--text-1)', textDecoration: 'none', letterSpacing: '.08em' }}>
           PARA<span style={{ color: 'var(--amber)' }}>COSM</span>
         </a>
-        <a href="https://agentos.sh" target="_blank" rel="noopener" style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '1px', color: 'var(--rust)', fontFamily: 'var(--mono)', textDecoration: 'none' }} title="AgentOS Runtime">
+        <a href="https://agentos.sh" target="_blank" rel="noopener" className="topbar-agentos" style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '1px', color: 'var(--rust)', fontFamily: 'var(--mono)', textDecoration: 'none' }} title="AgentOS Runtime">
           AGENTOS
         </a>
-        <span style={{ color: 'var(--border)', fontSize: '12px' }} aria-hidden="true">|</span>
-        <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--amber)', fontFamily: 'var(--mono)' }}>
+        <span className="topbar-agentos" style={{ color: 'var(--border)', fontSize: '12px' }} aria-hidden="true">|</span>
+        <span className="topbar-scenario" style={{ fontSize: '12px', fontWeight: 700, color: 'var(--amber)', fontFamily: 'var(--mono)' }}>
           {scenario.labels.name}
         </span>
       </div>
@@ -155,6 +159,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
         {onTour && (
           <button
             onClick={onTour}
+            className="topbar-tour"
             style={{
               background: 'var(--bg-card)', color: 'var(--amber)',
               border: '1px solid var(--amber-dim, var(--border))',
@@ -165,7 +170,8 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
             title="Interactive guided tour with sample data"
             aria-label="Start guided tour"
           >
-            HOW IT WORKS
+            <span className="topbar-tour-label">HOW IT WORKS</span>
+            <span className="topbar-tour-icon" aria-hidden="true" style={{ display: 'none' }}>{'\u003F'}</span>
           </button>
         )}
         {/* Run button */}
