@@ -883,9 +883,28 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
           env.COHERE_API_KEY = simConfig.cohereKey;
         }
 
-        if (!simRunning) {
-          void marsServer.startWithConfig(simConfig);
+        // If a run is already in flight, abort it before starting the
+        // new one. Previously /setup silently no-op'd on simRunning,
+        // which left the old sim draining API credits while the user
+        // thought their new config had taken effect. The orchestrator
+        // handles AbortSignal via its finally block in startWithConfig
+        // (resets simRunning + activeSimAbortController), so awaiting
+        // that unwind before starting ensures the event buffer clear +
+        // new config take effect cleanly.
+        if (simRunning && activeSimAbortController) {
+          console.log(`  [setup] Aborting in-flight sim before launching new one`);
+          activeSimAbortController.abort();
+          // Wait up to 5s for the previous run's finally block to run.
+          // Without this, the orchestrator's finally could reset
+          // simRunning AFTER the new startWithConfig has already set
+          // it, then the watchdog would never re-arm on the new sim.
+          const waitStart = Date.now();
+          while (simRunning && Date.now() - waitStart < 5000) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
         }
+
+        void marsServer.startWithConfig(simConfig);
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ redirect: '/sim' }));
@@ -1173,17 +1192,24 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       eventBuffer.length = 0;
       simConfig = config;
       simRunning = true;
-      // Create the per-run AbortController so the disconnect watchdog
-      // (and any future cancel endpoint) can abort this specific run
-      // without affecting future ones. Always tear down in finally so a
-      // thrown error doesn't leak the controller into the next sim.
-      activeSimAbortController = new AbortController();
+      // Per-run AbortController. Held in a local so the finally block
+      // only clears the global flag when it still points to *our* run.
+      // Without the identity check, a slow cleanup on an old run could
+      // null the active controller of a newer run that /setup just
+      // started, breaking the disconnect watchdog's abort path.
+      const controller = new AbortController();
+      activeSimAbortController = controller;
       try {
-        await startSimulations(config, broadcast, activeSimAbortController.signal);
+        await startSimulations(config, broadcast, controller.signal);
       } finally {
-        simRunning = false;
         disarmDisconnectWatchdog();
-        activeSimAbortController = null;
+        if (activeSimAbortController === controller) {
+          simRunning = false;
+          activeSimAbortController = null;
+        }
+        // Else: a newer run already replaced us. Leave simRunning and
+        // activeSimAbortController alone so the new run's watchdog
+        // continues to work.
       }
     },
   });
