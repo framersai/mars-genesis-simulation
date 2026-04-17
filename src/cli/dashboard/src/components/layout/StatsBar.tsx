@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import type { ColonyState } from '../../hooks/useGameState';
 import type { ToolRegistry } from '../../hooks/useToolRegistry';
 import { useScenarioContext } from '../../App';
@@ -108,6 +108,24 @@ export function StatsBar({
     return { reuseA: a, reuseB: b };
   }, [toolRegistry]);
 
+  // Track previous counter values so the row can show +N deltas for
+  // tools/reuse/cites/deaths the same way pop/morale/food/power already
+  // do. Uses refs so the math runs once per render without adding
+  // prev-value props to the component's interface.
+  const prevCountersRef = useRef({ toolsA, toolsB, reuseA, reuseB, citationsA, citationsB, deathsA, deathsB });
+  const prev = prevCountersRef.current;
+  const deltaToolsA = delta(toolsA, prev.toolsA);
+  const deltaToolsB = delta(toolsB, prev.toolsB);
+  const deltaReuseA = delta(reuseA, prev.reuseA);
+  const deltaReuseB = delta(reuseB, prev.reuseB);
+  const deltaCitesA = delta(citationsA, prev.citationsA);
+  const deltaCitesB = delta(citationsB, prev.citationsB);
+  const deltaDeathsA = delta(deathsA, prev.deathsA);
+  const deltaDeathsB = delta(deathsB, prev.deathsB);
+  useEffect(() => {
+    prevCountersRef.current = { toolsA, toolsB, reuseA, reuseB, citationsA, citationsB, deathsA, deathsB };
+  }, [toolsA, toolsB, reuseA, reuseB, citationsA, citationsB, deathsA, deathsB]);
+
   if (!colonyA && !colonyB) {
     return null;
   }
@@ -169,33 +187,33 @@ export function StatsBar({
       })}
 
       {/* Deaths — leader-coloured A/B so the eye follows the same
-          colour mapping as the colony metrics (vis for A, eng for B).
-          Rust-on-red was a separate severity signal that conflicted
-          with the leader-attribution language the rest of the bar
-          speaks. */}
+          colour mapping as the colony metrics (vis for A, eng for B). */}
       <span style={pillWrap}>
         <span style={labelStyle} title="Deaths">
           <span className="pill-label-full">DEATHS</span>
           <span className="pill-label-short">†</span>
         </span>
         <span style={{ ...valueStyle, color: 'var(--vis)' }}>{deathsA}</span>
+        {deltaDeathsA && <span style={{ ...deltaStyle, color: 'var(--rust)' }}>{deltaDeathsA}</span>}
         <span style={sepStyle}>vs</span>
         <span style={{ ...valueStyle, color: 'var(--eng)' }}>{deathsB}</span>
+        {deltaDeathsB && <span style={{ ...deltaStyle, color: 'var(--rust)' }}>{deltaDeathsB}</span>}
       </span>
 
       {/* Tools + Reuse cluster together. The two numbers speak to the
           same emergent-capability story: how many unique tools a side
           forged (TOOLS) and how many times those tools got reused
-          across events without re-forging (REUSE). Keeping CITES
-          between them obscured the relationship. */}
+          across events without re-forging (REUSE). */}
       <span style={pillWrap}>
         <span style={labelStyle} title="Tools forged">
           <span className="pill-label-full">TOOLS</span>
           <span className="pill-label-short">T</span>
         </span>
         <span style={{ ...valueStyle, color: 'var(--vis)' }}>{toolsA}</span>
+        {deltaToolsA && <span style={{ ...deltaStyle, color: 'var(--green)' }}>{deltaToolsA}</span>}
         <span style={sepStyle}>/</span>
         <span style={{ ...valueStyle, color: 'var(--eng)' }}>{toolsB}</span>
+        {deltaToolsB && <span style={{ ...deltaStyle, color: 'var(--green)' }}>{deltaToolsB}</span>}
       </span>
 
       {toolRegistry && toolRegistry.list.length > 0 && (
@@ -208,21 +226,24 @@ export function StatsBar({
             <span className="pill-label-short">R</span>
           </span>
           <span style={{ ...valueStyle, color: 'var(--vis)' }}>{reuseA}</span>
+          {deltaReuseA && <span style={{ ...deltaStyle, color: 'var(--green)' }}>{deltaReuseA}</span>}
           <span style={sepStyle}>/</span>
           <span style={{ ...valueStyle, color: 'var(--eng)' }}>{reuseB}</span>
+          {deltaReuseB && <span style={{ ...deltaStyle, color: 'var(--green)' }}>{deltaReuseB}</span>}
         </span>
       )}
 
-      {/* Citations — moved after the tools cluster since it is a
-          research-signal metric, not a capability-signal one. */}
+      {/* Citations — research-signal metric, kept after the tools cluster. */}
       <span style={pillWrap}>
         <span style={labelStyle} title="Citations">
           <span className="pill-label-full">CITES</span>
           <span className="pill-label-short">C</span>
         </span>
         <span style={{ ...valueStyle, color: 'var(--vis)' }}>{citationsA}</span>
+        {deltaCitesA && <span style={{ ...deltaStyle, color: 'var(--text-3)' }}>{deltaCitesA}</span>}
         <span style={sepStyle}>/</span>
         <span style={{ ...valueStyle, color: 'var(--eng)' }}>{citationsB}</span>
+        {deltaCitesB && <span style={{ ...deltaStyle, color: 'var(--text-3)' }}>{deltaCitesB}</span>}
       </span>
     </div>
   );
