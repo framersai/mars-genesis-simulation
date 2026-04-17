@@ -1323,32 +1323,35 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
       };
 
       // Build a shared "previously forged tools" block for this turn so
-      // every department in this event sees the same inventory. Without
-      // this the system prompt tells depts to "reuse a previously-forged
-      // tool by name" but never names what's available — forgedLedger
-      // lives only in the orchestrator. Result: the LLM invents new
-      // names every turn (radiation_risk_index_v2, _v3, ...) instead of
-      // citing the ones already approved. Listing approved tools here
-      // turns those re-forges into cheap reuses.
+      // every department in this event sees the same inventory. First
+      // iteration listed just name + description, which wasn't enough —
+      // the LLM kept re-forging because the system prompt says "Run it
+      // to produce a number you reference in your summary" and there
+      // was no other way to surface a number than to re-run forge_tool.
+      // Now we also include the last approved output so the LLM can
+      // cite both the name and the value without re-forging.
       const availableToolsBlock = (() => {
-        const approved: Array<{ name: string; description: string; dept: string }> = [];
+        type Entry = { name: string; dept: string; title: string; output: string | null };
+        const approved: Entry[] = [];
         for (const [name, ledger] of forgedLedger.entries()) {
           const lastApproved = [...ledger.history].reverse().find(h => !h.rejected);
           if (!lastApproved) continue;
           approved.push({
             name,
-            description: ledger.firstForgedEventTitle || name,
             dept: ledger.firstForgedDepartment,
+            title: ledger.firstForgedEventTitle || name,
+            // Truncate aggressively so the block stays under a few hundred
+            // tokens even with 20 tools. 180 chars covers a compact JSON
+            // like {"score":42,"warnings":[]} which is what the LLM cites.
+            output: lastApproved.output ? lastApproved.output.slice(0, 180) : null,
           });
         }
         if (approved.length === 0) return '';
-        // Cap at 20 tools to keep the prompt bounded. Ordered by most
-        // recent first so the LLM sees the latest approved capabilities
-        // rather than stale ones from turn 1.
-        const lines = approved.slice(-20).reverse().map(t =>
-          `- ${t.name} (${t.dept}): ${t.description}`,
-        ).join('\n');
-        return `\n\nALREADY-FORGED TOOLS IN THIS SESSION (cite by name in forgedToolsUsed instead of re-forging; reuse is +0.02 outcome bonus each, re-forging the same concept is −0.06 and wastes the turn):\n${lines}\n`;
+        const lines = approved.slice(-20).reverse().map(t => {
+          const head = `- ${t.name} (${t.dept}): ${t.title}`;
+          return t.output ? `${head}\n  last output: ${t.output}` : head;
+        }).join('\n');
+        return `\n\nALREADY-FORGED TOOLS IN THIS SESSION:\n${lines}\n\nHARD RULE: If a tool above already covers your analysis, DO NOT call forge_tool. Cite it in "forgedToolsUsed" with the exact name and reference the last output in your summary. Re-forging by the same name costs −0.06 outcome bonus and −0.015 morale. Only forge a NEW tool when no existing one applies. Reuses are +0.02 outcome bonus each.\n`;
       })();
 
       const deptPromises = depts.map(async (dept) => {
