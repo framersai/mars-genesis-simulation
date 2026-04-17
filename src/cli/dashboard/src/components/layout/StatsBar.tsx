@@ -10,6 +10,13 @@ interface StatsBarProps {
   prevColonyB: ColonyState | null;
   deathsA: number;
   deathsB: number;
+  /** Cumulative death-cause breakdown per side. Lets the DEATHS pill
+   *  render a tooltip + compact inline chip of attributed causes
+   *  ("3 radiation · 2 accident") so mortality reads as structural
+   *  pressure (starvation, radiation, despair) rather than a faceless
+   *  total. */
+  deathCausesA?: Record<string, number>;
+  deathCausesB?: Record<string, number>;
   toolsA: number;
   toolsB: number;
   citationsA: number;
@@ -85,9 +92,25 @@ const valueStyle: React.CSSProperties = { fontSize: '12px', fontWeight: 800 };
 const deltaStyle: React.CSSProperties = { fontSize: '8px' };
 const sepStyle: React.CSSProperties = { color: 'var(--text-3)', fontSize: '9px' };
 
+/**
+ * Format a cause map into a compact chip: '3 radiation · 2 accident'.
+ * Orders by count descending; caps at 3 causes to keep the chip small.
+ */
+function formatCauses(causes: Record<string, number> | undefined): string {
+  if (!causes) return '';
+  const sorted = Object.entries(causes).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+  if (sorted.length === 0) return '';
+  const top = sorted.slice(0, 3).map(([cause, n]) => {
+    const short = cause.replace('radiation cancer', 'radiation').replace('natural causes', 'age').replace('age-related complications', 'age').replace('fatal fracture', 'fracture').replace('accident: ', '').replace('accident', 'accident');
+    return `${n} ${short}`;
+  });
+  const rest = sorted.length - top.length;
+  return rest > 0 ? `${top.join(' \u00b7 ')} +${rest}` : top.join(' \u00b7 ');
+}
+
 export function StatsBar({
   colonyA, colonyB, prevColonyA, prevColonyB,
-  deathsA, deathsB, toolsA, toolsB, citationsA, citationsB,
+  deathsA, deathsB, deathCausesA, deathCausesB, toolsA, toolsB, citationsA, citationsB,
   crisisText, toolRegistry,
 }: StatsBarProps) {
   const scenario = useScenarioContext();
@@ -187,17 +210,45 @@ export function StatsBar({
       })}
 
       {/* Deaths — leader-coloured A/B so the eye follows the same
-          colour mapping as the colony metrics (vis for A, eng for B). */}
+          colour mapping as the colony metrics (vis for A, eng for B).
+          Tooltips carry the full cause breakdown (e.g. '3 radiation
+          cancer, 2 accident, 1 despair') so the single DEATHS number
+          stays legible at the stats-bar scale but the detail is one
+          hover away. */}
       <span style={pillWrap}>
         <span style={labelStyle} title="Deaths">
           <span className="pill-label-full">DEATHS</span>
           <span className="pill-label-short">†</span>
         </span>
-        <span style={{ ...valueStyle, color: 'var(--vis)' }}>{deathsA}</span>
+        <span
+          style={{ ...valueStyle, color: 'var(--vis)' }}
+          title={deathCausesA && Object.keys(deathCausesA).length > 0
+            ? `Leader A deaths by cause: ${Object.entries(deathCausesA).map(([k, v]) => `${v} ${k}`).join(', ')}`
+            : undefined}
+        >
+          {deathsA}
+        </span>
         {deltaDeathsA && <span style={{ ...deltaStyle, color: 'var(--rust)' }}>{deltaDeathsA}</span>}
         <span style={sepStyle}>vs</span>
-        <span style={{ ...valueStyle, color: 'var(--eng)' }}>{deathsB}</span>
+        <span
+          style={{ ...valueStyle, color: 'var(--eng)' }}
+          title={deathCausesB && Object.keys(deathCausesB).length > 0
+            ? `Leader B deaths by cause: ${Object.entries(deathCausesB).map(([k, v]) => `${v} ${k}`).join(', ')}`
+            : undefined}
+        >
+          {deathsB}
+        </span>
         {deltaDeathsB && <span style={{ ...deltaStyle, color: 'var(--rust)' }}>{deltaDeathsB}</span>}
+        {(() => {
+          const chipA = formatCauses(deathCausesA);
+          const chipB = formatCauses(deathCausesB);
+          if (!chipA && !chipB) return null;
+          return (
+            <span style={{ ...deltaStyle, color: 'var(--text-3)', fontStyle: 'italic', marginLeft: 4 }}>
+              ({chipA || '0'} / {chipB || '0'})
+            </span>
+          );
+        })()}
       </span>
 
       {/* Tools + Reuse cluster together. The two numbers speak to the

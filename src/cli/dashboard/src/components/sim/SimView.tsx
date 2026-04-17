@@ -181,6 +181,8 @@ export function SimView({ state, sseStatus, onRun, verdict, launching: launching
         prevColonyB={state.b.prevColony}
         deathsA={state.a.deaths}
         deathsB={state.b.deaths}
+        deathCausesA={state.a.deathCauses}
+        deathCausesB={state.b.deathCauses}
         toolsA={state.a.tools}
         toolsB={state.b.tools}
         citationsA={state.a.citations}
