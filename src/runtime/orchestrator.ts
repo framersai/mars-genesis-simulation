@@ -1139,7 +1139,27 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
       },
     });
     console.log(`  State: Pop ${after.colony.population} | Morale ${Math.round(after.colony.morale * 100)}% | Food ${after.colony.foodMonthsReserve.toFixed(1)}mo`);
-    emit('turn_done', { turn, year, colony: after.colony, toolsForged: Object.values(toolRegs).flat().length, totalEvents: turnEvents.length });
+    // Death cause breakdown for this turn: maps attributed causes from
+    // the kernel (natural causes, radiation cancer, starvation, despair,
+    // fatal fracture, accident: X) to counts so the dashboard can
+    // render "3 lost: 2 radiation cancer, 1 accident" instead of a
+    // faceless total. Accident sub-types collapse to 'accident' for
+    // the roll-up; the detailed descriptor stays in the individual
+    // event for anyone reading the raw log.
+    const deathsThisTurn = after.eventLog.filter(e => e.turn === turn && e.type === 'death');
+    const deathCauses: Record<string, number> = {};
+    for (const d of deathsThisTurn) {
+      const raw = (d as unknown as { cause?: string }).cause ?? 'unknown';
+      const key = raw.startsWith('accident:') ? 'accident' : raw;
+      deathCauses[key] = (deathCauses[key] ?? 0) + 1;
+    }
+    emit('turn_done', {
+      turn, year,
+      colony: after.colony,
+      toolsForged: Object.values(toolRegs).flat().length,
+      totalEvents: turnEvents.length,
+      deathCauses: Object.keys(deathCauses).length > 0 ? deathCauses : undefined,
+    });
 
     // Emit full agent roster for colony visualization.
     //
