@@ -117,35 +117,54 @@ export const DEFAULT_KEY_PERSONNEL: KeyPersonnel[] = [
 /**
  * Default model assignments per provider.
  *
- * Cost note: the judge runs on EVERY forge call (department × event × turn),
- * easily 60+ calls in a typical 6-turn, 5-department run. Defaulting the
- * judge to the flagship model (sonnet / gpt-5.4) was the single biggest
- * contributor to per-simulation cost. The judge does code review over a
- * short, highly-structured prompt that the cheap/fast tier handles well, so
- * it now defaults to haiku/mini. Override via `models.judge` if you need
- * stricter review (e.g. adversarial forges).
+ * Tier strategy (verified against live provider rate cards 2026-04-16):
  *
- * Similarly `agentReactions` defaults to the cheap tier because it fans out
- * to ~100 parallel calls per turn.
+ * - `departments` stays on flagship because departments forge tools. Writing
+ *   correct code, schemas, and test cases needs real reasoning. Cheap
+ *   models produce broken forges that waste judge calls and lower the tool
+ *   approval rate.
  *
- * Commander / departments / director stay on the flagship model because
- * their output directly shapes the simulation's narrative and determinism.
+ * - `commander` drops to mid-tier. The commander reads already-written
+ *   reports and picks an option. No code, no schemas, no novel reasoning.
+ *   Mid-tier handles it at ~20% of flagship cost.
+ *
+ * - `director` drops to mid-tier. The director emits structured batch JSON
+ *   from world state plus a research packet. Structured output on a
+ *   well-cached system prompt is a mid-tier task. The cacheBreakpoint on
+ *   the system prompt (see director.ts) already cuts repeat-turn cost.
+ *
+ * - `judge` stays mid-tier (was cheapest). Judges that approve bad code are
+ *   a net loss because approved tools run in a sandbox against real state
+ *   and waste downstream tokens. Mid-tier judge is ~$0.01 per call and
+ *   worth the uplift from nano/mini reviews.
+ *
+ * - `agentReactions` drops to the cheapest class. ~100 colonists × 6 turns
+ *   = 600 one-to-two-sentence parallel calls per run. The 5.4-nano tier
+ *   (OpenAI) or haiku (Anthropic) is the right place for pure volume.
+ *
+ * Expected per-run spend at 6 turns, 5 departments, 100 colonists, on OpenAI:
+ *   old defaults (all flagship for commander/depts/director): ~$35-45
+ *   new defaults:                                              ~$8-12
  */
 export const DEFAULT_MODELS: Record<LlmProvider, SimulationModelConfig> = {
   openai: {
-    commander: 'gpt-5.4',
+    // Flagship: forge code correctness.
     departments: 'gpt-5.4',
-    // Code review on short structured prompts. Cheap tier is sufficient.
-    judge: 'gpt-4o-mini',
-    director: 'gpt-5.4',
-    agentReactions: 'gpt-4o-mini',
+    // Mid-tier: structured output, no novel code.
+    commander: 'gpt-5.4-mini',
+    director: 'gpt-5.4-mini',
+    judge: 'gpt-5.4-mini',
+    // Cheapest: high-volume parallel reactions.
+    agentReactions: 'gpt-5.4-nano',
   },
   anthropic: {
-    commander: 'claude-sonnet-4-6',
+    // Flagship: forge code correctness.
     departments: 'claude-sonnet-4-6',
-    // Code review on short structured prompts. Cheap tier is sufficient.
+    // Mid-tier: structured output, no novel code.
+    commander: 'claude-haiku-4-5-20251001',
+    director: 'claude-haiku-4-5-20251001',
     judge: 'claude-haiku-4-5-20251001',
-    director: 'claude-sonnet-4-6',
+    // Cheapest: high-volume parallel reactions.
     agentReactions: 'claude-haiku-4-5-20251001',
   },
 };
@@ -169,6 +188,62 @@ export const DEFAULT_EXECUTION: SimulationExecutionConfig = {
   sandboxMemoryMB: 128,
   reactionBatchSize: 10,
   progressiveReactions: true,
+};
+
+/**
+ * Demo-mode model assignments. Used when a request arrives without a
+ * user-supplied API key, i.e. when the run bills against the host's
+ * provider keys. Every tier drops to the cheapest class in each provider
+ * family to keep the public-demo cost floor bounded.
+ *
+ * The quality hit is real: forges are more likely to get rejected by the
+ * judge, and commander/director output is less nuanced. This is the right
+ * trade for public demos — users who want real-quality output bring their
+ * own key, which unlocks DEFAULT_MODELS above.
+ */
+export const DEMO_MODELS: Record<LlmProvider, SimulationModelConfig> = {
+  openai: {
+    commander: 'gpt-5.4-nano',
+    departments: 'gpt-5.4-nano',
+    director: 'gpt-5.4-nano',
+    judge: 'gpt-5.4-nano',
+    agentReactions: 'gpt-5.4-nano',
+  },
+  anthropic: {
+    commander: 'claude-haiku-4-5-20251001',
+    departments: 'claude-haiku-4-5-20251001',
+    director: 'claude-haiku-4-5-20251001',
+    judge: 'claude-haiku-4-5-20251001',
+    agentReactions: 'claude-haiku-4-5-20251001',
+  },
+};
+
+/**
+ * Demo-mode execution caps. Enforced server-side when the request has no
+ * user API key. Caps apply on top of whatever the client posted.
+ *
+ *   turns:        6 → 3  (halves flagship calls per sim)
+ *   population:  100 → 30 (cuts reaction fan-out by 70%)
+ *   departments:  5 → 3  (fewer parallel forges per turn)
+ *   max steps:   4-5 → 3 (tighter cap on misbehaving tool loops)
+ *
+ * Sandbox limits stay identical to DEFAULT_EXECUTION — they protect the
+ * host process from runaway forged code regardless of who is paying.
+ */
+export const DEMO_EXECUTION: SimulationExecutionConfig & {
+  maxTurns: number;
+  maxPopulation: number;
+  maxActiveDepartments: number;
+} = {
+  commanderMaxSteps: 3,
+  departmentMaxSteps: 3,
+  sandboxTimeoutMs: 10000,
+  sandboxMemoryMB: 128,
+  reactionBatchSize: 10,
+  progressiveReactions: true,
+  maxTurns: 3,
+  maxPopulation: 30,
+  maxActiveDepartments: 3,
 };
 
 const DEFAULT_ACTIVE_DEPARTMENTS: Department[] = ['medical', 'engineering', 'agriculture', 'psychology', 'governance'];
@@ -233,6 +308,39 @@ function normalizeActiveDepartments(input: SimulationSetupPayload['activeDepartm
   }
 
   return DEFAULT_ACTIVE_DEPARTMENTS.filter(dept => active.has(dept));
+}
+
+/**
+ * Apply demo-mode caps to an already-normalized sim config.
+ *
+ * Called server-side when a request arrives without a user-supplied API
+ * key, so the run bills against the host's provider key. Replaces models
+ * with DEMO_MODELS, clamps turn/population/department counts, and tightens
+ * tool-loop step caps. Leaders, seed, scenario content, and scenario-level
+ * starting state pass through unchanged so the run still feels like a
+ * real sim rather than a canned preview.
+ *
+ * The client cannot bypass by posting its own `models` or `turns` values.
+ * Whatever the normalizer produced is overwritten here.
+ */
+export function applyDemoCaps(config: NormalizedSimulationConfig): NormalizedSimulationConfig {
+  const demoModels = DEMO_MODELS[config.provider];
+  const activeClamped = config.activeDepartments.slice(0, DEMO_EXECUTION.maxActiveDepartments);
+  return {
+    ...config,
+    turns: Math.min(config.turns, DEMO_EXECUTION.maxTurns),
+    initialPopulation: Math.min(config.initialPopulation, DEMO_EXECUTION.maxPopulation),
+    activeDepartments: activeClamped,
+    execution: {
+      commanderMaxSteps: DEMO_EXECUTION.commanderMaxSteps,
+      departmentMaxSteps: DEMO_EXECUTION.departmentMaxSteps,
+      sandboxTimeoutMs: DEMO_EXECUTION.sandboxTimeoutMs,
+      sandboxMemoryMB: DEMO_EXECUTION.sandboxMemoryMB,
+      reactionBatchSize: DEMO_EXECUTION.reactionBatchSize,
+      progressiveReactions: DEMO_EXECUTION.progressiveReactions,
+    },
+    models: demoModels,
+  };
 }
 
 export function normalizeSimulationConfig(input: SimulationSetupPayload): NormalizedSimulationConfig {

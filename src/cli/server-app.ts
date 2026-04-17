@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { normalizeSimulationConfig, type NormalizedSimulationConfig } from './sim-config.js';
+import { normalizeSimulationConfig, applyDemoCaps, type NormalizedSimulationConfig } from './sim-config.js';
 import { runPairSimulations, type BroadcastFn } from './pair-runner.js';
 import { marsScenario } from '../engine/mars/index.js';
 import { lunarScenario } from '../engine/lunar/index.js';
@@ -224,12 +224,13 @@ export interface MarsServer extends Server {
 
 export function createMarsServer(options: CreateMarsServerOptions = {}): MarsServer {
   const env = options.env ?? process.env;
-  // Rate limit default: 2 simulations per IP per day. A single 6-turn run on
-  // Anthropic defaults can cost $5-8 in API fees against the owner's key, so
-  // a conservative default is safer than advertising "cheap demos." Override
-  // with RATE_LIMIT env var or maxSimsPerDay option when hosting on your own
-  // infrastructure.
-  const maxSims = options.maxSimsPerDay ?? parseInt(env.RATE_LIMIT || '2', 10);
+  // Rate limit default: 1 simulation per IP per day for the public-demo
+  // path. Even on DEMO_MODELS + DEMO_EXECUTION a run costs ~$0.40 against
+  // the host's keys, so 1/day caps worst-case monthly spend at roughly
+  // $30 × unique-daily-IPs. Users who want more runs provide their own
+  // key, which fully bypasses rate limiting. Override with RATE_LIMIT
+  // env var or maxSimsPerDay option when hosting on your own infra.
+  const maxSims = options.maxSimsPerDay ?? parseInt(env.RATE_LIMIT || '1', 10);
   const adminWrite = (env.ADMIN_WRITE || 'false').toLowerCase() === 'true';
   const scenarioDir = options.scenarioDir ?? resolve(__dirname, '..', '..', 'scenarios');
   const rateLimiter = maxSims > 0 ? new IpRateLimiter(maxSims) : null;
@@ -501,7 +502,13 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         }
 
         const provider = requestedProvider || (env.ANTHROPIC_API_KEY ? 'anthropic' : 'openai');
-        const model = requestedModel || (env.ANTHROPIC_API_KEY ? 'claude-sonnet-4-6' : 'gpt-5.4-mini');
+        // Demo mode: force cheapest class for compile when no user key,
+        // ignoring whatever the client asked for. BYO-key compiles honor
+        // the requested model.
+        const demoCompileModel = provider === 'anthropic' ? 'claude-haiku-4-5-20251001' : 'gpt-5.4-nano';
+        const model = userSuppliedKey
+          ? (requestedModel || (provider === 'anthropic' ? 'claude-sonnet-4-6' : 'gpt-5.4-mini'))
+          : demoCompileModel;
 
         // SSE progress stream
         res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Access-Control-Allow-Origin': '*' });
@@ -819,6 +826,20 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         }
 
         simConfig = normalizeSimulationConfig(config);
+
+        // Demo-mode enforcement: when the run bills against the host's
+        // provider keys (no user-supplied key), force cheap models and
+        // clamped scope regardless of what the client posted. Returning
+        // users with their own key hit `hasUserKeys` above and skip this
+        // branch entirely, so BYO-key runs keep the full tiered defaults
+        // and whatever model overrides they submitted.
+        if (!hasUserKeys) {
+          simConfig = applyDemoCaps(simConfig);
+          console.log(
+            `  [demo-mode] Capped run: turns=${simConfig.turns} pop=${simConfig.initialPopulation} ` +
+            `depts=${simConfig.activeDepartments.length} models=${simConfig.models.commander}`,
+          );
+        }
 
         if (simConfig.apiKey && !simConfig.apiKey.includes('...')) {
           env.OPENAI_API_KEY = simConfig.apiKey;

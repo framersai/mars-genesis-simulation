@@ -601,15 +601,23 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
     other: newBucket(),
   };
 
-  // Per-million-token pricing estimates for cost tracking
+  // Per-million-token pricing (USD). Verified against openai.com/api/pricing
+  // and anthropic.com/pricing on 2026-04-16. Update when provider rate cards
+  // change. Cached-input rates are not tracked here; providers with prompt
+  // caching bill cached tokens at 10% of uncached input, which shows up
+  // under-billed rather than over-billed in these totals.
   const MODEL_PRICING: Record<string, { input: number; output: number }> = {
-    'gpt-5.4': { input: 2.50, output: 10.00 },
-    'gpt-5.4-mini': { input: 0.30, output: 1.20 },
-    'gpt-4o-mini': { input: 0.15, output: 0.60 },
-    'claude-sonnet-4-6': { input: 3.00, output: 15.00 },
-    'claude-haiku-4-5-20251001': { input: 0.80, output: 4.00 },
+    // OpenAI
+    'gpt-5.4':                   { input: 2.50, output: 15.00 },
+    'gpt-5.4-mini':              { input: 0.75, output: 4.50 },
+    'gpt-5.4-nano':              { input: 0.20, output: 1.25 },
+    'gpt-4o-mini':               { input: 0.15, output: 0.60 },
+    // Anthropic
+    'claude-opus-4-7':           { input: 5.00, output: 25.00 },
+    'claude-sonnet-4-6':         { input: 3.00, output: 15.00 },
+    'claude-haiku-4-5-20251001': { input: 1.00, output: 5.00 },
   };
-  const defaultPricing = MODEL_PRICING[modelConfig.commander] || { input: 2.50, output: 10.00 };
+  const defaultPricing = MODEL_PRICING[modelConfig.commander] || { input: 2.50, output: 15.00 };
 
   /**
    * Per-site model pricing so cache-savings math bills each stage at
