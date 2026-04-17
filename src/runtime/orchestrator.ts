@@ -172,6 +172,18 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
   /** True when the run should stop launching new LLM work. */
   const isAborted = () => providerErrorState !== null;
 
+  /**
+   * Combined abort check: either an external signal flipped (client
+   * disconnected past the grace period so the server's watchdog fired)
+   * or a terminal provider error stopped the run. Used to gate every
+   * expensive LLM call inside a turn so at most one in-flight call
+   * completes after a tab close before the rest of the turn short-
+   * circuits. Without these gates the turn's remaining depts +
+   * commander + reactions would all fire even after the watchdog
+   * aborted, burning tokens on nobody.
+   */
+  const shouldStop = () => opts.signal?.aborted || isAborted();
+
   console.log(`\n${'═'.repeat(60)}`);
   console.log(`  ${sc.labels.name.toUpperCase()} v2`);
   console.log(`  Commander: ${leader.name} — "${leader.archetype}"`);
@@ -268,15 +280,22 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
   // Turn 0: commander promotes department heads from the kernel's
   // candidate roster. Any dept the commander skips gets its top
   // candidate promoted via fallback so turn 1 starts with a full cabinet.
-  await runDepartmentPromotions({
-    kernel,
-    scenario: sc,
-    leader,
-    startYear,
-    sendToCommander: (prompt) => cmdSess.send(prompt),
-    trackUsage,
-    emit,
-  });
+  // Abort gate: promotions fire one commander LLM call per department
+  // (up to 5) before Turn 1 even begins. If the user clicked Run and
+  // immediately closed the tab, skipping this saves those calls
+  // entirely; the fallback path inside runDepartmentPromotions also
+  // needs to be skipped because the whole run is being torn down.
+  if (!shouldStop()) {
+    await runDepartmentPromotions({
+      kernel,
+      scenario: sc,
+      leader,
+      startYear,
+      sendToCommander: (prompt) => cmdSess.send(prompt),
+      trackUsage,
+      emit,
+    });
+  }
 
   // Captured forge events keyed by department. Each `wrapForgeTool` push
   // here on every successful or failed forge; we drain the dept's bucket
@@ -523,6 +542,14 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
         knowledgeCategories: Object.keys(sc.knowledge?.categoryMapping ?? {}),
       };
       emit('turn_start', { turn, year, title: 'Director generating...', crisis: '', births: 0, deaths: 0, colony: preState.colony });
+      // Abort gate: if the client already left during the gap between
+      // the kernel advance and the director call, skip the director's
+      // flagship LLM call. The inner event loop then has nothing to
+      // iterate and the outer turn loop's top-of-turn signal check
+      // catches the abort on the next iteration and emits sim_aborted.
+      if (shouldStop()) {
+        turnEvents = [];
+      } else {
       const dirInstructions = sc.hooks.directorInstructions?.();
       const batch = await director.generateEventBatch(
         dirCtx,
@@ -541,6 +568,7 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
       );
       turnEvents = batch.events;
       batchPacing = batch.pacing;
+      }
     }
 
     // ── Kernel advance (once per turn, before events) ─────────────────
@@ -857,6 +885,14 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
           return emptyReport(dept);
         }
       });
+      // Abort gate: checking before Promise.all lets us bail out
+      // without firing N parallel dept LLM calls (5 flagship calls
+      // per event, each with tool-forge judge passes on top). This
+      // is the single largest cost on an abandoned turn.
+      if (shouldStop()) {
+        console.log(`  [abort] Skipping dept analysis for turn ${turn} event ${ei + 1} (${opts.signal?.aborted ? 'signal' : 'provider error'}).`);
+        break;
+      }
       const reports = await Promise.all(deptPromises);
 
       // Accumulate per-turn + run-wide so the final result includes the
@@ -896,6 +932,15 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
       const eventLabel = turnEvents.length > 1 ? ` (Event ${ei + 1}/${turnEvents.length})` : '';
       const cmdPrompt = `TURN ${turn}${eventLabel} — ${year}: ${event.title}\n\n${event.description}\n\nDEPARTMENT REPORTS:\n${summaries}\n\nColony: Pop ${kernel.getState().colony.population} | Morale ${Math.round(kernel.getState().colony.morale * 100)}% | Food ${kernel.getState().colony.foodMonthsReserve.toFixed(1)}mo${optionText}${effectsText}\n\nDecide. Return JSON.`;
 
+      // Abort gate: skip the commander LLM call if the client left
+      // between dept analysis and commander decision. Breaking the
+      // event loop here also skips the remaining per-event outcome
+      // and drift emits; the turn finishes with partial reports and
+      // the next turn sees the abort flag and emits sim_aborted.
+      if (shouldStop()) {
+        console.log(`  [abort] Skipping commander decision for turn ${turn} event ${ei + 1}.`);
+        break;
+      }
       emit('commander_deciding', { turn, year, eventIndex: ei });
       const cmdR = await cmdSess.send(cmdPrompt);
       // Commander decision per event — lands in the commander bucket.
@@ -1017,6 +1062,13 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
     // full roster on turn 1; turn 2+ uses progressive reactions to pick
     // only agents materially affected by this turn's events (featured +
     // promoted heads + dept-relevant, capped at 30). See reaction-step.ts.
+    // Abort gate: reactions are batched but still fire many LLM calls
+    // (up to ~30 per turn on turn 1). Skip them entirely if the run
+    // was aborted between dept analysis and this step.
+    if (shouldStop()) {
+      console.log(`  [abort] Skipping reactions for turn ${turn}.`);
+      continue;
+    }
     const reactionResult = await runReactionStep({
       kernel,
       scenario: sc,

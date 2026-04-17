@@ -280,6 +280,14 @@ function AppContent() {
     ];
     try {
       setLaunching(true);
+      // Clear prior-run state on the client before launching a new sim.
+      // handleClear does this via sse.reset() but Run previously did not,
+      // so a user who loaded a completed run from cache and then hit Run
+      // saw the new sim's events append to the stale history. reset()
+      // also posts /clear to the server; the server's /setup handler
+      // would clear its buffer again anyway, but a redundant clear is
+      // cheap and unambiguous.
+      sse.reset();
       // Switch to the sim tab immediately so the user sees the launching
       // spinner there (the Run button on the empty state still works
       // from any tab via the topbar).
