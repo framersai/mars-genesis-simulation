@@ -426,6 +426,17 @@
   /* === RESPONSIVE — MOBILE FIRST === */
 
   /* Tablet and below */
+  /* Narrow desktop / tablet landscape. At this width the full topbar
+     (logo + scenario name + turn meta + github + tour + run + save +
+     copy + load + clear + status + theme) starts overlapping. Drop
+     the secondary labels first so the primary actions stay visible. */
+  @media (max-width: 1024px) {
+    .topbar-agentos { display: none !important; }
+    .topbar-scenario { display: none !important; }
+    .topbar-tour-label { display: none !important; }
+    .topbar-tour-icon { display: inline !important; }
+  }
+
   @media (max-width: 768px) {
     body { font-size: 11px; }
 
@@ -457,7 +468,8 @@
     /* Reports padding */
     .reports-content { padding: 16px !important; }
 
-    /* TopBar compact */
+    /* TopBar compact. Further drops (agentos tag, scenario name, tour
+       label) already triggered by the 1024px block above. */
     .topbar-center { display: none !important; }
 
     /* Timeline stacks */
