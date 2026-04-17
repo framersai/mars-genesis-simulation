@@ -222,9 +222,13 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
   // emits on cancel.
   //
   // Grace period handles the legitimate refresh / nav-across-tabs case:
-  // EventSource disconnects briefly, then reconnects within ~1-2s. We
-  // only pull the plug when no client has reconnected after 3s (default).
-  const disconnectGraceMs = options.disconnectGraceMs ?? 3000;
+  // EventSource disconnects briefly, then reconnects within ~500-1000ms.
+  // 1500ms default is long enough to cover a normal refresh round-trip
+  // and short enough that a tab actually closed stops burning tokens
+  // within two seconds, not five. Combined with the per-LLM-call abort
+  // gates in the orchestrator (runtime/orchestrator.ts), at most one
+  // in-flight call finishes after the watchdog trips.
+  const disconnectGraceMs = options.disconnectGraceMs ?? 1500;
   /** Current sim's AbortController, or null when no sim is running. */
   let activeSimAbortController: AbortController | null = null;
   /** Timer id for the pending disconnect-watchdog fire. Null when disarmed. */
