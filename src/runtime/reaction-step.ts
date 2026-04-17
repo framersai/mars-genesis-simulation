@@ -40,6 +40,7 @@ import type { SimEvent } from './orchestrator.js';
  * aggregate colony state rather than just the latest event title.
  */
 export interface ReactionContext {
+  crisisTitle: string;
   crisisCategory: string;
   outcome: TurnOutcome | null;
   decision: string;
@@ -93,6 +94,7 @@ export async function runReactionStep(args: RunReactionStepArgs): Promise<Reacti
   } = args;
 
   const reactionCtx: ReactionContext = {
+    crisisTitle: turnEventTitles.join(' / '),
     crisisCategory: turnEvents.map(e => (e as { category?: string }).category || '').filter(Boolean).join(', '),
     outcome: lastOutcome,
     decision: turnEventTitles.join('. '),
@@ -190,9 +192,13 @@ export async function runReactionStep(args: RunReactionStepArgs): Promise<Reacti
   // the shortTerm/longTerm split for the whole alive roster (even
   // non-reactors drift; they just don't have a fresh personal reaction
   // memory this turn).
+  // recordReactionMemory takes `outcome: string` (not nullable) so coerce
+  // the TurnOutcome|null into a stable placeholder when the turn ended
+  // before the outcome roll (e.g. director batch produced zero events).
+  const outcomeLabel: string = lastOutcome ?? 'unknown';
   for (const r of reactions) {
     const c = agentMap.get(r.agentId);
-    if (c) recordReactionMemory(c, r, turnEventTitles.join(' / '), lastEventCategory, lastOutcome, turn, year);
+    if (c) recordReactionMemory(c, r, turnEventTitles.join(' / '), lastEventCategory, outcomeLabel, turn, year);
   }
   updateRelationshipsFromReactions(kernel.getState().agents, reactions);
   for (const c of kernel.getState().agents) if (c.health.alive) consolidateMemory(c);
