@@ -352,7 +352,7 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
     // approved vs terminally-rejected) that are more actionable than
     // raw attempt counts when the retry loop re-forges under the same
     // name.
-    costTracker.recordForgeAttempt(record.approved, record.confidence, record.name);
+    costTracker.recordForgeAttempt(record.approved, record.confidence, record.name, record.errorReason);
     // Real-time SSE so the dashboard can render an animated card the
     // moment a forge happens, instead of waiting for the dept_done summary.
     const inputProps = (record.inputSchema && typeof record.inputSchema === 'object' && (record.inputSchema as any).properties)

@@ -103,6 +103,27 @@ test('unique-tool forge metrics distinguish re-forges from distinct tools', () =
   assert.equal(cost.forgeStats!.uniqueTerminalRejections, 1);
 });
 
+test('recordForgeAttempt classifies rejection reasons into the histogram', () => {
+  const tracker = createCostTracker(modelConfig);
+  tracker.recordForgeAttempt(false, 0, 'tool_a',
+    'violates the declared output schema by returning additional properties not allowed by additionalProperties:false');
+  tracker.recordForgeAttempt(false, 0, 'tool_b',
+    'Shape check failed: need at least 2 testCases, got 1');
+  tracker.recordForgeAttempt(false, 0, 'tool_c',
+    'Failed to parse LLM response as JSON during creation review.');
+  tracker.recordForgeAttempt(false, 0, 'tool_d',
+    'correctness is questionable: the unclamped stressScore produces inconsistent risk grading');
+  tracker.recordForgeAttempt(false, 0, 'tool_e');
+  tracker.recordForgeAttempt(true, 0.9, 'tool_f');
+  const cost = tracker.finalCost();
+  assert.ok(cost.forgeStats);
+  assert.equal(cost.forgeStats!.rejectionReasons.schema_extra_field, 1);
+  assert.equal(cost.forgeStats!.rejectionReasons.shape_check, 1);
+  assert.equal(cost.forgeStats!.rejectionReasons.parse_error, 1);
+  assert.equal(cost.forgeStats!.rejectionReasons.judge_correctness, 1);
+  assert.equal(cost.forgeStats!.rejectionReasons.other, 1); // tool_e — no reason
+});
+
 test('unique forge metrics ignore attempts without a toolName', () => {
   const tracker = createCostTracker(modelConfig);
   tracker.recordForgeAttempt(true, 0.9);  // no name
