@@ -1,5 +1,43 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, type ReactNode } from 'react';
 import type { ClusterMode, TurnSnapshot } from './viz-types.js';
+
+/**
+ * Collapsible deceased-colonists block. Uses a native <details> element
+ * so the open/closed state is browser-managed; adds an onToggle hook
+ * that scrolls the summary into view on expand. Before this, expanding
+ * the list revealed content below the fold and required a manual
+ * scroll — a small friction repeatable across every turn the user
+ * inspects. Deferred to requestAnimationFrame so the browser has laid
+ * out the freshly-expanded content before we scroll.
+ */
+function DeceasedSection({
+  ghostCount,
+  header,
+  emptyLabel,
+  children,
+}: {
+  ghostCount: number;
+  header: ReactNode;
+  emptyLabel: ReactNode;
+  children?: ReactNode;
+}) {
+  const detailsRef = useRef<HTMLDetailsElement | null>(null);
+  const handleToggle = () => {
+    const el = detailsRef.current;
+    if (!el || !el.open) return;
+    requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+  return (
+    <details ref={detailsRef} onToggle={handleToggle} style={{ border: 'none' }}>
+      <summary style={{ cursor: 'pointer', listStyle: 'none' }}>
+        {header}
+      </summary>
+      {ghostCount > 0 ? children : emptyLabel}
+    </details>
+  );
+}
 import { computeLayout } from './viz-layout.js';
 import { Tile } from './Tile.js';
 import { FamilyPod } from './FamilyPod.js';
@@ -377,16 +415,17 @@ export function ColonyPanel(props: ColonyPanelProps) {
         ) : emptySlot('department clusters')}
       </div>
 
-      <details style={{ border: 'none' }}>
-        <summary style={{ cursor: 'pointer', listStyle: 'none' }}>
-          {sectionHeader('Deceased (click to expand)', layout.ghosts.length)}
-        </summary>
-        {layout.ghosts.length > 0 ? (
+      <DeceasedSection
+        ghostCount={layout.ghosts.length}
+        header={sectionHeader('Deceased (click to expand)', layout.ghosts.length)}
+        emptyLabel={emptySlot('deceased colonists')}
+      >
+        {layout.ghosts.length > 0 && (
           <div style={{ paddingTop: 6 }}>
             <GhostLayer ghosts={layout.ghosts} selectedId={selectedId} onSelect={onSelect} />
           </div>
-        ) : emptySlot('deceased colonists')}
-      </details>
+        )}
+      </DeceasedSection>
         </>
       )}
     </div>
