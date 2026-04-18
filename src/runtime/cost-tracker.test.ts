@@ -46,3 +46,50 @@ test('recordSchemaAttempt ignores empty schema names', () => {
   const cost = tracker.finalCost();
   assert.equal(cost.schemaRetries, undefined);
 });
+
+test('recordForgeAttempt aggregates approved/rejected/confidence', () => {
+  const tracker = createCostTracker(modelConfig);
+  tracker.recordForgeAttempt(true, 0.9);
+  tracker.recordForgeAttempt(true, 0.8);
+  tracker.recordForgeAttempt(false, 0);
+  const cost = tracker.finalCost();
+  assert.ok(cost.forgeStats);
+  assert.equal(cost.forgeStats!.attempts, 3);
+  assert.equal(cost.forgeStats!.approved, 2);
+  assert.equal(cost.forgeStats!.rejected, 1);
+  // Rounding-tolerant: 0.9 + 0.8 should be within floating tolerance of 1.7
+  assert.ok(Math.abs(cost.forgeStats!.approvedConfidenceSum - 1.7) < 1e-9);
+});
+
+test('buildCostPayload includes forgeStats once any forge has been recorded', () => {
+  const tracker = createCostTracker(modelConfig);
+  const before = tracker.buildCostPayload();
+  assert.equal(before.forgeStats, undefined);
+
+  tracker.recordForgeAttempt(false, 0);
+  const after = tracker.buildCostPayload();
+  assert.ok(after.forgeStats);
+  assert.equal(after.forgeStats!.attempts, 1);
+  assert.equal(after.forgeStats!.approved, 0);
+  assert.equal(after.forgeStats!.rejected, 1);
+});
+
+test('finalCost omits forgeStats when no forge attempt was recorded', () => {
+  const tracker = createCostTracker(modelConfig);
+  const cost = tracker.finalCost();
+  assert.equal(cost.forgeStats, undefined);
+});
+
+test('rejected forges do not contribute to approvedConfidenceSum', () => {
+  const tracker = createCostTracker(modelConfig);
+  tracker.recordForgeAttempt(true, 0.7);
+  tracker.recordForgeAttempt(false, 0);
+  tracker.recordForgeAttempt(false, 0);
+  tracker.recordForgeAttempt(true, 0.85);
+  const cost = tracker.finalCost();
+  // Only two approvals contribute; rejected confidence=0 is filtered out.
+  assert.ok(Math.abs(cost.forgeStats!.approvedConfidenceSum - 1.55) < 1e-9);
+  assert.equal(cost.forgeStats!.approved, 2);
+  assert.equal(cost.forgeStats!.rejected, 2);
+  assert.equal(cost.forgeStats!.attempts, 4);
+});
