@@ -418,9 +418,12 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--mono)' }}>
                     <thead>
                       <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 10, letterSpacing: '.08em' }}>
-                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>RUNS WITH FORGES</th>
-                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>TOTAL ATTEMPTS</th>
-                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>APPROVAL RATE</th>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>RUNS</th>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>ATTEMPTS</th>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>ATTEMPT RATE</th>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>UNIQUE TOOLS</th>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>EVENTUALLY APPROVED</th>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>TERMINAL FAILS</th>
                         <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>AVG CONF</th>
                       </tr>
                     </thead>
@@ -431,12 +434,22 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
                         <td style={{ padding: '6px 0', textAlign: 'right', color: forges.approvalRate < 0.5 ? 'var(--rust)' : forges.approvalRate < 0.75 ? 'var(--amber)' : 'var(--green)', fontWeight: 700 }}>
                           {(forges.approvalRate * 100).toFixed(1)}%
                         </td>
+                        <td style={{ padding: '6px 0', textAlign: 'right', color: 'var(--text-1)' }}>{forges.totalUniqueNames}</td>
+                        <td style={{ padding: '6px 0', textAlign: 'right', color: forges.uniqueApprovalRate < 0.8 ? 'var(--rust)' : forges.uniqueApprovalRate < 0.95 ? 'var(--amber)' : 'var(--green)', fontWeight: 700 }}>
+                          {forges.totalUniqueApproved} ({(forges.uniqueApprovalRate * 100).toFixed(0)}%)
+                        </td>
+                        <td style={{ padding: '6px 0', textAlign: 'right', color: forges.totalUniqueTerminalRejections > 0 ? 'var(--rust)' : 'var(--text-3)', fontWeight: forges.totalUniqueTerminalRejections > 0 ? 700 : 400 }}>
+                          {forges.totalUniqueTerminalRejections}
+                        </td>
                         <td style={{ padding: '6px 0', textAlign: 'right', color: 'var(--text-1)', fontWeight: 700 }}>
                           {forges.avgApprovedConfidence > 0 ? forges.avgApprovedConfidence.toFixed(2) : '—'}
                         </td>
                       </tr>
                     </tbody>
                   </table>
+                  <div style={{ marginTop: 4, fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--sans)' }}>
+                    ATTEMPT RATE counts every forge call including retries. EVENTUALLY APPROVED is the real quality signal — tools that landed in the toolbox. TERMINAL FAILS are tools the retry loop never recovered.
+                  </div>
                 </div>
               )}
 

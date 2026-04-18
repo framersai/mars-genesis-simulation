@@ -104,6 +104,13 @@ export interface PerRunForgeStats {
   rejected: number;
   /** Sum of judge confidence across approved forges; divide by approved for avg. */
   approvedConfidenceSum: number;
+  /** Count of unique tool names attempted this run. Optional for back-compat
+   *  with v2 entries that predate unique tracking. */
+  uniqueNames?: number;
+  /** Count of unique names that got approved at least once. */
+  uniqueApproved?: number;
+  /** Count of unique names that were only ever rejected. */
+  uniqueTerminalRejections?: number;
 }
 
 /** Aggregate rollup across N runs' forge stats. */
@@ -115,6 +122,16 @@ export interface ForgeStatsRollup {
   approvalRate: number;
   /** approvedConfidenceSum / approved, rounded to 2 decimals. 0 when no approvals. */
   avgApprovedConfidence: number;
+  /** Sum of unique names attempted across all runs. */
+  totalUniqueNames: number;
+  /** Sum of unique names approved at least once across all runs. */
+  totalUniqueApproved: number;
+  /** Sum of unique names that were only rejected across all runs. */
+  totalUniqueTerminalRejections: number;
+  /** totalUniqueApproved / totalUniqueNames, rounded to 4 decimals. The
+   *  "eventually-approved" rate — closer to the real quality signal than
+   *  raw approvalRate when the retry loop re-forges under the same name. */
+  uniqueApprovalRate: number;
   /** Count of runs in the window that recorded at least one forge attempt. */
   runsPresent: number;
 }
@@ -130,6 +147,9 @@ export function aggregateForgeStats(runs: PerRunForgeStats[]): ForgeStatsRollup 
   let approved = 0;
   let rejected = 0;
   let approvedConfidenceSum = 0;
+  let totalUniqueNames = 0;
+  let totalUniqueApproved = 0;
+  let totalUniqueTerminalRejections = 0;
   let runsPresent = 0;
   for (const run of runs) {
     if (!run || run.attempts === 0) continue;
@@ -137,6 +157,9 @@ export function aggregateForgeStats(runs: PerRunForgeStats[]): ForgeStatsRollup 
     approved += run.approved;
     rejected += run.rejected;
     approvedConfidenceSum += run.approvedConfidenceSum;
+    totalUniqueNames += run.uniqueNames ?? 0;
+    totalUniqueApproved += run.uniqueApproved ?? 0;
+    totalUniqueTerminalRejections += run.uniqueTerminalRejections ?? 0;
     runsPresent += 1;
   }
   return {
@@ -145,6 +168,10 @@ export function aggregateForgeStats(runs: PerRunForgeStats[]): ForgeStatsRollup 
     rejected,
     approvalRate: totalAttempts > 0 ? round(approved / totalAttempts, 4) : 0,
     avgApprovedConfidence: approved > 0 ? round(approvedConfidenceSum / approved, 2) : 0,
+    totalUniqueNames,
+    totalUniqueApproved,
+    totalUniqueTerminalRejections,
+    uniqueApprovalRate: totalUniqueNames > 0 ? round(totalUniqueApproved / totalUniqueNames, 4) : 0,
     runsPresent,
   };
 }
