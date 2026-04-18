@@ -26,10 +26,20 @@ export interface RetryStatsForges {
   runsPresent: number;
 }
 
+export interface RetryStatsCaches {
+  totalReadTokens: number;
+  totalCreationTokens: number;
+  totalSavingsUSD: number;
+  /** readTokens / (readTokens + creationTokens). Healthy > 0.7. */
+  readRatio: number;
+  runsPresent: number;
+}
+
 export interface RetryStatsResponse {
   runCount: number;
   schemas: Record<string, RetryStatsSchemaBucket>;
   forges?: RetryStatsForges;
+  caches?: RetryStatsCaches;
 }
 
 export interface UseRetryStatsResult {

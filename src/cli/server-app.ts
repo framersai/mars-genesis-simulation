@@ -16,8 +16,10 @@ import { IpRateLimiter } from './rate-limiter.js';
 import {
   aggregateSchemaRetries,
   aggregateForgeStats,
+  aggregateCacheStats,
   type PerRunSchemaRetries,
   type PerRunForgeStats,
+  type PerRunCacheStats,
 } from './retry-stats.js';
 import { createCompilerTelemetry, type CompilerTelemetry } from '../engine/compiler/telemetry.js';
 
@@ -207,42 +209,42 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
   const RETRY_RING_MAX = 100;
   const retryRingPath = resolve(env.APP_DIR || '.', '.retry-stats.json');
 
-  // File format v2:
-  //   { version: 2, schemas: PerRunSchemaRetries[], forges: PerRunForgeStats[] }
-  // Legacy format (v1, still in production .retry-stats.json as of
-  // 2026-04-18) was a bare JSON array of PerRunSchemaRetries entries.
-  // We detect the old shape on load, migrate in-memory, and rewrite on
-  // next persist.
+  // File format v3:
+  //   { version: 3, schemas: PerRunSchemaRetries[], forges: PerRunForgeStats[], caches: PerRunCacheStats[] }
+  // Prior formats still loaded for back-compat:
+  //   v1 (bare JSON array) - early deploys; pre-2026-04-18
+  //   v2 (object without `caches`) - 2026-04-18 first half
   interface RetryRingFile {
     version: number;
     schemas: PerRunSchemaRetries[];
     forges: PerRunForgeStats[];
+    caches: PerRunCacheStats[];
   }
 
-  const { schemas: retryRing, forges: forgeRing } = ((): RetryRingFile => {
+  const { schemas: retryRing, forges: forgeRing, caches: cacheRing } = ((): RetryRingFile => {
     try {
       if (existsSync(retryRingPath)) {
         const raw = readFileSync(retryRingPath, 'utf-8');
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          // Legacy v1 format: bare schema-retries array.
-          return { version: 2, schemas: parsed.slice(-RETRY_RING_MAX), forges: [] };
+          return { version: 3, schemas: parsed.slice(-RETRY_RING_MAX), forges: [], caches: [] };
         }
         if (parsed && typeof parsed === 'object' && Array.isArray(parsed.schemas)) {
           return {
-            version: 2,
+            version: 3,
             schemas: parsed.schemas.slice(-RETRY_RING_MAX),
             forges: Array.isArray(parsed.forges) ? parsed.forges.slice(-RETRY_RING_MAX) : [],
+            caches: Array.isArray(parsed.caches) ? parsed.caches.slice(-RETRY_RING_MAX) : [],
           };
         }
       }
     } catch { /* start empty on corrupt file */ }
-    return { version: 2, schemas: [], forges: [] };
+    return { version: 3, schemas: [], forges: [], caches: [] };
   })();
 
   const persistRetryRing = () => {
     try {
-      const payload: RetryRingFile = { version: 2, schemas: retryRing, forges: forgeRing };
+      const payload: RetryRingFile = { version: 3, schemas: retryRing, forges: forgeRing, caches: cacheRing };
       writeFileSync(retryRingPath, JSON.stringify(payload));
     } catch (err) { console.log(`  [retry-stats] persist failed: ${err}`); }
   };
@@ -255,7 +257,8 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
   const captureRetrySnapshot = () => {
     let capturedSchemas = false;
     let capturedForges = false;
-    for (let i = eventBuffer.length - 1; i >= 0 && (!capturedSchemas || !capturedForges); i--) {
+    let capturedCaches = false;
+    for (let i = eventBuffer.length - 1; i >= 0 && (!capturedSchemas || !capturedForges || !capturedCaches); i--) {
       const msg = eventBuffer[i];
       const dataLine = msg.split('\n').find(l => l.startsWith('data: '));
       if (!dataLine) continue;
@@ -277,9 +280,16 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
           }
           capturedForges = true;
         }
+        if (!capturedCaches && cost.cacheStats && typeof cost.cacheStats === 'object') {
+          cacheRing.push(cost.cacheStats as PerRunCacheStats);
+          if (cacheRing.length > RETRY_RING_MAX) {
+            cacheRing.splice(0, cacheRing.length - RETRY_RING_MAX);
+          }
+          capturedCaches = true;
+        }
       } catch { /* skip malformed buffer entries */ }
     }
-    if (capturedSchemas || capturedForges) {
+    if (capturedSchemas || capturedForges || capturedCaches) {
       persistRetryRing();
     }
   };
@@ -1003,10 +1013,12 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       const limit = limitRaw ? Math.max(1, Math.min(RETRY_RING_MAX, parseInt(limitRaw, 10) || RETRY_RING_MAX)) : undefined;
       const schemaWindow = limit ? retryRing.slice(-limit) : retryRing;
       const forgeWindow = limit ? forgeRing.slice(-limit) : forgeRing;
+      const cacheWindow = limit ? cacheRing.slice(-limit) : cacheRing;
       const schemaAgg = aggregateSchemaRetries(schemaWindow);
       const forgeAgg = aggregateForgeStats(forgeWindow);
+      const cacheAgg = aggregateCacheStats(cacheWindow);
       res.writeHead(200, { 'Content-Type': 'application/json', ...corsHeaders });
-      res.end(JSON.stringify({ ...schemaAgg, forges: forgeAgg }));
+      res.end(JSON.stringify({ ...schemaAgg, forges: forgeAgg, caches: cacheAgg }));
       return;
     }
 

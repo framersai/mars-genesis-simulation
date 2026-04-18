@@ -350,6 +350,7 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
             .filter(([k]) => k.startsWith('compile:'))
             .map(([k, v]) => [k.replace(/^compile:/, ''), v] as const);
           const forges = rs.forges;
+          const caches = rs.caches;
 
           const schemaRow = ([name, b]: readonly [string, typeof rs.schemas[string]]) => {
             const avgColor = b.avgAttempts > 1.5 ? 'var(--rust)' : b.avgAttempts > 1.1 ? 'var(--amber)' : 'var(--text-1)';
@@ -411,7 +412,7 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
               )}
 
               {forges && forges.runsPresent > 0 && (
-                <div>
+                <div style={{ marginBottom: 14 }}>
                   <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>FORGES</div>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--mono)' }}>
                     <thead>
@@ -435,6 +436,39 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
                       </tr>
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {caches && caches.runsPresent > 0 && (
+                <div>
+                  <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>PROMPT CACHE</div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--mono)' }}>
+                    <thead>
+                      <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 10, letterSpacing: '.08em' }}>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>RUNS WITH CACHE</th>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>READ TOKENS</th>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>CREATE TOKENS</th>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>READ RATIO</th>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>SAVINGS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr style={{ borderTop: '1px solid var(--border)' }}>
+                        <td style={{ padding: '6px 0', textAlign: 'right', color: 'var(--text-1)' }}>{caches.runsPresent}</td>
+                        <td style={{ padding: '6px 0', textAlign: 'right', color: 'var(--text-1)' }}>{fmtTokens(caches.totalReadTokens)}</td>
+                        <td style={{ padding: '6px 0', textAlign: 'right', color: 'var(--text-2)' }}>{fmtTokens(caches.totalCreationTokens)}</td>
+                        <td style={{ padding: '6px 0', textAlign: 'right', color: caches.readRatio >= 0.7 ? 'var(--green)' : caches.readRatio >= 0.4 ? 'var(--amber)' : 'var(--rust)', fontWeight: 700 }}>
+                          {(caches.readRatio * 100).toFixed(0)}%
+                        </td>
+                        <td style={{ padding: '6px 0', textAlign: 'right', color: caches.totalSavingsUSD > 0 ? 'var(--green)' : 'var(--text-2)', fontWeight: 700 }}>
+                          {fmtUsd(caches.totalSavingsUSD)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div style={{ marginTop: 4, fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--sans)' }}>
+                    Read ratio &gt;= 70% is healthy. Lower ratios mean the cache keeps getting invalidated.
+                  </div>
                 </div>
               )}
             </div>
