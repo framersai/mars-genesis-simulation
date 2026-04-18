@@ -28,14 +28,20 @@ test('buildReactionCues does not fire cue between thresholds', () => {
   assert.doesNotMatch(cue, /stay flat/);
 });
 
-test('buildReactionCues caps output at 3 cues', () => {
+test('buildReactionCues caps output at the axis count (6) even when all axes are polarized', () => {
+  // Previously capped at 3, which silently dropped half of a heavily-
+  // polarized agent's trait voice. Raised to 6 to cover every axis
+  // because the per-batch token cost is negligible (~$0.02/run on
+  // haiku) against the quality win of full trait expression.
   const allHigh: HexacoProfile = {
     openness: 0.9, conscientiousness: 0.9, extraversion: 0.9,
     agreeableness: 0.9, emotionality: 0.9, honestyHumility: 0.9,
   };
   const cue = buildReactionCues(allHigh);
   const cueCount = cue.split(';').length;
-  assert.ok(cueCount <= 3, `expected <= 3 cues, got ${cueCount}: ${cue}`);
+  assert.ok(cueCount <= 6, `expected <= 6 cues, got ${cueCount}: ${cue}`);
+  // All six HEXACO traits should be represented on an all-high agent.
+  assert.equal(cueCount, 6, 'all-high HEXACO should surface all six trait cues');
 });
 
 test('buildReactionCues covers each of the six axes at both poles', () => {
