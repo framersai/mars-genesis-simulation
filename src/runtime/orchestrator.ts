@@ -721,7 +721,17 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
         const sess = deptSess.get(dept);
         if (!sess) return emptyReport(dept);
         const baseCtx = buildDepartmentContext(dept, kernel.getState(), scenario, packet, deptMemory.get(dept), sc.hooks.departmentPromptHook);
-        const ctx = baseCtx + availableToolsBlock;
+        // Turn-1 bootstrap forge floor. Without a tool forged on turn 1
+        // there is nothing for later turns to reuse, and high-discipline
+        // dept heads on both sides converged on "existing knowledge is
+        // enough, skip forging" — killing the reuse economy before it
+        // started. Forcing one forge on turn 1 seeds the toolbox so the
+        // personality asymmetry (Visionary reuses more, Engineer
+        // rebuilds more) can actually play out in turns 2-6.
+        const bootstrapDirective = turn === 1
+          ? '\n\nTURN 1 IS A BOOTSTRAP TURN. You MUST call forge_tool at least once this turn to contribute a reusable computational tool to the shared toolbox. Later turns will reuse what you forge here. Pick a quantifiable aspect of THIS event (e.g. a risk score, a capacity calculator, a resource allocator) and forge a tool that computes it. Do not skip the forge — the colony depends on building a toolbox the whole run can draw from.\n'
+          : '';
+        const ctx = baseCtx + bootstrapDirective + availableToolsBlock;
         emit('dept_start', { turn, year, department: dept, eventIndex: ei });
         // Snapshot the dept's forge bucket index BEFORE the LLM call so we
         // can attribute new forges to this specific dept_done. The LLM
