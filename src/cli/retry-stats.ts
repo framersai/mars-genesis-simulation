@@ -92,3 +92,59 @@ export function aggregateSchemaRetries(
 
   return { runCount: runs.length, schemas };
 }
+
+/**
+ * Per-run forge-stats payload emitted by the cost tracker once any
+ * forge attempt (approved or rejected) has been captured. Mirrors the
+ * shape of {@link CostTracker.finalCost}'s `forgeStats` field.
+ */
+export interface PerRunForgeStats {
+  attempts: number;
+  approved: number;
+  rejected: number;
+  /** Sum of judge confidence across approved forges; divide by approved for avg. */
+  approvedConfidenceSum: number;
+}
+
+/** Aggregate rollup across N runs' forge stats. */
+export interface ForgeStatsRollup {
+  totalAttempts: number;
+  approved: number;
+  rejected: number;
+  /** approved / totalAttempts, rounded to 4 decimals. 0 when no attempts. */
+  approvalRate: number;
+  /** approvedConfidenceSum / approved, rounded to 2 decimals. 0 when no approvals. */
+  avgApprovedConfidence: number;
+  /** Count of runs in the window that recorded at least one forge attempt. */
+  runsPresent: number;
+}
+
+/**
+ * Fold an array of per-run forge-stats payloads into a single rollup
+ * for the /retry-stats response. Runs without any forge activity are
+ * counted in the window's runCount (see aggregateSchemaRetries) but do
+ * not contribute to the forge rollup (they have `attempts===0`).
+ */
+export function aggregateForgeStats(runs: PerRunForgeStats[]): ForgeStatsRollup {
+  let totalAttempts = 0;
+  let approved = 0;
+  let rejected = 0;
+  let approvedConfidenceSum = 0;
+  let runsPresent = 0;
+  for (const run of runs) {
+    if (!run || run.attempts === 0) continue;
+    totalAttempts += run.attempts;
+    approved += run.approved;
+    rejected += run.rejected;
+    approvedConfidenceSum += run.approvedConfidenceSum;
+    runsPresent += 1;
+  }
+  return {
+    totalAttempts,
+    approved,
+    rejected,
+    approvalRate: totalAttempts > 0 ? round(approved / totalAttempts, 4) : 0,
+    avgApprovedConfidence: approved > 0 ? round(approvedConfidenceSum / approved, 2) : 0,
+    runsPresent,
+  };
+}

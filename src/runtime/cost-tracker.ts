@@ -52,6 +52,23 @@ export interface CostBreakdownEntry {
   cacheSavingsUSD?: number;
 }
 
+/**
+ * Per-run forge reliability rollup. Aggregated by the cost tracker so
+ * the same SSE payload that ships cost data also ships "how is the
+ * judge treating this run's forges". Persists across the run (never
+ * decrements, matching the schemaRetries pattern).
+ */
+export interface ForgeStats {
+  /** Total forge attempts (approved + rejected combined). */
+  attempts: number;
+  /** Attempts the judge approved. */
+  approved: number;
+  /** Attempts the judge rejected (shape check OR judge verdict). */
+  rejected: number;
+  /** Sum of confidence across APPROVED forges. Divide by `approved` for avg. */
+  approvedConfidenceSum: number;
+}
+
 /** Aggregate cost payload embedded on every SSE event's `_cost` field. */
 export interface CostPayload {
   totalTokens: number;
@@ -68,6 +85,11 @@ export interface CostPayload {
    * schema-validated call completed.
    */
   schemaRetries?: Record<string, { attempts: number; calls: number; fallbacks: number }>;
+  /**
+   * Per-run forge reliability rollup. Only present when at least one
+   * forge attempt (approved or rejected) was captured during the run.
+   */
+  forgeStats?: ForgeStats;
 }
 
 /** Cost tracker bundle returned by createCostTracker. */
@@ -81,6 +103,14 @@ export interface CostTracker {
    * Builds a per-schema rollup exposed in `finalCost().schemaRetries`.
    */
   recordSchemaAttempt(schemaName: string, attempts: number, fellBack: boolean): void;
+  /**
+   * Record one forge attempt's outcome. `approved` true means the judge
+   * cleared the tool; false means shape check or judge rejected it.
+   * `confidence` is the judge's score for the tool's quality (used only
+   * when `approved`; rejection confidence in wrapForgeTool is 0 and
+   * would skew averages).
+   */
+  recordForgeAttempt(approved: boolean, confidence: number): void;
   /** Build the _cost payload attached to every SSE event. */
   buildCostPayload(): CostPayload;
   /**
@@ -94,6 +124,7 @@ export interface CostTracker {
     totalCostUSD: number;
     llmCalls: number;
     schemaRetries?: Record<string, { attempts: number; calls: number; fallbacks: number }>;
+    forgeStats?: ForgeStats;
   };
 }
 
@@ -124,6 +155,16 @@ export function createCostTracker(modelConfig: SimulationModelConfig): CostTrack
    * (older call sites still using plain generateText bypass this).
    */
   const schemaRetries = new Map<string, { attempts: number; calls: number; fallbacks: number }>();
+  /**
+   * Running forge stats. Incremented on every wrapForgeTool capture so
+   * SSE consumers see a live approval-rate indicator as the run goes.
+   */
+  const forgeStats: ForgeStats = {
+    attempts: 0,
+    approved: 0,
+    rejected: 0,
+    approvedConfidenceSum: 0,
+  };
 
   const defaultPricing = getDefaultPricing(modelConfig);
   const priceForSite = buildPriceForSite(modelConfig);
@@ -205,6 +246,9 @@ export function createCostTracker(modelConfig: SimulationModelConfig): CostTrack
     if (schemaRetries.size > 0) {
       payload.schemaRetries = Object.fromEntries(schemaRetries.entries());
     }
+    if (forgeStats.attempts > 0) {
+      payload.forgeStats = { ...forgeStats };
+    }
     return payload;
   };
 
@@ -218,6 +262,16 @@ export function createCostTracker(modelConfig: SimulationModelConfig): CostTrack
     });
   };
 
+  const recordForgeAttempt: CostTracker['recordForgeAttempt'] = (approved, confidence) => {
+    forgeStats.attempts += 1;
+    if (approved) {
+      forgeStats.approved += 1;
+      forgeStats.approvedConfidenceSum += confidence;
+    } else {
+      forgeStats.rejected += 1;
+    }
+  };
+
   const finalCost: CostTracker['finalCost'] = () => {
     const out: ReturnType<CostTracker['finalCost']> = {
       totalTokens,
@@ -227,8 +281,11 @@ export function createCostTracker(modelConfig: SimulationModelConfig): CostTrack
     if (schemaRetries.size > 0) {
       out.schemaRetries = Object.fromEntries(schemaRetries.entries());
     }
+    if (forgeStats.attempts > 0) {
+      out.forgeStats = { ...forgeStats };
+    }
     return out;
   };
 
-  return { trackUsage, recordSchemaAttempt, buildCostPayload, finalCost };
+  return { trackUsage, recordSchemaAttempt, recordForgeAttempt, buildCostPayload, finalCost };
 }

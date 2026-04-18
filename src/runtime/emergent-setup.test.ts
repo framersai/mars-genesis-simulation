@@ -319,3 +319,104 @@ test('wrapForgeTool: empty testCases + empty schemas still correctly rejected', 
   assert.equal(captured[0].approved, false);
   assert.match(String(captured[0].errorReason), /Shape check failed/);
 });
+
+test('wrapForgeTool: judge rejection captures approved=false with the judge reasoning', async () => {
+  const rawMock = {
+    execute: async () => ({
+      success: false,
+      error: 'Judge rejected',
+      output: { success: false, verdict: { approved: false, confidence: 0.42, reasoning: 'logic error in threshold ordering' } },
+    }),
+  } as unknown as ForgeToolMetaTool;
+
+  const captured: any[] = [];
+  const wrapped = wrapForgeTool(
+    rawMock,
+    'agent-1', 'sess-1', 'engineering',
+    (record) => captured.push(record),
+  );
+
+  const llmArgs = {
+    name: 'bad_calculator',
+    implementation: { mode: 'sandbox', code: 'function execute(i){ return { x: i.a }; }', allowlist: [] },
+    inputSchema: { type: 'object', properties: { a: { type: 'number' } } },
+    outputSchema: { type: 'object', properties: { x: { type: 'number' } } },
+    testCases: [
+      { input: { a: 1 }, expectedOutput: { x: 1 } },
+      { input: { a: 2 }, expectedOutput: { x: 2 } },
+    ],
+  };
+
+  const result = await wrapped.execute(llmArgs, {} as any);
+  assert.equal((result as any).success, false);
+  assert.equal(captured.length, 1);
+  assert.equal(captured[0].approved, false);
+  // Confidence on a rejection is always 0 (wrapForgeTool filters the
+  // judge's rejection confidence because it's confidence in rejecting,
+  // not confidence in the tool).
+  assert.equal(captured[0].confidence, 0);
+  assert.match(String(captured[0].errorReason), /Judge rejected|logic error/);
+});
+
+test('wrapForgeTool: approved forge captures judge confidence (not the default 0.85)', async () => {
+  const rawMock = {
+    execute: async () => ({
+      success: true,
+      output: { success: true, verdict: { approved: true, confidence: 0.73, reasoning: 'safe + correct' } },
+    }),
+  } as unknown as ForgeToolMetaTool;
+
+  const captured: any[] = [];
+  const wrapped = wrapForgeTool(
+    rawMock,
+    'agent-1', 'sess-1', 'engineering',
+    (record) => captured.push(record),
+  );
+
+  const llmArgs = {
+    name: 'ok_calculator',
+    implementation: { mode: 'sandbox', code: 'function execute(i){ return { x: i.a }; }', allowlist: [] },
+    inputSchema: { type: 'object', properties: { a: { type: 'number' } } },
+    outputSchema: { type: 'object', properties: { x: { type: 'number' } } },
+    testCases: [
+      { input: { a: 1 }, expectedOutput: { x: 1 } },
+      { input: { a: 2 }, expectedOutput: { x: 2 } },
+    ],
+  };
+
+  await wrapped.execute(llmArgs, {} as any);
+  assert.equal(captured.length, 1);
+  assert.equal(captured[0].approved, true);
+  assert.equal(captured[0].confidence, 0.73);
+});
+
+test('wrapForgeTool: exception in raw execute captures approved=false with the error message', async () => {
+  const rawMock = {
+    execute: async () => { throw new Error('sandbox exploded'); },
+  } as unknown as ForgeToolMetaTool;
+
+  const captured: any[] = [];
+  const wrapped = wrapForgeTool(
+    rawMock,
+    'agent-1', 'sess-1', 'engineering',
+    (record) => captured.push(record),
+  );
+
+  const llmArgs = {
+    name: 'broken_tool',
+    implementation: { mode: 'sandbox', code: 'function execute(i){ return { x: i.a }; }', allowlist: [] },
+    inputSchema: { type: 'object', properties: { a: { type: 'number' } } },
+    outputSchema: { type: 'object', properties: { x: { type: 'number' } } },
+    testCases: [
+      { input: { a: 1 }, expectedOutput: { x: 1 } },
+      { input: { a: 2 }, expectedOutput: { x: 2 } },
+    ],
+  };
+
+  const result = await wrapped.execute(llmArgs, {} as any);
+  assert.equal((result as any).success, false);
+  assert.equal(captured.length, 1);
+  assert.equal(captured[0].approved, false);
+  assert.equal(captured[0].confidence, 0);
+  assert.match(String(captured[0].errorReason), /sandbox exploded/);
+});
