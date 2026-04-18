@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import {
   aggregateSchemaRetries,
   aggregateForgeStats,
+  aggregateCacheStats,
   type PerRunSchemaRetries,
   type PerRunForgeStats,
+  type PerRunCacheStats,
 } from './retry-stats.js';
 
 const emptyRun: PerRunSchemaRetries = {};
@@ -134,4 +136,55 @@ test('aggregateForgeStats returns approvalRate:0 when no approvals exist', () =>
   const agg = aggregateForgeStats(runs);
   assert.equal(agg.approvalRate, 0);
   assert.equal(agg.avgApprovedConfidence, 0);
+});
+
+// -----------------------------------------------------------------------
+// aggregateCacheStats
+// -----------------------------------------------------------------------
+
+test('aggregateCacheStats returns zero rollup on empty runs', () => {
+  const agg = aggregateCacheStats([]);
+  assert.deepEqual(agg, {
+    totalReadTokens: 0,
+    totalCreationTokens: 0,
+    totalSavingsUSD: 0,
+    readRatio: 0,
+    runsPresent: 0,
+  });
+});
+
+test('aggregateCacheStats sums readTokens + creationTokens + savings across runs', () => {
+  const runs: PerRunCacheStats[] = [
+    { readTokens: 8000, creationTokens: 2000, savingsUSD: 0.15 },
+    { readTokens: 6000, creationTokens: 1500, savingsUSD: 0.11 },
+  ];
+  const agg = aggregateCacheStats(runs);
+  assert.equal(agg.totalReadTokens, 14000);
+  assert.equal(agg.totalCreationTokens, 3500);
+  assert.equal(agg.totalSavingsUSD, 0.26);
+  assert.equal(agg.runsPresent, 2);
+});
+
+test('aggregateCacheStats computes readRatio as reads / (reads + creations)', () => {
+  const runs: PerRunCacheStats[] = [
+    { readTokens: 7000, creationTokens: 3000, savingsUSD: 0.1 },
+  ];
+  const agg = aggregateCacheStats(runs);
+  assert.equal(agg.readRatio, 0.7);
+});
+
+test('aggregateCacheStats skips runs with zero cache activity', () => {
+  const runs: PerRunCacheStats[] = [
+    { readTokens: 0, creationTokens: 0, savingsUSD: 0 },
+    { readTokens: 5000, creationTokens: 1000, savingsUSD: 0.08 },
+    { readTokens: 0, creationTokens: 0, savingsUSD: 0 },
+  ];
+  const agg = aggregateCacheStats(runs);
+  assert.equal(agg.runsPresent, 1);
+  assert.equal(agg.totalReadTokens, 5000);
+});
+
+test('aggregateCacheStats returns readRatio:0 when no cache activity at all', () => {
+  const agg = aggregateCacheStats([]);
+  assert.equal(agg.readRatio, 0);
 });

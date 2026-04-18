@@ -148,3 +148,54 @@ export function aggregateForgeStats(runs: PerRunForgeStats[]): ForgeStatsRollup 
     runsPresent,
   };
 }
+
+/**
+ * Per-run cache-stats payload emitted by the cost tracker when the
+ * provider returned non-zero cache counters (Anthropic reports these
+ * on every call). Matches {@link CostTracker.finalCost}'s `cacheStats`.
+ */
+export interface PerRunCacheStats {
+  readTokens: number;
+  creationTokens: number;
+  savingsUSD: number;
+}
+
+/** Aggregate prompt-cache rollup across N runs. */
+export interface CacheStatsRollup {
+  totalReadTokens: number;
+  totalCreationTokens: number;
+  /** Sum of savingsUSD across runs; rounded to 4 decimals. */
+  totalSavingsUSD: number;
+  /** readTokens / (readTokens + creationTokens), rounded to 4 decimals.
+   *  Healthy caching shows ratios > 0.7 — most traffic is replays. */
+  readRatio: number;
+  /** Count of runs that reported any cache activity. */
+  runsPresent: number;
+}
+
+/**
+ * Fold an array of per-run cache-stats payloads into a rollup. Runs
+ * without cache activity (OpenAI with opaque counters, or very short
+ * runs that never crossed the auto-cache threshold) are skipped.
+ */
+export function aggregateCacheStats(runs: PerRunCacheStats[]): CacheStatsRollup {
+  let totalReadTokens = 0;
+  let totalCreationTokens = 0;
+  let totalSavingsUSD = 0;
+  let runsPresent = 0;
+  for (const run of runs) {
+    if (!run || (run.readTokens === 0 && run.creationTokens === 0)) continue;
+    totalReadTokens += run.readTokens;
+    totalCreationTokens += run.creationTokens;
+    totalSavingsUSD += run.savingsUSD;
+    runsPresent += 1;
+  }
+  const denom = totalReadTokens + totalCreationTokens;
+  return {
+    totalReadTokens,
+    totalCreationTokens,
+    totalSavingsUSD: round(totalSavingsUSD, 4),
+    readRatio: denom > 0 ? round(totalReadTokens / denom, 4) : 0,
+    runsPresent,
+  };
+}

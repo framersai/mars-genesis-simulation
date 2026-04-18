@@ -69,6 +69,23 @@ export interface ForgeStats {
   approvedConfidenceSum: number;
 }
 
+/**
+ * Per-run prompt-cache rollup. Ships alongside forgeStats on every
+ * _cost SSE payload so the dashboard can render live cache health.
+ * Cache is Anthropic-specific (OpenAI auto-caches prompts >= 1024 tok
+ * without surfacing per-call counters), so on OpenAI runs these fields
+ * stay zero.
+ */
+export interface CacheStats {
+  /** Total tokens served from the provider's prompt cache this run. */
+  readTokens: number;
+  /** Total tokens written to the provider's prompt cache this run. */
+  creationTokens: number;
+  /** USD saved by caching vs a no-cache run. Negative during early
+   *  turns while the cache fills; positive once reads amortize. */
+  savingsUSD: number;
+}
+
 /** Aggregate cost payload embedded on every SSE event's `_cost` field. */
 export interface CostPayload {
   totalTokens: number;
@@ -90,6 +107,11 @@ export interface CostPayload {
    * forge attempt (approved or rejected) was captured during the run.
    */
   forgeStats?: ForgeStats;
+  /**
+   * Per-run prompt-cache rollup. Only present when the provider
+   * reported at least one cache read or write this run.
+   */
+  cacheStats?: CacheStats;
 }
 
 /** Cost tracker bundle returned by createCostTracker. */
@@ -125,6 +147,7 @@ export interface CostTracker {
     llmCalls: number;
     schemaRetries?: Record<string, { attempts: number; calls: number; fallbacks: number }>;
     forgeStats?: ForgeStats;
+    cacheStats?: CacheStats;
   };
 }
 
@@ -249,6 +272,13 @@ export function createCostTracker(modelConfig: SimulationModelConfig): CostTrack
     if (forgeStats.attempts > 0) {
       payload.forgeStats = { ...forgeStats };
     }
+    if (cacheReadTokens > 0 || cacheCreationTokens > 0) {
+      payload.cacheStats = {
+        readTokens: cacheReadTokens,
+        creationTokens: cacheCreationTokens,
+        savingsUSD: Math.round(runCacheSavingsUSD * 10000) / 10000,
+      };
+    }
     return payload;
   };
 
@@ -283,6 +313,28 @@ export function createCostTracker(modelConfig: SimulationModelConfig): CostTrack
     }
     if (forgeStats.attempts > 0) {
       out.forgeStats = { ...forgeStats };
+    }
+    // Emit cacheStats only when the provider reported at least one
+    // cache-related token count. OpenAI runs (which auto-cache but
+    // don't surface per-call counters) leave all three at zero, so
+    // we skip the payload to avoid noise.
+    if (cacheReadTokens > 0 || cacheCreationTokens > 0) {
+      // Recompute savings from the per-site breakdown to match the
+      // buildCostPayload() rollup. Keeps the two surfaces consistent.
+      let savingsUSD = 0;
+      for (const [k, v] of Object.entries(costBySite)) {
+        if (v.calls > 0) {
+          const sitePricing = priceForSite(k as CostSite);
+          savingsUSD +=
+            ((v.cacheReadTokens * 0.90) - (v.cacheCreationTokens * 0.25))
+            * sitePricing.input / 1_000_000;
+        }
+      }
+      out.cacheStats = {
+        readTokens: cacheReadTokens,
+        creationTokens: cacheCreationTokens,
+        savingsUSD: Math.round(savingsUSD * 10000) / 10000,
+      };
     }
     return out;
   };
