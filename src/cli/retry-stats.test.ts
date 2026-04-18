@@ -86,8 +86,34 @@ test('aggregateForgeStats returns zero rollup on empty runs array', () => {
     rejected: 0,
     approvalRate: 0,
     avgApprovedConfidence: 0,
+    totalUniqueNames: 0,
+    totalUniqueApproved: 0,
+    totalUniqueTerminalRejections: 0,
+    uniqueApprovalRate: 0,
     runsPresent: 0,
   });
+});
+
+test('aggregateForgeStats sums unique-tool metrics across runs', () => {
+  const runs: PerRunForgeStats[] = [
+    { attempts: 5, approved: 3, rejected: 2, approvedConfidenceSum: 2.7, uniqueNames: 3, uniqueApproved: 3, uniqueTerminalRejections: 0 },
+    { attempts: 6, approved: 3, rejected: 3, approvedConfidenceSum: 2.4, uniqueNames: 4, uniqueApproved: 3, uniqueTerminalRejections: 1 },
+  ];
+  const agg = aggregateForgeStats(runs);
+  assert.equal(agg.totalUniqueNames, 7);
+  assert.equal(agg.totalUniqueApproved, 6);
+  assert.equal(agg.totalUniqueTerminalRejections, 1);
+  // 6 / 7 = 0.8571...
+  assert.equal(agg.uniqueApprovalRate, 0.8571);
+});
+
+test('aggregateForgeStats treats v2 entries without unique-tool fields as zero', () => {
+  const runs: PerRunForgeStats[] = [
+    { attempts: 4, approved: 2, rejected: 2, approvedConfidenceSum: 1.7 },
+  ];
+  const agg = aggregateForgeStats(runs);
+  assert.equal(agg.totalUniqueNames, 0);
+  assert.equal(agg.uniqueApprovalRate, 0);
 });
 
 test('aggregateForgeStats sums attempts / approved / rejected across runs', () => {

@@ -80,6 +80,41 @@ test('finalCost omits forgeStats when no forge attempt was recorded', () => {
   assert.equal(cost.forgeStats, undefined);
 });
 
+test('unique-tool forge metrics distinguish re-forges from distinct tools', () => {
+  const tracker = createCostTracker(modelConfig);
+  // Tool A: rejected once, then approved. Should count as 1 unique name,
+  // 1 uniqueApproved, 0 terminalRejections.
+  tracker.recordForgeAttempt(false, 0, 'tool_a');
+  tracker.recordForgeAttempt(true, 0.9, 'tool_a');
+  // Tool B: approved on first try. 1 unique, 1 uniqueApproved.
+  tracker.recordForgeAttempt(true, 0.95, 'tool_b');
+  // Tool C: rejected twice, never approved. 1 unique, 0 uniqueApproved,
+  // 1 terminalRejection.
+  tracker.recordForgeAttempt(false, 0, 'tool_c');
+  tracker.recordForgeAttempt(false, 0, 'tool_c');
+
+  const cost = tracker.finalCost();
+  assert.ok(cost.forgeStats);
+  assert.equal(cost.forgeStats!.attempts, 5);
+  assert.equal(cost.forgeStats!.approved, 2);
+  assert.equal(cost.forgeStats!.rejected, 3);
+  assert.equal(cost.forgeStats!.uniqueNames, 3);
+  assert.equal(cost.forgeStats!.uniqueApproved, 2);
+  assert.equal(cost.forgeStats!.uniqueTerminalRejections, 1);
+});
+
+test('unique forge metrics ignore attempts without a toolName', () => {
+  const tracker = createCostTracker(modelConfig);
+  tracker.recordForgeAttempt(true, 0.9);  // no name
+  tracker.recordForgeAttempt(false, 0);   // no name
+  const cost = tracker.finalCost();
+  assert.ok(cost.forgeStats);
+  assert.equal(cost.forgeStats!.attempts, 2);
+  assert.equal(cost.forgeStats!.uniqueNames, 0);
+  assert.equal(cost.forgeStats!.uniqueApproved, 0);
+  assert.equal(cost.forgeStats!.uniqueTerminalRejections, 0);
+});
+
 test('rejected forges do not contribute to approvedConfidenceSum', () => {
   const tracker = createCostTracker(modelConfig);
   tracker.recordForgeAttempt(true, 0.7);

@@ -23,6 +23,15 @@ export interface RetryStatsForges {
   rejected: number;
   approvalRate: number;
   avgApprovedConfidence: number;
+  /** Unique tool names attempted across the window. */
+  totalUniqueNames: number;
+  /** Unique tool names that got approved at least once. */
+  totalUniqueApproved: number;
+  /** Unique tool names only ever rejected (never approved). */
+  totalUniqueTerminalRejections: number;
+  /** totalUniqueApproved / totalUniqueNames. The "eventually-approved"
+   *  rate — closer to the real quality signal than raw approvalRate. */
+  uniqueApprovalRate: number;
   runsPresent: number;
 }
 
