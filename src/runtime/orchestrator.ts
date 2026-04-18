@@ -9,13 +9,13 @@ import {
 } from './emergent-setup.js';
 import {
   humanizeToolName,
-  parseCmdDecision,
   emptyReport,
   emptyDecision,
   decisionToPolicy,
 } from './parsers.js';
 import { sendAndValidate } from './llm-invocations/sendAndValidate.js';
 import { DepartmentReportSchema } from './schemas/department.js';
+import { CommanderDecisionSchema } from './schemas/commander.js';
 import { createCostTracker } from './cost-tracker.js';
 import {
   buildPersonalityCue,
@@ -1036,17 +1036,14 @@ ${summaries}
 ${commanderToolboxBlock}
 Colony: Pop ${kernel.getState().colony.population} | Morale ${Math.round(kernel.getState().colony.morale * 100)}% | Food ${kernel.getState().colony.foodMonthsReserve.toFixed(1)}mo${optionText}${effectsText}
 
-Reason step by step BEFORE writing the JSON. Do not skip the thinking block.
+REASONING — populate the "reasoning" field of your JSON response BEFORE committing to selectedOptionId. Numbered list, one point per line:
+  (1) What does my personality profile push me toward on this call? Name the specific trait poles at play.
+  (2) Do the department reports converge or conflict? If they conflict, which voice do I trust given my profile?
+  (3) Which forged-tool outputs in the toolbox above directly inform this decision? Cite the numeric output if available.
+  (4) What risk am I accepting vs refusing? My rationale must name the specific trade.
+  (5) Final choice + one-line justification.
 
-<thinking>
-1. What does my personality profile push me toward on this call? Name the specific trait poles at play.
-2. Do the department reports converge or conflict? If they conflict, which voice do I trust given my profile?
-3. Which forged-tool outputs in the toolbox above directly inform this decision? Cite the numeric output if available.
-4. What is the risk I accept vs the risk I refuse? My rationale must name the specific trade.
-5. Final choice + one-line justification.
-</thinking>
-
-Then return the JSON decision. Rationale should cite specific tool outputs when they support the call.`;
+Then set selectedOptionId, decision, and rationale. The rationale compresses the reasoning into a single paragraph for default UI display; the "reasoning" field stores the full working.`;
 
       // Abort gate: skip the commander LLM call if the client left
       // between dept analysis and commander decision. Breaking the
@@ -1058,10 +1055,18 @@ Then return the JSON decision. Rationale should cite specific tool outputs when 
         break;
       }
       emit('commander_deciding', { turn, year, eventIndex: ei });
-      const cmdR = await cmdSess.send(cmdPrompt);
-      // Commander decision per event — lands in the commander bucket.
-      trackUsage(cmdR, 'commander');
-      const decision = parseCmdDecision(cmdR.text, depts);
+      const { object: decisionParsed, fromFallback: decisionFallback } = await sendAndValidate({
+        session: cmdSess,
+        prompt: cmdPrompt,
+        schema: CommanderDecisionSchema,
+        onUsage: (usage) => trackUsage(usage as any, 'commander'),
+        onProviderError: (err) => reportProviderError(err, `commander:turn${turn}:event${ei + 1}`),
+        fallback: { ...emptyDecision(depts), decision: 'Commander decision unavailable; defer to department consensus.' } as any,
+      });
+      if (decisionFallback) {
+        console.log(`  [commander] schema fallback for turn ${turn} event ${ei + 1}`);
+      }
+      const decision = decisionParsed as unknown as CommanderDecision;
       console.log(`  [commander] ${decision.decision.slice(0, 120)}...`);
       emit('commander_decided', { turn, year, decision: decision.decision, rationale: decision.rationale, selectedPolicies: decision.selectedPolicies, eventIndex: ei });
 
