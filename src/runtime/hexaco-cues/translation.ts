@@ -5,15 +5,21 @@
  * Thresholds 0.7 / 0.3 match the poles used in commander and dept-head
  * prompts so all trait-driven voice is uniform across the system.
  *
- * Output is capped at 3 cues (selection: first-hit across trait order)
- * to keep per-agent batch blocks small. Reactions batch at 10 agents/call
- * so every 10 extra tokens per agent compounds.
+ * Output covers up to all six axes' polarized poles (max 6 cues, matching
+ * the number of HEXACO traits). Previously capped at 3, which dropped
+ * half of a heavily-polarized agent's trait voice. The per-batch cost
+ * delta at 6 vs 3 is ~180 tokens/call × ~60 calls per run on haiku ≈
+ * $0.02 per run — negligible against the quality win of preserving full
+ * trait expression on reactions.
+ *
+ * Selection order matches the axis iteration below, so recurring trait
+ * combinations produce consistent phrasing order across agents.
  *
  * @module paracosm/runtime/hexaco-cues/translation
  */
 import type { HexacoProfile } from '../../engine/core/state.js';
 
-const MAX_CUES = 3;
+const MAX_CUES = 6;
 
 /**
  * Turn a HEXACO profile into a concise cue string like
