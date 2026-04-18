@@ -19,6 +19,7 @@ import {
   getDefaultPricing,
   type CostSite,
 } from './pricing.js';
+import { classifyForgeRejection } from './forge-rejection-classifier.js';
 
 /** Token + cost rollup for a single pipeline stage across a run. */
 export interface CostBucket {
@@ -87,6 +88,19 @@ export interface ForgeStats {
    * large because most rejections recover on subsequent attempts.
    */
   uniqueTerminalRejections: number;
+  /**
+   * Histogram of rejection reasons this run, classified by
+   * classifyForgeRejection. Turns "why did forges fail" from a
+   * log-grep question into a live dashboard signal. Keys match
+   * ForgeRejectionCategory.
+   */
+  rejectionReasons: {
+    schema_extra_field: number;
+    shape_check: number;
+    parse_error: number;
+    judge_correctness: number;
+    other: number;
+  };
 }
 
 /**
@@ -177,9 +191,12 @@ export interface CostTracker {
    * would skew averages). `toolName`, when provided, is folded into a
    * per-name Set so the rollup can report unique-tool metrics
    * (eventually-approved vs terminally-rejected) rather than raw
-   * attempt counts.
+   * attempt counts. `errorReason`, when provided on a rejected attempt,
+   * is classified via classifyForgeRejection and binned into
+   * rejectionReasons — gives the dashboard the "why" distribution
+   * without SSHing logs.
    */
-  recordForgeAttempt(approved: boolean, confidence: number, toolName?: string): void;
+  recordForgeAttempt(approved: boolean, confidence: number, toolName?: string, errorReason?: string): void;
   /**
    * Record one classified provider error. `kind` matches the classifier's
    * ProviderErrorKind (auth / quota / rate_limit / network / unknown).
@@ -246,6 +263,13 @@ export function createCostTracker(modelConfig: SimulationModelConfig): CostTrack
     uniqueNames: 0,
     uniqueApproved: 0,
     uniqueTerminalRejections: 0,
+    rejectionReasons: {
+      schema_extra_field: 0,
+      shape_check: 0,
+      parse_error: 0,
+      judge_correctness: 0,
+      other: 0,
+    },
   };
   // Per-name sets so the rollup can report unique-tool metrics. A tool
   // rejected twice then approved contributes to `rejectedNames` and
@@ -390,7 +414,7 @@ export function createCostTracker(modelConfig: SimulationModelConfig): CostTrack
     });
   };
 
-  const recordForgeAttempt: CostTracker['recordForgeAttempt'] = (approved, confidence, toolName) => {
+  const recordForgeAttempt: CostTracker['recordForgeAttempt'] = (approved, confidence, toolName, errorReason) => {
     forgeStats.attempts += 1;
     if (approved) {
       forgeStats.approved += 1;
@@ -399,6 +423,11 @@ export function createCostTracker(modelConfig: SimulationModelConfig): CostTrack
     } else {
       forgeStats.rejected += 1;
       if (toolName) rejectedNames.add(toolName);
+      // Bucket the rejection reason so /retry-stats and the dashboard
+      // can show the failure-mode distribution without log-grep. Only
+      // meaningful on rejections; approvals never carry errorReason.
+      const category = classifyForgeRejection(errorReason);
+      forgeStats.rejectionReasons[category] += 1;
     }
     refreshUniqueForgeCounts();
   };

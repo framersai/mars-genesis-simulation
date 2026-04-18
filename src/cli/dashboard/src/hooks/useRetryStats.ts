@@ -32,6 +32,16 @@ export interface RetryStatsForges {
   /** totalUniqueApproved / totalUniqueNames. The "eventually-approved"
    *  rate — closer to the real quality signal than raw approvalRate. */
   uniqueApprovalRate: number;
+  /** Aggregated rejection-reason histogram across the window. Use the
+   *  distribution to measure whether prompt fixes targeting a specific
+   *  failure mode actually cut that bucket. */
+  rejectionReasons: {
+    schema_extra_field: number;
+    shape_check: number;
+    parse_error: number;
+    judge_correctness: number;
+    other: number;
+  };
   runsPresent: number;
 }
 

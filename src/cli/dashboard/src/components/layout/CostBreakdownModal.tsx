@@ -450,6 +450,52 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
                   <div style={{ marginTop: 4, fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--sans)' }}>
                     ATTEMPT RATE counts every forge call including retries. EVENTUALLY APPROVED is the real quality signal — tools that landed in the toolbox. TERMINAL FAILS are tools the retry loop never recovered.
                   </div>
+                  {(() => {
+                    const rr = forges.rejectionReasons;
+                    const totalCategorized = rr.schema_extra_field + rr.shape_check + rr.parse_error + rr.judge_correctness + rr.other;
+                    if (totalCategorized === 0) return null;
+                    const pct = (n: number) => totalCategorized > 0 ? Math.round((n / totalCategorized) * 100) : 0;
+                    return (
+                      <div style={{ marginTop: 10 }}>
+                        <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>
+                          REJECTION REASONS (last {forges.runsPresent} run{forges.runsPresent === 1 ? '' : 's'})
+                        </div>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--mono)' }}>
+                          <thead>
+                            <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 10, letterSpacing: '.08em' }}>
+                              <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>SCHEMA EXTRA FIELD</th>
+                              <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>SHAPE CHECK</th>
+                              <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>PARSE ERROR</th>
+                              <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>JUDGE CORRECTNESS</th>
+                              <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>OTHER</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr style={{ borderTop: '1px solid var(--border)' }}>
+                              <td style={{ padding: '6px 0', textAlign: 'right', color: rr.schema_extra_field > 0 ? 'var(--amber)' : 'var(--text-3)', fontWeight: rr.schema_extra_field > 0 ? 700 : 400 }}>
+                                {rr.schema_extra_field} ({pct(rr.schema_extra_field)}%)
+                              </td>
+                              <td style={{ padding: '6px 0', textAlign: 'right', color: rr.shape_check > 0 ? 'var(--amber)' : 'var(--text-3)' }}>
+                                {rr.shape_check} ({pct(rr.shape_check)}%)
+                              </td>
+                              <td style={{ padding: '6px 0', textAlign: 'right', color: rr.parse_error > 0 ? 'var(--rust)' : 'var(--text-3)' }}>
+                                {rr.parse_error} ({pct(rr.parse_error)}%)
+                              </td>
+                              <td style={{ padding: '6px 0', textAlign: 'right', color: rr.judge_correctness > 0 ? 'var(--rust)' : 'var(--text-3)' }}>
+                                {rr.judge_correctness} ({pct(rr.judge_correctness)}%)
+                              </td>
+                              <td style={{ padding: '6px 0', textAlign: 'right', color: 'var(--text-3)' }}>
+                                {rr.other} ({pct(rr.other)}%)
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <div style={{ marginTop: 4, fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--sans)' }}>
+                          SCHEMA EXTRA FIELD dominating means the LLM's return-keys don't match its declared outputSchema.properties — the target of the 2026-04-18 forge-guidance prompt fix. JUDGE CORRECTNESS = real logic bugs the judge caught.
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 
