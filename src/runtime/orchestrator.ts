@@ -1226,7 +1226,19 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
     const drifted = kernel.getState().agents.filter(c => c.promotion && c.health.alive);
     const driftData: Record<string, { name: string; hexaco: any }> = {};
     for (const p of drifted.slice(0, 5)) { const h = p.hexaco; driftData[p.core.id] = { name: p.core.name, hexaco: { O: +h.openness.toFixed(2), C: +h.conscientiousness.toFixed(2), E: +h.extraversion.toFixed(2), A: +h.agreeableness.toFixed(2) } }; }
-    emit('drift', { turn, year, agents: driftData });
+    // Include the commander's current HEXACO so the dashboard can plot
+    // the commander trajectory arc alongside promoted agents. Baseline
+    // is commanderHexacoHistory[0] (exported at run end); the per-turn
+    // current is sent here so the arc can build up live.
+    const commanderHexacoSnapshot = {
+      openness: +commanderHexacoLive.openness.toFixed(3),
+      conscientiousness: +commanderHexacoLive.conscientiousness.toFixed(3),
+      extraversion: +commanderHexacoLive.extraversion.toFixed(3),
+      agreeableness: +commanderHexacoLive.agreeableness.toFixed(3),
+      emotionality: +commanderHexacoLive.emotionality.toFixed(3),
+      honestyHumility: +commanderHexacoLive.honestyHumility.toFixed(3),
+    };
+    emit('drift', { turn, year, agents: driftData, commander: commanderHexacoSnapshot });
 
     // Agent reactions (once per turn, reacting to ALL events). Runs the
     // full roster on turn 1; turn 2+ uses progressive reactions to pick
