@@ -8,6 +8,7 @@ import { ReferencesSection } from '../shared/ReferencesSection';
 import { ToolboxSection } from '../shared/ToolboxSection';
 import { VerdictCard, VerdictPanel } from '../sim/VerdictCard';
 import { CostBreakdownModal } from '../layout/CostBreakdownModal';
+import { CommanderTrajectoryCard } from './CommanderTrajectoryCard';
 
 /**
  * Tiny hook for booleans persisted to localStorage. Used here to remember
@@ -208,6 +209,25 @@ export function ReportView({ state, verdict }: ReportViewProps) {
       </h2>
 
       {verdict && <VerdictPanel verdict={verdict} />}
+
+      {/* Commander personality arcs. Shown once per side once there's at
+          least one turn of drift data, so the user can visually inspect
+          how each commander's HEXACO evolved across the run. Data comes
+          from drift SSE events emitted after every turn. */}
+      {(state.a.events.some(e => e.type === 'drift') || state.b.events.some(e => e.type === 'drift')) && (
+        <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+          <CommanderTrajectoryCard
+            events={state.a.events}
+            leaderName={nameA}
+            baselineHexaco={state.a.leader?.hexaco}
+          />
+          <CommanderTrajectoryCard
+            events={state.b.events}
+            leaderName={nameB}
+            baselineHexaco={state.b.leader?.hexaco}
+          />
+        </div>
+      )}
 
       {/* Cost breakdown trigger. Moved out of the StatsBar header when
           the row got too dense; Reports is the right home since users

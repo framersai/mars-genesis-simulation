@@ -1,0 +1,152 @@
+import type { SimEvent } from '../../hooks/useSSE';
+
+/**
+ * Compact line chart of a commander's HEXACO trajectory across the run.
+ *
+ * Reads per-turn commander snapshots from `drift` SSE events (emitted by
+ * the orchestrator after every turn's outcome). Renders each of the six
+ * HEXACO axes as a thin SVG polyline in a small inline card. Six lines
+ * overlap in a 0..1 y-axis bounded to [0.05, 0.95] (matching the kernel's
+ * drift bounds) and a turn-based x-axis.
+ *
+ * No external chart library — a single SVG keeps the dashboard dependency
+ * surface flat and the card renders instantly even for long runs.
+ *
+ * @module paracosm/dashboard/reports/CommanderTrajectoryCard
+ */
+
+const TRAIT_KEYS: Array<keyof CommanderSnapshot> = [
+  'openness',
+  'conscientiousness',
+  'extraversion',
+  'agreeableness',
+  'emotionality',
+  'honestyHumility',
+];
+
+const TRAIT_COLORS: Record<string, string> = {
+  openness: 'var(--side-a, #e8b44a)',
+  conscientiousness: 'var(--teal, #4ca8a8)',
+  extraversion: '#c44a1e',
+  agreeableness: '#6b9a6b',
+  emotionality: '#a86cb5',
+  honestyHumility: '#d2b48c',
+};
+
+const TRAIT_LABELS: Record<string, string> = {
+  openness: 'O',
+  conscientiousness: 'C',
+  extraversion: 'E',
+  agreeableness: 'A',
+  emotionality: 'Em',
+  honestyHumility: 'HH',
+};
+
+interface CommanderSnapshot {
+  openness: number;
+  conscientiousness: number;
+  extraversion: number;
+  agreeableness: number;
+  emotionality: number;
+  honestyHumility: number;
+}
+
+/** Extract per-turn commander snapshots for a single leader from the SSE event stream. */
+function extractCommanderTrajectory(
+  events: SimEvent[],
+  leaderName: string,
+): Array<{ turn: number; hexaco: CommanderSnapshot }> {
+  const out: Array<{ turn: number; hexaco: CommanderSnapshot }> = [];
+  for (const e of events) {
+    if (e.type !== 'drift' || e.leader !== leaderName || !e.data) continue;
+    const commander = (e.data as Record<string, unknown>).commander as CommanderSnapshot | undefined;
+    const turn = (e.data as Record<string, unknown>).turn as number | undefined;
+    if (!commander || typeof turn !== 'number') continue;
+    out.push({ turn, hexaco: commander });
+  }
+  return out.sort((a, b) => a.turn - b.turn);
+}
+
+export function CommanderTrajectoryCard({
+  events,
+  leaderName,
+  baselineHexaco,
+}: {
+  events: SimEvent[];
+  leaderName: string;
+  /** Turn-0 baseline. Prepended so the chart shows the drift FROM config,
+   *  not just the drift BETWEEN turn 1 and turn N. */
+  baselineHexaco?: CommanderSnapshot;
+}) {
+  const trajectory = extractCommanderTrajectory(events, leaderName);
+  if (trajectory.length === 0 && !baselineHexaco) return null;
+
+  const series: Array<{ turn: number; hexaco: CommanderSnapshot }> = baselineHexaco
+    ? [{ turn: 0, hexaco: baselineHexaco }, ...trajectory]
+    : trajectory;
+  if (series.length < 2) return null;
+
+  const W = 260;
+  const H = 80;
+  const padX = 6;
+  const padY = 6;
+  const minTurn = series[0].turn;
+  const maxTurn = series[series.length - 1].turn;
+  const xRange = Math.max(1, maxTurn - minTurn);
+
+  // Kernel bounds are [0.05, 0.95]. Project onto [padY, H - padY] with
+  // y=0 at top so higher trait value renders higher on the chart.
+  const yFor = (v: number) => {
+    const clamped = Math.max(0.05, Math.min(0.95, v));
+    return padY + (H - padY * 2) * (1 - (clamped - 0.05) / 0.9);
+  };
+  const xFor = (turn: number) => padX + (W - padX * 2) * ((turn - minTurn) / xRange);
+
+  return (
+    <div
+      style={{
+        padding: '8px 10px',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border)',
+        borderRadius: '4px',
+        fontFamily: 'var(--mono)',
+        fontSize: '10px',
+        color: 'var(--text-2)',
+      }}
+      aria-label={`HEXACO trajectory for ${leaderName}`}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+        <span style={{ fontWeight: 700, color: 'var(--text-1)', letterSpacing: '.5px' }}>PERSONALITY ARC</span>
+        <span style={{ color: 'var(--text-3)' }}>turn {minTurn} → {maxTurn}</span>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img">
+        {/* Horizontal mid-line at 0.5 for reference */}
+        <line x1={padX} y1={yFor(0.5)} x2={W - padX} y2={yFor(0.5)} stroke="var(--border)" strokeWidth="0.5" strokeDasharray="2,3" />
+        {TRAIT_KEYS.map(trait => {
+          const points = series.map(s => `${xFor(s.turn)},${yFor(s.hexaco[trait])}`).join(' ');
+          return (
+            <polyline
+              key={trait}
+              points={points}
+              fill="none"
+              stroke={TRAIT_COLORS[trait]}
+              strokeWidth="1.25"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              opacity={0.85}
+            />
+          );
+        })}
+      </svg>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 10px', marginTop: '4px' }}>
+        {TRAIT_KEYS.map(trait => (
+          <span key={trait} style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+            <span aria-hidden="true" style={{ width: '8px', height: '2px', background: TRAIT_COLORS[trait], display: 'inline-block' }} />
+            <span style={{ color: 'var(--text-3)' }}>{TRAIT_LABELS[trait]}</span>
+            <span style={{ color: 'var(--text-1)' }}>{series[series.length - 1].hexaco[trait].toFixed(2)}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
