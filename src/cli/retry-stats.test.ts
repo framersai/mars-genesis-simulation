@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { aggregateSchemaRetries, type PerRunSchemaRetries } from './retry-stats.js';
+import {
+  aggregateSchemaRetries,
+  aggregateForgeStats,
+  type PerRunSchemaRetries,
+  type PerRunForgeStats,
+} from './retry-stats.js';
 
 const emptyRun: PerRunSchemaRetries = {};
 
@@ -63,4 +68,70 @@ test('aggregateSchemaRetries handles schema appearing in only some runs', () => 
   const agg = aggregateSchemaRetries(runs);
   assert.equal(agg.schemas.DepartmentReport.runsPresent, 1);
   assert.equal(agg.schemas.CommanderDecision.runsPresent, 1);
+});
+
+// -----------------------------------------------------------------------
+// aggregateForgeStats
+// -----------------------------------------------------------------------
+
+test('aggregateForgeStats returns zero rollup on empty runs array', () => {
+  const agg = aggregateForgeStats([]);
+  assert.deepEqual(agg, {
+    totalAttempts: 0,
+    approved: 0,
+    rejected: 0,
+    approvalRate: 0,
+    avgApprovedConfidence: 0,
+    runsPresent: 0,
+  });
+});
+
+test('aggregateForgeStats sums attempts / approved / rejected across runs', () => {
+  const runs: PerRunForgeStats[] = [
+    { attempts: 5, approved: 4, rejected: 1, approvedConfidenceSum: 3.2 },
+    { attempts: 4, approved: 3, rejected: 1, approvedConfidenceSum: 2.4 },
+  ];
+  const agg = aggregateForgeStats(runs);
+  assert.equal(agg.totalAttempts, 9);
+  assert.equal(agg.approved, 7);
+  assert.equal(agg.rejected, 2);
+  assert.equal(agg.runsPresent, 2);
+});
+
+test('aggregateForgeStats computes approvalRate rounded to 4 decimals', () => {
+  const runs: PerRunForgeStats[] = [
+    { attempts: 7, approved: 5, rejected: 2, approvedConfidenceSum: 4.0 },
+  ];
+  const agg = aggregateForgeStats(runs);
+  // 5/7 = 0.714285... → rounds to 0.7143
+  assert.equal(agg.approvalRate, 0.7143);
+});
+
+test('aggregateForgeStats computes avgApprovedConfidence rounded to 2 decimals', () => {
+  const runs: PerRunForgeStats[] = [
+    { attempts: 4, approved: 2, rejected: 2, approvedConfidenceSum: 1.7 },
+  ];
+  const agg = aggregateForgeStats(runs);
+  // 1.7 / 2 = 0.85
+  assert.equal(agg.avgApprovedConfidence, 0.85);
+});
+
+test('aggregateForgeStats skips runs with zero attempts (runsPresent excludes them)', () => {
+  const runs: PerRunForgeStats[] = [
+    { attempts: 0, approved: 0, rejected: 0, approvedConfidenceSum: 0 },
+    { attempts: 3, approved: 2, rejected: 1, approvedConfidenceSum: 1.6 },
+    { attempts: 0, approved: 0, rejected: 0, approvedConfidenceSum: 0 },
+  ];
+  const agg = aggregateForgeStats(runs);
+  assert.equal(agg.runsPresent, 1);
+  assert.equal(agg.totalAttempts, 3);
+});
+
+test('aggregateForgeStats returns approvalRate:0 when no approvals exist', () => {
+  const runs: PerRunForgeStats[] = [
+    { attempts: 3, approved: 0, rejected: 3, approvedConfidenceSum: 0 },
+  ];
+  const agg = aggregateForgeStats(runs);
+  assert.equal(agg.approvalRate, 0);
+  assert.equal(agg.avgApprovedConfidence, 0);
 });
