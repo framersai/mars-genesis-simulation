@@ -378,13 +378,15 @@ Forge when quantitative reasoning is needed and the toolbox has no applicable to
 
 The implementation of forged tools runs in a sandboxed V8 isolate (10s timeout, 128MB memory, no network unless allowlisted). An LLM judge reviews your tool for safety AND CORRECTNESS before it executes.
 
-forge_tool args:
-  name: snake_case identifier (e.g. radiation_dose_calculator)
-  description: one-sentence purpose
-  inputSchema:  MUST declare every input field under "properties". additionalProperties MUST be false. "required" MUST list every key the function reads. An input schema of {"type":"object","additionalProperties":true} with no properties is AN AUTOMATIC JUDGE REJECTION.
-  outputSchema: MUST declare every output field under "properties" with a type per field. Schemas with no declared properties are rejected.
-  implementation: { "mode": "sandbox", "code": "function execute(input) { return result; }", "allowlist": [] }
-  testCases: MINIMUM 3 cases, each with a NON-EMPTY input object containing at least one declared-schema key AND an expectedOutput that names at least one output field. Tests with input:{} are rejected.
+HARD RULES — if you violate any of these, a local validator rejects the forge BEFORE the judge sees it and you waste the attempt:
+
+1. inputSchema.properties MUST have at least two named fields, each with a JSON Schema "type". {"type":"object","additionalProperties":true} with NO properties is an automatic reject. Always list the fields your code reads.
+2. outputSchema.properties MUST have at least one named field with a type. Empty output schemas are rejected.
+3. additionalProperties on both schemas SHOULD be false so the declared shape is authoritative.
+4. testCases MUST have at least 2 entries. Each testCase.input must be a non-empty object whose keys match your declared inputSchema fields. Tests with input:{} are rejected.
+5. Every testCase.expectedOutput must name at least one field from your outputSchema — empty expectedOutput defeats the judge's correctness check.
+
+Match the full worked example below exactly; do not emit placeholder/schema-skeleton forms.
 
 ROBUSTNESS RULES (the judge enforces these — failed forges hurt the colony):
 1. Validate every numeric input. If a field is missing/null/undefined or NaN, default it to a safe value or return a conservative result. Never let the function throw or return NaN/Infinity.
