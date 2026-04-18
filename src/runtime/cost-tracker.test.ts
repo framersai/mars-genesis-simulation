@@ -93,3 +93,48 @@ test('rejected forges do not contribute to approvedConfidenceSum', () => {
   assert.equal(cost.forgeStats!.rejected, 2);
   assert.equal(cost.forgeStats!.attempts, 4);
 });
+
+test('finalCost emits cacheStats when provider reported cache tokens', () => {
+  const tracker = createCostTracker(modelConfig);
+  tracker.trackUsage({
+    usage: { totalTokens: 1200, promptTokens: 1000, completionTokens: 200, cacheReadTokens: 500, cacheCreationTokens: 200 },
+  }, 'departments');
+  const cost = tracker.finalCost();
+  assert.ok(cost.cacheStats);
+  assert.equal(cost.cacheStats!.readTokens, 500);
+  assert.equal(cost.cacheStats!.creationTokens, 200);
+  // savingsUSD is the rollup of (reads*0.90 - creations*0.25) * inputPrice
+  // across the sites that reported cache traffic. Exact value depends on
+  // the site's input-token pricing; we just assert it's a finite number.
+  assert.equal(typeof cost.cacheStats!.savingsUSD, 'number');
+  assert.equal(Number.isFinite(cost.cacheStats!.savingsUSD), true);
+});
+
+test('finalCost omits cacheStats when no cache activity was reported', () => {
+  const tracker = createCostTracker(modelConfig);
+  tracker.trackUsage({
+    usage: { totalTokens: 800, promptTokens: 600, completionTokens: 200 },
+  }, 'commander');
+  const cost = tracker.finalCost();
+  assert.equal(cost.cacheStats, undefined);
+});
+
+test('cacheStats savings accumulate across sites (net positive when reads dominate)', () => {
+  const tracker = createCostTracker(modelConfig);
+  // Turn 1: cache write (net cost).
+  tracker.trackUsage({
+    usage: { totalTokens: 1500, promptTokens: 1200, completionTokens: 300, cacheCreationTokens: 800 },
+  }, 'departments');
+  // Turn 2-6: cache reads dominate (net savings).
+  for (let i = 0; i < 5; i++) {
+    tracker.trackUsage({
+      usage: { totalTokens: 1200, promptTokens: 400, completionTokens: 200, cacheReadTokens: 800 },
+    }, 'departments');
+  }
+  const cost = tracker.finalCost();
+  assert.ok(cost.cacheStats);
+  assert.equal(cost.cacheStats!.readTokens, 4000);
+  assert.equal(cost.cacheStats!.creationTokens, 800);
+  // 5 reads × 800 × 0.9 = 3600 savings units vs 1 create × 800 × 0.25 = 200 cost units → net positive.
+  assert.ok(cost.cacheStats!.savingsUSD > 0, `expected positive savings, got ${cost.cacheStats!.savingsUSD}`);
+});
