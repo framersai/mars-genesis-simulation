@@ -351,6 +351,7 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
             .map(([k, v]) => [k.replace(/^compile:/, ''), v] as const);
           const forges = rs.forges;
           const caches = rs.caches;
+          const providerErrors = rs.providerErrors;
 
           const schemaRow = ([name, b]: readonly [string, typeof rs.schemas[string]]) => {
             const avgColor = b.avgAttempts > 1.5 ? 'var(--rust)' : b.avgAttempts > 1.1 ? 'var(--amber)' : 'var(--text-1)';
@@ -436,6 +437,39 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
                       </tr>
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {providerErrors && providerErrors.runsPresent > 0 && (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>PROVIDER ERRORS</div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--mono)' }}>
+                    <thead>
+                      <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 10, letterSpacing: '.08em' }}>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>RUNS W/ ERRORS</th>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>TOTAL</th>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>AUTH</th>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>QUOTA</th>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>RATE</th>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>NET</th>
+                        <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>OTHER</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr style={{ borderTop: '1px solid var(--border)' }}>
+                        <td style={{ padding: '6px 0', textAlign: 'right', color: 'var(--text-1)' }}>{providerErrors.runsPresent}</td>
+                        <td style={{ padding: '6px 0', textAlign: 'right', color: 'var(--text-1)', fontWeight: 700 }}>{providerErrors.total}</td>
+                        <td style={{ padding: '6px 0', textAlign: 'right', color: providerErrors.auth > 0 ? 'var(--rust)' : 'var(--text-3)', fontWeight: providerErrors.auth > 0 ? 700 : 400 }}>{providerErrors.auth}</td>
+                        <td style={{ padding: '6px 0', textAlign: 'right', color: providerErrors.quota > 0 ? 'var(--rust)' : 'var(--text-3)', fontWeight: providerErrors.quota > 0 ? 700 : 400 }}>{providerErrors.quota}</td>
+                        <td style={{ padding: '6px 0', textAlign: 'right', color: providerErrors.rate_limit > 0 ? 'var(--amber)' : 'var(--text-3)' }}>{providerErrors.rate_limit}</td>
+                        <td style={{ padding: '6px 0', textAlign: 'right', color: providerErrors.network > 0 ? 'var(--amber)' : 'var(--text-3)' }}>{providerErrors.network}</td>
+                        <td style={{ padding: '6px 0', textAlign: 'right', color: providerErrors.unknown > 0 ? 'var(--amber)' : 'var(--text-3)' }}>{providerErrors.unknown}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div style={{ marginTop: 4, fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--sans)' }}>
+                    AUTH/QUOTA are terminal (run aborts). RATE/NET/OTHER are non-terminal — the retry layer handles them.
+                  </div>
                 </div>
               )}
 
