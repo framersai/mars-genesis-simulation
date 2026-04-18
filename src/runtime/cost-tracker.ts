@@ -67,6 +67,26 @@ export interface ForgeStats {
   rejected: number;
   /** Sum of confidence across APPROVED forges. Divide by `approved` for avg. */
   approvedConfidenceSum: number;
+  /**
+   * Count of UNIQUE tool names seen this run. A forge that got rejected
+   * and re-forged under the same name counts once. Provides the
+   * "how many distinct tools did this run attempt" signal.
+   */
+  uniqueNames: number;
+  /**
+   * Count of unique tool names that got approved at least once this
+   * run. Raw `approved` counts every approval attempt (re-forges add);
+   * `uniqueApproved` counts tools that landed in the toolbox.
+   */
+  uniqueApproved: number;
+  /**
+   * Count of unique tool names that were ONLY rejected (never
+   * approved) this run. Non-zero means some forge ideas failed
+   * terminally; the retry loop did not recover. This is the
+   * actionable quality signal — small even when raw `rejected` is
+   * large because most rejections recover on subsequent attempts.
+   */
+  uniqueTerminalRejections: number;
 }
 
 /**
@@ -154,9 +174,12 @@ export interface CostTracker {
    * cleared the tool; false means shape check or judge rejected it.
    * `confidence` is the judge's score for the tool's quality (used only
    * when `approved`; rejection confidence in wrapForgeTool is 0 and
-   * would skew averages).
+   * would skew averages). `toolName`, when provided, is folded into a
+   * per-name Set so the rollup can report unique-tool metrics
+   * (eventually-approved vs terminally-rejected) rather than raw
+   * attempt counts.
    */
-  recordForgeAttempt(approved: boolean, confidence: number): void;
+  recordForgeAttempt(approved: boolean, confidence: number, toolName?: string): void;
   /**
    * Record one classified provider error. `kind` matches the classifier's
    * ProviderErrorKind (auth / quota / rate_limit / network / unknown).
@@ -220,6 +243,27 @@ export function createCostTracker(modelConfig: SimulationModelConfig): CostTrack
     approved: 0,
     rejected: 0,
     approvedConfidenceSum: 0,
+    uniqueNames: 0,
+    uniqueApproved: 0,
+    uniqueTerminalRejections: 0,
+  };
+  // Per-name sets so the rollup can report unique-tool metrics. A tool
+  // rejected twice then approved contributes to `rejectedNames` and
+  // `approvedNames` both — at snapshot time, uniqueTerminalRejections =
+  // |rejectedNames - approvedNames|.
+  const approvedNames = new Set<string>();
+  const rejectedNames = new Set<string>();
+  const refreshUniqueForgeCounts = () => {
+    forgeStats.uniqueApproved = approvedNames.size;
+    // Names that were rejected but never approved = terminal failures.
+    let terminal = 0;
+    for (const n of rejectedNames) if (!approvedNames.has(n)) terminal += 1;
+    forgeStats.uniqueTerminalRejections = terminal;
+    // Total unique = union of both sets.
+    const union = new Set<string>();
+    for (const n of approvedNames) union.add(n);
+    for (const n of rejectedNames) union.add(n);
+    forgeStats.uniqueNames = union.size;
   };
   /**
    * Provider-error counters keyed by classifier kind. Incremented on
@@ -346,14 +390,17 @@ export function createCostTracker(modelConfig: SimulationModelConfig): CostTrack
     });
   };
 
-  const recordForgeAttempt: CostTracker['recordForgeAttempt'] = (approved, confidence) => {
+  const recordForgeAttempt: CostTracker['recordForgeAttempt'] = (approved, confidence, toolName) => {
     forgeStats.attempts += 1;
     if (approved) {
       forgeStats.approved += 1;
       forgeStats.approvedConfidenceSum += confidence;
+      if (toolName) approvedNames.add(toolName);
     } else {
       forgeStats.rejected += 1;
+      if (toolName) rejectedNames.add(toolName);
     }
+    refreshUniqueForgeCounts();
   };
 
   const recordProviderError: CostTracker['recordProviderError'] = (kind) => {

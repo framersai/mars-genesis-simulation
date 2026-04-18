@@ -347,8 +347,12 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
     // Feed the cost-tracker rollup so `_cost.forgeStats` ships live on
     // every subsequent SSE payload and finalCost().forgeStats lands in
     // the run artifact. The ring buffer in server-app.ts picks it up
-    // on run completion for /retry-stats aggregation.
-    costTracker.recordForgeAttempt(record.approved, record.confidence);
+    // on run completion for /retry-stats aggregation. Passing the tool
+    // name lets the tracker compute unique-tool metrics (eventually-
+    // approved vs terminally-rejected) that are more actionable than
+    // raw attempt counts when the retry loop re-forges under the same
+    // name.
+    costTracker.recordForgeAttempt(record.approved, record.confidence, record.name);
     // Real-time SSE so the dashboard can render an animated card the
     // moment a forge happens, instead of waiting for the dept_done summary.
     const inputProps = (record.inputSchema && typeof record.inputSchema === 'object' && (record.inputSchema as any).properties)
