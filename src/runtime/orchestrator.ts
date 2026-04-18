@@ -27,6 +27,7 @@ import { buildCitationCatalog } from './citations-catalog.js';
 import type { Department, HexacoProfile, HexacoSnapshot, TurnOutcome } from '../engine/core/state.js';
 import { SeededRng } from '../engine/core/rng.js';
 import { classifyOutcome, classifyOutcomeById, driftCommanderHexaco } from '../engine/core/progression.js';
+import { buildTrajectoryCue } from './hexaco-cues/trajectory.js';
 import type { DepartmentReport, CommanderDecision, TurnArtifact } from './contracts.js';
 import { SimulationKernel, type PolicyEffect } from '../engine/core/kernel.js';
 import type { KeyPersonnel } from '../engine/core/agent-generator.js';
@@ -1037,11 +1038,12 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
       // preamble adds ~300 tokens of reasoning per call but visibly sharpens
       // rationale quality (rationales started citing specific tool outputs
       // and trade tradeoffs instead of generic risk-averse hedging).
+      const trajectoryCue = buildTrajectoryCue(commanderHexacoHistory, commanderHexacoLive);
       const cmdPrompt =
 `TURN ${turn}${eventLabel} — ${year}: ${event.title}
 
 ${event.description}
-
+${trajectoryCue ? `\n${trajectoryCue}\n` : ''}
 DEPARTMENT REPORTS:
 ${summaries}
 ${commanderToolboxBlock}
