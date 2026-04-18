@@ -16,7 +16,6 @@
  * or by switching to a smaller model.
  */
 
-import { generateText, extractJson } from '@framers/agentos';
 import type { Agent, TurnOutcome } from '../engine/core/state.js';
 import { buildMemoryContext } from './agent-memory.js';
 import { generateValidatedObject } from './llm-invocations/generateValidatedObject.js';
@@ -54,12 +53,6 @@ interface ReactionContext {
   colonyMorale: number;
   colonyPopulation: number;
 }
-
-const REACTION_PROMPT = `You are a colony member reacting to what just happened. Based on your personality and situation, give a short reaction.
-
-Return JSON only: {"quote":"1-2 sentences in first person","mood":"positive|negative|neutral|anxious|defiant|hopeful|resigned","intensity":0.7}
-
-Keep it real. No heroic speeches. People under stress say blunt, honest things.`;
 
 /**
  * Build the shared system prompt + crisis context for a BATCHED reaction
@@ -187,76 +180,6 @@ function hydrateBatchReactions(
   return reactions;
 }
 
-function buildAgentPrompt(c: Agent, ctx: ReactionContext, reactionContextHook?: (agent: any, ctx: any) => string): string {
-  const age = ctx.year - c.core.birthYear;
-  const h = c.hexaco;
-  const marsborn = reactionContextHook ? reactionContextHook(c, ctx) : (c.core.marsborn ? 'Mars-born, never seen Earth.' : `Earth-born, ${ctx.year - 2035} years on Mars.`);
-
-  // Recent life events give the agent a personal history that shapes their reaction
-  const recentEvents = c.narrative.lifeEvents
-    .slice(-4)
-    .map(e => `- Year ${e.year}: ${e.event}`)
-    .join('\n');
-  const lifeHistory = recentEvents ? `\nYOUR RECENT HISTORY:\n${recentEvents}` : '';
-
-  // Social context
-  const socialContext: string[] = [];
-  if (c.social.partnerId) socialContext.push('Has a partner in the colony');
-  if (c.social.childrenIds.length) socialContext.push(`${c.social.childrenIds.length} children`);
-  if (c.social.earthContacts > 3) socialContext.push(`Still in touch with ${c.social.earthContacts} people on Earth`);
-  if (c.social.earthContacts === 0 && !c.core.marsborn) socialContext.push('Lost all contact with Earth');
-  if (c.health.conditions.length) socialContext.push(`Health issues: ${c.health.conditions.join(', ')}`);
-  if ((c.health.boneDensityPct ?? 0) < 70) socialContext.push('Suffering significant bone density loss');
-  if ((c.health.cumulativeRadiationMsv ?? 0) > 1500) socialContext.push('High cumulative radiation exposure');
-  if (c.health.psychScore < 0.4) socialContext.push('Struggling with depression');
-  const socialLine = socialContext.length ? socialContext.join('. ') + '.' : '';
-
-  // Persistent memory context (beliefs, recent memories, stances, relationships)
-  const memoryContext = buildMemoryContext(c);
-
-  return `${REACTION_PROMPT}
-
-YOU: ${c.core.name}, age ${age}, ${c.core.role} in ${c.core.department}. ${marsborn}
-${c.career.specialization !== 'Undetermined' ? `Specialization: ${c.career.specialization}. ${c.career.yearsExperience} years experience.` : ''}
-Personality: O=${h.openness.toFixed(2)} C=${h.conscientiousness.toFixed(2)} E=${h.extraversion.toFixed(2)} A=${h.agreeableness.toFixed(2)} Em=${h.emotionality.toFixed(2)} HH=${h.honestyHumility.toFixed(2)}
-Health: bone density ${(c.health.boneDensityPct ?? 0).toFixed(0)}%, radiation ${(c.health.cumulativeRadiationMsv ?? 0).toFixed(0)} mSv, psych ${c.health.psychScore.toFixed(2)}
-${socialLine}
-${c.promotion ? `Promoted to ${c.promotion.role} by ${c.promotion.promotedBy}.` : ''}${lifeHistory}${memoryContext}
-
-WHAT HAPPENED: Turn ${ctx.turn}, Year ${ctx.year}. Event: "${ctx.eventTitle}" (${ctx.eventCategory}).
-Commander decided: ${ctx.decision.slice(0, 200)}
-Outcome: ${ctx.outcome}. Colony morale: ${Math.round(ctx.colonyMorale * 100)}%. Population: ${ctx.colonyPopulation}.
-
-React as this specific person given YOUR history, memories, beliefs, and personality. Reference your past experiences when relevant. Do NOT start with "I can't believe". Be distinctive. JSON only.`;
-}
-
-function parseReaction(text: string, c: Agent, year: number): AgentReaction | null {
-  const jsonStr = extractJson(text);
-  if (!jsonStr) return null;
-  try {
-    const raw = JSON.parse(jsonStr);
-    if (raw.quote) {
-      return {
-        agentId: c.core.id,
-        name: c.core.name,
-        age: year - c.core.birthYear,
-        department: c.core.department,
-        role: c.core.role,
-        specialization: c.career.specialization,
-        marsborn: c.core.marsborn,
-        quote: raw.quote,
-        mood: raw.mood || 'neutral',
-        intensity: typeof raw.intensity === 'number' ? raw.intensity : 0.5,
-        hexaco: { O: +c.hexaco.openness.toFixed(2), C: +c.hexaco.conscientiousness.toFixed(2), E: +c.hexaco.extraversion.toFixed(2), A: +c.hexaco.agreeableness.toFixed(2), Em: +c.hexaco.emotionality.toFixed(2), HH: +c.hexaco.honestyHumility.toFixed(2) },
-        psychScore: +c.health.psychScore.toFixed(2),
-        boneDensity: +(c.health.boneDensityPct ?? 0).toFixed(0),
-        radiation: +(c.health.cumulativeRadiationMsv ?? 0).toFixed(0),
-      };
-    }
-  } catch { /* invalid JSON */ }
-  return null;
-}
-
 /**
  * Generate reactions from all alive agents in parallel.
  * Uses cheap model (gpt-4o-mini / haiku) for cost efficiency.
@@ -308,127 +231,72 @@ export async function generateAgentReactions(
   const provider = (options.provider || 'openai') as any;
   const model = options.model || 'gpt-4o-mini';
   const maxConcurrent = options.maxConcurrent || 25;
-  const batchSize = Math.max(1, Math.min(20, options.batchSize ?? 10));
+  // Minimum batchSize is 2. The legacy per-agent path was deleted now
+  // that the batched + schema-validated path handles all cases. Callers
+  // passing 1 get clamped up; reactions always flow through generateValidatedObject.
+  const batchSize = Math.max(2, Math.min(20, options.batchSize ?? 10));
 
   console.log(`  [agents] Generating ${alive.length} reactions via ${model} (batchSize=${batchSize})...`);
   const startTime = Date.now();
 
-  // --- Batched path ---
-  //
   // Groups of `batchSize` agents share a single LLM call. The system
   // prompt carries the shared crisis context (cached with cacheBreakpoint
   // so providers that support prefix caching serve turns 2-N at 0.1×
   // cost). The user prompt lists the agents' identity/history blocks.
   // Outer `maxConcurrent` still throttles API concurrency to avoid
   // hitting provider rate limits on a large colony.
-  if (batchSize > 1) {
-    const chunks: Agent[][] = [];
-    for (let i = 0; i < alive.length; i += batchSize) {
-      chunks.push(alive.slice(i, i + batchSize));
-    }
-
-    const systemPrompt = buildBatchSystemPrompt(ctx);
-    const reactions: AgentReaction[] = [];
-    let firstBatchError: unknown = null;
-
-    // Process chunks in parallel, throttled by maxConcurrent which now
-    // bounds concurrent BATCH calls rather than per-agent calls. With
-    // batchSize=10 and maxConcurrent=25, up to 250 agents can be in
-    // flight simultaneously, which is fine for any realistic scenario.
-    for (let i = 0; i < chunks.length; i += maxConcurrent) {
-      const window = chunks.slice(i, i + maxConcurrent);
-      const windowResults = await Promise.all(window.map(async (chunk) => {
-        try {
-          const userPrompt = [
-            `Generate one reaction per agent below, in order, returning a JSON object with a "reactions" array.`,
-            '',
-            ...chunk.map((c, idx) => `--- ${idx + 1}/${chunk.length} ---\n${buildBatchAgentBlock(c, ctx, options.reactionContextHook)}`),
-          ].join('\n\n');
-
-          const { object, fromFallback } = await generateValidatedObject({
-            provider,
-            model,
-            schema: ReactionBatchSchema,
-            schemaName: 'ReactionBatch',
-            systemCacheable: systemPrompt,
-            prompt: userPrompt,
-            onUsage: options.onUsage,
-            fallback: { reactions: [] },
-          });
-          if (fromFallback) {
-            if (firstBatchError == null) firstBatchError = new Error('reactions schema fallback');
-            return [] as AgentReaction[];
-          }
-          return hydrateBatchReactions(object.reactions as ReactionEntryPayload[], chunk, ctx.year);
-        } catch (err) {
-          if (firstBatchError == null) firstBatchError = err;
-          return [] as AgentReaction[];
-        }
-      }));
-      for (const group of windowResults) reactions.push(...group);
-    }
-
-    if (firstBatchError != null) {
-      options.onProviderError?.(firstBatchError);
-    }
-
-    // Fallback: if the batched call returned ZERO reactions (model
-    // misbehaved badly, JSON array malformed) and we have agents left,
-    // retry the first ~10 with the per-agent path so the turn at least
-    // has SOMETHING in the bulletin. Avoids the worst-case "empty
-    // reactions" turn that would otherwise follow a bad batch.
-    if (reactions.length === 0 && alive.length > 0 && firstBatchError == null) {
-      console.log(`  [agents] Batched call returned no parseable reactions; falling back to per-agent for the first 10.`);
-      const fallbackAgents = alive.slice(0, 10);
-      const fallbackResults = await Promise.all(fallbackAgents.map(async (c) => {
-        try {
-          const prompt = buildAgentPrompt(c, ctx, options.reactionContextHook);
-          const result = await generateText({ provider, model, prompt });
-          options.onUsage?.(result);
-          return parseReaction(result.text, c, ctx.year);
-        } catch {
-          return null;
-        }
-      }));
-      for (const r of fallbackResults) if (r) reactions.push(r);
-    }
-
-    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`  [agents] ${reactions.length}/${alive.length} reactions in ${elapsed}s (${chunks.length} batches)`);
-    reactions.sort((a, b) => b.intensity - a.intensity);
-    return reactions;
+  const chunks: Agent[][] = [];
+  for (let i = 0; i < alive.length; i += batchSize) {
+    chunks.push(alive.slice(i, i + batchSize));
   }
 
-  // --- Legacy per-agent path (batchSize=1) ---
-  //
-  // Kept for tests, A/B comparison, and any scenario that needs maximum
-  // per-agent personalization at the cost of extra API spend. Default
-  // is batched; opt back into per-agent by passing batchSize: 1.
+  const systemPrompt = buildBatchSystemPrompt(ctx);
   const reactions: AgentReaction[] = [];
   let firstBatchError: unknown = null;
-  for (let i = 0; i < alive.length; i += maxConcurrent) {
-    const batch = alive.slice(i, i + maxConcurrent);
-    const batchResults = await Promise.all(
-      batch.map(async (c) => {
-        try {
-          const prompt = buildAgentPrompt(c, ctx, options.reactionContextHook);
-          const result = await generateText({ provider, model, prompt });
-          options.onUsage?.(result);
-          return parseReaction(result.text, c, ctx.year);
-        } catch (err) {
-          if (firstBatchError == null) firstBatchError = err;
-          return null;
+
+  // Process chunks in parallel, throttled by maxConcurrent which bounds
+  // concurrent BATCH calls rather than per-agent calls. With batchSize=10
+  // and maxConcurrent=25, up to 250 agents can be in flight simultaneously,
+  // which is fine for any realistic scenario.
+  for (let i = 0; i < chunks.length; i += maxConcurrent) {
+    const window = chunks.slice(i, i + maxConcurrent);
+    const windowResults = await Promise.all(window.map(async (chunk) => {
+      try {
+        const userPrompt = [
+          `Generate one reaction per agent below, in order, returning a JSON object with a "reactions" array.`,
+          '',
+          ...chunk.map((c, idx) => `--- ${idx + 1}/${chunk.length} ---\n${buildBatchAgentBlock(c, ctx, options.reactionContextHook)}`),
+        ].join('\n\n');
+
+        const { object, fromFallback } = await generateValidatedObject({
+          provider,
+          model,
+          schema: ReactionBatchSchema,
+          schemaName: 'ReactionBatch',
+          systemCacheable: systemPrompt,
+          prompt: userPrompt,
+          onUsage: options.onUsage,
+          fallback: { reactions: [] },
+        });
+        if (fromFallback) {
+          if (firstBatchError == null) firstBatchError = new Error('reactions schema fallback');
+          return [] as AgentReaction[];
         }
-      })
-    );
-    reactions.push(...batchResults.filter((r): r is AgentReaction => r !== null));
+        return hydrateBatchReactions(object.reactions as ReactionEntryPayload[], chunk, ctx.year);
+      } catch (err) {
+        if (firstBatchError == null) firstBatchError = err;
+        return [] as AgentReaction[];
+      }
+    }));
+    for (const group of windowResults) reactions.push(...group);
   }
+
   if (firstBatchError != null) {
     options.onProviderError?.(firstBatchError);
   }
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-  console.log(`  [agents] ${reactions.length}/${alive.length} reactions in ${elapsed}s (per-agent path)`);
+  console.log(`  [agents] ${reactions.length}/${alive.length} reactions in ${elapsed}s (${chunks.length} batches)`);
   reactions.sort((a, b) => b.intensity - a.intensity);
   return reactions;
 }
