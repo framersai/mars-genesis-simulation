@@ -121,10 +121,10 @@ describe('compileScenario with mock LLM', () => {
     progression: '(ctx) => { for (const c of ctx.agents) { if (!c.health.alive) continue; c.health.boneDensityPct = Math.max(50, c.health.boneDensityPct - 0.3 * ctx.yearDelta); } }',
     director: 'You are the Crisis Director for a base simulation. Departments: medical, engineering. Generate crises with 2-3 options, one risky. Categories: environmental, resource, medical. Return JSON with title, crisis, options, riskyOptionId, riskSuccessProbability, category, researchKeywords, relevantDepartments, turnSummary.',
     prompts: '(ctx) => { const lines = []; if (ctx.department === "medical") lines.push("HEALTH: population alive"); else lines.push("INFRA: systems nominal"); return lines; }',
-    milestones: JSON.stringify([
-      { title: 'Founding', crisis: 'Choose your strategy.', options: [{ id: 'option_a', label: 'Safe', description: 'Conservative', isRisky: false }, { id: 'option_b', label: 'Bold', description: 'Risky', isRisky: true }], riskyOptionId: 'option_b', riskSuccessProbability: 0.6, category: 'infrastructure', researchKeywords: ['base'], relevantDepartments: ['engineering'], turnSummary: 'Founding.' },
-      { title: 'Legacy', crisis: 'Report status.', options: [{ id: 'option_a', label: 'Honest', description: 'Facts', isRisky: false }, { id: 'option_b', label: 'Bold', description: 'Vision', isRisky: true }], riskyOptionId: 'option_b', riskSuccessProbability: 0.5, category: 'political', researchKeywords: [], relevantDepartments: ['medical'], turnSummary: 'Assessment.' },
-    ]),
+    milestones: JSON.stringify({
+      founding: { title: 'Founding', description: 'Choose your strategy.', options: [{ id: 'option_a', label: 'Safe', description: 'Conservative', isRisky: false }, { id: 'option_b', label: 'Bold', description: 'Risky', isRisky: true }], riskyOptionId: 'option_b', riskSuccessProbability: 0.6, category: 'infrastructure', researchKeywords: ['base'], relevantDepartments: ['engineering'], turnSummary: 'Founding.' },
+      legacy: { title: 'Legacy', description: 'Report status.', options: [{ id: 'option_a', label: 'Honest', description: 'Facts', isRisky: false }, { id: 'option_b', label: 'Bold', description: 'Vision', isRisky: true }], riskyOptionId: 'option_b', riskSuccessProbability: 0.5, category: 'political', researchKeywords: [], relevantDepartments: ['medical'], turnSummary: 'Assessment.' },
+    }),
     fingerprint: '(finalState, outcomeLog, leader, toolRegs, maxTurns) => { const summary = "test"; return { summary }; }',
     politics: '(category, outcome) => { if (category !== "political") return null; return outcome.includes("success") ? { stability: 0.05 } : { stability: -0.03 }; }',
     reactions: '(colonist, ctx) => { return colonist.core.marsborn ? "Born at the base." : "Arrived from elsewhere."; }',
@@ -133,8 +133,12 @@ describe('compileScenario with mock LLM', () => {
   let callIndex = 0;
   const hookOrder = ['progression', 'director', 'prompts', 'milestones', 'fingerprint', 'politics', 'reactions'];
 
-  const mockGenerateText = async (prompt: string): Promise<string> => {
-    // Determine which hook is being requested from the prompt content
+  const mockGenerateText = async (
+    _promptOrOptions: string | { system?: Array<{ text: string; cacheBreakpoint?: boolean }>; prompt: string },
+  ): Promise<string> => {
+    // Determine which hook is being requested from call order (the
+    // hookOrder array matches compiler's HOOK_NAMES, so callIndex lines
+    // up 1:1 with the current hook being generated).
     const hookKey = hookOrder[callIndex % hookOrder.length];
     callIndex++;
     return mockResponses[hookKey] ?? '() => null';

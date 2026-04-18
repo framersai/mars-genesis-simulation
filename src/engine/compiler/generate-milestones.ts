@@ -8,7 +8,7 @@ import type { MilestoneEventDef } from '../types.js';
 import type { GenerateTextFn } from './types.js';
 import type { CompilerTelemetry } from './telemetry.js';
 import { MilestonesSchema } from './schemas/milestones.js';
-import { generateValidatedObject } from './llm-invocations/generateValidatedObject.js';
+import { generateValidatedJson } from './llm-invocations/generateValidatedJson.js';
 
 function buildSystemBlock(scenarioJson: Record<string, any>): string {
   const labels = scenarioJson.labels ?? {};
@@ -116,40 +116,24 @@ export function parseMilestones(text: string): [MilestoneEventDef, MilestoneEven
 }
 
 export interface GenerateMilestonesOptions {
-  provider: string;
-  model: string;
   telemetry?: CompilerTelemetry;
-  onUsage?: (r: { usage?: unknown }) => void;
 }
 
 export async function generateMilestones(
   scenarioJson: Record<string, any>,
-  _generateText: GenerateTextFn,
-  opts: GenerateMilestonesOptions,
+  generateText: GenerateTextFn,
+  options: GenerateMilestonesOptions = {},
 ): Promise<{ hook: (turn: number, maxTurns: number) => MilestoneEventDef | null; source: string; attempts: number; fromFallback: boolean }> {
   const fallback = fallbackMilestones(scenarioJson);
-  const result = await generateValidatedObject({
-    provider: opts.provider,
-    model: opts.model,
-    schema: MilestonesSchema,
-    schemaName: 'compile:milestones',
+  const result = await generateValidatedJson({
+    hookName: 'milestones',
     systemCacheable: buildSystemBlock(scenarioJson),
     prompt: userPrompt,
+    schema: MilestonesSchema,
     fallback,
-    onUsage: opts.onUsage,
-    onValidationFallback: (details) => {
-      opts.telemetry?.recordFallback('milestones', {
-        rawText: details.rawText,
-        reason: (details.err instanceof Error ? details.err.message : String(details.err)).slice(0, 500),
-        attempts: 3,
-      });
-    },
+    generateText,
+    telemetry: options.telemetry,
   });
-
-  if (!result.fromFallback) {
-    opts.telemetry?.recordAttempt('milestones', result.attempts, false);
-  }
-
   const { founding, legacy } = result.object as { founding: MilestoneEventDef; legacy: MilestoneEventDef };
   return {
     hook: (turn, maxTurns) => {
@@ -157,7 +141,7 @@ export async function generateMilestones(
       if (turn === maxTurns) return legacy;
       return null;
     },
-    source: JSON.stringify({ founding, legacy }, null, 2),
+    source: result.source,
     attempts: result.attempts,
     fromFallback: result.fromFallback,
   };
