@@ -67,6 +67,11 @@ export interface SideState {
    *  of a single faceless number. */
   deathCauses: Record<string, number>;
   tools: number;
+  /** Set of unique tool names approved on this side so tools stat
+   *  counts unique forges, not per-call invocations. Invocations
+   *  across later turns reappear in every dept_done that cites the
+   *  tool, which was inflating s.tools past the real forge count. */
+  toolNames: Set<string>;
   citations: number;
   decisions: number;
   pendingDecision: string;
@@ -146,7 +151,7 @@ function emptySide(): SideState {
   return {
     leader: null, colony: null, prevColony: null, crisis: null,
     events: [], popHistory: [], moraleHistory: [],
-    deaths: 0, deathCauses: {}, tools: 0, citations: 0, decisions: 0,
+    deaths: 0, deathCauses: {}, tools: 0, toolNames: new Set<string>(), citations: 0, decisions: 0,
     pendingDecision: '', pendingRationale: '', pendingPolicies: [],
     outcome: null, agentSnapshots: [], currentEvents: [],
   };
@@ -335,8 +340,19 @@ export function useGameState(sseEvents: SimEvent[], isComplete: boolean): GameSt
           // it is not part of the leader's real capability inventory;
           // counting it inflated the headline against reality.
           const allTools = Array.isArray(dd.forgedTools) ? dd.forgedTools.filter((t: any) => t?.name && t.name !== 'unnamed') : [];
-          const approvedTools = allTools.filter((t: any) => t.approved !== false);
-          s.tools += approvedTools.length;
+          // Track unique approved tool names across the whole run so
+          // the stats bar counts real forges, not the fact that later
+          // dept_done events cite the same tool over and over. Each
+          // unique approved name contributes +1 to s.tools exactly
+          // once.
+          for (const t of allTools) {
+            const name = String(t.name || '').trim();
+            if (!name) continue;
+            if (t.approved !== false && !s.toolNames.has(name)) {
+              s.toolNames.add(name);
+            }
+          }
+          s.tools = s.toolNames.size;
           s.citations += Number(dd.citations) || 0;
           s.events.push({ ...processed, data: { ...dd, _filteredTools: allTools } });
           break;

@@ -138,13 +138,25 @@ export function useToolRegistry(state: GameState): ToolRegistry {
             if (typeof t.confidence === 'number' && (t.confidence as number) > entry.confidence) {
               entry.confidence = t.confidence as number;
             }
+            // Approval escalates monotonically: if ANY attempt with
+            // this name was approved (even a later retry after an
+            // initial rejection), the tool is approved in the
+            // registry. The previous "first attempt wins" rule
+            // mislabelled tools where the LLM re-forged with a
+            // corrected schema after an initial judge reject.
+            if (t.approved !== false) {
+              entry.approved = true;
+            }
             // Backfill schema if a later occurrence has it.
             if (!entry.inputSchema && t.inputSchema) entry.inputSchema = t.inputSchema;
             if (!entry.outputSchema && t.outputSchema) entry.outputSchema = t.outputSchema;
-            // Backfill errorReason when a rejected re-forge attempt comes
-            // through AFTER the original pass: we want the tooltip to
-            // surface the latest rejection reason, not leave it blank.
-            if (typeof t.errorReason === 'string' && t.errorReason) {
+            // errorReason surfaces only when the tool is still
+            // rejected. If a later retry succeeded, clear the reason
+            // so the UI stops showing a stale failure message next
+            // to a passing tool.
+            if (entry.approved) {
+              entry.errorReason = undefined;
+            } else if (typeof t.errorReason === 'string' && t.errorReason) {
               entry.errorReason = t.errorReason as string;
             }
           }
