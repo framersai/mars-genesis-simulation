@@ -15,7 +15,19 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const submarineJson = JSON.parse(readFileSync(resolve(__dirname, '../../../scenarios/submarine.json'), 'utf-8'));
 
 /** Mock generateText that returns appropriate hook implementations for a submarine scenario. */
-const mockGenerateText = async (prompt: string): Promise<string> => {
+const mockGenerateText = async (
+  promptOrOptions: string | { system?: Array<{ text: string; cacheBreakpoint?: boolean }>; prompt: string },
+): Promise<string> => {
+  // Combine system block text + user prompt so keyword matching still
+  // works after the compiler migrated stable hook-identifying content
+  // into cacheBreakpoint-tagged system blocks (leaving only thin
+  // "return only valid JSON" tails in the user prompt).
+  const prompt = typeof promptOrOptions === 'string'
+    ? promptOrOptions
+    : [
+        ...(promptOrOptions.system ?? []).map(s => s.text),
+        promptOrOptions.prompt,
+      ].join('\n');
   if (prompt.includes('progression hook')) {
     return `(ctx) => {
       for (const c of ctx.agents) {
@@ -27,7 +39,7 @@ const mockGenerateText = async (prompt: string): Promise<string> => {
       }
     }`;
   }
-  if (prompt.includes('Crisis Director system instructions')) {
+  if (prompt.includes('Event Director system instructions') || prompt.includes('Crisis Director system instructions')) {
     return `You are the Crisis Director for a deep ocean research station at 2000m depth. You observe station state and generate crises that test the crew's weaknesses.
 
 RULES:
@@ -63,11 +75,11 @@ Return JSON: {"title","crisis","options":[{"id","label","description","isRisky"}
       return lines;
     }`;
   }
-  if (prompt.includes('milestone crises')) {
-    return JSON.stringify([
-      {
+  if (prompt.includes('milestone events') || prompt.includes('milestone crises')) {
+    return JSON.stringify({
+      founding: {
         title: 'Descent',
-        crisis: 'The station modules have been lowered to 2000m depth. Choose deployment configuration. Option A: Cluster deployment near the hydrothermal vent field. Option B: Distributed deployment across a 5km survey grid.',
+        description: 'The station modules have been lowered to 2000m depth. Choose deployment configuration. Option A: Cluster deployment near the hydrothermal vent field. Option B: Distributed deployment across a 5km survey grid.',
         options: [
           { id: 'option_a', label: 'Cluster Deployment', description: 'Near the vents, concentrated power and life support', isRisky: false },
           { id: 'option_b', label: 'Distributed Grid', description: 'Wider research coverage but isolated modules', isRisky: true },
@@ -79,9 +91,9 @@ Return JSON: {"title","crisis","options":[{"id","label","description","isRisky"}
         relevantDepartments: ['engineering', 'marine-science'],
         turnSummary: 'Station reaches operating depth. Deployment pattern determines research access and safety margins.',
       },
-      {
+      legacy: {
         title: 'Surface Report',
-        crisis: 'The funding agency requests a comprehensive mission report. Evaluate: research output, crew health, station integrity, discoveries, and future plans.',
+        description: 'The funding agency requests a comprehensive mission report. Evaluate: research output, crew health, station integrity, discoveries, and future plans.',
         options: [
           { id: 'option_a', label: 'Honest Assessment', description: 'Report factually including setbacks', isRisky: false },
           { id: 'option_b', label: 'Bold Proposal', description: 'Emphasize discoveries, request deeper deployment', isRisky: true },
@@ -93,7 +105,7 @@ Return JSON: {"title","crisis","options":[{"id","label","description","isRisky"}
         relevantDepartments: ['communications', 'marine-science', 'medical'],
         turnSummary: 'Funding review. The commander decides: conservative reporting or bold expansion proposal.',
       },
-    ]);
+    });
   }
   if (prompt.includes('fingerprint hook')) {
     return `(finalState, outcomeLog, leader, toolRegs, maxTurns) => {
