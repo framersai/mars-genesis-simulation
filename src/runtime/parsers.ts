@@ -1,20 +1,22 @@
 /**
- * JSON-forgiving parsers + default report/decision constructors extracted
- * from orchestrator.ts.
+ * Skeleton + policy-translation helpers that survived the Zod migration.
  *
- * The LLM regularly returns text with preamble, code fences, or trailing
- * notes around the JSON body. These helpers extract the JSON, hydrate a
- * typed DepartmentReport / CommanderDecision with sensible defaults,
- * and clean up the summary text so UI strings read as prose rather than
- * as a dump of markdown bullets.
+ * The old JSON-salvage parsers (`parseDeptReport`, `parseCmdDecision`,
+ * `cleanSummary`, `buildReadableSummary`) were deleted once every caller
+ * migrated to `generateValidatedObject` / `sendAndValidate` with Zod
+ * schemas. These helpers remain:
  *
- * All pure — no IO, no LLM calls, no global state. Safe to test directly
- * with string inputs.
+ * - `humanizeToolName` — UI-friendly tool name display
+ * - `emptyReport` / `emptyDecision` — fallback skeletons used when the
+ *   validated wrappers fall through (schema retries exhausted)
+ * - `decisionToPolicy` — translates a typed commander decision + the
+ *   supporting dept reports into a `PolicyEffect` the kernel applies
+ *
+ * All pure — no IO, no LLM calls, no global state.
  *
  * @module paracosm/runtime/parsers
  */
 
-import { extractJson } from '@framers/agentos';
 import type { Department } from '../engine/core/state.js';
 import type { DepartmentReport, CommanderDecision } from './contracts.js';
 import type { PolicyEffect } from '../engine/core/kernel.js';
@@ -26,96 +28,6 @@ import type { PolicyEffect } from '../engine/core/kernel.js';
  */
 export function humanizeToolName(name: string): string {
   return name.replace(/_v\d+$/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-}
-
-/**
- * Aggressively strip LLM summary boilerplate: leading markdown headings,
- * bold markers, list bullets, numbered prefixes, and the stock LLM
- * opening phrases ("Based on the analysis...", "In summary..."). Returns
- * the first 1–2 sentences or a 150-char truncation when no punctuation
- * is found.
- *
- * Returns an empty string when the input is pure JSON (starts with { or [)
- * so callers can fall through to richer alternatives.
- */
-export function cleanSummary(raw: string): string {
-  let s = raw
-    .replace(/^#{1,4}\s+/gm, '')
-    .replace(/\*\*/g, '')
-    .replace(/^[-*]\s+/gm, '')
-    .replace(/^\d+\.\s+/gm, '')
-    .replace(/^(Decision|Recommendation|Summary|Analysis|Conclusion|I recommend|My analysis|Based on|After careful|Given the|Looking at|The data|In conclusion|Therefore|Overall|To summarize|As a result|In summary|Considering|Upon review|Having analyzed)\s*:?\s*/gim, '')
-    .replace(/^(choose|select|go with|opt for|approve|we should|I suggest|I propose)\s+/i, '')
-    .replace(/^Option [A-C][.:,]\s*/i, '')
-    .replace(/\n+/g, ' ')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
-
-  if (s.startsWith('{') || s.startsWith('[')) return '';
-
-  const sentences = s.match(/[^.!?]+[.!?]/g) || [];
-  const result = sentences.slice(0, 2).join(' ').trim();
-  return result || s.slice(0, 150);
-}
-
-/**
- * Parse a commander's LLM response into a typed CommanderDecision.
- * JSON preferred; falls back to treating the entire text as a free-
- * form decision + rationale when no JSON body is recoverable.
- */
-export function parseCmdDecision(text: string, depts: Department[]): CommanderDecision {
-  // Strip any <thinking>...</thinking> reasoning block before looking for
-  // the JSON. The commander prompt now asks the model to reason step by
-  // step before emitting the decision JSON, so braces inside the
-  // reasoning prose (e.g. "effect id: {resource_shift}") would otherwise
-  // confuse extractJson's greedy brace match.
-  const stripped = text.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
-  const jsonStr = extractJson(stripped);
-  if (jsonStr) {
-    try {
-      const raw = JSON.parse(jsonStr);
-      if (raw.decision || raw.selectedOptionId) {
-        // Coerce rationale / decision to strings — models occasionally
-        // return them as arrays, which the UI then rendered as
-        // "[object Object]" or concatenated-with-commas prose.
-        const out: CommanderDecision = { ...emptyDecision(depts), ...raw };
-        if (Array.isArray(out.decision)) out.decision = (out.decision as unknown[]).filter(s => typeof s === 'string').join(' ');
-        if (Array.isArray(out.rationale)) out.rationale = (out.rationale as unknown[]).filter(s => typeof s === 'string').join('\n\n');
-        if (typeof out.decision !== 'string') out.decision = String(out.decision ?? '');
-        if (typeof out.rationale !== 'string') out.rationale = String(out.rationale ?? '');
-        return out;
-      }
-    } catch { /* fall through to salvage path */ }
-  }
-  // Salvage: parse failed (unescaped quote, truncation, bad escape).
-  // Pull the decision + rationale + option id out with targeted regex
-  // so we never leak raw JSON braces into the UI as the decision text.
-  const out = emptyDecision(depts);
-  const decisionField = stripped.match(/"decision"\s*:\s*"((?:\\.|[^"\\])*)"/);
-  const optionField = stripped.match(/"selectedOptionId"\s*:\s*"((?:\\.|[^"\\])*)"/);
-  const rationaleStringField = stripped.match(/"rationale"\s*:\s*"((?:\\.|[^"\\])*)"/);
-  const rationaleArrayField = stripped.match(/"rationale"\s*:\s*\[([\s\S]*?)\]/);
-  if (decisionField) out.decision = decisionField[1].replace(/\\"/g, '"').replace(/\\n/g, '\n');
-  if (optionField) (out as unknown as Record<string, unknown>).selectedOptionId = optionField[1];
-  if (rationaleStringField) {
-    out.rationale = rationaleStringField[1].replace(/\\"/g, '"').replace(/\\n/g, '\n');
-  } else if (rationaleArrayField) {
-    const strings = rationaleArrayField[1].match(/"((?:\\.|[^"\\])*)"/g) ?? [];
-    out.rationale = strings.map(s => s.slice(1, -1).replace(/\\"/g, '"').replace(/\\n/g, '\n')).join('\n\n');
-  }
-  // Last resort: if we still have nothing useful, strip JSON-looking
-  // chunks from the text so the UI shows prose, not braces.
-  if (!out.decision) {
-    const prose = text
-      .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
-      .replace(/\{[\s\S]*\}/g, '')
-      .trim();
-    out.decision = prose.slice(0, 300) || 'Commander response could not be parsed cleanly; see Reports for the full text.';
-  }
-  if (!out.rationale) {
-    out.rationale = out.decision;
-  }
-  return out;
 }
 
 /** Empty DepartmentReport skeleton. Every field a typed array/object so spreads are safe. */
