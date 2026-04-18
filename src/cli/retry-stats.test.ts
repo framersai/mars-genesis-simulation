@@ -4,9 +4,11 @@ import {
   aggregateSchemaRetries,
   aggregateForgeStats,
   aggregateCacheStats,
+  aggregateProviderErrors,
   type PerRunSchemaRetries,
   type PerRunForgeStats,
   type PerRunCacheStats,
+  type PerRunProviderErrors,
 } from './retry-stats.js';
 
 const emptyRun: PerRunSchemaRetries = {};
@@ -187,4 +189,42 @@ test('aggregateCacheStats skips runs with zero cache activity', () => {
 test('aggregateCacheStats returns readRatio:0 when no cache activity at all', () => {
   const agg = aggregateCacheStats([]);
   assert.equal(agg.readRatio, 0);
+});
+
+// -----------------------------------------------------------------------
+// aggregateProviderErrors
+// -----------------------------------------------------------------------
+
+test('aggregateProviderErrors returns zero rollup on empty runs', () => {
+  const agg = aggregateProviderErrors([]);
+  assert.deepEqual(agg, {
+    auth: 0, quota: 0, rate_limit: 0, network: 0, unknown: 0, total: 0, runsPresent: 0,
+  });
+});
+
+test('aggregateProviderErrors sums each kind across runs', () => {
+  const runs: PerRunProviderErrors[] = [
+    { auth: 0, quota: 3, rate_limit: 1, network: 0, unknown: 0, total: 4 },
+    { auth: 1, quota: 0, rate_limit: 2, network: 1, unknown: 1, total: 5 },
+  ];
+  const agg = aggregateProviderErrors(runs);
+  assert.equal(agg.auth, 1);
+  assert.equal(agg.quota, 3);
+  assert.equal(agg.rate_limit, 3);
+  assert.equal(agg.network, 1);
+  assert.equal(agg.unknown, 1);
+  assert.equal(agg.total, 9);
+  assert.equal(agg.runsPresent, 2);
+});
+
+test('aggregateProviderErrors skips runs with zero total', () => {
+  const runs: PerRunProviderErrors[] = [
+    { auth: 0, quota: 0, rate_limit: 0, network: 0, unknown: 0, total: 0 },
+    { auth: 0, quota: 1, rate_limit: 0, network: 0, unknown: 0, total: 1 },
+    { auth: 0, quota: 0, rate_limit: 0, network: 0, unknown: 0, total: 0 },
+  ];
+  const agg = aggregateProviderErrors(runs);
+  assert.equal(agg.runsPresent, 1);
+  assert.equal(agg.total, 1);
+  assert.equal(agg.quota, 1);
 });

@@ -35,11 +35,22 @@ export interface RetryStatsCaches {
   runsPresent: number;
 }
 
+export interface RetryStatsProviderErrors {
+  auth: number;
+  quota: number;
+  rate_limit: number;
+  network: number;
+  unknown: number;
+  total: number;
+  runsPresent: number;
+}
+
 export interface RetryStatsResponse {
   runCount: number;
   schemas: Record<string, RetryStatsSchemaBucket>;
   forges?: RetryStatsForges;
   caches?: RetryStatsCaches;
+  providerErrors?: RetryStatsProviderErrors;
 }
 
 export interface UseRetryStatsResult {

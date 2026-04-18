@@ -199,3 +199,50 @@ export function aggregateCacheStats(runs: PerRunCacheStats[]): CacheStatsRollup 
     runsPresent,
   };
 }
+
+/**
+ * Per-run provider-error counters. Keys match the classifier's
+ * ProviderErrorKind; `total` is the sum for dashboard rendering
+ * convenience.
+ */
+export interface PerRunProviderErrors {
+  auth: number;
+  quota: number;
+  rate_limit: number;
+  network: number;
+  unknown: number;
+  total: number;
+}
+
+/** Aggregate provider-error rollup across N runs. */
+export interface ProviderErrorsRollup {
+  auth: number;
+  quota: number;
+  rate_limit: number;
+  network: number;
+  unknown: number;
+  total: number;
+  /** Count of runs that recorded at least one provider error. */
+  runsPresent: number;
+}
+
+/**
+ * Fold per-run provider-error counters into a rollup. Runs without any
+ * classified errors are skipped (total === 0).
+ */
+export function aggregateProviderErrors(runs: PerRunProviderErrors[]): ProviderErrorsRollup {
+  const rollup: ProviderErrorsRollup = {
+    auth: 0, quota: 0, rate_limit: 0, network: 0, unknown: 0, total: 0, runsPresent: 0,
+  };
+  for (const run of runs) {
+    if (!run || run.total === 0) continue;
+    rollup.auth += run.auth;
+    rollup.quota += run.quota;
+    rollup.rate_limit += run.rate_limit;
+    rollup.network += run.network;
+    rollup.unknown += run.unknown;
+    rollup.total += run.total;
+    rollup.runsPresent += 1;
+  }
+  return rollup;
+}
