@@ -17,6 +17,7 @@ import type { LlmProvider } from '../engine/types.js';
 import { SCENARIOS } from './research/scenarios.js';
 import { generateValidatedObject } from './llm-invocations/generateValidatedObject.js';
 import { DirectorEventBatchSchema } from './schemas/director.js';
+import { buildTrajectoryCue } from './hexaco-cues/trajectory.js';
 
 /** Event category. Scenario-defined, not a fixed union. */
 export type EventCategory = string;
@@ -190,6 +191,7 @@ ${politicsLines ? `\nPOLITICS/SOCIAL:\n${politicsLines}` : ''}
 COMMANDER PERSONALITY (HEXACO):
 O: ${ctx.leaderHexaco.openness.toFixed(2)} C: ${ctx.leaderHexaco.conscientiousness.toFixed(2)} E: ${ctx.leaderHexaco.extraversion.toFixed(2)}
 A: ${ctx.leaderHexaco.agreeableness.toFixed(2)} Em: ${ctx.leaderHexaco.emotionality.toFixed(2)} HH: ${ctx.leaderHexaco.honestyHumility.toFixed(2)}
+${ctx.leaderHexacoHistory ? buildTrajectoryCue(ctx.leaderHexacoHistory, ctx.leaderHexaco) : ''}
 
 Use this profile to colour (not determine) the next event. A high-openness commander should face events that reward novel responses and punish rigid thinking. A high-conscientiousness commander should face events that reward procedure and expose improvisation gaps. A high-emotionality commander should face events that test how their human-impact weighting plays against the math. Events are not rigged against the commander; they reflect the colony they shaped. Two commanders with opposing profiles should diverge into genuinely different pressures by turn 3.
 
