@@ -14,6 +14,7 @@ import {
 } from './custom-scenarios.js';
 import { IpRateLimiter } from './rate-limiter.js';
 import { aggregateSchemaRetries, type PerRunSchemaRetries } from './retry-stats.js';
+import { createCompilerTelemetry, type CompilerTelemetry } from '../engine/compiler/telemetry.js';
 
 function projectScenarioForClient(sc: ScenarioPackage) {
   return {
@@ -586,6 +587,26 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Access-Control-Allow-Origin': '*' });
         res.write('event: status\ndata: {"status":"compiling"}\n\n');
 
+        // Forward every compile-hook fallback as an SSE event in real time
+        // so the dashboard surfaces degraded compiles instead of showing
+        // a silent success. The underlying aggregator still records the
+        // attempts + fallbacks for the /retry-stats ring buffer below.
+        const baseCompileTelemetry = createCompilerTelemetry();
+        const compileTelemetry: CompilerTelemetry = {
+          recordAttempt: (hookName, attempts, fromFallback) =>
+            baseCompileTelemetry.recordAttempt(hookName, attempts, fromFallback),
+          recordFallback: (hookName, details) => {
+            baseCompileTelemetry.recordFallback(hookName, details);
+            res.write(`event: compile_validation_fallback\ndata: ${JSON.stringify({
+              hookName,
+              attempts: details.attempts,
+              reason: details.reason,
+              rawTextExcerpt: (details.rawText ?? '').slice(-500),
+            })}\n\n`);
+          },
+          snapshot: () => baseCompileTelemetry.snapshot(),
+        };
+
         let compiled;
         try {
           compiled = await runCompileScenario(scenarioJson, {
@@ -596,6 +617,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
             seedUrl,
             webSearch: webSearch ?? true,
             maxSearches,
+            telemetry: compileTelemetry,
             onProgress(hookName: string, status: string) {
               res.write(`event: progress\ndata: ${JSON.stringify({ hook: hookName, status })}\n\n`);
             },
@@ -608,6 +630,30 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         activeScenario = compiled;
         memoryScenarios.set(compiled.id, compiled);
         customScenarioCatalog.set(compiled.id, { scenario: compiled, source: 'compiled' });
+
+        // Snapshot compile telemetry into the ring buffer so /retry-stats
+        // aggregates compile:* schemas alongside runtime schemas, and emit
+        // the rollup as SSE so the dashboard can render per-hook attempts
+        // and fallbacks immediately without polling the endpoint.
+        const compileSnap = compileTelemetry.snapshot();
+        if (Object.keys(compileSnap.schemaRetries).length > 0) {
+          retryRing.push(compileSnap.schemaRetries as PerRunSchemaRetries);
+          if (retryRing.length > RETRY_RING_MAX) {
+            retryRing.splice(0, retryRing.length - RETRY_RING_MAX);
+          }
+          persistRetryRing();
+        }
+        const perHookMetrics: Record<string, { attempts: number; fromFallback: boolean }> = {};
+        for (const [key, bucket] of Object.entries(compileSnap.schemaRetries)) {
+          perHookMetrics[key.replace(/^compile:/, '')] = {
+            attempts: bucket.attempts,
+            fromFallback: bucket.fallbacks > 0,
+          };
+        }
+        res.write(`event: compile_metrics\ndata: ${JSON.stringify({
+          hooks: perHookMetrics,
+          totalFallbacks: compileSnap.fallbacks.length,
+        })}\n\n`);
 
         res.write(`event: complete\ndata: ${JSON.stringify({ id: compiled.id, version: compiled.version, departments: compiled.departments.length, hooks: Object.keys(compiled.hooks).filter(k => (compiled.hooks as any)[k]).length })}\n\n`);
         res.end();
