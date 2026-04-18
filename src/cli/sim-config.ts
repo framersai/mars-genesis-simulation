@@ -212,14 +212,14 @@ export const DEFAULT_EXECUTION: SimulationExecutionConfig = {
  */
 export const DEMO_MODELS: Record<LlmProvider, SimulationModelConfig> = {
   openai: {
-    // Departments stay on mid-tier. A brief trial on nano produced
-    // forges whose sandboxed code ran safely but returned empty
-    // objects for every declared test output, so the judge rejected
-    // every tool and the reuse economy collapsed. Mid-tier is the
-    // minimum quality needed for the forge judge's correctness bar.
-    // The other demo savings (departmentMaxSteps: 2, explicit verdict
-    // model) still apply and are still cost-positive.
-    departments: 'gpt-5.4-mini',
+    // Departments moved to flagship. Mid-tier (gpt-5.4-mini) kept
+    // emitting inputSchema/outputSchema with additionalProperties:true
+    // and no declared properties, so every forge hit the pre-judge
+    // shape validator and failed. Flagship reliably follows the
+    // worked-example schema format in the forge prompt. The extra
+    // cost is bounded by departmentMaxSteps: 2 and the judge staying
+    // on nano for cheap pass/fail review.
+    departments: 'gpt-5.4',
     commander: 'gpt-5.4-nano',
     director: 'gpt-5.4-nano',
     judge: 'gpt-5.4-nano',
