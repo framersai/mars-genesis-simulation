@@ -90,8 +90,40 @@ test('aggregateForgeStats returns zero rollup on empty runs array', () => {
     totalUniqueApproved: 0,
     totalUniqueTerminalRejections: 0,
     uniqueApprovalRate: 0,
+    rejectionReasons: {
+      schema_extra_field: 0,
+      shape_check: 0,
+      parse_error: 0,
+      judge_correctness: 0,
+      other: 0,
+    },
     runsPresent: 0,
   });
+});
+
+test('aggregateForgeStats sums rejectionReasons histograms across runs', () => {
+  const runs: PerRunForgeStats[] = [
+    {
+      attempts: 3, approved: 1, rejected: 2, approvedConfidenceSum: 0.9,
+      rejectionReasons: { schema_extra_field: 2, shape_check: 0, parse_error: 0, judge_correctness: 0, other: 0 },
+    },
+    {
+      attempts: 4, approved: 2, rejected: 2, approvedConfidenceSum: 1.8,
+      rejectionReasons: { schema_extra_field: 1, shape_check: 1, parse_error: 0, judge_correctness: 0, other: 0 },
+    },
+  ];
+  const agg = aggregateForgeStats(runs);
+  assert.equal(agg.rejectionReasons.schema_extra_field, 3);
+  assert.equal(agg.rejectionReasons.shape_check, 1);
+  assert.equal(agg.rejectionReasons.parse_error, 0);
+});
+
+test('aggregateForgeStats treats v4 entries without rejectionReasons as zero', () => {
+  const runs: PerRunForgeStats[] = [
+    { attempts: 3, approved: 1, rejected: 2, approvedConfidenceSum: 0.9 },
+  ];
+  const agg = aggregateForgeStats(runs);
+  assert.equal(agg.rejectionReasons.schema_extra_field, 0);
 });
 
 test('aggregateForgeStats sums unique-tool metrics across runs', () => {

@@ -111,6 +111,15 @@ export interface PerRunForgeStats {
   uniqueApproved?: number;
   /** Count of unique names that were only ever rejected. */
   uniqueTerminalRejections?: number;
+  /** Rejection-reason histogram. Optional for back-compat with entries
+   *  written before 2026-04-18. */
+  rejectionReasons?: {
+    schema_extra_field: number;
+    shape_check: number;
+    parse_error: number;
+    judge_correctness: number;
+    other: number;
+  };
 }
 
 /** Aggregate rollup across N runs' forge stats. */
@@ -132,6 +141,16 @@ export interface ForgeStatsRollup {
    *  "eventually-approved" rate — closer to the real quality signal than
    *  raw approvalRate when the retry loop re-forges under the same name. */
   uniqueApprovalRate: number;
+  /** Summed rejection-reason histogram across all runs. Lets operators
+   *  see the failure-mode distribution over time (e.g. did the
+   *  2026-04-18 forge-guidance prompt fix cut schema_extra_field). */
+  rejectionReasons: {
+    schema_extra_field: number;
+    shape_check: number;
+    parse_error: number;
+    judge_correctness: number;
+    other: number;
+  };
   /** Count of runs in the window that recorded at least one forge attempt. */
   runsPresent: number;
 }
@@ -151,6 +170,13 @@ export function aggregateForgeStats(runs: PerRunForgeStats[]): ForgeStatsRollup 
   let totalUniqueApproved = 0;
   let totalUniqueTerminalRejections = 0;
   let runsPresent = 0;
+  const rejectionReasons = {
+    schema_extra_field: 0,
+    shape_check: 0,
+    parse_error: 0,
+    judge_correctness: 0,
+    other: 0,
+  };
   for (const run of runs) {
     if (!run || run.attempts === 0) continue;
     totalAttempts += run.attempts;
@@ -160,6 +186,13 @@ export function aggregateForgeStats(runs: PerRunForgeStats[]): ForgeStatsRollup 
     totalUniqueNames += run.uniqueNames ?? 0;
     totalUniqueApproved += run.uniqueApproved ?? 0;
     totalUniqueTerminalRejections += run.uniqueTerminalRejections ?? 0;
+    if (run.rejectionReasons) {
+      rejectionReasons.schema_extra_field += run.rejectionReasons.schema_extra_field;
+      rejectionReasons.shape_check += run.rejectionReasons.shape_check;
+      rejectionReasons.parse_error += run.rejectionReasons.parse_error;
+      rejectionReasons.judge_correctness += run.rejectionReasons.judge_correctness;
+      rejectionReasons.other += run.rejectionReasons.other;
+    }
     runsPresent += 1;
   }
   return {
@@ -172,6 +205,7 @@ export function aggregateForgeStats(runs: PerRunForgeStats[]): ForgeStatsRollup 
     totalUniqueApproved,
     totalUniqueTerminalRejections,
     uniqueApprovalRate: totalUniqueNames > 0 ? round(totalUniqueApproved / totalUniqueNames, 4) : 0,
+    rejectionReasons,
     runsPresent,
   };
 }
