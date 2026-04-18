@@ -25,6 +25,8 @@ import type { SimulationKernel } from '../engine/core/kernel.js';
 import type { ScenarioPackage, LeaderConfig } from '../engine/types.js';
 import type { CallUsage } from './cost-tracker.js';
 import { buildPromotionPrompt } from './runtime-helpers.js';
+import { sendAndValidate } from './llm-invocations/sendAndValidate.js';
+import { PromotionsSchema } from './schemas/commander.js';
 
 /**
  * Build a "Your decision style" block from the leader's HEXACO profile.
@@ -138,21 +140,22 @@ export async function runDepartmentPromotions(args: RunPromotionArgs): Promise<v
     }).join('\n')}`;
   }).join('\n\n');
 
-  const promoResult = await sendToCommander(buildPromotionPrompt(candidateSummaries));
-  trackUsage(promoResult, 'commander');
-
-  const promoMatch = promoResult.text.match(/\{[\s\S]*"promotions"[\s\S]*\}/);
-  if (promoMatch) {
+  const { object: promoDecision, fromFallback } = await sendAndValidate({
+    session: { send: sendToCommander as (p: string) => Promise<{ text: string; usage?: any }> },
+    prompt: buildPromotionPrompt(candidateSummaries),
+    schema: PromotionsSchema,
+    onUsage: (r) => trackUsage({ usage: r.usage as CallUsage }, 'commander'),
+    fallback: { promotions: [] },
+  });
+  if (fromFallback) {
+    console.log('  [promotion] schema fallback; commander promotions skipped (fallback pass below will fill)');
+  }
+  for (const p of promoDecision.promotions) {
     try {
-      const pd = JSON.parse(promoMatch[0]);
-      for (const p of pd.promotions || []) {
-        try {
-          kernel.promoteAgent(p.agentId, p.department, p.role, leader.name);
-          console.log(`  ✦ ${p.agentId} → ${p.role}: ${p.reason?.slice(0, 80)}`);
-          emit('promotion', { agentId: p.agentId, department: p.department, role: p.role, reason: p.reason?.slice(0, 120) });
-        } catch (err) { console.log(`  ✦ Promotion failed: ${err}`); }
-      }
-    } catch (e) { console.warn('  [promotion] Failed to parse promotion JSON:', e); }
+      kernel.promoteAgent(p.agentId, p.department as Department, p.role, leader.name);
+      console.log(`  ✦ ${p.agentId} → ${p.role}: ${p.reason?.slice(0, 80)}`);
+      emit('promotion', { agentId: p.agentId, department: p.department, role: p.role, reason: p.reason?.slice(0, 120) });
+    } catch (err) { console.log(`  ✦ Promotion failed: ${err}`); }
   }
 
   // Fallback: promote the top candidate for any department the commander
