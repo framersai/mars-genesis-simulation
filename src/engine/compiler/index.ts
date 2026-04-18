@@ -177,11 +177,7 @@ export async function compileScenario(
         break;
       }
       case 'milestones': {
-        const result = await generateMilestones(json, genText, {
-          provider,
-          model,
-          telemetry: options.telemetry,
-        });
+        const result = await generateMilestones(json, genText, { telemetry: options.telemetry });
         hooks.getMilestoneEvent = result.hook;
         if (cache) writeCache(json, hookName, result.source, model, cacheDir);
         break;
