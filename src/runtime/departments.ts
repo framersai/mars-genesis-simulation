@@ -1,6 +1,7 @@
 import type { Department, SimulationState, Agent } from '../engine/core/state.js';
 import type { DepartmentReport, CrisisResearchPacket } from './contracts.js';
 import type { Scenario } from '../engine/types.js';
+import { buildTrajectoryCue } from './hexaco-cues/trajectory.js';
 
 export interface DepartmentConfig {
   department: Department;
@@ -149,9 +150,10 @@ export function buildDepartmentContext(
       'YOUR PERSONALITY PROFILE (evolves over time based on leadership and experience):',
       `Openness: ${h.openness.toFixed(2)} | Conscientiousness: ${h.conscientiousness.toFixed(2)} | Extraversion: ${h.extraversion.toFixed(2)}`,
       `Agreeableness: ${h.agreeableness.toFixed(2)} | Emotionality: ${h.emotionality.toFixed(2)} | Honesty-Humility: ${h.honestyHumility.toFixed(2)}`,
-      ...cues,
-      '',
     );
+    const trajectory = buildTrajectoryCue(leader.hexacoHistory, leader.hexaco);
+    if (trajectory) hexacoBlock.push(trajectory);
+    hexacoBlock.push(...cues, '');
   }
 
   // Build memory block from previous turns
