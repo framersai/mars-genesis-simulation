@@ -69,8 +69,8 @@ export function ColonistSearch({ value, onChange, matches, onPick }: ColonistSea
         onChange={e => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setTimeout(() => setFocused(false), 120)}
-        placeholder="colonist name… (press / to focus)"
-        aria-label="Search colonist by name"
+        placeholder="name, dept, mood… (space-separate to AND-match; / to focus)"
+        aria-label="Search colonists by name, department, role, or mood"
         style={{
           flex: 1,
           minWidth: 0,

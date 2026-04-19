@@ -680,6 +680,63 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
                 ? ` · psych ${Math.round(hovered.cell.psychScore * 100)}%`
                 : ''}
             </div>
+            {snapshotHistory && snapshotHistory.length >= 2 && (() => {
+              const sW = 140;
+              const sH = 20;
+              const pad = 2;
+              const trail: number[] = [];
+              for (const s of snapshotHistory) {
+                const match = s.cells.find(c => c.agentId === hovered.cell.agentId);
+                if (match && typeof match.psychScore === 'number') {
+                  trail.push(Math.max(0, Math.min(1, match.psychScore)));
+                }
+              }
+              if (trail.length < 2) return null;
+              const stepX = (sW - pad * 2) / Math.max(1, trail.length - 1);
+              const path = trail
+                .map((v, i) => {
+                  const x = pad + i * stepX;
+                  const y = pad + (1 - v) * (sH - pad * 2);
+                  return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+                })
+                .join(' ');
+              return (
+                <div style={{ marginTop: 4 }}>
+                  <div style={{ fontSize: 7, color: 'var(--text-4)', letterSpacing: '0.1em' }}>
+                    PSYCH TRAJECTORY
+                  </div>
+                  <svg
+                    viewBox={`0 0 ${sW} ${sH}`}
+                    preserveAspectRatio="none"
+                    style={{
+                      display: 'block',
+                      width: sW,
+                      height: sH,
+                      background: 'var(--bg-deep)',
+                      borderRadius: 2,
+                      marginTop: 2,
+                    }}
+                  >
+                    <line
+                      x1={pad}
+                      x2={sW - pad}
+                      y1={pad + (sH - pad * 2) / 2}
+                      y2={pad + (sH - pad * 2) / 2}
+                      stroke="var(--border)"
+                      strokeWidth={0.4}
+                      strokeDasharray="2 2"
+                    />
+                    <path d={path} fill="none" stroke={sideColor} strokeWidth={1} />
+                    <circle
+                      cx={pad + (trail.length - 1) * stepX}
+                      cy={pad + (1 - trail[trail.length - 1]) * (sH - pad * 2)}
+                      r={1.6}
+                      fill={sideColor}
+                    />
+                  </svg>
+                </div>
+              );
+            })()}
             <div style={{ marginTop: 3, fontSize: 8, color: 'var(--text-4)' }}>
               click for drilldown
             </div>
