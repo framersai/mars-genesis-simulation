@@ -25,6 +25,7 @@ import {
 } from './retry-stats.js';
 import { createCompilerTelemetry, type CompilerTelemetry } from '../engine/compiler/telemetry.js';
 import { openSessionStore, type SessionStore, type TimestampedEvent } from './session-store.js';
+import { generateSessionTitle } from './session-title.js';
 import { resolveServerMode } from './server/server-mode.js';
 import { createRunRecord, hashLeaderConfig } from './server/run-record.js';
 import { createNoopRunHistoryStore, type RunHistoryStore } from './server/run-history-store.js';
@@ -464,6 +465,30 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         eventCount: events.length,
         turnCount: turnDoneCount,
         totalStored: storeCount,
+      });
+      // Title-generation pipeline: fire-and-forget nano-tier LLM call
+      // off the save hot path. A failed / slow title call must not
+      // block the broadcast pipeline, so the promise is intentionally
+      // unawaited. Emits a second `sim_saved` event when the title
+      // lands so the dashboard can patch its in-memory session list
+      // without a round-trip to /sessions.
+      const titleProvider = simConfig?.provider === 'anthropic' ? 'anthropic' : 'openai';
+      const store = sessionStore; // non-null inside this closure
+      void generateSessionTitle(events, titleProvider, runGenerateText).then((title) => {
+        if (!title) return;
+        try {
+          store.updateTitle(result.id, title);
+          console.log(`[sessions] titled run ${result.id}: "${title}"`);
+          try {
+            broadcast('sim_saved', {
+              status: 'titled',
+              id: result.id,
+              title,
+            });
+          } catch { /* broadcast failure must not crash the title pipeline */ }
+        } catch (err) {
+          console.warn('[sessions] title update failed:', err);
+        }
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

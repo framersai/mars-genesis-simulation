@@ -26,6 +26,10 @@ export interface StoredSessionMeta {
   eventCount: number;
   durationMs?: number;
   totalCostUSD?: number;
+  /** LLM-generated narrative title, e.g. "Aria's Cautious Descent".
+   *  Populated asynchronously after the save lands; may be absent on
+   *  rows from pre-titling deploys or where the title LLM call failed. */
+  title?: string;
 }
 
 export type SessionsStatus = 'loading' | 'ready' | 'unavailable' | 'error';

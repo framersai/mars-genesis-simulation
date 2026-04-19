@@ -50,6 +50,14 @@ export interface SessionMeta {
   durationMs?: number;
   /** Total cost in USD reported by the run's cost tracker, when available. */
   totalCostUSD?: number;
+  /**
+   * Short LLM-generated narrative title for the run, e.g.
+   * "Aria's Cautious Descent" or "Engineering Wins on Turn 4".
+   * Set asynchronously after `saveSession` returns via `updateTitle`;
+   * `null` for rows saved before the titling pipeline ran or when the
+   * title LLM call failed.
+   */
+  title?: string | null;
 }
 
 /** A full session record, including the event payload for replay. */
@@ -93,6 +101,13 @@ export interface SessionStore {
   getSession(id: string): StoredSession | null;
   /** Number of currently stored sessions. Useful for tests + smoke checks. */
   count(): number;
+  /**
+   * Overwrite the title for a stored session. No-op when the id does
+   * not exist. Surfaced separately so the title pipeline can run
+   * asynchronously after the sync `saveSession` returns — a failed or
+   * slow title LLM call must not block the save itself.
+   */
+  updateTitle(id: string, title: string): void;
   /** Releases the database handle. */
   close(): void;
 }
@@ -131,6 +146,18 @@ export function openSessionStore(dbPath: string, maxSessions: number = DEFAULT_M
     CREATE INDEX IF NOT EXISTS idx_sessions_createdAt ON sessions(createdAt);
   `);
 
+  // Idempotent schema migration: add `title` on existing DBs without
+  // dropping them. SQLite errors if the column is already present; the
+  // `PRAGMA table_info` check makes this a no-op on newer DBs while
+  // keeping one-file databases migrating cleanly in-place on reopen.
+  const columns = db
+    .prepare<unknown[], { name: string }>('PRAGMA table_info(sessions)')
+    .all()
+    .map((r) => r.name);
+  if (!columns.includes('title')) {
+    db.exec('ALTER TABLE sessions ADD COLUMN title TEXT');
+  }
+
   const insertStmt = db.prepare(`
     INSERT INTO sessions
       (id, createdAt, scenarioId, scenarioName, leaderA, leaderB, turnCount, eventCount, durationMs, totalCostUSD, events)
@@ -143,10 +170,11 @@ export function openSessionStore(dbPath: string, maxSessions: number = DEFAULT_M
   const deleteStmt = db.prepare('DELETE FROM sessions WHERE id = ?');
   const countStmt = db.prepare<unknown[], { c: number }>('SELECT COUNT(*) AS c FROM sessions');
   const listStmt = db.prepare<unknown[], SessionMetaRow>(
-    `SELECT id, createdAt, scenarioId, scenarioName, leaderA, leaderB, turnCount, eventCount, durationMs, totalCostUSD
+    `SELECT id, createdAt, scenarioId, scenarioName, leaderA, leaderB, turnCount, eventCount, durationMs, totalCostUSD, title
      FROM sessions ORDER BY createdAt DESC`,
   );
   const getStmt = db.prepare<[string], SessionRow>('SELECT * FROM sessions WHERE id = ?');
+  const updateTitleStmt = db.prepare('UPDATE sessions SET title = ? WHERE id = ?');
 
   return {
     saveSession(events, override) {
@@ -200,6 +228,16 @@ export function openSessionStore(dbPath: string, maxSessions: number = DEFAULT_M
       return countStmt.get()?.c ?? 0;
     },
 
+    updateTitle(id, title) {
+      // Trim + cap so a runaway LLM response can't bloat the metadata
+      // row. 120 chars is generous for "Aria's Cautious Mars Descent"
+      // style titles while still guarding against JSON hallucinations
+      // that pack reasoning into the title field.
+      const clean = title.trim().slice(0, 120);
+      if (!clean) return;
+      updateTitleStmt.run(clean, id);
+    },
+
     close() {
       db.close();
     },
@@ -218,6 +256,7 @@ interface SessionMetaRow {
   eventCount: number;
   durationMs: number | null;
   totalCostUSD: number | null;
+  title: string | null;
 }
 
 interface SessionRow extends SessionMetaRow {
@@ -237,6 +276,7 @@ function rowToMeta(row: SessionMetaRow): SessionMeta {
   if (row.turnCount != null) meta.turnCount = row.turnCount;
   if (row.durationMs != null) meta.durationMs = row.durationMs;
   if (row.totalCostUSD != null) meta.totalCostUSD = row.totalCostUSD;
+  if (row.title) meta.title = row.title;
   return meta;
 }
 
