@@ -9,6 +9,14 @@ import { drawHud } from './HudLayer.js';
 import { drawLines } from './LinesLayer.js';
 import { drawDeptRings } from './DeptRingsLayer.js';
 import { drawGhostTrail } from './GhostTrailLayer.js';
+import {
+  createGolState,
+  seedFromColonists,
+  tickGol,
+  drawGol,
+  DEFAULT_GOL_CONFIG,
+  type GolState,
+} from './GameOfLifeLayer.js';
 import { useGridState, type ForgeAttempt, type ReuseCall } from './useGridState.js';
 import { computeDeptCenters } from './deptCenters.js';
 import { GridRenderer } from '../../../lib/webgl/gridRenderer.js';
@@ -201,6 +209,14 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
    *  the render effect reads `.current` inline. */
   const pulseRef = useRef<number>(0);
   const lastTurnRef = useRef<number>(-1);
+  // Conway Game of Life overlay state. Persistent across renders so
+  // the discrete-cell pattern evolves continuously rather than
+  // resetting every frame. Re-seeded when the turn changes (new
+  // colonist positions) and every N frames thereafter to keep sparse
+  // populations from extinguishing the grid. User feedback that the
+  // canvas felt "not like Game of Life" prompted adding an actual
+  // discrete-cell CA on top of the continuous RD field.
+  const golStateRef = useRef<GolState>(createGolState(DEFAULT_GOL_CONFIG.cols, DEFAULT_GOL_CONFIG.rows));
   // Relationship-flare: when a colonist is clicked, brighten their
   // partner/child arcs briefly (~1s decay). Ref, not state, so the
   // decay itself doesn't force re-render — consumed in the render
@@ -492,6 +508,35 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
       (cs && hexToRgba(cs.getPropertyValue('--text-2').trim(), 0.7)) ||
       'rgba(216, 204, 176, 0.7)';
     ctx.clearRect(0, 0, size.w, size.h);
+    // Conway Game of Life pass — discrete-cell pattern layered UNDER
+    // the seeds / glyphs / HUD so the colonist markers still read as
+    // the primary foreground. Re-seed every ~6 frames so sparse
+    // populations don't extinguish the pattern; evolve every other
+    // frame so the Conway animation is visible but doesn't burn
+    // 60fps of CPU on the double-buffer copy.
+    const gol = golStateRef.current;
+    if (snapshot.turn !== lastTurnRef.current || gol.frame % 6 === 0) {
+      seedFromColonists(gol, snapshot.cells, positions, size.w, size.h);
+    }
+    if (!reducedMotion && gol.frame % 2 === 0) {
+      tickGol(gol);
+    } else {
+      // Still bump the frame counter under reduced-motion so the
+      // re-seed cadence above keeps firing.
+      gol.frame += 1;
+    }
+    // GoL layer dims with the same mode-config as the RD field so
+    // ecology / forge don't drown the strip / forge-flare overlays.
+    // 0.7x the resolved fieldIntensity gives the pattern enough
+    // contrast to read against the RD biome without washing it out.
+    drawGol(
+      ctx,
+      gol,
+      size.w,
+      size.h,
+      mode === 'mood' ? moodTintedSideColor : sideColor,
+      fieldIntensity * 0.7,
+    );
     if (mode !== 'ecology') drawSeeds(ctx, snapshot.cells, positions);
     if (mode !== 'ecology' && settings.deptRings) drawDeptRings(ctx, snapshot.cells, positions);
     if (settings.ghostTrail && previousSnapshot) {
