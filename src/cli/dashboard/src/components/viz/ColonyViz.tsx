@@ -34,6 +34,7 @@ import { useMediaQuery, NARROW_QUERY } from './grid/useMediaQuery.js';
 import { TimelineSparkline } from './grid/TimelineSparkline.js';
 import { EventChronicle } from './grid/EventChronicle.js';
 import { TurnProgress } from './grid/TurnProgress.js';
+import { ColonistSearch } from './grid/ColonistSearch.js';
 
 /** Tiny keyboard-shortcut chip for the footer legend. Kept local since
  *  it's only used in the viz tab footer. */
@@ -194,6 +195,129 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
   const [hoveredA, setHoveredA] = useState<string | null>(null);
   const [hoveredB, setHoveredB] = useState<string | null>(null);
   const [hoveredTurn, setHoveredTurn] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  // Latest crisis event that hasn't been dismissed — drives the toast
+  // banner. Keyed by turn + category so the same crisis is announced
+  // once per turn across both leaders.
+  const [crisisToast, setCrisisToast] = useState<{
+    key: string;
+    side: 'a' | 'b';
+    turn: number;
+    category: string;
+    title: string;
+    expiresAt: number;
+  } | null>(null);
+
+  // Scan both event streams for the most recent un-toasted crisis.
+  useEffect(() => {
+    const crisisKinds = new Set(['event_start', 'director_crisis']);
+    const seen = new Set<string>();
+    type Evt = { type: string; turn?: number; data?: Record<string, unknown> };
+    const findLatest = () => {
+      let best: { key: string; side: 'a' | 'b'; turn: number; category: string; title: string } | null = null;
+      for (const side of ['a', 'b'] as const) {
+        const events = state[side].events as Evt[];
+        for (let i = events.length - 1; i >= 0; i--) {
+          const e = events[i];
+          if (!crisisKinds.has(e.type)) continue;
+          const turn = Number(e.turn ?? e.data?.turn ?? 0);
+          const cat = typeof e.data?.category === 'string' ? e.data.category : '';
+          if (!cat) continue;
+          const key = `${side}:${turn}:${cat}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const title = typeof e.data?.title === 'string' ? e.data.title : '';
+          if (!best || turn > best.turn) {
+            best = { key, side, turn, category: cat, title };
+          }
+          break;
+        }
+      }
+      return best;
+    };
+    const latest = findLatest();
+    if (!latest) return;
+    setCrisisToast(prev => {
+      if (prev && prev.key === latest.key) return prev;
+      return { ...latest, expiresAt: performance.now() + 5500 };
+    });
+  }, [state.a.events, state.b.events]);
+
+  // Dismiss crisis toast after timeout.
+  useEffect(() => {
+    if (!crisisToast) return;
+    const remaining = crisisToast.expiresAt - performance.now();
+    if (remaining <= 0) {
+      setCrisisToast(null);
+      return;
+    }
+    const id = setTimeout(() => setCrisisToast(null), remaining);
+    return () => clearTimeout(id);
+  }, [crisisToast]);
+
+  // Palette cycler — cycles through warm amber (default), cool cyan,
+  // monochrome. Persists to localStorage.
+  type PaletteKey = 'amber' | 'cool' | 'mono';
+  const [palette, setPaletteState] = useState<PaletteKey>(() => {
+    try {
+      const raw = localStorage.getItem('paracosm:gridPalette');
+      if (raw === 'cool' || raw === 'mono' || raw === 'amber') return raw;
+    } catch {
+      /* silent */
+    }
+    return 'amber';
+  });
+  const setPalette = useCallback((p: PaletteKey) => {
+    setPaletteState(p);
+    try {
+      localStorage.setItem('paracosm:gridPalette', p);
+    } catch {
+      /* silent */
+    }
+  }, []);
+  const cyclePalette = useCallback(() => {
+    setPalette(palette === 'amber' ? 'cool' : palette === 'cool' ? 'mono' : 'amber');
+  }, [palette, setPalette]);
+
+  // Export the current viz as a composed PNG. Rasterises TurnBanner +
+  // the two canvases into an offscreen canvas at 2x for retina
+  // downloads.
+  const vizRootRef = useRef<HTMLDivElement | null>(null);
+  const handleExportPng = useCallback(() => {
+    const root = vizRootRef.current;
+    if (!root) return;
+    const allCanvases = Array.from(root.querySelectorAll('canvas')) as HTMLCanvasElement[];
+    if (allCanvases.length === 0) return;
+    const rootRect = root.getBoundingClientRect();
+    const scale = 2;
+    const out = document.createElement('canvas');
+    out.width = Math.round(rootRect.width * scale);
+    out.height = Math.round(rootRect.height * scale);
+    const ctx = out.getContext('2d');
+    if (!ctx) return;
+    ctx.fillStyle = getComputedStyle(root).getPropertyValue('--bg-deep').trim() || '#0a0806';
+    ctx.fillRect(0, 0, out.width, out.height);
+    ctx.scale(scale, scale);
+    for (const c of allCanvases) {
+      const r = c.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) continue;
+      ctx.drawImage(c, r.left - rootRect.left, r.top - rootRect.top, r.width, r.height);
+    }
+    out.toBlob(
+      blob => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `paracosm-viz-t${currentTurn + 1}-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      },
+      'image/png',
+    );
+  }, [currentTurn]);
   // Scene-transition vignette — briefly dims the whole viz when the
   // user jumps the playhead more than 1 turn in either direction.
   const [vignetteKey, setVignetteKey] = useState(0);
@@ -407,8 +531,17 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
     const prevSnapB = currentTurn > 0
       ? (snapsB[currentTurn - 1] ?? snapsB[snapsB.length - 2])
       : undefined;
+    const q = searchQuery.trim().toLowerCase();
+    const searchMatchCount = q
+      ? (snapA?.cells.filter(c => c.alive && c.name.toLowerCase().includes(q)).length ?? 0) +
+        (snapB?.cells.filter(c => c.alive && c.name.toLowerCase().includes(q)).length ?? 0)
+      : 0;
     return (
-      <div className="viz-content" style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', position: 'relative' }}>
+      <div
+        ref={vizRootRef}
+        className="viz-content"
+        style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', position: 'relative' }}
+      >
         <TurnBanner state={state} currentTurn={currentTurn} />
         <div
           style={{
@@ -435,6 +568,52 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
                 }}
               />
             </div>
+            <button
+              type="button"
+              onClick={cyclePalette}
+              aria-label={`Palette: ${palette}. Click to cycle.`}
+              title={`Palette: ${palette.toUpperCase()} (click to cycle)`}
+              style={{
+                padding: '0 8px',
+                background:
+                  palette === 'amber'
+                    ? 'linear-gradient(135deg, #e8b44a 0 40%, #c44a1e 100%)'
+                    : palette === 'cool'
+                    ? 'linear-gradient(135deg, #4ecdc4 0 40%, #9b6bd8 100%)'
+                    : 'linear-gradient(135deg, #f5f0e4 0 40%, #6b5f50 100%)',
+                color: palette === 'mono' ? '#0a0806' : '#0a0806',
+                border: '1px solid var(--border)',
+                borderRadius: 3,
+                cursor: 'pointer',
+                fontFamily: 'var(--mono)',
+                fontSize: 9,
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {palette}
+            </button>
+            <button
+              type="button"
+              onClick={handleExportPng}
+              aria-label="Export current frame as PNG"
+              title="Export PNG"
+              style={{
+                padding: '0 10px',
+                background: 'var(--bg-card)',
+                color: 'var(--text-3)',
+                border: '1px solid var(--border)',
+                borderRadius: 3,
+                cursor: 'pointer',
+                fontFamily: 'var(--mono)',
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+              }}
+            >
+              PNG
+            </button>
             <button
               type="button"
               onClick={() => setHelpOpen(true)}
@@ -467,6 +646,11 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
             {gridModeHint(gridMode)}
           </div>
         </div>
+        <ColonistSearch
+          value={searchQuery}
+          onChange={setSearchQuery}
+          matchCount={searchMatchCount}
+        />
         <TurnProgress
           eventsA={state.a.events as Array<{ type: string; turn?: number; data?: Record<string, unknown> }>}
           eventsB={state.b.events as Array<{ type: string; turn?: number; data?: Record<string, unknown> }>}
@@ -525,6 +709,8 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
             divergedIds={divergenceData.aliveOnlyA}
             siblingHoveredId={hoveredB}
             onHoverChange={setHoveredA}
+            searchQuery={searchQuery}
+            palette={palette === 'cool' ? 1 : palette === 'mono' ? 2 : 0}
             onOpenChat={handleOpenChat}
           />
           <LivingColonyGrid
@@ -544,6 +730,8 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
             divergedIds={divergenceData.aliveOnlyB}
             siblingHoveredId={hoveredA}
             onHoverChange={setHoveredB}
+            searchQuery={searchQuery}
+            palette={palette === 'cool' ? 1 : palette === 'mono' ? 2 : 0}
             onOpenChat={handleOpenChat}
           />
         </div>
@@ -603,6 +791,57 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
             : ''}
         </div>
         <GridHelpOverlay open={helpOpen} onClose={() => setHelpOpen(false)} />
+        {crisisToast && (
+          <div
+            key={crisisToast.key}
+            role="status"
+            aria-live="polite"
+            onClick={() => setCrisisToast(null)}
+            style={{
+              position: 'absolute',
+              top: 8,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              maxWidth: 520,
+              width: 'calc(100% - 24px)',
+              padding: '8px 14px',
+              background: 'rgba(14, 11, 9, 0.92)',
+              border: `1px solid ${crisisToast.side === 'a' ? 'var(--vis)' : 'var(--eng)'}`,
+              borderLeft: '3px solid var(--rust)',
+              borderRadius: 4,
+              fontFamily: 'var(--sans)',
+              fontSize: 12,
+              color: 'var(--text-1)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.6)',
+              zIndex: 30,
+              cursor: 'pointer',
+              animation: 'paracosm-toast-in 280ms ease-out',
+            }}
+            title="Click to dismiss"
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                fontSize: 9,
+                fontFamily: 'var(--mono)',
+                letterSpacing: '0.12em',
+                color: 'var(--rust)',
+                textTransform: 'uppercase',
+                marginBottom: 2,
+              }}
+            >
+              <span>\u26A1 Crisis</span>
+              <span style={{ color: 'var(--text-3)' }}>
+                {crisisToast.side.toUpperCase()} · T{crisisToast.turn} · {crisisToast.category}
+              </span>
+            </div>
+            <div style={{ fontSize: 13, lineHeight: 1.3 }}>
+              {crisisToast.title || `${crisisToast.category} crisis unfolding`}
+            </div>
+          </div>
+        )}
         {vignetteKey > 0 && (
           <div
             key={vignetteKey}
@@ -623,6 +862,10 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
             0% { opacity: 0; }
             25% { opacity: 1; }
             100% { opacity: 0; }
+          }
+          @keyframes paracosm-toast-in {
+            0% { opacity: 0; transform: translate(-50%, -8px); }
+            100% { opacity: 1; transform: translate(-50%, 0); }
           }
         `}</style>
       </div>
