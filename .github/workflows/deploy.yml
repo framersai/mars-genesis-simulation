@@ -14,7 +14,12 @@ permissions:
   pages: write
 
 env:
-  NODE_VERSION: '22'
+  # Node 24 ships npm 11.x which matches the developer-machine npm that
+  # authors lockfile updates. Pinning Node 22 (npm 10.x) caused the
+  # lockfile-sync preflight to fail on every push because npm 10 and
+  # npm 11 disagree on transitive entries (`@tailwindcss/oxide-wasm32-wasi`
+  # bundled deps) and `peer: true` markers on optional peers.
+  NODE_VERSION: '24'
   # SERVER_IP + APP_DIR resolved from GitHub Actions repo secrets so
   # deploy topology isn't encoded in the public workflow file. Set both
   # at repo → Settings → Secrets and variables → Actions → Secrets.
