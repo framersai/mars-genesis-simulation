@@ -44,6 +44,7 @@ import { useSoundCues } from './grid/useSoundCues.js';
 import { RunSummaryDrawer } from './grid/RunSummaryDrawer.js';
 import { ForgeLineageModal, type ForgeLineagePayload } from './grid/ForgeLineageModal.js';
 import { ExportMenu } from './grid/ExportMenu.js';
+import { useScenarioLabels } from '../../hooks/useScenarioLabels.js';
 
 /** Tiny keyboard-shortcut chip for the footer legend. Kept local since
  *  it's only used in the viz tab footer. */
@@ -201,6 +202,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
 
   const [helpOpen, setHelpOpen] = useState(false);
   const scenario = useScenarioContext();
+  const scenarioLabels = useScenarioLabels();
   const [hoveredA, setHoveredA] = useState<string | null>(null);
   const [hoveredB, setHoveredB] = useState<string | null>(null);
   const [hoveredTurn, setHoveredTurn] = useState<number | null>(null);
@@ -765,7 +767,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
         flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
         color: 'var(--text-3)', fontSize: 13,
       }}>
-        Run a simulation to see the colony visualization.
+        Run a simulation to see the {scenarioLabels.place} visualization.
       </div>
     );
   }
@@ -834,6 +836,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
                     (divergenceData.aliveOnlyA?.size ?? 0) +
                     (divergenceData.aliveOnlyB?.size ?? 0),
                 }}
+                labels={scenarioLabels}
               />
             </div>
             <button
@@ -937,7 +940,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
               minHeight: 12,
             }}
           >
-            {gridModeHint(gridMode)}
+            {gridModeHint(gridMode, scenarioLabels)}
           </div>
         </div>
         <ColonistSearch
@@ -1098,7 +1101,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
           <Kbd k="1-5" v="mode" />
           <Kbd k="\u2190 \u2192" v="scrub turn" />
           <Kbd k="space" v="play / pause" />
-          <Kbd k="click" v="colonist drilldown" />
+          <Kbd k="click" v={`${scenarioLabels.person} drilldown`} />
           <Kbd k="esc" v="close popover" />
         </div>
         {/* Off-screen aria-live region announces turn deltas to
@@ -1120,7 +1123,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
           }}
         >
           {snapA && snapB
-            ? `Turn ${Math.max(snapA.turn, snapB.turn)}. ${leaderA?.name ?? 'A'} colony: ${snapA.cells.filter(c => c.alive).length} alive, ${snapA.births} born, ${snapA.deaths} died, morale ${Math.round(snapA.morale * 100)}%. ${leaderB?.name ?? 'B'} colony: ${snapB.cells.filter(c => c.alive).length} alive, ${snapB.births} born, ${snapB.deaths} died, morale ${Math.round(snapB.morale * 100)}%.`
+            ? `Turn ${Math.max(snapA.turn, snapB.turn)}. ${leaderA?.name ?? 'A'} ${scenarioLabels.place}: ${snapA.cells.filter(c => c.alive).length} alive, ${snapA.births} born, ${snapA.deaths} died, morale ${Math.round(snapA.morale * 100)}%. ${leaderB?.name ?? 'B'} ${scenarioLabels.place}: ${snapB.cells.filter(c => c.alive).length} alive, ${snapB.births} born, ${snapB.deaths} died, morale ${Math.round(snapB.morale * 100)}%.`
             : ''}
         </div>
         {maxTurn > 1 && currentTurn < maxTurn - 1 && (

@@ -1,15 +1,32 @@
 export type GridMode = 'living' | 'mood' | 'forge' | 'ecology' | 'divergence';
 
+/** Hints are scenario-templated. `{people}` = plural population noun,
+ *  `{person}` = singular, both lower-case. Resolved at render time. */
 const MODES: { key: GridMode; label: string; hint: string }[] = [
-  { key: 'living', label: 'LIVING', hint: 'Full field + colonist seeds + family lines + all events' },
-  { key: 'mood', label: 'MOOD', hint: 'Colonist mood cloud emphasized; births / deaths / partner arcs' },
+  { key: 'living', label: 'LIVING', hint: 'Full field + {person} seeds + family lines + all events' },
+  { key: 'mood', label: 'MOOD', hint: '{Person} mood cloud emphasized; births / deaths / partner arcs' },
   { key: 'forge', label: 'FORGE', hint: 'Field dimmed; tool forge attempts + reuse arcs between departments' },
   { key: 'ecology', label: 'ECOLOGY', hint: 'Glyphs hidden; metrics strip + crisis shockwaves lead' },
-  { key: 'divergence', label: 'DIVERGENCE', hint: 'Only colonists alive here but dead on the other side' },
+  { key: 'divergence', label: 'DIVERGENCE', hint: 'Only {people} alive here but dead on the other side' },
 ];
 
-export function gridModeHint(mode: GridMode): string {
-  return MODES.find(m => m.key === mode)?.hint ?? '';
+function interpolate(
+  template: string,
+  labels: { person: string; people: string; Person: string; People: string },
+): string {
+  return template
+    .replace(/\{person\}/g, labels.person)
+    .replace(/\{Person\}/g, labels.Person)
+    .replace(/\{people\}/g, labels.people)
+    .replace(/\{People\}/g, labels.People);
+}
+
+export function gridModeHint(
+  mode: GridMode,
+  labels: { person: string; people: string; Person: string; People: string },
+): string {
+  const template = MODES.find(m => m.key === mode)?.hint ?? '';
+  return interpolate(template, labels);
 }
 
 /**
@@ -24,10 +41,12 @@ export function GridModePills({
   mode,
   onChange,
   counts,
+  labels,
 }: {
   mode: GridMode;
   onChange: (next: GridMode) => void;
   counts?: Partial<Record<GridMode, number>>;
+  labels: { person: string; people: string; Person: string; People: string };
 }) {
   return (
     <div
@@ -45,6 +64,7 @@ export function GridModePills({
       {MODES.map((m, i) => {
         const active = mode === m.key;
         const count = counts?.[m.key];
+        const resolvedHint = interpolate(m.hint, labels);
         return (
           <button
             key={m.key}
@@ -52,7 +72,7 @@ export function GridModePills({
             role="tab"
             aria-selected={active}
             onClick={() => onChange(m.key)}
-            title={m.hint}
+            title={resolvedHint}
             style={{
               flex: 1,
               padding: '5px 8px',

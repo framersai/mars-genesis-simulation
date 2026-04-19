@@ -43,6 +43,19 @@ npm install paracosm
 
 ### 1. Define your world
 
+Every scenario declares its own vocabulary via `labels.populationNoun`
+(plural, e.g. `"colonists"` / `"crew"` / `"citizens"`) and
+`labels.settlementNoun` (singular, e.g. `"colony"` / `"habitat"` /
+`"kingdom"`). The dashboard + runtime pick these up everywhere
+user-facing copy renders.
+
+If you omit `labels`, Paracosm falls back to `"colonists"` /
+`"colony"` — defaults that read fine across most domains but usually
+feel sharper when you pick your own. "Colony" is the default because
+it's narratively richer than a neutral "group" / "unit" while still
+translating to Mars habitats, medieval holds, corporate teams, or any
+bounded collective under a leader's decisions.
+
 ```json
 {
   "id": "submarine-habitat",
