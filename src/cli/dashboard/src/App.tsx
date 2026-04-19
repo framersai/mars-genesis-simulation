@@ -411,24 +411,41 @@ function AppContent() {
   // End-of-sim toast: fire exactly once when the run transitions to a
   // terminal state. Distinguishes Complete (all turns finished, verdict
   // broadcast) from Unfinished (user left, disconnect watchdog aborted
-  // the run). Guarded by a ref so the effect does not re-fire on every
-  // state nudge after the terminal flip (e.g. verdict arriving, further
-  // SSE reconnects). Skipped during tour mode where isComplete is synthetic.
-  const terminalToastFiredRef = useRef(false);
+  // the run). Skipped during tour mode where isComplete is synthetic.
+  //
+  // Dedup across remounts via sessionStorage: the dashboard SPA fully
+  // reloads when the user clicks the About link (it jumps to /) and
+  // a fresh mount on return would otherwise re-fire this toast for
+  // the same terminal state the user already saw. Keyed on a stable
+  // fingerprint so a new run can still toast its own terminal event
+  // without the prior run's fingerprint blocking it.
   useEffect(() => {
     if (tourActive) return;
-    if (!sse.isComplete && !sse.isAborted) {
-      terminalToastFiredRef.current = false;
-      return;
+    if (!sse.isComplete && !sse.isAborted) return;
+    const fingerprint = sse.isAborted
+      ? `aborted:${sse.abortReason?.reason ?? 'unknown'}:${sse.abortReason?.leader ?? ''}:${sse.abortReason?.turn ?? ''}`
+      : `complete:${sse.results.length}:${sse.verdict ? 'v' : 'nv'}`;
+    const storageKey = 'paracosm:terminalToastFingerprint';
+    try {
+      if (sessionStorage.getItem(storageKey) === fingerprint) return;
+      sessionStorage.setItem(storageKey, fingerprint);
+    } catch {
+      /* silent — fall through and toast once per mount */
     }
-    if (terminalToastFiredRef.current) return;
-    terminalToastFiredRef.current = true;
     if (sse.isAborted) {
       toast('info', 'Simulation ended early', 'Partial results saved. Reload to resume from the abort point.');
     } else {
       toast('success', 'Simulation complete', 'Open the Reports tab for the verdict + full breakdown.');
     }
-  }, [sse.isComplete, sse.isAborted, tourActive, toast]);
+  }, [
+    sse.isComplete,
+    sse.isAborted,
+    sse.abortReason,
+    sse.results.length,
+    sse.verdict,
+    tourActive,
+    toast,
+  ]);
 
   // Safety timeout: if /setup succeeded but no events arrived in 30s,
   // give up on the spinner. Only toast when we really saw nothing —
@@ -712,6 +729,8 @@ function AppContent() {
               isComplete: sse.isComplete,
               isAborted: sse.isAborted,
               connectionStatus: sse.status,
+              abortReason: sse.abortReason,
+              providerError: sse.providerError,
             }}
           />
           {/* Full-verdict modal triggered from the global top banner. */}

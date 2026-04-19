@@ -246,10 +246,33 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
   }, []);
 
   // Scan both event streams for the most recent un-toasted crisis.
+  // Dedup across component remounts (e.g. user navigates to About tab
+  // and back) via sessionStorage — keeping the Set in a local ref would
+  // reset on every remount and the user would see the same crisis toast
+  // replay each time they return to the Sim tab.
   useEffect(() => {
     if (!gridSettings.alerts) return;
     const crisisKinds = new Set(['event_start', 'director_crisis']);
-    const seen = new Set<string>();
+    const storageKey = 'paracosm:seenCrisisToasts';
+    const readSeen = (): Set<string> => {
+      try {
+        const raw = sessionStorage.getItem(storageKey);
+        if (!raw) return new Set();
+        return new Set(JSON.parse(raw) as string[]);
+      } catch {
+        return new Set();
+      }
+    };
+    const writeSeen = (s: Set<string>) => {
+      try {
+        // Cap at 200 entries to bound session storage growth.
+        const arr = [...s].slice(-200);
+        sessionStorage.setItem(storageKey, JSON.stringify(arr));
+      } catch {
+        /* silent */
+      }
+    };
+    const seen = readSeen();
     type Evt = { type: string; turn?: number; data?: Record<string, unknown> };
     const findLatest = () => {
       let best: { key: string; side: 'a' | 'b'; turn: number; category: string; title: string } | null = null;
@@ -263,7 +286,6 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
           if (!cat) continue;
           const key = `${side}:${turn}:${cat}`;
           if (seen.has(key)) continue;
-          seen.add(key);
           const title = typeof e.data?.title === 'string' ? e.data.title : '';
           if (!best || turn > best.turn) {
             best = { key, side, turn, category: cat, title };
@@ -275,6 +297,8 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
     };
     const latest = findLatest();
     if (!latest) return;
+    seen.add(latest.key);
+    writeSeen(seen);
     setCrisisToast(prev => {
       if (prev && prev.key === latest.key) return prev;
       return { ...latest, expiresAt: performance.now() + 5500 };
@@ -305,46 +329,64 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
     message: string;
     expiresAt: number;
   } | null>(null);
-  const seenAlertsRef = useRef<Set<string>>(new Set());
+  // Seen-alert dedup: backed by sessionStorage so the same morale/food
+  // alert doesn't replay every time the user navigates away and back.
+  // useRef alone resets on remount — tab switches within the SPA would
+  // surface every historical threshold crossing as a fresh toast.
+  const alertStorageKey = 'paracosm:seenThresholdAlerts';
+  const readSeenAlerts = useCallback((): Set<string> => {
+    try {
+      const raw = sessionStorage.getItem(alertStorageKey);
+      if (!raw) return new Set();
+      return new Set(JSON.parse(raw) as string[]);
+    } catch {
+      return new Set();
+    }
+  }, []);
+  const writeSeenAlerts = useCallback((s: Set<string>) => {
+    try {
+      sessionStorage.setItem(alertStorageKey, JSON.stringify([...s].slice(-200)));
+    } catch {
+      /* silent */
+    }
+  }, []);
   useEffect(() => {
     if (!gridSettings.alerts) return;
+    const seen = readSeenAlerts();
+    const fire = (key: string, toast: Omit<
+      NonNullable<typeof alertToast>,
+      'key' | 'expiresAt'
+    >) => {
+      if (seen.has(key)) return;
+      seen.add(key);
+      setAlertToast({ key, ...toast, expiresAt: performance.now() + 5500 });
+    };
     const check = (side: 'a' | 'b', snaps: TurnSnapshot[]) => {
       if (snaps.length < 2) return;
       const current = snaps[snaps.length - 1];
       const prev = snaps[snaps.length - 2];
       const moraleDrop = prev.morale - current.morale;
       if (moraleDrop >= 0.2) {
-        const key = `${side}|${current.turn}|morale-crash`;
-        if (!seenAlertsRef.current.has(key)) {
-          seenAlertsRef.current.add(key);
-          setAlertToast({
-            key,
-            side,
-            turn: current.turn,
-            kind: 'morale-crash',
-            message: `Morale crashed ${Math.round(moraleDrop * 100)}% → ${Math.round(current.morale * 100)}% this turn`,
-            expiresAt: performance.now() + 5500,
-          });
-        }
+        fire(`${side}|${current.turn}|morale-crash`, {
+          side,
+          turn: current.turn,
+          kind: 'morale-crash',
+          message: `Morale crashed ${Math.round(moraleDrop * 100)}% → ${Math.round(current.morale * 100)}% this turn`,
+        });
       }
       if (current.foodReserve < 3 && prev.foodReserve >= 3) {
-        const key = `${side}|${current.turn}|food-low`;
-        if (!seenAlertsRef.current.has(key)) {
-          seenAlertsRef.current.add(key);
-          setAlertToast({
-            key,
-            side,
-            turn: current.turn,
-            kind: 'food-low',
-            message: `Food reserve fell below 3mo (${current.foodReserve.toFixed(1)}mo remaining)`,
-            expiresAt: performance.now() + 5500,
-          });
-        }
+        fire(`${side}|${current.turn}|food-low`, {
+          side,
+          turn: current.turn,
+          kind: 'food-low',
+          message: `Food reserve fell below 3mo (${current.foodReserve.toFixed(1)}mo remaining)`,
+        });
       }
     };
     check('a', snapsA);
     check('b', snapsB);
-  }, [snapsA, snapsB, gridSettings.alerts]);
+    writeSeenAlerts(seen);
+  }, [snapsA, snapsB, gridSettings.alerts, readSeenAlerts, writeSeenAlerts]);
   useEffect(() => {
     if (!alertToast) return;
     const remaining = alertToast.expiresAt - performance.now();
