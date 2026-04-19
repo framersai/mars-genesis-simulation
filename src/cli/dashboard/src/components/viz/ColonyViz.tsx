@@ -32,7 +32,7 @@ import { GridModePills, gridModeHint, type GridMode } from './grid/GridModePills
 import { GridHelpOverlay } from './grid/GridHelpOverlay.js';
 import { useMediaQuery, NARROW_QUERY } from './grid/useMediaQuery.js';
 import { TimelineSparkline } from './grid/TimelineSparkline.js';
-import { EventChronicle } from './grid/EventChronicle.js';
+import { EventChronicle, type ChronicleFilter } from './grid/EventChronicle.js';
 import { TurnProgress } from './grid/TurnProgress.js';
 import { ColonistSearch, type SearchMatch } from './grid/ColonistSearch.js';
 import {
@@ -206,6 +206,13 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
   const [hoveredA, setHoveredA] = useState<string | null>(null);
   const [hoveredB, setHoveredB] = useState<string | null>(null);
   const [hoveredTurn, setHoveredTurn] = useState<number | null>(null);
+  // Event-kind filter shared between EventChronicle (strip above the
+  // viz panels) and each LivingColonyGrid (main canvas). Prior to
+  // lifting this to ColonyViz, clicking BIRTHS / DEATHS / FORGES /
+  // CRISES only hid entries in the chronicle strip — the canvas
+  // flares continued to fire for every event regardless. Controlled
+  // pattern keeps a single source of truth for both widgets.
+  const [chronicleFilter, setChronicleFilter] = useState<ChronicleFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   // Latest crisis event that hasn't been dismissed — drives the toast
   // banner. Keyed by turn + category so the same crisis is announced
@@ -1031,6 +1038,8 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
           onJumpToTurn={handleTurnChange}
           hoveredTurn={hoveredTurn}
           onHoverTurnChange={setHoveredTurn}
+          filter={chronicleFilter}
+          onFilterChange={setChronicleFilter}
           onForgeSelect={(toolName, side) =>
             setForgeLineage({
               toolName,
@@ -1099,6 +1108,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
             focusedSide={focusedSide}
             onToggleFocus={toggleFocus}
             onOpenChat={handleOpenChat}
+            eventFilter={chronicleFilter}
           />
           </div>
           <div
@@ -1133,6 +1143,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
             focusedSide={focusedSide}
             onToggleFocus={toggleFocus}
             onOpenChat={handleOpenChat}
+            eventFilter={chronicleFilter}
           />
           </div>
         </div>

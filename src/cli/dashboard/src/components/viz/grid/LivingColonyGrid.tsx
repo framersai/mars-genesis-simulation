@@ -74,6 +74,14 @@ interface LivingColonyGridProps {
   onToggleFocus?: (side: 'a' | 'b') => void;
   /** Invoked when the user chooses "Open chat" inside the popover. */
   onOpenChat?: (colonistName: string) => void;
+  /**
+   * Active event-kind filter from the EventChronicle strip. When set
+   * to anything other than `'all'`, flares whose kind doesn't match
+   * are dropped from the canvas — the user's filter choice propagates
+   * through to the main visualization instead of only hiding
+   * chronicle rows. `'all'` (default when omitted) is a passthrough.
+   */
+  eventFilter?: 'all' | 'birth' | 'death' | 'forge' | 'crisis';
 }
 
 function resolveRgb(color: string, element: HTMLElement | null): [number, number, number] {
@@ -149,6 +157,7 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
     focusedSide = null,
     onToggleFocus,
     onOpenChat,
+    eventFilter = 'all',
   } = props;
   const isFocused = focusedSide === side;
 
@@ -363,12 +372,28 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
       strength: i.strength * seedIntensity,
       radius: 1,
     } as const));
+    // Apply the chronicle-strip filter here so the user's "show me
+    // only forges" / "only crises" choice propagates through to the
+    // main canvas. The flare `.kind` vocabulary is broader than the
+    // chronicle's — forge covers approved, rejected, AND reuse calls
+    // so a "forges" filter keeps the whole forge narrative intact.
+    const flareMatchesFilter = (f: { kind: string }): boolean => {
+      if (eventFilter === 'all') return true;
+      if (eventFilter === 'birth') return f.kind === 'birth';
+      if (eventFilter === 'death') return f.kind === 'death';
+      if (eventFilter === 'crisis') return f.kind === 'crisis';
+      if (eventFilter === 'forge') {
+        return f.kind === 'forge_approved' || f.kind === 'forge_rejected' || f.kind === 'reuse';
+      }
+      return true;
+    };
+    const visibleFlares = gridState.flares.filter(flareMatchesFilter);
     // Flares are stored in overlay-space pixels; rescale to grid-space
     // for WebGL deposits. Overlay continues to render with the original
     // pixel coords so flare rings land under the cursor correctly.
     const scaleX = GRID_W / Math.max(1, size.w);
     const scaleY = GRID_H / Math.max(1, size.h);
-    const flaresGridSpace = gridState.flares.map(f => ({
+    const flaresGridSpace = visibleFlares.map(f => ({
       ...f,
       x: f.x * scaleX,
       y: f.y * scaleY,
@@ -477,7 +502,11 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
         flareIntensity: relationshipFlareRef.current.intensity,
       });
     }
-    drawFlares(ctx, gridState.flares);
+    // Draw the filtered flare subset on the overlay. Using the
+    // pre-filtered `visibleFlares` keeps the main canvas in lock-step
+    // with what the chronicle strip is showing — hiding a kind in one
+    // widget hides it in both.
+    drawFlares(ctx, visibleFlares);
     if (mode !== 'ecology')
       drawGlyphs(
         ctx,
