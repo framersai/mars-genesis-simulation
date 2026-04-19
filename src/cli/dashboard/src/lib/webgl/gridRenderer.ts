@@ -21,6 +21,8 @@ export interface FrameInputs {
   sideTint: [number, number, number];
   /** Steps per frame: 2 under default cadence, 5 during turn fast-forward. */
   stepsPerFrame?: number;
+  /** 0=amber (default), 1=cool teal/violet, 2=warm mono. */
+  palette?: 0 | 1 | 2;
 }
 
 /**
@@ -43,7 +45,7 @@ export class GridRenderer {
   tick(inputs: FrameInputs): void {
     depositBrush(this.ctx, inputs.deposits);
     stepRD(this.ctx, { F: inputs.F, k: inputs.k }, inputs.stepsPerFrame ?? 2);
-    renderDisplay(this.ctx, inputs.sideTint);
+    renderDisplay(this.ctx, inputs.sideTint, inputs.palette ?? 0);
   }
 
   destroy(): void {

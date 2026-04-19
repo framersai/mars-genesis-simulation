@@ -17,6 +17,7 @@ interface DisplayProgram {
   program: WebGLProgram;
   uField: WebGLUniformLocation | null;
   uSideTint: WebGLUniformLocation | null;
+  uPalette: WebGLUniformLocation | null;
 }
 
 export interface GrayScottContext {
@@ -156,6 +157,7 @@ export function createGrayScottContext(
       program: displayProg,
       uField: gl.getUniformLocation(displayProg, 'u_field'),
       uSideTint: gl.getUniformLocation(displayProg, 'u_sideTint'),
+      uPalette: gl.getUniformLocation(displayProg, 'u_palette'),
     },
     quadVAO: vao,
   };
@@ -208,11 +210,13 @@ export function stepRD(
 
 /**
  * Render the current field texture to the canvas (default framebuffer),
- * applying the amber/rust colorization + side-color tint.
+ * applying the palette colorization + side-color tint.
+ *   palette: 0 = amber, 1 = cool, 2 = mono
  */
 export function renderDisplay(
   ctx: GrayScottContext,
   sideTint: [number, number, number] = [0, 0, 0],
+  palette = 0,
 ): void {
   const { gl, displayProgram, textures } = ctx;
   gl.useProgram(displayProgram.program);
@@ -222,6 +226,7 @@ export function renderDisplay(
   gl.bindTexture(gl.TEXTURE_2D, textures[ctx.current]);
   gl.uniform1i(displayProgram.uField, 0);
   gl.uniform3f(displayProgram.uSideTint, sideTint[0], sideTint[1], sideTint[2]);
+  gl.uniform1i(displayProgram.uPalette, palette);
   gl.bindVertexArray(ctx.quadVAO);
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 }

@@ -52,6 +52,11 @@ interface LivingColonyGridProps {
   /** Fires when the user hovers a colonist on this panel. Lifted so
    *  the sibling panel can render a sympathetic ring. */
   onHoverChange?: (agentId: string | null) => void;
+  /** Case-insensitive name substring. When non-empty, matching glyphs
+   *  get a bright halo and non-matches dim. */
+  searchQuery?: string;
+  /** Display-shader palette: 0=amber, 1=cool, 2=mono. */
+  palette?: 0 | 1 | 2;
   /** Invoked when the user chooses "Open chat" inside the popover. */
   onOpenChat?: (colonistName: string) => void;
 }
@@ -121,6 +126,8 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
     divergedIds,
     siblingHoveredId,
     onHoverChange,
+    searchQuery = '',
+    palette = 0,
     onOpenChat,
   } = props;
 
@@ -283,6 +290,7 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
       deposits: [...colonistDeposits, ...flareDepositsGrid],
       sideTint: tintScaled,
       stepsPerFrame: reducedMotion ? 0 : 2,
+      palette,
     });
 
     const resolvedSide = resolveCssColor(sideColor, containerRef.current);
@@ -303,6 +311,7 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
         divergedIds,
         mode === 'divergence',
         reducedMotion ? 0 : performance.now(),
+        searchQuery,
       );
     drawHud(ctx, snapshot, {
       leaderName,
@@ -366,6 +375,8 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
     divergedIds,
     siblingHoveredId,
     reducedMotion,
+    searchQuery,
+    palette,
   ]);
 
   const onMouseMove = useCallback(
