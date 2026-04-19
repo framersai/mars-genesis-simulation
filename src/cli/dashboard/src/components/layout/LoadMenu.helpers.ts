@@ -1,0 +1,40 @@
+/**
+ * Pure helpers extracted from LoadMenu for unit testing. The React
+ * component wires these to UI state; helpers are kept free of
+ * DOM/React dependencies so they can run under node:test.
+ *
+ * @module paracosm/cli/dashboard/components/layout/LoadMenu.helpers
+ */
+import type { SessionsStatus, StoredSessionMeta } from '../../hooks/useSessions';
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/** `Apr 18 · 14:32` in the viewer's local timezone. */
+export function formatExplicit(ts: number): string {
+  const d = new Date(ts);
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `${MONTHS[d.getMonth()]} ${d.getDate()} · ${hh}:${mm}`;
+}
+
+/** Hide the cache row when the server ring is unavailable or errored. */
+export function shouldShowCacheRow(status: SessionsStatus): boolean {
+  return status === 'loading' || status === 'ready';
+}
+
+/** Which body to render when the cache row is expanded. */
+export function cacheExpandedBody(
+  status: SessionsStatus,
+  sessions: readonly StoredSessionMeta[],
+): 'loading' | 'empty' | 'cards' {
+  if (status === 'loading') return 'loading';
+  if (sessions.length === 0) return 'empty';
+  return 'cards';
+}
+
+/** Build a replay href that preserves the current origin + path. */
+export function buildReplayHref(base: string, id: string): string {
+  const url = new URL(base);
+  url.searchParams.set('replay', id);
+  return url.toString();
+}
