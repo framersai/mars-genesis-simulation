@@ -171,6 +171,10 @@ function AppContent() {
   // historical run. Live forge_attempt events that arrive after the
   // buffer flush get a toast each.
   const seenForgeKeysRef = useRef<Set<string>>(new Set());
+  // `toast` must be declared before the effect below: reading it from
+  // the dep array on first render would throw TDZ ("Cannot access 'toast'
+  // before initialization") if the const sat below the useEffect.
+  const { toast } = useToast();
   useEffect(() => {
     if (!sse.replayDone) {
       // Pre-replay: seed the dedupe set with every forge_attempt
@@ -215,7 +219,6 @@ function AppContent() {
   const citationRegistry = useCitationRegistry(gameState);
   const toolRegistry = useToolRegistry(gameState);
   const persistence = useGamePersistence(scenario.labels.shortName);
-  const { toast } = useToast();
   const [activeTab, setActiveTabState] = useState<DashboardTab>(() => getDashboardTabFromHref(window.location.href));
   const setActiveTab = useCallback((tab: DashboardTab) => {
     if (tab === 'about') {
