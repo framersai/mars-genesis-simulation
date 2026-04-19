@@ -197,6 +197,13 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
   // accurate pacing.
   const eventTimestamps: number[] = new Array(eventBuffer.length).fill(0);
 
+  // Run-state flags for auto-save on clean completion. Reset inside
+  // clearEventBuffer() so the next run starts fresh. See
+  // docs/superpowers/specs/2026-04-18-load-menu-cached-runs-design.md.
+  let currentRunAborted = false;
+  let currentRunSaved = false;
+  const AUTO_SAVE_MIN_TURNS = 3;
+
   // Persistent storage for completed sim runs. Lives at
   // `${APP_DIR}/data/sessions.db`; the directory is created on first
   // open. Cap of 10 saved sessions; oldest evicts when an admin saves
@@ -383,6 +390,8 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
    * be a fresh state. Cancels any pending write so the empty state wins.
    */
   const clearEventBuffer = () => {
+    currentRunAborted = false;
+    currentRunSaved = false;
     eventBuffer.length = 0;
     eventTimestamps.length = 0;
     if (persistTimer) {
