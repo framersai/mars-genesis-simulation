@@ -320,11 +320,10 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
     ? `A vs B: ${snapB.population - snapA.population >= 0 ? '+' : ''}${snapB.population - snapA.population} pop, ${Math.round((snapB.morale - snapA.morale) * 100)}% morale, ${snapB.foodReserve - snapA.foodReserve > 0 ? '+' : ''}${(snapB.foodReserve - snapA.foodReserve).toFixed(1)}mo food`
     : '';
 
-  // Feature flag: VITE_NEW_GRID=1 renders the Phase 1 living-colony
-  // grid in place of the legacy ColonyPanel tile grid. Default (flag
-  // unset or '0') keeps the existing viz so prod is unaffected until
-  // the Phase 4 flip.
-  const useNewGrid = import.meta.env.VITE_NEW_GRID === '1';
+  // Feature flag: VITE_NEW_GRID controls which viz renders. Default (unset)
+  // is the new living-colony grid. Setting VITE_NEW_GRID=0 explicitly opts
+  // back to the legacy ColonyPanel tile grid as a bail-out path.
+  const useNewGrid = import.meta.env.VITE_NEW_GRID !== '0';
   if (useNewGrid) {
     const prevSnapA = currentTurn > 0
       ? (snapsA[currentTurn - 1] ?? snapsA[snapsA.length - 2])
