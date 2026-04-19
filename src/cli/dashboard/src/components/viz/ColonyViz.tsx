@@ -40,6 +40,7 @@ import {
   DEFAULT_GRID_SETTINGS,
   type GridSettings,
 } from './grid/GridSettingsDrawer.js';
+import { useSoundCues } from './grid/useSoundCues.js';
 
 /** Tiny keyboard-shortcut chip for the footer legend. Kept local since
  *  it's only used in the viz tab footer. */
@@ -215,6 +216,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
 
   // Scan both event streams for the most recent un-toasted crisis.
   useEffect(() => {
+    if (!gridSettings.alerts) return;
     const crisisKinds = new Set(['event_start', 'director_crisis']);
     const seen = new Set<string>();
     type Evt = { type: string; turn?: number; data?: Record<string, unknown> };
@@ -246,7 +248,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
       if (prev && prev.key === latest.key) return prev;
       return { ...latest, expiresAt: performance.now() + 5500 };
     });
-  }, [state.a.events, state.b.events]);
+  }, [state.a.events, state.b.events, gridSettings.alerts]);
 
   // Dismiss crisis toast after timeout.
   useEffect(() => {
@@ -274,6 +276,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
   } | null>(null);
   const seenAlertsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
+    if (!gridSettings.alerts) return;
     const check = (side: 'a' | 'b', snaps: TurnSnapshot[]) => {
       if (snaps.length < 2) return;
       const current = snaps[snaps.length - 1];
@@ -310,7 +313,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
     };
     check('a', snapsA);
     check('b', snapsB);
-  }, [snapsA, snapsB]);
+  }, [snapsA, snapsB, gridSettings.alerts]);
   useEffect(() => {
     if (!alertToast) return;
     const remaining = alertToast.expiresAt - performance.now();
@@ -367,6 +370,16 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
       /* silent */
     }
   }, []);
+
+  useSoundCues({
+    enabled: gridSettings.sound,
+    snapshotA: snapsA[snapsA.length - 1],
+    prevSnapshotA: snapsA[snapsA.length - 2],
+    snapshotB: snapsB[snapsB.length - 1],
+    prevSnapshotB: snapsB[snapsB.length - 2],
+    forgeAttemptsA: forgeFeeds.a.attempts,
+    forgeAttemptsB: forgeFeeds.b.attempts,
+  });
 
   // Export the current viz as a composed PNG. Rasterises TurnBanner +
   // the two canvases into an offscreen canvas at 2x for retina
@@ -848,6 +861,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
             searchQuery={searchQuery}
             palette={palette === 'cool' ? 1 : palette === 'mono' ? 2 : 0}
             settings={gridSettings}
+            startYear={scenario.setup?.defaultStartYear}
             onOpenChat={handleOpenChat}
           />
           <LivingColonyGrid
@@ -870,6 +884,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
             searchQuery={searchQuery}
             palette={palette === 'cool' ? 1 : palette === 'mono' ? 2 : 0}
             settings={gridSettings}
+            startYear={scenario.setup?.defaultStartYear}
             onOpenChat={handleOpenChat}
           />
         </div>

@@ -8,6 +8,7 @@ import { drawFlares } from './FlareLayer.js';
 import { drawHud } from './HudLayer.js';
 import { drawLines } from './LinesLayer.js';
 import { drawDeptRings } from './DeptRingsLayer.js';
+import { drawGhostTrail } from './GhostTrailLayer.js';
 import { useGridState, type ForgeAttempt, type ReuseCall } from './useGridState.js';
 import { computeDeptCenters } from './deptCenters.js';
 import { GridRenderer } from '../../../lib/webgl/gridRenderer.js';
@@ -29,6 +30,8 @@ interface LivingColonyGridProps {
   leaderName: string;
   leaderArchetype: string;
   leaderColony?: string;
+  /** First year of the scenario for HUD "Yr N" readout. */
+  startYear?: number;
   sideColor: string;
   side: 'a' | 'b';
   lagTurns?: number;
@@ -117,6 +120,8 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
     previousSnapshot,
     snapshotHistory,
     leaderName,
+    leaderArchetype,
+    startYear,
     sideColor,
     side,
     lagTurns,
@@ -307,6 +312,17 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
     ctx.clearRect(0, 0, size.w, size.h);
     if (mode !== 'ecology') drawSeeds(ctx, snapshot.cells, positions);
     if (mode !== 'ecology' && settings.deptRings) drawDeptRings(ctx, snapshot.cells, positions);
+    if (settings.ghostTrail && previousSnapshot) {
+      // Compute previous-turn positions lazily here — cheaper than
+      // another useMemo since this only runs when the setting is on.
+      const prevPositions = computeGridPositions(
+        previousSnapshot.cells,
+        clusterMode,
+        size.w,
+        size.h,
+      );
+      drawGhostTrail(ctx, snapshot.cells, positions, previousSnapshot.cells, prevPositions);
+    }
     if (settings.lines && (mode === 'living' || mode === 'mood')) {
       drawLines(ctx, snapshot.cells, positions, resolvedSide);
     }
@@ -325,6 +341,8 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
       );
     drawHud(ctx, snapshot, {
       leaderName,
+      leaderArchetype,
+      startYear,
       sideColor: resolvedSide,
       width: size.w,
       height: size.h,
@@ -436,6 +454,8 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
     palette,
     cursor,
     settings,
+    leaderArchetype,
+    startYear,
   ]);
 
   const onMouseMove = useCallback(

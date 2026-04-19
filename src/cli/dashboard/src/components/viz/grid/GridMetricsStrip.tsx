@@ -1,5 +1,6 @@
 import type { TurnSnapshot } from '../viz-types.js';
 import { useMediaQuery, NARROW_QUERY } from './useMediaQuery.js';
+import { DeptDonut } from './DeptDonut.js';
 
 /**
  * Full colony metrics strip rendered above the living grid. Same
@@ -51,7 +52,7 @@ export function GridMetricsStrip({
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: narrow ? '1fr 1fr' : 'auto 1.1fr 1fr auto',
+        gridTemplateColumns: narrow ? '1fr 1fr' : 'auto 1.1fr 1fr auto auto',
         gap: narrow ? 8 : 10,
         alignItems: 'stretch',
         padding: '8px 10px',
@@ -210,6 +211,30 @@ export function GridMetricsStrip({
           </span>
         </div>
       </div>
+      {!narrow && (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 2,
+          }}
+          aria-label="Department breakdown"
+        >
+          <DeptDonut cells={snapshot.cells} size={44} />
+          <span
+            style={{
+              fontSize: 8,
+              color: 'var(--text-4)',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+            }}
+          >
+            Depts
+          </span>
+        </div>
+      )}
     </div>
   );
 }

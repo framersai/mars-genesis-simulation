@@ -13,6 +13,10 @@ export interface HudOpts {
   positions?: Map<string, GridPosition>;
   /** Previous snapshot for population + morale deltas. */
   previousSnapshot?: TurnSnapshot | undefined;
+  /** Leader archetype chip rendered next to the name. */
+  leaderArchetype?: string;
+  /** First year of the scenario (for "Yr N of colony" math). */
+  startYear?: number;
 }
 
 const DEPT_COLORS: Record<string, string> = {
@@ -47,9 +51,41 @@ export function drawHud(
   ctx.fillStyle = opts.sideColor;
   ctx.textBaseline = 'top';
   ctx.textAlign = 'left';
-  ctx.fillText(opts.leaderName.toUpperCase(), 10, 10);
+  const nameText = opts.leaderName.toUpperCase();
+  ctx.fillText(nameText, 10, 10);
+  const nameWidth = ctx.measureText(nameText).width;
+
+  // Archetype chip next to the name.
+  const archetype = (opts.leaderArchetype || '').trim().replace(/^The\s+/i, '');
+  if (archetype) {
+    ctx.font = 'bold 8px ui-monospace, monospace';
+    const chipText = archetype.toUpperCase();
+    const tw = ctx.measureText(chipText).width;
+    const chipX = 10 + nameWidth + 8;
+    const chipY = 9;
+    const chipH = 13;
+    const padX = 5;
+    ctx.fillStyle = `rgba(10, 8, 6, 0.5)`;
+    ctx.fillRect(chipX, chipY, tw + padX * 2, chipH);
+    ctx.strokeStyle = opts.sideColor;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(chipX + 0.5, chipY + 0.5, tw + padX * 2 - 1, chipH - 1);
+    ctx.fillStyle = opts.sideColor;
+    ctx.textBaseline = 'middle';
+    ctx.fillText(chipText, chipX + padX, chipY + chipH / 2 + 0.5);
+    ctx.textBaseline = 'top';
+    ctx.font = '10px ui-monospace, monospace';
+  }
+
+  // Turn + year + colony-age line.
   ctx.fillStyle = 'rgba(216, 204, 176, 0.75)';
-  ctx.fillText(`T${snapshot?.turn ?? 0}`, 10, 24);
+  const year = snapshot?.year;
+  const yearLabel = typeof year === 'number'
+    ? typeof opts.startYear === 'number'
+      ? `T${snapshot?.turn ?? 0} · ${year} · Yr ${Math.max(0, year - opts.startYear)}`
+      : `T${snapshot?.turn ?? 0} · ${year}`
+    : `T${snapshot?.turn ?? 0}`;
+  ctx.fillText(yearLabel, 10, 24);
 
   if (!snapshot) {
     ctx.restore();
