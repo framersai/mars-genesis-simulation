@@ -183,6 +183,64 @@ export function useToolRegistry(state: GameState): ToolRegistry {
       }
     }
 
+    // Failsafe pass: scan forge_attempt events directly and include any
+    // tool name that ONLY ever appeared as rejected (never made it into
+    // a dept_done summary with an approved record). Covers the edge case
+    // where a forge fails and the dept bails on that tool entirely —
+    // those attempts wouldn't land in dept_done.forgedTools but ARE in
+    // the live forge_attempt stream, and users need to see terminal
+    // failures in the toolbox to understand what was tried.
+    for (const side of ['a', 'b'] as Side[]) {
+      for (const evt of state[side].events) {
+        if (evt.type !== 'forge_attempt') continue;
+        const d = (evt.data as Record<string, unknown>) || {};
+        const name = String(d.name || '').trim();
+        if (!name || name === 'unnamed') continue;
+        if (byName.has(name)) continue; // already captured via dept_done path
+        if (d.approved === true) continue; // approved-only forge that somehow missed dept_done — skip
+        const failEntry: ToolEntry = {
+          n: next++,
+          name,
+          description: String(d.description || name),
+          mode: String(d.mode || 'sandbox'),
+          firstForgedTurn: Number(d.turn ?? evt.turn ?? 0),
+          firstForgedDepartment: String(d.department || ''),
+          departments: new Set<string>(
+            typeof d.department === 'string' && d.department ? [d.department] : [],
+          ),
+          sides: new Set<Side>([side]),
+          reuseCount: 0,
+          reforgeCount: 0,
+          rejectedReforges: 1,
+          confidence: typeof d.confidence === 'number' ? (d.confidence as number) : 0,
+          approved: false,
+          inputSchema: undefined,
+          outputSchema: undefined,
+          sampleOutput: null,
+          errorReason: typeof d.errorReason === 'string' ? (d.errorReason as string) : undefined,
+          inputFields: Array.isArray(d.inputFields) ? (d.inputFields as string[]) : [],
+          outputFields: Array.isArray(d.outputFields) ? (d.outputFields as string[]) : [],
+          history: [
+            {
+              turn: Number(d.turn ?? evt.turn ?? 0),
+              year: Number(d.year ?? 0),
+              eventIndex: Number(d.eventIndex ?? 0),
+              eventTitle: '',
+              department: String(d.department || ''),
+              output: null,
+              isReforge: false,
+              rejected: true,
+              confidence:
+                typeof d.confidence === 'number' ? (d.confidence as number) : undefined,
+              side,
+            },
+          ],
+        };
+        byName.set(name, failEntry);
+        list.push(failEntry);
+      }
+    }
+
     return {
       getNumber: (name: string) => byName.get(name)?.n ?? 0,
       getEntry: (name: string) => byName.get(name),

@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useDashboardNavigation, useScenarioContext } from '../../App';
 import { LeaderConfig, type LeaderFormData } from './LeaderConfig';
 import { ScenarioEditor } from './ScenarioEditor';
+import { LoadPriorRunsCTA } from './LoadPriorRunsCTA';
 import { getDashboardTabFromHref, resolveSetupRedirectHref } from '../../tab-routing';
 import { subscribeScenarioUpdates } from '../../scenario-sync';
 import {
@@ -311,6 +312,11 @@ export function SettingsPanel() {
 
   return (
     <div className="settings-content" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '20px 24px', background: 'var(--bg-deep)' }}>
+      {/* Prior-runs CTA — surfaces saved sessions at the top so users
+          who don't want to spend credits can replay an existing run
+          turn-by-turn without touching any API keys. Hides itself when
+          no saved runs exist or the session store is unavailable. */}
+      <LoadPriorRunsCTA />
       {/* Scenario Selector */}
       {scenarios.length > 0 && (
         <div className="responsive-stack" style={{
