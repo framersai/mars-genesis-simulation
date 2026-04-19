@@ -6,6 +6,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createMarsServer } from '../../src/cli/server-app.js';
 import type { NormalizedSimulationConfig } from '../../src/cli/sim-config.js';
+import type { RunRecord } from '../../src/cli/server/run-record.js';
+import type { RunHistoryStore } from '../../src/cli/server/run-history-store.js';
 
 const leaderA = {
   name: 'Aria Chen',
@@ -163,11 +165,18 @@ test('GET /scenario returns valid scenario client payload', async () => {
 
 test('POST /setup normalizes config and hands it to the simulation runner', async () => {
   let captured: NormalizedSimulationConfig | null = null;
+  let capturedRun: RunRecord | null = null;
+  const runHistoryStore: RunHistoryStore = {
+    async insertRun(run) { capturedRun = run; },
+    async listRuns() { return capturedRun ? [capturedRun] : []; },
+    async getRun(runId) { return capturedRun?.runId === runId ? capturedRun : null; },
+  };
 
   const server = createMarsServer({
     runPairSimulations: async config => {
       captured = config;
     },
+    runHistoryStore,
   });
 
   server.listen(0);
@@ -203,9 +212,15 @@ test('POST /setup normalizes config and hands it to the simulation runner', asyn
     });
     const json = await response.json();
 
-    assert.deepEqual(json, { redirect: '/sim' });
+    assert.equal(json.redirect, '/sim');
+    assert.equal(json.scenarioId, 'mars-genesis');
+    assert.equal(json.scenarioName, 'Mars Genesis');
+    assert.match(json.run.id, /^run_/);
+    assert.equal(json.run.sourceMode, 'local_demo');
+    assert.equal(json.run.economicsProfile, 'balanced');
     await new Promise(resolve => setTimeout(resolve, 10));
     assert.ok(captured);
+    assert.ok(capturedRun);
     const cfg = captured as NormalizedSimulationConfig;
     assert.equal(cfg.provider, 'anthropic');
     assert.equal(cfg.startYear, 2042);
@@ -214,8 +229,11 @@ test('POST /setup normalizes config and hands it to the simulation runner', asyn
     assert.equal(cfg.startingResources.pressurizedVolumeM3, 4100);
     assert.equal(cfg.startingPolitics.earthDependencyPct, 68);
     assert.equal(cfg.execution.commanderMaxSteps, 7);
-    assert.equal(cfg.models.commander, 'claude-sonnet-4-6');
+    assert.equal(cfg.models.commander, 'claude-haiku-4-5-20251001');
+    assert.equal(cfg.economics.id, 'balanced');
     assert.equal(cfg.customEvents[0].title, 'Blackout');
+    assert.equal(capturedRun!.economicsProfile, 'balanced');
+    assert.equal(capturedRun!.sourceMode, 'local_demo');
   } finally {
     server.close();
     await once(server, 'close');
@@ -307,7 +325,31 @@ test('POST /scenario/store keeps non-runnable draft JSON out of the switchable c
       body: JSON.stringify({ id: draftScenario.id }),
     });
     assert.equal(switched.status, 400);
-    assert.match((await switched.json()).error, /Unknown scenario/);
+    assert.match((await switched.json()).error, /stored but not runnable/i);
+  } finally {
+    server.close();
+    await once(server, 'close');
+  }
+});
+
+test('platform API routes reject requests when the server is not in platform_api mode', async () => {
+  const server = createMarsServer({
+    env: { ...process.env, PARACOSM_HOSTED_DEMO: 'true' },
+    runPairSimulations: async () => {},
+  });
+
+  server.listen(0);
+  await once(server, 'listening');
+  const address = server.address();
+  const port = typeof address === 'object' && address ? address.port : 0;
+
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/v1/runs`);
+    assert.equal(res.status, 403);
+    assert.deepEqual(await res.json(), {
+      error: 'platform_api_only',
+      mode: 'hosted_demo',
+    });
   } finally {
     server.close();
     await once(server, 'close');

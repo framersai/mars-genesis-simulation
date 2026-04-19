@@ -13,4 +13,13 @@ export { buildDepartmentContext, getDepartmentsForTurn } from './departments.js'
 export { generateAgentReactions } from './agent-reactions.js';
 export { runBatch } from './batch.js';
 export type { BatchConfig, BatchResult, BatchManifest } from './batch.js';
+export {
+  buildEconomicsEnvelope,
+  resolveEconomicsProfile,
+} from './economics-profile.js';
+export type {
+  EconomicsEnvelope,
+  ResolvedEconomicsProfile,
+  SimulationEconomicsProfileId,
+} from './economics-profile.js';
 export { recordReactionMemory, consolidateMemory, updateRelationshipsFromReactions, buildMemoryContext } from './agent-memory.js';

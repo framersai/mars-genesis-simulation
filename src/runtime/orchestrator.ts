@@ -51,6 +51,7 @@ import { classifyProviderError, shouldAbortRun, type ClassifiedProviderError } f
 import { EffectRegistry } from '../engine/effect-registry.js';
 import { marsScenario } from '../engine/mars/index.js';
 import type { LeaderConfig } from '../engine/types.js';
+import type { ResolvedEconomicsProfile } from './economics-profile.js';
 export type { LeaderConfig };
 
 
@@ -82,6 +83,7 @@ export interface RunOptions {
   onEvent?: (event: SimEvent) => void;
   customEvents?: Array<{ turn: number; title: string; description: string }>;
   models?: Partial<SimulationModelConfig>;
+  economics?: ResolvedEconomicsProfile;
   initialPopulation?: number;
   startingResources?: StartingResources;
   startingPolitics?: StartingPolitics;
@@ -743,9 +745,16 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
         if (memPacket.canonicalFacts.length >= 2) {
           packet = memPacket;
           console.log(`  [research] Memory recall: ${packet.canonicalFacts.length} citations`);
-        } else if (opts.liveSearch && event.researchKeywords.length) {
+        } else {
+          const searchMode = opts.economics?.search.mode ?? 'adaptive';
+          const allowsSearch =
+            opts.liveSearch &&
+            event.researchKeywords.length > 0 &&
+            (searchMode === 'aggressive' || (searchMode === 'adaptive' && memPacket.canonicalFacts.length < 2) || (searchMode === 'gated' && memPacket.canonicalFacts.length === 0));
+          if (allowsSearch) {
           try {
-            const query = event.researchKeywords.slice(0, 3).join(' ') + ' ' + sc.labels.settlementNoun + ' science';
+            const keywordBudget = Math.max(1, Math.min(3, opts.economics?.search.maxSearches ?? 3));
+            const query = event.researchKeywords.slice(0, keywordBudget).join(' ') + ' ' + sc.labels.settlementNoun + ' science';
             const searchResult = await webSearchTool.execute({ query }, { gmiId: sid, personaId: sid, userContext: {} } as any);
             const results = (searchResult as any)?.output?.results || [];
             packet = { canonicalFacts: results.slice(0, 5).map((r: any) => ({ claim: r.snippet || r.title || '', source: r.title || 'web search', url: r.url || '' })), counterpoints: [], departmentNotes: {} };
@@ -753,8 +762,9 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
             console.log(`  [research] Live search failed: ${err}`);
             packet = getResearchFromBundle(sc.knowledge, event.category, event.researchKeywords);
           }
-        } else {
-          packet = getResearchFromBundle(sc.knowledge, event.category, event.researchKeywords);
+          } else {
+            packet = getResearchFromBundle(sc.knowledge, event.category, event.researchKeywords);
+          }
         }
       }
 

@@ -48,11 +48,14 @@ test('normalizeSimulationConfig applies defaults for omitted optional fields', (
   assert.equal(config.startingResources.infrastructureModules, 3);
   assert.equal(config.startingPolitics.earthDependencyPct, 95);
   assert.equal(config.execution.commanderMaxSteps, 5);
-  assert.equal(config.execution.departmentMaxSteps, 8);
-  assert.equal(config.models.commander, 'gpt-5.4');
+  assert.equal(config.execution.departmentMaxSteps, 4);
+  assert.equal(config.models.commander, 'gpt-5.4-mini');
   assert.equal(config.models.departments, 'gpt-5.4');
-  assert.equal(config.models.judge, 'gpt-5.4');
-  assert.equal(config.models.director, 'gpt-5.4');
+  assert.equal(config.models.judge, 'gpt-5.4-mini');
+  assert.equal(config.models.director, 'gpt-5.4-mini');
+  assert.equal(config.models.agentReactions, 'gpt-5.4-nano');
+  assert.equal(config.economics.id, 'balanced');
+  assert.equal(config.economics.verdict.mode, 'balanced');
   assert.equal(config.keyPersonnel.length, 5);
 });
 
@@ -120,10 +123,10 @@ test('normalizeSimulationConfig honors anthropic provider defaults and rejects m
   });
 
   assert.equal(config.provider, 'anthropic');
-  assert.equal(config.models.commander, 'claude-sonnet-4-6');
+  assert.equal(config.models.commander, 'claude-haiku-4-5-20251001');
   assert.equal(config.models.departments, 'claude-sonnet-4-6');
-  assert.equal(config.models.judge, 'claude-sonnet-4-6');
-  assert.equal(config.models.director, 'claude-sonnet-4-6');
+  assert.equal(config.models.judge, 'claude-haiku-4-5-20251001');
+  assert.equal(config.models.director, 'claude-haiku-4-5-20251001');
 });
 
 test('normalizeSimulationConfig infers provider from selected model family when provider is omitted', () => {
@@ -150,9 +153,22 @@ test('normalizeSimulationConfig keeps medical and engineering active even if omi
 
 test('resolveSimulationModels uses provider defaults when models are omitted for standalone runs', () => {
   const anthropicModels = resolveSimulationModels('anthropic');
-  assert.equal(anthropicModels.commander, 'claude-sonnet-4-6');
+  assert.equal(anthropicModels.commander, 'claude-haiku-4-5-20251001');
   assert.equal(anthropicModels.departments, 'claude-sonnet-4-6');
-  assert.equal(anthropicModels.judge, 'claude-sonnet-4-6');
-  assert.equal(anthropicModels.director, 'claude-sonnet-4-6');
+  assert.equal(anthropicModels.judge, 'claude-haiku-4-5-20251001');
+  assert.equal(anthropicModels.director, 'claude-haiku-4-5-20251001');
   assert.equal(anthropicModels.agentReactions, 'claude-haiku-4-5-20251001');
+});
+
+test('normalizeSimulationConfig resolves explicit economics profiles', () => {
+  const config = normalizeSimulationConfig({
+    leaders: [leaderA, leaderB],
+    economics: { profileId: 'economy', batchConcurrency: 3 },
+  });
+
+  assert.equal(config.economics.id, 'economy');
+  assert.equal(config.economics.verdict.mode, 'cheap');
+  assert.equal(config.economics.batch.maxConcurrency, 3);
+  assert.equal(config.models.commander, 'gpt-5.4-nano');
+  assert.equal(config.models.departments, 'gpt-5.4-mini');
 });

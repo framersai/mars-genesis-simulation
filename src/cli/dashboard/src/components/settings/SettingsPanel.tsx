@@ -4,7 +4,12 @@ import { LeaderConfig, type LeaderFormData } from './LeaderConfig';
 import { ScenarioEditor } from './ScenarioEditor';
 import { getDashboardTabFromHref, resolveSetupRedirectHref } from '../../tab-routing';
 import { subscribeScenarioUpdates } from '../../scenario-sync';
-
+import {
+  ECONOMICS_PROFILE_OPTIONS,
+  describeServerMode,
+  type DashboardEconomicsProfileId,
+  type DashboardServerMode,
+} from './economicsProfiles';
 
 const DEFAULT_HEXACO: Record<string, number> = {
   openness: 0.5, conscientiousness: 0.5, extraversion: 0.5,
@@ -128,6 +133,7 @@ export function SettingsPanel() {
   const [population, setPopulation] = useState(scenario.setup.defaultPopulation);
   const [provider, setProvider] = useState('openai');
   const [liveSearch, setLiveSearch] = useState(false);
+  const [economicsProfile, setEconomicsProfile] = useState<DashboardEconomicsProfileId>('balanced');
   const [launching, setLaunching] = useState(false);
   const [status, setStatus] = useState('');
   const [scenarios, setScenarios] = useState<Array<{ id: string; name: string; description: string; departments: number }>>([]);
@@ -136,6 +142,7 @@ export function SettingsPanel() {
   // API key state: env flags tell us what's configured server-side; overrides are user-entered values
   const [envKeys, setEnvKeys] = useState<Record<string, boolean>>({});
   const [hostedDemo, setHostedDemo] = useState(false);
+  const [serverMode, setServerMode] = useState<DashboardServerMode>('local_demo');
   // Demo caps fetched from the server so lock labels read the current
   // effective numbers (driven by PARACOSM_DEMO_MAX_TURNS env var on
   // prod) instead of a stale client-side constant.
@@ -194,6 +201,9 @@ export function SettingsPanel() {
   // key OR when hosted-demo mode is off (local dev trusts env keys as the
   // user's own). Same contract as applyDemoCaps on the server side.
   const hasUserLlmKey = hasSessionLlmKey || (!hostedDemo && hasEnvLlmKey);
+  const effectiveEconomicsProfile: DashboardEconomicsProfileId =
+    hostedDemo && !hasSessionLlmKey ? 'economy' : economicsProfile;
+  const serverModeInfo = describeServerMode(serverMode);
 
   const refreshScenarioCatalog = useCallback(() => {
     fetch('/scenarios')
@@ -213,6 +223,7 @@ export function SettingsPanel() {
       .then(data => {
         if (data.keys) setEnvKeys(data.keys);
         if (typeof data.hostedDemo === 'boolean') setHostedDemo(data.hostedDemo);
+        if (typeof data.serverMode === 'string') setServerMode(data.serverMode as DashboardServerMode);
         if (data.demoCaps && typeof data.demoCaps.maxTurns === 'number') {
           setDemoCaps({
             maxTurns: data.demoCaps.maxTurns,
@@ -249,6 +260,7 @@ export function SettingsPanel() {
         ],
         provider, turns, seed, startYear, yearsPerTurn: yearsPerTurn || undefined, population, liveSearch,
         activeDepartments: scenario.departments.map(d => d.id),
+        economics: { profileId: effectiveEconomicsProfile },
       };
       // Persist the last-launched config shape so a "re-run with seed+1"
       // button on the completed-sim screen can reuse it without asking
@@ -295,7 +307,7 @@ export function SettingsPanel() {
       setStatus(`Failed: ${err}`);
       setLaunching(false);
     }
-  }, [leaderA, leaderB, turns, seed, startYear, population, provider, liveSearch, navigateTab, scenario, keyOverrides, tierModels, hasUserLlmKey]);
+  }, [leaderA, leaderB, turns, seed, startYear, population, provider, liveSearch, navigateTab, scenario, keyOverrides, tierModels, hasUserLlmKey, effectiveEconomicsProfile]);
 
   return (
     <div className="settings-content" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '20px 24px', background: 'var(--bg-deep)' }}>
@@ -345,6 +357,9 @@ export function SettingsPanel() {
       </h2>
       <p style={{ fontSize: '13px', color: 'var(--text-2)', marginBottom: '16px' }}>
         Configure two leaders and launch. {scenario.departments.length} departments: {scenario.departments.map(d => d.label).join(', ')}.
+      </p>
+      <p style={{ fontSize: '12px', color: 'var(--text-3)', marginBottom: '16px', lineHeight: 1.6 }}>
+        Server mode: <strong style={{ color: 'var(--text-1)' }}>{serverModeInfo.label}</strong>. {serverModeInfo.description}
       </p>
 
       {/* Leaders grid */}
@@ -449,7 +464,7 @@ export function SettingsPanel() {
             />
           </div>
         </div>
-        <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
+        <div className="responsive-grid-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginTop: '12px' }}>
           <div>
             <label htmlFor="provider-select" style={labelStyle}>Provider</label>
             <select id="provider-select" className="pc-select" value={provider} onChange={e => setProvider(e.target.value)} style={inputStyle}>
@@ -463,6 +478,38 @@ export function SettingsPanel() {
               <option value="false">Off</option>
               <option value="true">On (requires search API keys)</option>
             </select>
+          </div>
+          <div>
+            <label htmlFor="economics-select" style={labelStyle}>
+              Economics
+              {hostedDemo && !hasSessionLlmKey && (
+                <span style={{ color: 'var(--amber)', fontSize: 9, fontWeight: 400, marginLeft: 4 }}>
+                  {'\u{1F512}'} forced:economy
+                </span>
+              )}
+            </label>
+            <select
+              id="economics-select"
+              className="pc-select"
+              value={effectiveEconomicsProfile}
+              onChange={e => setEconomicsProfile(e.target.value as DashboardEconomicsProfileId)}
+              disabled={hostedDemo && !hasSessionLlmKey}
+              style={{
+                ...inputStyle,
+                opacity: hostedDemo && !hasSessionLlmKey ? 0.5 : 1,
+                cursor: hostedDemo && !hasSessionLlmKey ? 'not-allowed' : 'auto',
+              }}
+              title={ECONOMICS_PROFILE_OPTIONS.find(option => option.value === effectiveEconomicsProfile)?.description}
+            >
+              {ECONOMICS_PROFILE_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <div style={{ fontSize: '10px', color: 'var(--text-3)', marginTop: '3px', lineHeight: 1.4 }}>
+              {ECONOMICS_PROFILE_OPTIONS.find(option => option.value === effectiveEconomicsProfile)?.description}
+            </div>
           </div>
         </div>
       </fieldset>

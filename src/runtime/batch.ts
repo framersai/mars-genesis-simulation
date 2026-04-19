@@ -14,6 +14,7 @@ export interface BatchConfig {
   startYear?: number;
   provider?: LlmProvider;
   models?: Partial<SimulationModelConfig>;
+  maxConcurrency?: number;
 }
 
 export interface BatchResult {
@@ -35,9 +36,33 @@ export interface BatchManifest {
     turns: number;
     seed: number;
     provider?: string;
+    maxConcurrency: number;
   };
   results: BatchResult[];
   totalDuration: number;
+}
+
+export async function mapConcurrentInOrder<T, R>(
+  items: readonly T[],
+  maxConcurrency: number,
+  worker: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) return [];
+  const concurrency = Math.max(1, Math.min(maxConcurrency, items.length));
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+
+  const runWorker = async () => {
+    while (true) {
+      const current = nextIndex;
+      nextIndex += 1;
+      if (current >= items.length) return;
+      results[current] = await worker(items[current], current);
+    }
+  };
+
+  await Promise.all(Array.from({ length: concurrency }, () => runWorker()));
+  return results;
 }
 
 /**
@@ -47,10 +72,13 @@ export interface BatchManifest {
 export async function runBatch(config: BatchConfig): Promise<BatchManifest> {
   const { runSimulation } = await import('./orchestrator.js');
   const startTime = Date.now();
-  const results: BatchResult[] = [];
-
-  for (const scenario of config.scenarios) {
-    for (const leader of config.leaders) {
+  const jobs = config.scenarios.flatMap(scenario => (
+    config.leaders.map(leader => ({ scenario, leader }))
+  ));
+  const results = await mapConcurrentInOrder(
+    jobs,
+    config.maxConcurrency ?? 1,
+    async ({ scenario, leader }) => {
       const runStart = Date.now();
       console.log(`\n  [batch] ${scenario.id} x ${leader.name} (${config.turns} turns, seed ${config.seed})`);
 
@@ -63,7 +91,7 @@ export async function runBatch(config: BatchConfig): Promise<BatchManifest> {
         scenario,
       });
 
-      results.push({
+      return {
         scenarioId: scenario.id,
         scenarioVersion: scenario.version,
         leader: leader.name,
@@ -72,9 +100,9 @@ export async function runBatch(config: BatchConfig): Promise<BatchManifest> {
         output,
         fingerprint: (output as any).fingerprint || {},
         duration: Date.now() - runStart,
-      });
-    }
-  }
+      };
+    },
+  );
 
   return {
     timestamp: new Date().toISOString(),
@@ -84,6 +112,7 @@ export async function runBatch(config: BatchConfig): Promise<BatchManifest> {
       turns: config.turns,
       seed: config.seed,
       provider: config.provider,
+      maxConcurrency: Math.max(1, config.maxConcurrency ?? 1),
     },
     results,
     totalDuration: Date.now() - startTime,
