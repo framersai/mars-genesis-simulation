@@ -260,6 +260,68 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
     return () => clearTimeout(id);
   }, [crisisToast]);
 
+  // Threshold alerts: fire when morale or food crosses a critical
+  // boundary for either leader. Dedup per (side, turn, kind) so the
+  // same alert isn't repeated after a render.
+  type AlertKind = 'morale-crash' | 'food-low';
+  const [alertToast, setAlertToast] = useState<{
+    key: string;
+    side: 'a' | 'b';
+    turn: number;
+    kind: AlertKind;
+    message: string;
+    expiresAt: number;
+  } | null>(null);
+  const seenAlertsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const check = (side: 'a' | 'b', snaps: TurnSnapshot[]) => {
+      if (snaps.length < 2) return;
+      const current = snaps[snaps.length - 1];
+      const prev = snaps[snaps.length - 2];
+      const moraleDrop = prev.morale - current.morale;
+      if (moraleDrop >= 0.2) {
+        const key = `${side}|${current.turn}|morale-crash`;
+        if (!seenAlertsRef.current.has(key)) {
+          seenAlertsRef.current.add(key);
+          setAlertToast({
+            key,
+            side,
+            turn: current.turn,
+            kind: 'morale-crash',
+            message: `Morale crashed ${Math.round(moraleDrop * 100)}% → ${Math.round(current.morale * 100)}% this turn`,
+            expiresAt: performance.now() + 5500,
+          });
+        }
+      }
+      if (current.foodReserve < 3 && prev.foodReserve >= 3) {
+        const key = `${side}|${current.turn}|food-low`;
+        if (!seenAlertsRef.current.has(key)) {
+          seenAlertsRef.current.add(key);
+          setAlertToast({
+            key,
+            side,
+            turn: current.turn,
+            kind: 'food-low',
+            message: `Food reserve fell below 3mo (${current.foodReserve.toFixed(1)}mo remaining)`,
+            expiresAt: performance.now() + 5500,
+          });
+        }
+      }
+    };
+    check('a', snapsA);
+    check('b', snapsB);
+  }, [snapsA, snapsB]);
+  useEffect(() => {
+    if (!alertToast) return;
+    const remaining = alertToast.expiresAt - performance.now();
+    if (remaining <= 0) {
+      setAlertToast(null);
+      return;
+    }
+    const id = setTimeout(() => setAlertToast(null), remaining);
+    return () => clearTimeout(id);
+  }, [alertToast]);
+
   // Palette cycler — cycles through warm amber (default), cool cyan,
   // monochrome. Persists to localStorage.
   type PaletteKey = 'amber' | 'cool' | 'mono';
@@ -558,11 +620,16 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
     const prevSnapB = currentTurn > 0
       ? (snapsB[currentTurn - 1] ?? snapsB[snapsB.length - 2])
       : undefined;
-    const q = searchQuery.trim().toLowerCase();
-    const searchMatches: SearchMatch[] = q
+    const tokens = searchQuery.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const cellMatches = (c: CellSnapshot): boolean => {
+      if (tokens.length === 0) return false;
+      const hay = `${c.name} ${c.department} ${c.role} ${c.mood}`.toLowerCase();
+      return tokens.every(t => hay.includes(t));
+    };
+    const searchMatches: SearchMatch[] = tokens.length
       ? [
           ...(snapA?.cells ?? [])
-            .filter(c => c.alive && c.name.toLowerCase().includes(q))
+            .filter(c => c.alive && cellMatches(c))
             .map(cell => ({
               cell,
               side: 'a' as const,
@@ -570,7 +637,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
               sideColor: '#e8b44a',
             })),
           ...(snapB?.cells ?? [])
-            .filter(c => c.alive && c.name.toLowerCase().includes(q))
+            .filter(c => c.alive && cellMatches(c))
             .map(cell => ({
               cell,
               side: 'b' as const,
@@ -861,6 +928,40 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
             ? `Turn ${Math.max(snapA.turn, snapB.turn)}. ${leaderA?.name ?? 'A'} colony: ${snapA.cells.filter(c => c.alive).length} alive, ${snapA.births} born, ${snapA.deaths} died, morale ${Math.round(snapA.morale * 100)}%. ${leaderB?.name ?? 'B'} colony: ${snapB.cells.filter(c => c.alive).length} alive, ${snapB.births} born, ${snapB.deaths} died, morale ${Math.round(snapB.morale * 100)}%.`
             : ''}
         </div>
+        {maxTurn > 1 && currentTurn < maxTurn - 1 && (
+          <button
+            type="button"
+            onClick={() => handleTurnChange(maxTurn - 1)}
+            aria-label={`Jump to latest turn (T${maxTurn})`}
+            style={{
+              position: 'absolute',
+              right: 16,
+              bottom: 72,
+              padding: '6px 12px',
+              background: 'var(--amber)',
+              color: 'var(--bg-deep)',
+              border: 'none',
+              borderRadius: 999,
+              cursor: 'pointer',
+              fontFamily: 'var(--mono)',
+              fontSize: 10,
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.5)',
+              zIndex: 20,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              animation: 'paracosm-jump-pulse 2.2s ease-in-out infinite',
+            }}
+          >
+            \u2193 Latest · T{maxTurn}
+            <span style={{ fontSize: 9, opacity: 0.7 }}>
+              ({maxTurn - 1 - currentTurn} turn{maxTurn - 1 - currentTurn === 1 ? '' : 's'} behind)
+            </span>
+          </button>
+        )}
         <GridHelpOverlay open={helpOpen} onClose={() => setHelpOpen(false)} />
         <GridSettingsDrawer
           open={settingsOpen}
@@ -868,6 +969,61 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
           onChange={setGridSettings}
           onClose={() => setSettingsOpen(false)}
         />
+        {alertToast && (
+          <div
+            key={alertToast.key}
+            role="status"
+            aria-live="assertive"
+            onClick={() => setAlertToast(null)}
+            style={{
+              position: 'absolute',
+              top: crisisToast ? 68 : 8,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              maxWidth: 520,
+              width: 'calc(100% - 24px)',
+              padding: '8px 14px',
+              background: 'rgba(14, 11, 9, 0.92)',
+              border: `1px solid ${alertToast.side === 'a' ? 'var(--vis)' : 'var(--eng)'}`,
+              borderLeft:
+                alertToast.kind === 'morale-crash'
+                  ? '3px solid var(--rust)'
+                  : '3px solid var(--amber)',
+              borderRadius: 4,
+              fontFamily: 'var(--sans)',
+              fontSize: 12,
+              color: 'var(--text-1)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.6)',
+              zIndex: 30,
+              cursor: 'pointer',
+              animation: 'paracosm-toast-in 280ms ease-out',
+            }}
+            title="Click to dismiss"
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                fontSize: 9,
+                fontFamily: 'var(--mono)',
+                letterSpacing: '0.12em',
+                color:
+                  alertToast.kind === 'morale-crash'
+                    ? 'var(--rust)'
+                    : 'var(--amber)',
+                textTransform: 'uppercase',
+                marginBottom: 2,
+              }}
+            >
+              <span>{alertToast.kind === 'morale-crash' ? '\u25BC Alert' : '\u26A0 Alert'}</span>
+              <span style={{ color: 'var(--text-3)' }}>
+                {alertToast.side.toUpperCase()} · T{alertToast.turn}
+              </span>
+            </div>
+            <div style={{ fontSize: 12, lineHeight: 1.3 }}>{alertToast.message}</div>
+          </div>
+        )}
         {crisisToast && (
           <div
             key={crisisToast.key}
@@ -943,6 +1099,10 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
           @keyframes paracosm-toast-in {
             0% { opacity: 0; transform: translate(-50%, -8px); }
             100% { opacity: 1; transform: translate(-50%, 0); }
+          }
+          @keyframes paracosm-jump-pulse {
+            0%, 100% { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 0 0 0 rgba(232, 180, 74, 0.4); }
+            50%      { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 0 0 8px rgba(232, 180, 74, 0); }
           }
         `}</style>
       </div>

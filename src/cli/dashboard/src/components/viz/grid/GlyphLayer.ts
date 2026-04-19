@@ -28,15 +28,25 @@ export function drawGlyphs(
   void ({} as DrawGlyphsOptions);
   ctx.save();
   const pulse = 0.5 + 0.5 * Math.sin(timeMs * 0.003);
-  const query = searchQuery.trim().toLowerCase();
+  const tokens = searchQuery
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
+  const hasQuery = tokens.length > 0;
+  const matchCell = (c: CellSnapshot): boolean => {
+    if (!hasQuery) return false;
+    const hay = `${c.name} ${c.department} ${c.role} ${c.mood}`.toLowerCase();
+    return tokens.every(t => hay.includes(t));
+  };
   for (const c of cells) {
     if (!c.alive) continue;
     const pos = positions.get(c.agentId);
     if (!pos) continue;
     const diverged = divergedIds?.has(c.agentId) ?? false;
     if (divergenceOnly && !diverged) continue;
-    const matchesSearch = query.length > 0 && c.name.toLowerCase().includes(query);
-    const searchDim = query.length > 0 && !matchesSearch;
+    const matchesSearch = matchCell(c);
+    const searchDim = hasQuery && !matchesSearch;
     const r = c.featured ? 5 : 3;
     const baseAlpha = c.featured ? 0.95 : 0.75;
     const searchAlphaMult = searchDim ? 0.25 : 1;
