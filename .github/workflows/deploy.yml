@@ -32,6 +32,33 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: https://registry.npmjs.org
 
+      # Verify both lockfiles are in sync with their package.json before
+      # npm ci runs. npm ci's native failure message is cryptic and
+      # requires a follow-up debug-log read; this step writes a clear
+      # fix recipe directly into the annotations. Has fixed the same
+      # recurring dependabot-style desync twice already (PR #264, #310).
+      - name: Verify lockfiles are in sync with package.json
+        run: |
+          set -e
+          check() {
+            local dir="$1"
+            local label="$2"
+            pushd "$dir" >/dev/null
+            npm install --package-lock-only --no-audit --no-fund --ignore-scripts >/dev/null 2>&1
+            if ! git diff --quiet package-lock.json; then
+              echo "::error file=${dir}/package-lock.json::${label} package-lock.json is out of sync with package.json."
+              echo "::error file=${dir}/package-lock.json::To fix locally: cd ${dir} && npm install --package-lock-only && git add package-lock.json && git commit -m 'chore(deps): sync lockfile' && git push"
+              echo ""
+              echo "--- drift in ${dir}/package-lock.json ---"
+              git diff package-lock.json | head -40
+              popd >/dev/null
+              exit 1
+            fi
+            popd >/dev/null
+          }
+          check "." "Root"
+          check "src/cli/dashboard" "Dashboard"
+
       - name: Install dependencies
         run: npm ci
 

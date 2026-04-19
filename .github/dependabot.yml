@@ -1,0 +1,39 @@
+# Dependabot config for paracosm.
+#
+# Adding this file ensures that when dependabot opens PRs for dependency
+# bumps it includes the corresponding lockfile change. Previously the
+# `chore(deps): bump @framers/agentos` PRs updated package.json alone
+# and the deploy workflow's `npm ci` step broke on merge; the CI
+# preflight in deploy.yml now catches the desync but dependabot PRs
+# should not create the desync in the first place.
+#
+# Grouping @framers/* + @wilds/* into a single daily PR reduces review
+# load: an agentos bump usually lands together with coordinated bumps
+# in the sibling framers/wilds packages.
+
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 5
+    versioning-strategy: "increase"
+    groups:
+      framers:
+        patterns:
+          - "@framers/*"
+          - "@wilds/*"
+
+  - package-ecosystem: "npm"
+    directory: "/src/cli/dashboard"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 3
+    versioning-strategy: "increase"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
