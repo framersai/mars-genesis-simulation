@@ -11,6 +11,12 @@ export interface GridSettings {
   dust: boolean;
   /** Draw crosshair + nearest-colonist hint when cursor is between glyphs. */
   crosshair: boolean;
+  /** Draw faded previous-turn positions with movement arrows. */
+  ghostTrail: boolean;
+  /** Enable crash/crisis toast banners. */
+  alerts: boolean;
+  /** Enable audio cues on birth / death / forge / crisis. */
+  sound: boolean;
 }
 
 export const DEFAULT_GRID_SETTINGS: GridSettings = {
@@ -19,6 +25,9 @@ export const DEFAULT_GRID_SETTINGS: GridSettings = {
   lines: true,
   dust: true,
   crosshair: true,
+  ghostTrail: false,
+  alerts: true,
+  sound: false,
 };
 
 interface DrawerProps {
@@ -146,6 +155,21 @@ export function GridSettingsDrawer({ open, settings, onChange, onClose }: Drawer
         <Row label="Crosshair">
           <Pill active={settings.crosshair} onClick={() => toggle('crosshair', true)} label="on" />
           <Pill active={!settings.crosshair} onClick={() => toggle('crosshair', false)} label="off" />
+        </Row>
+
+        <Row label="Ghost trail">
+          <Pill active={settings.ghostTrail} onClick={() => toggle('ghostTrail', true)} label="on" />
+          <Pill active={!settings.ghostTrail} onClick={() => toggle('ghostTrail', false)} label="off" />
+        </Row>
+
+        <Row label="Alert toasts">
+          <Pill active={settings.alerts} onClick={() => toggle('alerts', true)} label="on" />
+          <Pill active={!settings.alerts} onClick={() => toggle('alerts', false)} label="off" />
+        </Row>
+
+        <Row label="Sound cues">
+          <Pill active={settings.sound} onClick={() => toggle('sound', true)} label="on" />
+          <Pill active={!settings.sound} onClick={() => toggle('sound', false)} label="off" />
         </Row>
 
         <button
