@@ -159,7 +159,7 @@ export function LoadPriorRunsCTA({ hideWhenUnavailable = true }: LoadPriorRunsCT
             key={s.id}
             type="button"
             onClick={() => handleOpen(s.id)}
-            aria-label={`Replay ${s.scenarioName || s.scenarioId || s.id}`}
+            aria-label={`Replay ${s.title || s.scenarioName || s.scenarioId || s.id}`}
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -194,9 +194,10 @@ export function LoadPriorRunsCTA({ hideWhenUnavailable = true }: LoadPriorRunsCT
                 fontFamily: 'var(--sans)',
               }}
             >
-              {s.scenarioName || s.scenarioId || 'Simulation'}
+              {s.title || s.scenarioName || s.scenarioId || 'Simulation'}
             </span>
             <span style={{ fontSize: 9, color: 'var(--text-3)', marginTop: 3 }}>
+              {s.title && s.scenarioName ? `${s.scenarioName} · ` : ''}
               {typeof s.turnCount === 'number' ? `${s.turnCount} turns · ` : ''}
               {s.leaderA && s.leaderB ? `${s.leaderA} vs ${s.leaderB} · ` : ''}
               {formatCreatedAt(s.createdAt)}
