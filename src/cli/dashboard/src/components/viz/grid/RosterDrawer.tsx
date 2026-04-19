@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { CellSnapshot } from '../viz-types.js';
+import { useScenarioLabels } from '../../../hooks/useScenarioLabels.js';
 
 interface RosterDrawerProps {
   open: boolean;
@@ -52,6 +53,7 @@ export function RosterDrawer({
 }: RosterDrawerProps) {
   const [showDeceased, setShowDeceased] = useState(false);
   const [sort, setSort] = useState<RosterSort>('dept');
+  const labels = useScenarioLabels();
 
   const { alive, deceased, matchSet } = useMemo(() => {
     const aliveArr: CellSnapshot[] = [];
@@ -220,7 +222,7 @@ export function RosterDrawer({
       <div style={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
         {grouped.length === 0 && (
           <div style={{ padding: '8px 10px', color: 'var(--text-4)', fontSize: 10 }}>
-            No living colonists.
+            No living {labels.people}.
           </div>
         )}
         {grouped.map(([dept, list]) => (

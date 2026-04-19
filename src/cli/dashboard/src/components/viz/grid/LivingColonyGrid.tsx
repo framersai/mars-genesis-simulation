@@ -21,6 +21,7 @@ import { useMediaQuery, NARROW_QUERY, REDUCED_MOTION_QUERY } from './useMediaQue
 import { DEFAULT_GRID_SETTINGS, type GridSettings } from './GridSettingsDrawer.js';
 import { RosterDrawer } from './RosterDrawer.js';
 import { FeaturedSpotlight } from './FeaturedSpotlight.js';
+import { useScenarioLabels } from '../../../hooks/useScenarioLabels.js';
 
 interface HexacoShape { O: number; C: number; E: number; A: number; Em: number; HH: number }
 
@@ -153,6 +154,7 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
 
   const narrow = useMediaQuery(NARROW_QUERY);
   const reducedMotion = useMediaQuery(REDUCED_MOTION_QUERY);
+  const scenarioLabels = useScenarioLabels();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasWrapRef = useRef<HTMLDivElement | null>(null);
   const webglCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -586,7 +588,7 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
       ref={containerRef}
       data-testid={`living-colony-grid-${side}`}
       role="region"
-      aria-label={`${leaderName} colony viz`}
+      aria-label={`${leaderName} ${scenarioLabels.place} viz`}
       style={{
         flex: narrow ? '0 0 auto' : 1,
         display: 'flex',
@@ -656,8 +658,8 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
           role="img"
           aria-label={
             snapshot
-              ? `${leaderName} colony, turn ${snapshot.turn}. ${snapshot.cells.filter(c => c.alive).length} alive, morale ${Math.round(snapshot.morale * 100)}%, food reserve ${snapshot.foodReserve.toFixed(1)} months. ${snapshot.births} births, ${snapshot.deaths} deaths this turn. Click a colonist glyph for drilldown.`
-              : `${leaderName} colony — waiting for first turn.`
+              ? `${leaderName} ${scenarioLabels.place}, turn ${snapshot.turn}. ${snapshot.cells.filter(c => c.alive).length} alive, morale ${Math.round(snapshot.morale * 100)}%, food reserve ${snapshot.foodReserve.toFixed(1)} months. ${snapshot.births} births, ${snapshot.deaths} deaths this turn. Click a ${scenarioLabels.person} glyph for drilldown.`
+              : `${leaderName} ${scenarioLabels.place} — waiting for first turn.`
           }
           onMouseMove={onMouseMove}
           onMouseLeave={onMouseLeave}

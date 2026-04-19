@@ -60,7 +60,7 @@ export function DeptDonut({
           fontSize: 9,
           fontFamily: 'var(--mono)',
         }}
-        aria-label="No live colonists"
+        aria-label="No live members"
       >
         —
       </div>

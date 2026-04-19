@@ -1,4 +1,5 @@
 import { useMediaQuery, PHONE_QUERY } from './useMediaQuery.js';
+import { useScenarioLabels } from '../../../hooks/useScenarioLabels.js';
 
 interface GridHelpOverlayProps {
   open: boolean;
@@ -12,6 +13,7 @@ interface GridHelpOverlayProps {
  */
 export function GridHelpOverlay({ open, onClose }: GridHelpOverlayProps) {
   const phone = useMediaQuery(PHONE_QUERY);
+  const labels = useScenarioLabels();
   if (!open) return null;
 
   return (
@@ -66,7 +68,7 @@ export function GridHelpOverlay({ open, onClose }: GridHelpOverlayProps) {
               fontFamily: 'var(--mono)',
             }}
           >
-            Living Colony Grid — Legend
+            Living {labels.Place} Grid — Legend
           </h2>
           <button
             type="button"
@@ -90,25 +92,25 @@ export function GridHelpOverlay({ open, onClose }: GridHelpOverlayProps) {
         </div>
 
         <Section title="Modes">
-          <Row k="LIVING" v="Full chemistry + colonist glyphs + family lines + event flares" />
-          <Row k="MOOD" v="Emphasizes colonist seeds + mood-coded chemistry clouds" />
+          <Row k="LIVING" v={`Full chemistry + ${labels.person} glyphs + family lines + event flares`} />
+          <Row k="MOOD" v={`Emphasizes ${labels.person} seeds + mood-coded chemistry clouds`} />
           <Row k="FORGE" v="Dims field, highlights forge attempts + reuse arcs" />
           <Row k="ECOLOGY" v="Hides glyphs; metrics strip + crisis flares lead" />
-          <Row k="DIVERGENCE" v="Only shows colonists alive here but dead on the other side" />
+          <Row k="DIVERGENCE" v={`Only shows ${labels.people} alive here but dead on the other side`} />
         </Section>
 
         <Section title="Grid elements">
           <Row
             k={<Swatch color="rgba(232, 180, 74, 0.9)" /> as unknown as string}
-            v="Warm amber = high vitality (colony thriving)"
+            v={`Warm amber = high vitality (${labels.place} thriving)`}
           />
           <Row
             k={<Swatch color="rgba(196, 74, 30, 0.9)" /> as unknown as string}
             v="Rust red = stress concentration (decay / anxiety)"
           />
-          <Row k="○ small ring" v="Alive colonist, hover for identity" />
-          <Row k="◎ thick ring" v="Featured colonist (drives narrative this turn)" />
-          <Row k="○ amber halo" v="Diverged colonist — alive here but dead on the other side" />
+          <Row k="○ small ring" v={`Alive ${labels.person}, hover for identity`} />
+          <Row k="◎ thick ring" v={`Featured ${labels.person} (drives narrative this turn)`} />
+          <Row k="○ amber halo" v={`Diverged ${labels.person} — alive here but dead on the other side`} />
           <Row k="DEPT label" v="Cluster centroid label showing dept + live count" />
         </Section>
 
@@ -150,7 +152,7 @@ export function GridHelpOverlay({ open, onClose }: GridHelpOverlayProps) {
           <Row k="Space" v="Play / pause timeline" />
           <Row k="?" v="Toggle this help overlay" />
           <Row k="Esc" v="Close popover / this overlay" />
-          <Row k="click glyph" v="Open colonist drilldown (HEXACO radar, memory, chat)" />
+          <Row k="click glyph" v={`Open ${labels.person} drilldown (HEXACO radar, memory, chat)`} />
         </Section>
 
         <div style={{ fontSize: 9, color: 'var(--text-4)', marginTop: 12 }}>

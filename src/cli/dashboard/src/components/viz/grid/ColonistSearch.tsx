@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CellSnapshot } from '../viz-types.js';
+import { useScenarioLabels } from '../../../hooks/useScenarioLabels.js';
 
 export interface SearchMatch {
   cell: CellSnapshot;
@@ -24,6 +25,7 @@ export function ColonistSearch({ value, onChange, matches, onPick }: ColonistSea
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [focused, setFocused] = useState(false);
   const matchCount = matches.length;
+  const labels = useScenarioLabels();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
@@ -69,8 +71,8 @@ export function ColonistSearch({ value, onChange, matches, onPick }: ColonistSea
         onChange={e => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setTimeout(() => setFocused(false), 120)}
-        placeholder="name, dept, mood… (space-separate to AND-match; / to focus)"
-        aria-label="Search colonists by name, department, role, or mood"
+        placeholder={`${labels.person} name, dept, mood… (space-separate to AND-match; / to focus)`}
+        aria-label={`Search ${labels.people} by name, department, role, or mood`}
         style={{
           flex: 1,
           minWidth: 0,
