@@ -331,6 +331,36 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
     });
 
     const resolvedSide = resolveCssColor(sideColor, containerRef.current);
+    // Resolve theme-dependent colors from CSS vars FIRST. The ghost-trail
+    // block below consumes `cs` + `hexToRgba`, and `drawGlyphs` consumes
+    // `textMuted` — both were previously declared lower in this function,
+    // which became a TDZ ("Cannot access 'wn' before initialization") the
+    // moment Vite's prod minifier reordered statements around them. Keep
+    // this block ABOVE every draw call that uses its outputs.
+    const cs = containerRef.current ? getComputedStyle(containerRef.current) : null;
+    const hexToRgba = (hex: string, alpha: number): string | null => {
+      if (!hex.startsWith('#') || hex.length !== 7) return null;
+      const n = parseInt(hex.slice(1), 16);
+      const r = (n >> 16) & 0xff;
+      const g = (n >> 8) & 0xff;
+      const b = n & 0xff;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+    const labelBg =
+      (cs && hexToRgba(cs.getPropertyValue('--bg-deep').trim(), 0.85)) ||
+      'rgba(10, 8, 6, 0.85)';
+    const textMuted =
+      (cs && hexToRgba(cs.getPropertyValue('--text-2').trim(), 0.8)) ||
+      'rgba(216, 204, 176, 0.75)';
+    const crosshairStroke =
+      (cs && hexToRgba(cs.getPropertyValue('--text-2').trim(), 0.22)) ||
+      'rgba(216, 204, 176, 0.22)';
+    const crosshairTracerStroke =
+      (cs && hexToRgba(cs.getPropertyValue('--text-2').trim(), 0.4)) ||
+      'rgba(216, 204, 176, 0.4)';
+    const crosshairTracerFill =
+      (cs && hexToRgba(cs.getPropertyValue('--text-2').trim(), 0.7)) ||
+      'rgba(216, 204, 176, 0.7)';
     ctx.clearRect(0, 0, size.w, size.h);
     if (mode !== 'ecology') drawSeeds(ctx, snapshot.cells, positions);
     if (mode !== 'ecology' && settings.deptRings) drawDeptRings(ctx, snapshot.cells, positions);
@@ -387,32 +417,6 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
         true, // always-on labels for featured + diverged
         textMuted,
       );
-    // Resolve theme-dependent colors from CSS vars so HUD label boxes
-    // and secondary text read correctly under both light + dark themes.
-    const cs = containerRef.current ? getComputedStyle(containerRef.current) : null;
-    const hexToRgba = (hex: string, alpha: number): string | null => {
-      if (!hex.startsWith('#') || hex.length !== 7) return null;
-      const n = parseInt(hex.slice(1), 16);
-      const r = (n >> 16) & 0xff;
-      const g = (n >> 8) & 0xff;
-      const b = n & 0xff;
-      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-    };
-    const labelBg =
-      (cs && hexToRgba(cs.getPropertyValue('--bg-deep').trim(), 0.85)) ||
-      'rgba(10, 8, 6, 0.85)';
-    const textMuted =
-      (cs && hexToRgba(cs.getPropertyValue('--text-2').trim(), 0.8)) ||
-      'rgba(216, 204, 176, 0.75)';
-    const crosshairStroke =
-      (cs && hexToRgba(cs.getPropertyValue('--text-2').trim(), 0.22)) ||
-      'rgba(216, 204, 176, 0.22)';
-    const crosshairTracerStroke =
-      (cs && hexToRgba(cs.getPropertyValue('--text-2').trim(), 0.4)) ||
-      'rgba(216, 204, 176, 0.4)';
-    const crosshairTracerFill =
-      (cs && hexToRgba(cs.getPropertyValue('--text-2').trim(), 0.7)) ||
-      'rgba(216, 204, 176, 0.7)';
     drawHud(ctx, snapshot, {
       leaderName,
       leaderArchetype,
