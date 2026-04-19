@@ -30,6 +30,15 @@ const MOOD_COLORS: Record<string, string> = {
  * Filters by the active search query; hovering a row highlights the
  * glyph, clicking opens the drilldown (delegated to caller).
  */
+type RosterSort = 'dept' | 'name' | 'psych' | 'age';
+
+const SORT_CHIPS: { key: RosterSort; label: string }[] = [
+  { key: 'dept', label: 'Dept' },
+  { key: 'name', label: 'Name' },
+  { key: 'psych', label: 'Psych' },
+  { key: 'age', label: 'Age' },
+];
+
 export function RosterDrawer({
   open,
   cells,
@@ -42,6 +51,7 @@ export function RosterDrawer({
   onClose,
 }: RosterDrawerProps) {
   const [showDeceased, setShowDeceased] = useState(false);
+  const [sort, setSort] = useState<RosterSort>('dept');
 
   const { alive, deceased, matchSet } = useMemo(() => {
     const aliveArr: CellSnapshot[] = [];
@@ -50,7 +60,17 @@ export function RosterDrawer({
       if (c.alive) aliveArr.push(c);
       else deceasedArr.push(c);
     }
-    aliveArr.sort((a, b) => a.department.localeCompare(b.department) || a.name.localeCompare(b.name));
+    if (sort === 'dept') {
+      aliveArr.sort(
+        (a, b) => a.department.localeCompare(b.department) || a.name.localeCompare(b.name),
+      );
+    } else if (sort === 'name') {
+      aliveArr.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sort === 'psych') {
+      aliveArr.sort((a, b) => (b.psychScore ?? 0) - (a.psychScore ?? 0));
+    } else if (sort === 'age') {
+      aliveArr.sort((a, b) => (b.age ?? 0) - (a.age ?? 0));
+    }
     deceasedArr.sort((a, b) => a.name.localeCompare(b.name));
 
     const tokens = searchQuery.trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -62,9 +82,12 @@ export function RosterDrawer({
       }
     }
     return { alive: aliveArr, deceased: deceasedArr, matchSet: match };
-  }, [cells, searchQuery]);
+  }, [cells, searchQuery, sort]);
 
   const grouped = useMemo(() => {
+    if (sort !== 'dept') {
+      return [['__flat__', alive] as [string, CellSnapshot[]]];
+    }
     const byDept = new Map<string, CellSnapshot[]>();
     for (const c of alive) {
       const k = (c.department || 'unknown').toLowerCase();
@@ -73,7 +96,7 @@ export function RosterDrawer({
       byDept.set(k, arr);
     }
     return [...byDept.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  }, [alive]);
+  }, [alive, sort]);
 
   if (!open) return null;
 
@@ -158,6 +181,42 @@ export function RosterDrawer({
           ×
         </button>
       </div>
+      <div
+        style={{
+          display: 'flex',
+          gap: 2,
+          padding: '4px 6px',
+          borderBottom: '1px solid var(--border)',
+        }}
+      >
+        {SORT_CHIPS.map(chip => {
+          const active = sort === chip.key;
+          return (
+            <button
+              key={chip.key}
+              type="button"
+              onClick={() => setSort(chip.key)}
+              aria-pressed={active}
+              style={{
+                flex: 1,
+                padding: '2px 0',
+                fontSize: 8,
+                fontFamily: 'var(--mono)',
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                background: active ? 'var(--amber)' : 'var(--bg-card)',
+                color: active ? 'var(--bg-deep)' : 'var(--text-3)',
+                border: '1px solid var(--border)',
+                borderRadius: 2,
+                cursor: 'pointer',
+              }}
+            >
+              {chip.label}
+            </button>
+          );
+        })}
+      </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
         {grouped.length === 0 && (
           <div style={{ padding: '8px 10px', color: 'var(--text-4)', fontSize: 10 }}>
@@ -166,18 +225,20 @@ export function RosterDrawer({
         )}
         {grouped.map(([dept, list]) => (
           <div key={dept}>
-            <div
-              style={{
-                padding: '3px 8px',
-                fontSize: 8,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                color: 'var(--text-4)',
-                fontWeight: 700,
-              }}
-            >
-              {dept} · {list.length}
-            </div>
+            {sort === 'dept' && (
+              <div
+                style={{
+                  padding: '3px 8px',
+                  fontSize: 8,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'var(--text-4)',
+                  fontWeight: 700,
+                }}
+              >
+                {dept} · {list.length}
+              </div>
+            )}
             {list.map(c => {
               const isMatch = matchSet.has(c.agentId);
               const isHovered = hoveredId === c.agentId;
