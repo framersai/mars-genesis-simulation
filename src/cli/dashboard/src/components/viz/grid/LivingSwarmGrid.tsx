@@ -25,7 +25,7 @@ import { useScenarioLabels } from '../../../hooks/useScenarioLabels.js';
 
 interface HexacoShape { O: number; C: number; E: number; A: number; Em: number; HH: number }
 
-interface LivingColonyGridProps {
+interface LivingSwarmGridProps {
   snapshot: TurnSnapshot | undefined;
   previousSnapshot?: TurnSnapshot | undefined;
   /** Full snapshot history for this side; enables recent-memory lookup. */
@@ -135,12 +135,16 @@ const GRID_W = 384;
 const GRID_H = 240;
 
 /**
- * Per-leader living colony grid. WebGL2 Gray-Scott field in back,
+ * Per-leader living swarm grid. WebGL2 Gray-Scott field in back,
  * Canvas2D overlay in front (seeds, glyphs, flares, dept labels, HUD),
  * GridMetricsStrip DOM layer above. Hover tooltip tracks the nearest
- * colonist under cursor.
+ * agent under cursor. Named "swarm" rather than "colony" so the
+ * component reads cleanly for non-Mars scenarios (corporate org,
+ * military unit, research lab, etc.) — the underlying semantics are
+ * scenario-agnostic; only the `scenarioLabels` hook localizes the
+ * population-noun ("colonist" / "employee" / "soldier" / ...).
  */
-export function LivingColonyGrid(props: LivingColonyGridProps) {
+export function LivingSwarmGrid(props: LivingSwarmGridProps) {
   const {
     snapshot,
     previousSnapshot,
@@ -230,7 +234,7 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
     try {
       rendererRef.current = new GridRenderer({ canvas, width: GRID_W, height: GRID_H });
     } catch (err) {
-      console.warn('[LivingColonyGrid] WebGL2 init failed', err);
+      console.warn('[LivingSwarmGrid] WebGL2 init failed', err);
       setWebglFailed(true);
     }
     return () => {

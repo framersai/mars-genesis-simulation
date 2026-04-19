@@ -27,7 +27,7 @@ import { ClusterToggleRow } from './ClusterToggleRow.js';
 import { Legend } from './Legend.js';
 import { DrilldownPanel } from './DrilldownPanel.js';
 import { VizControls } from './VizControls.js';
-import { LivingColonyGrid } from './grid/LivingColonyGrid.js';
+import { LivingSwarmGrid } from './grid/LivingSwarmGrid.js';
 import { GridModePills, gridModeHint, type GridMode } from './grid/GridModePills.js';
 import { GridHelpOverlay } from './grid/GridHelpOverlay.js';
 import { useMediaQuery, NARROW_QUERY } from './grid/useMediaQuery.js';
@@ -207,7 +207,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
   const [hoveredB, setHoveredB] = useState<string | null>(null);
   const [hoveredTurn, setHoveredTurn] = useState<number | null>(null);
   // Event-kind filter shared between EventChronicle (strip above the
-  // viz panels) and each LivingColonyGrid (main canvas). Prior to
+  // viz panels) and each LivingSwarmGrid (main canvas). Prior to
   // lifting this to ColonyViz, clicking BIRTHS / DEATHS / FORGES /
   // CRISES only hid entries in the chronicle strip — the canvas
   // flares continued to fire for every event regardless. Controlled
@@ -1084,7 +1084,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
               minHeight: 0,
             }}
           >
-          <LivingColonyGrid
+          <LivingSwarmGrid
             snapshot={snapA}
             previousSnapshot={prevSnapA}
             snapshotHistory={snapsA}
@@ -1127,7 +1127,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
               minHeight: 0,
             }}
           >
-          <LivingColonyGrid
+          <LivingSwarmGrid
             snapshot={snapB}
             previousSnapshot={prevSnapB}
             snapshotHistory={snapsB}
