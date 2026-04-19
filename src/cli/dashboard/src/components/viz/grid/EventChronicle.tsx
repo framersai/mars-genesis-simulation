@@ -29,7 +29,17 @@ interface EventChronicleProps {
   hoveredTurn?: number | null;
   /** Fires when a forge dot is clicked. Parent opens the lineage modal. */
   onForgeSelect?: (toolName: string, side: 'a' | 'b') => void;
+  /**
+   * Optional controlled filter. When `filter` + `onFilterChange` are
+   * provided, the parent owns the filter state and can propagate it to
+   * sister widgets (e.g. dim non-matching flares in the main canvas).
+   * When omitted, EventChronicle falls back to its own internal state.
+   */
+  filter?: ChronicleFilter;
+  onFilterChange?: (next: ChronicleFilter) => void;
 }
+
+export type { ChronicleFilter };
 
 const KIND_COLORS: Record<ChronicleEvent['kind'], string> = {
   birth: 'rgba(154, 205, 96, 0.95)',
@@ -59,6 +69,8 @@ export function EventChronicle({
   onHoverTurnChange,
   hoveredTurn,
   onForgeSelect,
+  filter: controlledFilter,
+  onFilterChange,
 }: EventChronicleProps) {
   const chronicle = useMemo<ChronicleEvent[]>(() => {
     const out: ChronicleEvent[] = [];
@@ -108,7 +120,16 @@ export function EventChronicle({
     return out.slice(-60);
   }, [eventsA, eventsB]);
 
-  const [filter, setFilter] = useState<ChronicleFilter>('all');
+  // Uncontrolled fallback. When the parent passes `filter` + `onFilterChange`
+  // the internal state is shadowed entirely — the controlled value flows
+  // through and setFilterInternal is a no-op signal to React that state
+  // is owned upstream.
+  const [internalFilter, setFilterInternal] = useState<ChronicleFilter>('all');
+  const filter = controlledFilter ?? internalFilter;
+  const setFilter = (next: ChronicleFilter) => {
+    if (controlledFilter === undefined) setFilterInternal(next);
+    onFilterChange?.(next);
+  };
   const filtered = useMemo(
     () => (filter === 'all' ? chronicle : chronicle.filter(e => e.kind === filter)),
     [chronicle, filter],
