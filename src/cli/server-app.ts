@@ -213,9 +213,15 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
   // Run-state flags for auto-save on clean completion. Reset inside
   // clearEventBuffer() so the next run starts fresh. See
   // docs/superpowers/specs/2026-04-18-load-menu-cached-runs-design.md.
+  //
+  // AUTO_SAVE_MIN_TURNS floors the run length at one completed turn:
+  // accidental clicks never get saved (no turn_done → nothing to replay
+  // anyway), but a legitimate 1- or 2-turn run does. The earlier value
+  // of 3 silently excluded most hosted-demo runs from the cache ring,
+  // which kept the LoadMenu perpetually empty for visitors.
   let currentRunAborted = false;
   let currentRunSaved = false;
-  const AUTO_SAVE_MIN_TURNS = 3;
+  const AUTO_SAVE_MIN_TURNS = 1;
 
   // Persistent storage for completed sim runs. Lives at
   // `${APP_DIR}/data/sessions.db`; the directory is created on first
