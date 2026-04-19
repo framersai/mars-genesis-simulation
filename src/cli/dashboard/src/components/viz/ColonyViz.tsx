@@ -41,6 +41,7 @@ import {
   type GridSettings,
 } from './grid/GridSettingsDrawer.js';
 import { useSoundCues } from './grid/useSoundCues.js';
+import { RunSummaryDrawer } from './grid/RunSummaryDrawer.js';
 
 /** Tiny keyboard-shortcut chip for the footer legend. Kept local since
  *  it's only used in the viz tab footer. */
@@ -350,6 +351,11 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
   }, [palette, setPalette]);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [focusedSide, setFocusedSide] = useState<'a' | 'b' | null>(null);
+  const toggleFocus = useCallback((side: 'a' | 'b') => {
+    setFocusedSide(prev => (prev === side ? null : side));
+  }, []);
   const [gridSettings, setGridSettingsState] = useState<GridSettings>(() => {
     try {
       const raw = localStorage.getItem('paracosm:gridSettings');
@@ -719,6 +725,26 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
             </button>
             <button
               type="button"
+              onClick={() => setSummaryOpen(true)}
+              aria-label="Open run summary"
+              title="Run summary (cumulative totals)"
+              style={{
+                padding: '0 10px',
+                background: 'var(--bg-card)',
+                color: 'var(--text-3)',
+                border: '1px solid var(--border)',
+                borderRadius: 3,
+                cursor: 'pointer',
+                fontFamily: 'var(--mono)',
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+              }}
+            >
+              STATS
+            </button>
+            <button
+              type="button"
               onClick={handleExportPng}
               aria-label="Export current frame as PNG"
               title="Export PNG"
@@ -841,6 +867,14 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
             overflow: narrow ? 'auto' : 'hidden',
           }}
         >
+          <div
+            style={{
+              display: focusedSide === 'b' ? 'none' : 'flex',
+              flex: 1,
+              minWidth: 0,
+              minHeight: 0,
+            }}
+          >
           <LivingColonyGrid
             snapshot={snapA}
             previousSnapshot={prevSnapA}
@@ -862,8 +896,19 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
             palette={palette === 'cool' ? 1 : palette === 'mono' ? 2 : 0}
             settings={gridSettings}
             startYear={scenario.setup?.defaultStartYear}
+            focusedSide={focusedSide}
+            onToggleFocus={toggleFocus}
             onOpenChat={handleOpenChat}
           />
+          </div>
+          <div
+            style={{
+              display: focusedSide === 'a' ? 'none' : 'flex',
+              flex: 1,
+              minWidth: 0,
+              minHeight: 0,
+            }}
+          >
           <LivingColonyGrid
             snapshot={snapB}
             previousSnapshot={prevSnapB}
@@ -885,8 +930,11 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
             palette={palette === 'cool' ? 1 : palette === 'mono' ? 2 : 0}
             settings={gridSettings}
             startYear={scenario.setup?.defaultStartYear}
+            focusedSide={focusedSide}
+            onToggleFocus={toggleFocus}
             onOpenChat={handleOpenChat}
           />
+          </div>
         </div>
         <VizControls
           currentTurn={currentTurn}
@@ -983,6 +1031,21 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
           settings={gridSettings}
           onChange={setGridSettings}
           onClose={() => setSettingsOpen(false)}
+        />
+        <RunSummaryDrawer
+          open={summaryOpen}
+          onClose={() => setSummaryOpen(false)}
+          snapsA={snapsA}
+          snapsB={snapsB}
+          leaderNameA={leaderA?.name ?? 'Leader A'}
+          leaderNameB={leaderB?.name ?? 'Leader B'}
+          forgeApprovedA={forgeFeeds.a.attempts.filter(x => x.approved).length}
+          forgeApprovedB={forgeFeeds.b.attempts.filter(x => x.approved).length}
+          reuseCountA={forgeFeeds.a.reuses.length}
+          reuseCountB={forgeFeeds.b.reuses.length}
+          divergedCount={
+            (divergenceData.aliveOnlyA?.size ?? 0) + (divergenceData.aliveOnlyB?.size ?? 0)
+          }
         />
         {alertToast && (
           <div

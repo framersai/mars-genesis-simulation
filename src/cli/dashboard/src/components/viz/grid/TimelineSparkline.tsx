@@ -33,17 +33,36 @@ export function TimelineSparkline({
   const plotW = W - padX * 2;
   const plotH = H - padY * 2;
 
-  const buildPath = (snaps: TurnSnapshot[]): string => {
+  const buildPath = (
+    snaps: TurnSnapshot[],
+    valueOf: (s: TurnSnapshot) => number,
+  ): string => {
     if (snaps.length === 0) return '';
     const stepX = plotW / Math.max(1, maxTurns - 1);
     return snaps
       .map((s, i) => {
         const x = padX + i * stepX;
-        const y = padY + (1 - s.morale) * plotH;
+        const y = padY + (1 - valueOf(s)) * plotH;
         return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
       })
       .join(' ');
   };
+
+  // Normalize food + pop against their per-run maxima so all three
+  // metrics share a 0..1 axis. Morale is already 0..1.
+  const maxFood = Math.max(
+    18,
+    ...snapsA.map(s => s.foodReserve),
+    ...snapsB.map(s => s.foodReserve),
+  );
+  const maxPop = Math.max(
+    1,
+    ...snapsA.map(s => s.population),
+    ...snapsB.map(s => s.population),
+  );
+  const normFood = (s: TurnSnapshot) => Math.max(0, Math.min(1, s.foodReserve / maxFood));
+  const normPop = (s: TurnSnapshot) => Math.max(0, Math.min(1, s.population / maxPop));
+  const normMorale = (s: TurnSnapshot) => Math.max(0, Math.min(1, s.morale));
 
   const cursorX = padX + currentTurn * (plotW / Math.max(1, maxTurns - 1));
   const hoverX =
@@ -91,10 +110,13 @@ export function TimelineSparkline({
           marginBottom: 2,
         }}
       >
-        <span>MORALE · T1 → T{maxTurns}</span>
-        <span style={{ display: 'flex', gap: 8 }}>
-          <span style={{ color: 'var(--vis)' }}>■ A</span>
-          <span style={{ color: 'var(--eng)' }}>■ B</span>
+        <span>MORALE · POP · FOOD · T1 → T{maxTurns}</span>
+        <span style={{ display: 'flex', gap: 10 }}>
+          <span style={{ color: 'var(--vis)' }}>A</span>
+          <span style={{ color: 'var(--eng)' }}>B</span>
+          <span style={{ color: 'var(--text-3)' }}>\u2014 morale</span>
+          <span style={{ color: 'var(--text-3)' }}>\u00B7\u00B7\u00B7 pop</span>
+          <span style={{ color: 'var(--text-3)' }}>- - food</span>
         </span>
       </div>
       <svg
@@ -122,8 +144,52 @@ export function TimelineSparkline({
           strokeWidth={0.5}
           strokeDasharray="2 2"
         />
-        <path d={buildPath(snapsA)} fill="none" stroke="var(--vis)" strokeWidth={1.2} />
-        <path d={buildPath(snapsB)} fill="none" stroke="var(--eng)" strokeWidth={1.2} />
+        {/* Food (dashed) + pop (dotted) trace beneath the morale line —
+            gives the scrubber 3-metric context without drowning morale. */}
+        <path
+          d={buildPath(snapsA, normFood)}
+          fill="none"
+          stroke="var(--vis)"
+          strokeWidth={0.8}
+          strokeDasharray="3 2"
+          opacity={0.45}
+        />
+        <path
+          d={buildPath(snapsB, normFood)}
+          fill="none"
+          stroke="var(--eng)"
+          strokeWidth={0.8}
+          strokeDasharray="3 2"
+          opacity={0.45}
+        />
+        <path
+          d={buildPath(snapsA, normPop)}
+          fill="none"
+          stroke="var(--vis)"
+          strokeWidth={0.7}
+          strokeDasharray="1 2"
+          opacity={0.5}
+        />
+        <path
+          d={buildPath(snapsB, normPop)}
+          fill="none"
+          stroke="var(--eng)"
+          strokeWidth={0.7}
+          strokeDasharray="1 2"
+          opacity={0.5}
+        />
+        <path
+          d={buildPath(snapsA, normMorale)}
+          fill="none"
+          stroke="var(--vis)"
+          strokeWidth={1.3}
+        />
+        <path
+          d={buildPath(snapsB, normMorale)}
+          fill="none"
+          stroke="var(--eng)"
+          strokeWidth={1.3}
+        />
         {hoverX !== null && hoveredTurn !== currentTurn && (
           <line
             x1={hoverX}
