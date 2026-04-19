@@ -93,10 +93,15 @@ export interface CreateMarsServerOptions {
   maxSimsPerDay?: number;
   /**
    * Grace period (ms) between the last SSE client disconnecting and the
-   * server cancelling the active simulation. Lets page refreshes and
-   * brief network drops reconnect before the watchdog trips. Default
-   * 3000ms: too short to interrupt a normal refresh, too long to keep
-   * burning API credits on an abandoned tab.
+   * server cancelling the active simulation. Default 30_000ms (30s),
+   * which covers the common case of a user clicking an internal link
+   * (e.g. /docs, /, another dashboard tab that triggers a full page
+   * navigation) and returning within half a minute. Shorter values
+   * (the previous 1500ms) surfaced "Interrupted" badges on routine
+   * in-domain navigation — a bad tradeoff, since the per-LLM-call
+   * abort gates in the orchestrator already cap the worst-case
+   * wasted-spend at a single in-flight call regardless of how long
+   * the grace window is.
    */
   disconnectGraceMs?: number;
   /**
@@ -493,14 +498,17 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
   // the run "Unfinished" via the sim_aborted SSE event the orchestrator
   // emits on cancel.
   //
-  // Grace period handles the legitimate refresh / nav-across-tabs case:
-  // EventSource disconnects briefly, then reconnects within ~500-1000ms.
-  // 1500ms default is long enough to cover a normal refresh round-trip
-  // and short enough that a tab actually closed stops burning tokens
-  // within two seconds, not five. Combined with the per-LLM-call abort
-  // gates in the orchestrator (runtime/orchestrator.ts), at most one
-  // in-flight call finishes after the watchdog trips.
-  const disconnectGraceMs = options.disconnectGraceMs ?? 1500;
+  // Grace period handles the legitimate refresh / in-domain navigation
+  // case: EventSource disconnects briefly, then reconnects. The default
+  // 30_000ms (30s) covers a user clicking an internal link (e.g. the
+  // About tab, which redirects to `/`) and returning within half a
+  // minute — the previous 1500ms surfaced "Interrupted" badges whenever
+  // the user navigated away and back. Combined with the per-LLM-call
+  // abort gates in the orchestrator (runtime/orchestrator.ts), at most
+  // one in-flight call finishes after the watchdog trips regardless of
+  // how long the grace window is, so widening it has no worst-case
+  // wasted-spend cost.
+  const disconnectGraceMs = options.disconnectGraceMs ?? 30_000;
   /** Current sim's AbortController, or null when no sim is running. */
   let activeSimAbortController: AbortController | null = null;
   /** Timer id for the pending disconnect-watchdog fire. Null when disarmed. */

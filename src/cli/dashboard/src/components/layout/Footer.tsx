@@ -1,3 +1,12 @@
+interface FooterAbortReason {
+  reason: string;
+  completedTurns?: number;
+}
+
+interface FooterProviderError {
+  message: string;
+}
+
 interface FooterProps {
   cost?: { totalTokens: number; totalCostUSD: number; llmCalls: number };
   /**
@@ -5,13 +14,31 @@ interface FooterProps {
    * the bottom of the page too. Driven by the same three booleans the
    * TopBar reads (isComplete, isAborted, connection status) so the
    * colour + text stay in lockstep between the two surfaces.
+   *
+   * `abortReason` and `providerError` mirror the TopBar tooltip
+   * derivation so hovering the Footer chip explains WHY the run was
+   * interrupted (quota, disconnect, user cancel) instead of only
+   * showing the "Interrupted" label with no context.
    */
   simStatus?: {
     isRunning: boolean;
     isComplete: boolean;
     isAborted: boolean;
     connectionStatus: 'connecting' | 'connected' | 'error';
+    abortReason?: FooterAbortReason | null;
+    providerError?: FooterProviderError | null;
   };
+}
+
+function abortReasonLabel(raw: string): string {
+  switch (raw) {
+    case 'client_disconnected': return 'browser tab closed before the sim finished';
+    case 'quota_exhausted': return 'provider credits exhausted';
+    case 'user_aborted': return 'cancelled by the user';
+    case 'provider_error': return 'provider returned an unrecoverable error';
+    case 'unknown': return 'reason not recorded by the server';
+    default: return raw;
+  }
 }
 
 function StatusChip({ s }: { s: NonNullable<FooterProps['simStatus']> }) {
@@ -36,15 +63,42 @@ function StatusChip({ s }: { s: NonNullable<FooterProps['simStatus']> }) {
     ? 'Reconnecting'
     : 'Connecting';
   const glyph = s.isRunning && !s.isComplete && !s.isAborted ? '\u25CF' : '\u25CB';
+  // Same derivation the TopBar uses so both pills explain an interrupted
+  // run identically. Mentioning providerError first keeps the actionable
+  // cause (top up credits / fix key) visible even when the orchestrator
+  // did not emit a sim_aborted for the underlying quota/auth failure.
+  const title = s.isAborted
+    ? (() => {
+        if (s.providerError) {
+          return `Run interrupted: ${s.providerError.message}. Click Clear to reset.`;
+        }
+        const r = s.abortReason;
+        if (!r) return 'Run was interrupted before finishing all turns. Click Clear to reset.';
+        const where = typeof r.completedTurns === 'number'
+          ? ` after ${r.completedTurns} turn${r.completedTurns === 1 ? '' : 's'}`
+          : '';
+        return `Run interrupted: ${abortReasonLabel(r.reason)}${where}. Click Clear to reset.`;
+      })()
+    : s.isComplete
+    ? 'Run finished all turns. Verdict is broadcast in Reports.'
+    : s.isRunning
+    ? 'Simulation in progress.'
+    : s.connectionStatus === 'connected'
+    ? 'Connected to the simulation server. Press RUN to start.'
+    : s.connectionStatus === 'error'
+    ? 'Reconnecting to the simulation server.'
+    : 'Connecting to the simulation server.';
   return (
     <span
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 4,
         color, fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 700,
+        cursor: 'help',
       }}
       role="status"
       aria-live="polite"
-      aria-label={`Simulation status: ${text}`}
+      aria-label={`Simulation status: ${text}. ${title}`}
+      title={title}
     >
       {glyph} {text}
     </span>
