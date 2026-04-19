@@ -203,10 +203,8 @@
 <span class="kw">import</span> worldJson <span class="kw">from</span> <span class="str">'./my-world.json'</span>;
 
 <span class="cm">// 1. Compile JSON into a runnable ScenarioPackage (~$0.10, cached to disk)</span>
-<span class="kw">const</span> scenario = <span class="kw">await</span> <span class="fn">compileScenario</span>(worldJson, {
-  provider: <span class="str">'anthropic'</span>,
-  model: <span class="str">'claude-sonnet-4-6'</span>,
-});
+<span class="cm">//    Defaults to OpenAI (gpt-5.4-mini). Pass provider: 'anthropic' to switch.</span>
+<span class="kw">const</span> scenario = <span class="kw">await</span> <span class="fn">compileScenario</span>(worldJson);
 
 <span class="cm">// 2. Define leaders with HEXACO personality profiles</span>
 <span class="cm">//    Each leader is one simulation run. Run one, two, or many.</span>

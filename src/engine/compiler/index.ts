@@ -10,10 +10,8 @@
  * import { compileScenario } from 'paracosm/compiler';
  * import { runSimulation } from 'paracosm/runtime';
  *
- * const scenario = await compileScenario(submarineJson, {
- *   provider: 'anthropic',
- *   model: 'claude-sonnet-4-6',
- * });
+ * // Defaults to OpenAI (gpt-5.4-mini). Pass provider: 'anthropic' to switch.
+ * const scenario = await compileScenario(submarineJson);
  *
  * const output = await runSimulation(leader, personnel, { scenario, maxTurns: 8 });
  * ```
@@ -131,7 +129,10 @@ export async function compileScenario(
   options: CompileOptions = {},
 ): Promise<ScenarioPackage> {
   const {
-    provider: requestedProvider = 'anthropic',
+    // Default to OpenAI since OPENAI_API_KEY is the more commonly set
+    // one, and runSimulation already defaults to openai. Swap with
+    // provider: 'anthropic' + model: 'claude-sonnet-4-6' when desired.
+    provider: requestedProvider = 'openai',
     model: requestedModel,
     cache = true,
     cacheDir = '.paracosm/cache',
