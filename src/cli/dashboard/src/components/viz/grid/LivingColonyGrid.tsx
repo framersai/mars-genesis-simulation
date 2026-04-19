@@ -63,6 +63,12 @@ interface LivingColonyGridProps {
   palette?: 0 | 1 | 2;
   /** User-tunable viz settings (anim speed, rings, lines, dust, crosshair). */
   settings?: GridSettings;
+  /** Full-screen state — if `this` is the active full-screen side,
+   *  `'a'` or `'b'`. When focused side is not this panel, we hide. */
+  focusedSide?: 'a' | 'b' | null;
+  /** Fires when the focus-toggle is clicked. Parent decides whether
+   *  this panel becomes sole focus or both return to side-by-side. */
+  onToggleFocus?: (side: 'a' | 'b') => void;
   /** Invoked when the user chooses "Open chat" inside the popover. */
   onOpenChat?: (colonistName: string) => void;
 }
@@ -137,8 +143,11 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
     searchQuery = '',
     palette = 0,
     settings = DEFAULT_GRID_SETTINGS,
+    focusedSide = null,
+    onToggleFocus,
     onOpenChat,
   } = props;
+  const isFocused = focusedSide === side;
 
   const narrow = useMediaQuery(NARROW_QUERY);
   const reducedMotion = useMediaQuery(REDUCED_MOTION_QUERY);
@@ -610,6 +619,36 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
           >
             WebGL2 unavailable
           </div>
+        )}
+        {onToggleFocus && (
+          <button
+            type="button"
+            onClick={() => onToggleFocus(side)}
+            aria-label={isFocused ? 'Restore split view' : 'Focus this panel'}
+            title={isFocused ? 'Restore split view' : 'Focus this panel'}
+            style={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              width: 22,
+              height: 22,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0,
+              background: 'rgba(14, 11, 9, 0.75)',
+              color: isFocused ? 'var(--amber)' : 'var(--text-3)',
+              border: `1px solid ${isFocused ? 'var(--amber)' : 'var(--border)'}`,
+              borderRadius: 3,
+              cursor: 'pointer',
+              fontFamily: 'var(--mono)',
+              fontSize: 12,
+              lineHeight: 1,
+              zIndex: 6,
+            }}
+          >
+            {isFocused ? '\u2921' : '\u2922'}
+          </button>
         )}
         {mode === 'divergence' && snapshot && (divergedIds?.size ?? 0) === 0 && (
           <div
