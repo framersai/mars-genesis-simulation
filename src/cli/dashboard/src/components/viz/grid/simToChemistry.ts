@@ -118,12 +118,32 @@ export interface Injection {
 /**
  * Build one Injection per alive colonist, keyed to their grid position.
  * Caller applies a Gaussian brush at (x, y) to smooth the halo.
+ *
+ * Strength scales inversely with the live-cell count: with only 3-5
+ * colonists (the demo-capped default) a 0.04 injection left the RD
+ * field nearly invisible. Scaling up to ~0.15 at pop<=5 and tapering
+ * back to 0.04 at pop>=40 keeps sparse-population panels from
+ * rendering as empty black voids while full-population runs still
+ * equilibrate cleanly.
  */
 export function computeInjections(
   cells: CellSnapshot[],
   positions: Map<string, GridPosition>,
 ): Injection[] {
   const out: Injection[] = [];
+  const liveCount = cells.filter(c => c.alive).length;
+  // Sparse-population boost: 0.04 baseline was tuned for 40+ colonists;
+  // demo-mode runs have 3-30, so the field equilibrated to near-zero
+  // and the canvas read as empty. Linearly interpolate the base so
+  // small populations still drive visible Turing patterns.
+  const sparsityBoost = liveCount <= 5
+    ? 4
+    : liveCount <= 15
+    ? 2.5
+    : liveCount <= 30
+    ? 1.5
+    : 1;
+  const base = 0.04 * sparsityBoost;
   for (const c of cells) {
     if (!c.alive) continue;
     const pos = positions.get(c.agentId);
@@ -131,10 +151,7 @@ export function computeInjections(
     const contrib = MOOD_CONTRIB[c.mood] ?? 0;
     const sizeMult = c.featured ? 1.5 : 1.0;
     const psych = typeof c.psychScore === 'number' ? c.psychScore : 0.5;
-    // 0.04 baseline (was 0.12 — caused field saturation into solid
-    // amber blobs). Paired with Gray-Scott's native F*(1-U) feed term,
-    // the field equilibrates rather than saturating.
-    const strength = 0.04 * sizeMult * psych * Math.abs(contrib);
+    const strength = base * sizeMult * psych * Math.abs(contrib);
     if (strength <= 0) continue;
     out.push({
       agentId: c.agentId,
