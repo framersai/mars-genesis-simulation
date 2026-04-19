@@ -20,6 +20,7 @@ import { ClickPopover, type ClickPopoverPayload } from './ClickPopover.js';
 import { useMediaQuery, NARROW_QUERY, REDUCED_MOTION_QUERY } from './useMediaQuery.js';
 import { DEFAULT_GRID_SETTINGS, type GridSettings } from './GridSettingsDrawer.js';
 import { RosterDrawer } from './RosterDrawer.js';
+import { FeaturedSpotlight } from './FeaturedSpotlight.js';
 
 interface HexacoShape { O: number; C: number; E: number; A: number; Em: number; HH: number }
 
@@ -725,6 +726,15 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
             {isFocused ? '\u2921' : '\u2922'}
           </button>
         )}
+        <FeaturedSpotlight
+          snapshot={snapshot}
+          previousSnapshot={previousSnapshot}
+          sideColor={resolveCssColor(sideColor, containerRef.current)}
+          onSelect={c => {
+            const pos = positions.get(c.agentId);
+            if (pos) setPopover({ cell: c, x: pos.x, y: pos.y });
+          }}
+        />
         <RosterDrawer
           open={rosterOpen}
           cells={snapshot?.cells ?? []}

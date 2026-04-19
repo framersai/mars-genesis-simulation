@@ -1,11 +1,22 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 interface ChronicleEvent {
   turn: number;
   kind: 'birth' | 'death' | 'forge' | 'crisis';
   side: 'a' | 'b';
   label: string;
+  toolName?: string;
 }
+
+type ChronicleFilter = 'all' | 'birth' | 'death' | 'forge' | 'crisis';
+
+const FILTER_CHIPS: { key: ChronicleFilter; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'birth', label: 'Births' },
+  { key: 'death', label: 'Deaths' },
+  { key: 'forge', label: 'Forges' },
+  { key: 'crisis', label: 'Crises' },
+];
 
 interface EventChronicleProps {
   eventsA: Array<{ type: string; turn?: number; data?: Record<string, unknown> }>;
@@ -16,6 +27,8 @@ interface EventChronicleProps {
    *  matching ghost cursor. 0-indexed to match currentTurn. */
   onHoverTurnChange?: (turn: number | null) => void;
   hoveredTurn?: number | null;
+  /** Fires when a forge dot is clicked. Parent opens the lineage modal. */
+  onForgeSelect?: (toolName: string, side: 'a' | 'b') => void;
 }
 
 const KIND_COLORS: Record<ChronicleEvent['kind'], string> = {
@@ -45,6 +58,7 @@ export function EventChronicle({
   onJumpToTurn,
   onHoverTurnChange,
   hoveredTurn,
+  onForgeSelect,
 }: EventChronicleProps) {
   const chronicle = useMemo<ChronicleEvent[]>(() => {
     const out: ChronicleEvent[] = [];
@@ -72,7 +86,8 @@ export function EventChronicle({
             turn,
             kind: 'forge',
             side,
-            label: `T${turn}: ${approved ? 'forged' : 'rejected'} ${name} (${side.toUpperCase()})`,
+            label: `T${turn}: ${approved ? 'forged' : 'rejected'} ${name} (${side.toUpperCase()}) — click for lineage`,
+            toolName: name,
           });
         } else if (e.type === 'event_start' || e.type === 'director_crisis') {
           const cat = typeof e.data?.category === 'string' ? e.data.category : '';
@@ -93,6 +108,11 @@ export function EventChronicle({
     return out.slice(-60);
   }, [eventsA, eventsB]);
 
+  const [filter, setFilter] = useState<ChronicleFilter>('all');
+  const filtered = useMemo(
+    () => (filter === 'all' ? chronicle : chronicle.filter(e => e.kind === filter)),
+    [chronicle, filter],
+  );
   if (chronicle.length === 0) return null;
 
   return (
@@ -117,8 +137,37 @@ export function EventChronicle({
           whiteSpace: 'nowrap',
         }}
       >
-        Events ({chronicle.length})
+        Events ({filtered.length}
+        {filter !== 'all' ? `/${chronicle.length}` : ''})
       </span>
+      <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+        {FILTER_CHIPS.map(chip => {
+          const active = filter === chip.key;
+          return (
+            <button
+              key={chip.key}
+              type="button"
+              onClick={() => setFilter(chip.key)}
+              aria-pressed={active}
+              style={{
+                padding: '1px 6px',
+                fontSize: 8,
+                fontFamily: 'var(--mono)',
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                background: active ? 'var(--amber)' : 'var(--bg-card)',
+                color: active ? 'var(--bg-deep)' : 'var(--text-3)',
+                border: '1px solid var(--border)',
+                borderRadius: 2,
+                cursor: 'pointer',
+              }}
+            >
+              {chip.label}
+            </button>
+          );
+        })}
+      </div>
       <div
         style={{
           display: 'flex',
@@ -128,7 +177,7 @@ export function EventChronicle({
           minWidth: 0,
         }}
       >
-        {chronicle.map((ev, i) => {
+        {filtered.map((ev, i) => {
           const evTurn0 = Math.max(0, ev.turn - 1);
           const isCurrent = evTurn0 === currentTurn;
           const isHovered = hoveredTurn === evTurn0;
@@ -136,7 +185,13 @@ export function EventChronicle({
             <button
               key={`${ev.turn}-${ev.side}-${ev.kind}-${i}`}
               type="button"
-              onClick={() => onJumpToTurn(evTurn0)}
+              onClick={() => {
+                if (ev.kind === 'forge' && ev.toolName && onForgeSelect) {
+                  onForgeSelect(ev.toolName, ev.side);
+                } else {
+                  onJumpToTurn(evTurn0);
+                }
+              }}
               onMouseEnter={() => onHoverTurnChange?.(evTurn0)}
               onMouseLeave={() => onHoverTurnChange?.(null)}
               onFocus={() => onHoverTurnChange?.(evTurn0)}

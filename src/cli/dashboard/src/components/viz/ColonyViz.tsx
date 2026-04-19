@@ -42,6 +42,7 @@ import {
 } from './grid/GridSettingsDrawer.js';
 import { useSoundCues } from './grid/useSoundCues.js';
 import { RunSummaryDrawer } from './grid/RunSummaryDrawer.js';
+import { ForgeLineageModal, type ForgeLineagePayload } from './grid/ForgeLineageModal.js';
 
 /** Tiny keyboard-shortcut chip for the footer legend. Kept local since
  *  it's only used in the viz tab footer. */
@@ -352,6 +353,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [forgeLineage, setForgeLineage] = useState<ForgeLineagePayload | null>(null);
   const [focusedSide, setFocusedSide] = useState<'a' | 'b' | null>(null);
   const toggleFocus = useCallback((side: 'a' | 'b') => {
     setFocusedSide(prev => (prev === side ? null : side));
@@ -1021,6 +1023,13 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
           onJumpToTurn={handleTurnChange}
           hoveredTurn={hoveredTurn}
           onHoverTurnChange={setHoveredTurn}
+          onForgeSelect={(toolName, side) =>
+            setForgeLineage({
+              toolName,
+              side,
+              sideColor: side === 'a' ? 'var(--vis)' : 'var(--eng)',
+            })
+          }
         />
         <TimelineSparkline
           snapsA={snapsA}
@@ -1215,6 +1224,18 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
           onChange={setGridSettings}
           onClose={() => setSettingsOpen(false)}
         />
+        <ForgeLineageModal
+          payload={forgeLineage}
+          forgeAttemptsA={forgeFeeds.a.attempts}
+          forgeAttemptsB={forgeFeeds.b.attempts}
+          reuseCallsA={forgeFeeds.a.reuses}
+          reuseCallsB={forgeFeeds.b.reuses}
+          onClose={() => setForgeLineage(null)}
+          onJumpToTurn={t => {
+            handleTurnChange(t);
+            setForgeLineage(null);
+          }}
+        />
         <RunSummaryDrawer
           open={summaryOpen}
           onClose={() => setSummaryOpen(false)}
@@ -1368,6 +1389,10 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
           @keyframes paracosm-rec-pulse {
             0%, 100% { filter: brightness(1); }
             50%      { filter: brightness(1.2); }
+          }
+          @keyframes paracosm-spotlight-in {
+            0%   { opacity: 0; transform: translateY(-6px); }
+            100% { opacity: 1; transform: translateY(0); }
           }
         `}</style>
       </div>
