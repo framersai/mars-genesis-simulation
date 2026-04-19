@@ -25,6 +25,11 @@ import {
 } from './retry-stats.js';
 import { createCompilerTelemetry, type CompilerTelemetry } from '../engine/compiler/telemetry.js';
 import { openSessionStore, type SessionStore, type TimestampedEvent } from './session-store.js';
+import { resolveServerMode } from './server/server-mode.js';
+import { createRunRecord, hashLeaderConfig } from './server/run-record.js';
+import { createNoopRunHistoryStore, type RunHistoryStore } from './server/run-history-store.js';
+import { handlePublicDemoRoute } from './server/routes/public-demo.js';
+import { handlePlatformApiRoute } from './server/routes/platform-api.js';
 
 function projectScenarioForClient(sc: ScenarioPackage) {
   return {
@@ -100,6 +105,7 @@ export interface CreateMarsServerOptions {
    * `${APP_DIR}/data/sessions.db`.
    */
   sessionStore?: SessionStore;
+  runHistoryStore?: RunHistoryStore;
 }
 
 export interface MarsServer extends Server {
@@ -108,6 +114,7 @@ export interface MarsServer extends Server {
 
 export function createMarsServer(options: CreateMarsServerOptions = {}): MarsServer {
   const env = options.env ?? process.env;
+  const serverMode = resolveServerMode(env);
   // Rate limit default: 1 simulation per IP per day for the public-demo
   // path. Even on DEMO_MODELS + DEMO_EXECUTION a run costs ~$0.40 against
   // the host's keys, so 1/day caps worst-case monthly spend at roughly
@@ -226,6 +233,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
     // routes just return 503.
     console.log(`  [sessions] Failed to open session store: ${err}`);
   }
+  const runHistoryStore = options.runHistoryStore ?? createNoopRunHistoryStore();
 
   // Coalesce disk writes so a burst of broadcasts (e.g. 50 forge_attempt
   // events during a turn) only triggers one persist call. 500ms debounce
@@ -514,6 +522,13 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       return;
     }
 
+    if (handlePublicDemoRoute(serverMode, req, res, corsHeaders)) {
+      return;
+    }
+    if (await handlePlatformApiRoute(serverMode, req, res, { runHistoryStore, corsHeaders })) {
+      return;
+    }
+
     if (req.url === '/events') {
       res.writeHead(200, {
         'Content-Type': 'text/event-stream',
@@ -593,7 +608,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       // "host is paying" and surfaces demo-mode UX (hidden model picker,
       // rate-limit notice). Local dev leaves this unset and the picker
       // becomes visible whenever any LLM key is configured.
-      const hostedDemo = (env.PARACOSM_HOSTED_DEMO || '').toLowerCase() === 'true';
+      const hostedDemo = serverMode === 'hosted_demo';
       // Expose the effective demo caps so the Settings UI can show
       // accurate `demo:N` lock labels without hardcoding the number
       // in the client. Lets operators flip the env var + pm2 restart
@@ -603,6 +618,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       res.end(JSON.stringify({
         adminWrite,
         hostedDemo,
+        serverMode,
         demoCaps: {
           maxTurns: DEMO_EXECUTION.maxTurns,
           maxPopulation: DEMO_EXECUTION.maxPopulation,
@@ -713,7 +729,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         // server is in local mode (PARACOSM_HOSTED_DEMO unset) where
         // env keys belong to the operator.
         const userSuppliedKey = !!(apiKey || anthropicKey);
-        const isHostedDemoCompile = (env.PARACOSM_HOSTED_DEMO || '').toLowerCase() === 'true';
+        const isHostedDemoCompile = serverMode === 'hosted_demo';
         const hostBilled = !userSuppliedKey && isHostedDemoCompile;
         if (rateLimiter && hostBilled) {
           const ip = IpRateLimiter.getIp(req);
@@ -1336,13 +1352,31 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         // belong to the operator, so we trust the tiered defaults and
         // any model overrides the client sent. On the hosted Linode
         // this variable is set, so env-only requests get clamped.
-        const isHostedDemo = (env.PARACOSM_HOSTED_DEMO || '').toLowerCase() === 'true';
+        const isHostedDemo = serverMode === 'hosted_demo';
         if (!hasUserKeys && isHostedDemo) {
           simConfig = applyDemoCaps(simConfig);
           console.log(
             `  [demo-mode] Capped run: turns=${simConfig.turns} pop=${simConfig.initialPopulation} ` +
             `depts=${simConfig.activeDepartments.length} models=${simConfig.models.commander}`,
           );
+        }
+
+        const runRecord = createRunRecord({
+          scenarioId: activeScenario.id,
+          scenarioVersion: activeScenario.version,
+          leaderConfigHash: hashLeaderConfig({
+            leaders: simConfig.leaders,
+            turns: simConfig.turns,
+            seed: simConfig.seed,
+          }),
+          economicsProfile: simConfig.economics.id,
+          sourceMode: serverMode,
+          createdBy: hasUserKeys ? 'user' : 'anonymous',
+        });
+        try {
+          await runHistoryStore.insertRun(runRecord);
+        } catch (error) {
+          console.warn('[run-history] insert failed:', error);
         }
 
         // Key-scope safety: snapshot the env values we're about to mutate
@@ -1411,7 +1445,16 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         marsServer.startWithConfig(simConfig).finally(restoreEnv);
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ redirect: '/sim', scenarioId: activeScenario.id, scenarioName: activeScenario.labels?.name }));
+        res.end(JSON.stringify({
+          redirect: '/sim',
+          scenarioId: activeScenario.id,
+          scenarioName: activeScenario.labels?.name,
+          run: {
+            id: runRecord.runId,
+            sourceMode: runRecord.sourceMode,
+            economicsProfile: runRecord.economicsProfile,
+          },
+        }));
       } catch (error) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: String(error) }));

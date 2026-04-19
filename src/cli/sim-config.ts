@@ -1,6 +1,11 @@
 import type { KeyPersonnel } from '../engine/core/agent-generator.js';
 import type { Department } from '../engine/core/state.js';
 import type { LeaderConfig } from './types.js';
+import {
+  resolveEconomicsProfile,
+  type ResolvedEconomicsProfile,
+  type SimulationEconomicsProfileId,
+} from '../runtime/economics-profile.js';
 
 export interface SimulationModelConfig {
   commander: string;
@@ -80,6 +85,10 @@ export interface SimulationSetupPayload {
   firecrawlKey?: string;
   tavilyKey?: string;
   cohereKey?: string;
+  economics?: {
+    profileId?: SimulationEconomicsProfileId;
+    batchConcurrency?: number;
+  };
 }
 
 export interface NormalizedSimulationConfig {
@@ -98,6 +107,7 @@ export interface NormalizedSimulationConfig {
   startingPolitics: StartingPolitics;
   execution: SimulationExecutionConfig;
   models: SimulationModelConfig;
+  economics: ResolvedEconomicsProfile;
   apiKey?: string;
   anthropicKey?: string;
   serperKey?: string;
@@ -422,6 +432,13 @@ function normalizeActiveDepartments(input: SimulationSetupPayload['activeDepartm
 export function applyDemoCaps(config: NormalizedSimulationConfig): NormalizedSimulationConfig {
   const demoModels = DEMO_MODELS[config.provider];
   const activeClamped = config.activeDepartments.slice(0, DEMO_EXECUTION.maxActiveDepartments);
+  const economics = resolveEconomicsProfile({
+    profileId: 'economy',
+    provider: config.provider,
+    baseModels: demoModels,
+    overrides: demoModels,
+    batchConcurrency: 1,
+  });
   return {
     ...config,
     turns: Math.min(config.turns, DEMO_EXECUTION.maxTurns),
@@ -435,6 +452,7 @@ export function applyDemoCaps(config: NormalizedSimulationConfig): NormalizedSim
       reactionBatchSize: DEMO_EXECUTION.reactionBatchSize,
       progressiveReactions: DEMO_EXECUTION.progressiveReactions,
     },
+    economics,
     models: demoModels,
   };
 }
@@ -470,6 +488,13 @@ export function normalizeSimulationConfig(input: SimulationSetupPayload): Normal
     inferProviderFromModel(input.models?.judge) ??
     'openai';
   const startYear = input.startYear ?? 2035;
+  const economics = resolveEconomicsProfile({
+    profileId: input.economics?.profileId,
+    provider: inferredProvider,
+    baseModels: DEFAULT_MODELS[inferredProvider],
+    overrides: input.models,
+    batchConcurrency: input.economics?.batchConcurrency,
+  });
 
   return {
     leaders: input.leaders,
@@ -479,7 +504,7 @@ export function normalizeSimulationConfig(input: SimulationSetupPayload): Normal
     startYear,
     yearsPerTurn: input.yearsPerTurn,
     initialPopulation: input.population ?? 100,
-    liveSearch: input.liveSearch ?? false,
+    liveSearch: economics.search.mode === 'off' ? false : (input.liveSearch ?? false),
     activeDepartments: normalizeActiveDepartments(input.activeDepartments),
     customEvents: normalizeCustomEvents(input.customEvents),
     keyPersonnel: input.keyPersonnel?.length ? input.keyPersonnel : DEFAULT_KEY_PERSONNEL,
@@ -504,7 +529,8 @@ export function normalizeSimulationConfig(input: SimulationSetupPayload): Normal
       reactionBatchSize: input.execution?.reactionBatchSize ?? DEFAULT_EXECUTION.reactionBatchSize,
       progressiveReactions: input.execution?.progressiveReactions ?? DEFAULT_EXECUTION.progressiveReactions,
     },
-    models: resolveSimulationModels(inferredProvider, input.models),
+    models: economics.models,
+    economics,
     apiKey: input.apiKey,
     anthropicKey: input.anthropicKey,
     serperKey: input.serperKey,

@@ -3,8 +3,32 @@ import { marsScenario } from '../engine/mars/index.js';
 import { generateValidatedObject } from '../runtime/llm-invocations/generateValidatedObject.js';
 import { VerdictSchema } from '../runtime/schemas/verdict.js';
 import type { ScenarioPackage } from '../engine/types.js';
+import type { ResolvedEconomicsProfile } from '../runtime/economics-profile.js';
 
 export type BroadcastFn = (event: string, data: unknown) => void;
+
+function resolveVerdictModel(
+  provider: 'openai' | 'anthropic',
+  economics: ResolvedEconomicsProfile,
+): string | null {
+  switch (economics.verdict.mode) {
+    case 'skip':
+      return null;
+    case 'cheap':
+      return provider === 'anthropic'
+        ? 'claude-haiku-4-5-20251001'
+        : 'gpt-5.4-mini';
+    case 'flagship':
+      return provider === 'anthropic'
+        ? 'claude-opus-4-7'
+        : 'gpt-5.4-pro';
+    case 'balanced':
+    default:
+      return provider === 'anthropic'
+        ? 'claude-sonnet-4-6'
+        : 'gpt-5.4';
+  }
+}
 
 export async function runPairSimulations(
   simConfig: NormalizedSimulationConfig,
@@ -58,6 +82,7 @@ export async function runPairSimulations(
       customEvents,
       provider: simConfig.provider,
       models: simConfig.models,
+      economics: simConfig.economics,
       initialPopulation: simConfig.initialPopulation,
       startingResources: simConfig.startingResources,
       startingPolitics: simConfig.startingPolitics,
@@ -102,6 +127,15 @@ export async function runPairSimulations(
       const [a, b] = settled;
       const colA = a.result.finalState?.colony;
       const colB = b.result.finalState?.colony;
+      const verdictModel = resolveVerdictModel(simConfig.provider || 'openai', simConfig.economics);
+      if (!verdictModel) {
+        broadcast('complete', {
+          timestamp: new Date().toISOString(),
+          verdictSkipped: true,
+          economicsProfile: simConfig.economics.id,
+        });
+        return;
+      }
       // Build a richer per-leader summary including innovation telemetry
       // (forged toolbox details, fingerprint classification) so the LLM
       // verdict actually reasons about emergent tool use, not just final
@@ -145,9 +179,6 @@ export async function runPairSimulations(
       // user sees first when the run finishes. Cheap-tier output on
       // this call was noticeably flatter than flagship output, so
       // pay the ~$0.02-0.05 per run for the better read.
-      const verdictModel = simConfig.provider === 'anthropic'
-        ? 'claude-sonnet-4-6'
-        : 'gpt-5.4';
       try {
         const { object: verdict, fromFallback } = await generateValidatedObject({
           provider: simConfig.provider || 'openai',
