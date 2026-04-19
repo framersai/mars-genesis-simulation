@@ -81,6 +81,7 @@ export function GridMetricsStrip({
               width: `${Math.max(2, morale)}%`,
               height: '100%',
               background: moraleColor,
+              transition: 'width 500ms cubic-bezier(0.2, 0.9, 0.3, 1), background 400ms ease',
             }}
           />
         </div>
@@ -119,7 +120,12 @@ export function GridMetricsStrip({
                   <div
                     key={m}
                     title={`${m}: ${c}`}
-                    style={{ width: `${pct}%`, background: moodColors[m] || 'var(--text-4)' }}
+                    style={{
+                      width: `${pct}%`,
+                      background: moodColors[m] || 'var(--text-4)',
+                      transition:
+                        'width 500ms cubic-bezier(0.2, 0.9, 0.3, 1)',
+                    }}
                   />
                 );
               })}
@@ -166,6 +172,7 @@ export function GridMetricsStrip({
                   background: n > 0 ? sideColor : 'transparent',
                   borderRadius: '2px 2px 0 0',
                   opacity: 0.85,
+                  transition: 'height 500ms cubic-bezier(0.2, 0.9, 0.3, 1)',
                 }}
               />
             </div>

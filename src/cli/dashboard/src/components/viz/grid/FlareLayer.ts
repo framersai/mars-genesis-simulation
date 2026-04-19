@@ -9,7 +9,13 @@ const FLARE_COLORS: Record<string, string> = {
   crisis: 'rgba(196, 74, 30, 0.8)',
 };
 
-/** Draw visible flare symbols + rings on top of the RD field. */
+/** Particle count for birth/death flourish. Evenly angled around the
+ *  source so the pattern is organic but not symmetric. */
+const PARTICLE_COUNT = 6;
+
+/** Draw visible flare symbols + rings + particles on top of the RD
+ *  field. Birth/death flares now scatter drifting particles outward
+ *  so events feel more alive than a plain expanding ring. */
 export function drawFlares(ctx: CanvasRenderingContext2D, flares: ActiveFlare[]): void {
   ctx.save();
   for (const f of flares) {
@@ -24,10 +30,38 @@ export function drawFlares(ctx: CanvasRenderingContext2D, flares: ActiveFlare[])
       ctx.beginPath();
       ctx.arc(f.x, f.y, r, 0, Math.PI * 2);
       ctx.stroke();
+
+      if (f.kind !== 'crisis') {
+        // Drifting particles — deterministic angles so the pattern is
+        // stable as frames tick (no jittery re-randomization).
+        const particleR = 2 + t * 22;
+        const particleSize = f.kind === 'birth' ? 1.8 : 1.4;
+        ctx.fillStyle = color;
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+          const ang = (i / PARTICLE_COUNT) * Math.PI * 2 + (f.kind === 'birth' ? 0.3 : -0.2);
+          const px = f.x + Math.cos(ang) * particleR;
+          const py = f.y + Math.sin(ang) * particleR;
+          ctx.globalAlpha = fade * 0.9;
+          ctx.beginPath();
+          ctx.arc(px, py, particleSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
     } else if (f.kind === 'reuse' && typeof f.endX === 'number' && typeof f.endY === 'number') {
+      // Comet head: bright core + outer glow traveling along the curve.
       const cx = f.x + (f.endX - f.x) * t;
       const cy = f.y + (f.endY - f.y) * t;
-      ctx.fillStyle = color;
+      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 8);
+      glow.addColorStop(0, 'rgba(248, 225, 150, 0.95)');
+      glow.addColorStop(0.4, color);
+      glow.addColorStop(1, 'rgba(232, 180, 74, 0)');
+      ctx.fillStyle = glow;
+      ctx.globalAlpha = fade;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+      ctx.fill();
+      // Solid core.
+      ctx.fillStyle = 'rgba(248, 225, 150, 0.95)';
       ctx.beginPath();
       ctx.arc(cx, cy, 2, 0, Math.PI * 2);
       ctx.fill();

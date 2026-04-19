@@ -7,6 +7,7 @@ import { drawGlyphs } from './GlyphLayer.js';
 import { drawFlares } from './FlareLayer.js';
 import { drawHud } from './HudLayer.js';
 import { drawLines } from './LinesLayer.js';
+import { drawDeptRings } from './DeptRingsLayer.js';
 import { useGridState, type ForgeAttempt, type ReuseCall } from './useGridState.js';
 import { computeDeptCenters } from './deptCenters.js';
 import { GridRenderer } from '../../../lib/webgl/gridRenderer.js';
@@ -287,6 +288,7 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
     const resolvedSide = resolveCssColor(sideColor, containerRef.current);
     ctx.clearRect(0, 0, size.w, size.h);
     if (mode !== 'ecology') drawSeeds(ctx, snapshot.cells, positions);
+    if (mode !== 'ecology') drawDeptRings(ctx, snapshot.cells, positions);
     if (mode === 'living' || mode === 'mood') {
       drawLines(ctx, snapshot.cells, positions, resolvedSide);
     }
@@ -300,6 +302,7 @@ export function LivingColonyGrid(props: LivingColonyGridProps) {
         glyphIntensity,
         divergedIds,
         mode === 'divergence',
+        reducedMotion ? 0 : performance.now(),
       );
     drawHud(ctx, snapshot, {
       leaderName,
