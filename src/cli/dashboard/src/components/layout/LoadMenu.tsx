@@ -25,16 +25,25 @@ export interface LoadMenuProps {
   onLoadFromFile: () => void;
 }
 
+/**
+ * Load-button CTA. Mirrors the RUN button's gradient + weight but uses
+ * amber instead of rust so it reads as "watch a prior sim" next to RUN
+ * ("start a new sim") without competing. Sized to match RUN exactly so
+ * the two sit together as a balanced primary/secondary pair in the
+ * TopBar.
+ */
 const triggerStyle: React.CSSProperties = {
-  background: 'var(--bg-card)',
-  color: 'var(--text-2)',
-  border: '1px solid var(--border)',
-  padding: '2px 10px',
-  borderRadius: 3,
-  fontSize: 10,
+  background: 'linear-gradient(135deg, var(--amber), #b88a1f)',
+  color: 'var(--bg-canvas)',
+  border: 'none',
+  padding: '3px 14px',
+  borderRadius: 4,
+  fontSize: 11,
+  fontWeight: 700,
   cursor: 'pointer',
-  fontWeight: 600,
   fontFamily: 'var(--mono)',
+  letterSpacing: '0.5px',
+  boxShadow: '0 2px 8px rgba(232, 180, 74, 0.25)',
 };
 
 const popoverStyle: React.CSSProperties = {
@@ -180,7 +189,7 @@ export function LoadMenu(props: LoadMenuProps) {
         title="Load a saved simulation (from file or from server cache)"
         onClick={() => setOpen(o => !o)}
       >
-        Load
+        LOAD
       </button>
       {open && (
         <div role="menu" style={popoverStyle}>
