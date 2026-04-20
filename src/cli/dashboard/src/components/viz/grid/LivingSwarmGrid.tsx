@@ -245,10 +245,37 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
     if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }, [size.w, size.h]);
 
+  // Mode-driven cluster layout: each GridMode pill picks a distinct
+  // clustering so colonist positions visibly reshape on click, not
+  // just the overlays. LIVING stays 'departments' (the stable default
+  // that lets the viewer track individuals across turns); MOOD/FORGE/
+  // ECOLOGY/DIVERGENCE switch to layouts that emphasize each mode's
+  // semantic axis.
+  //
+  //   LIVING      → departments   (default, continuity across turns)
+  //   MOOD        → mood          (happy / anxious / defiant clusters)
+  //   FORGE       → age           (visually distinct arrangement)
+  //   ECOLOGY     → departments   (glyphs hidden, cluster irrelevant)
+  //   DIVERGENCE  → families      (diverged families surface clearly)
+  //
+  // Fallbacks to the clusterMode prop when the caller explicitly
+  // passes one (keeps the legacy contract intact).
+  const modeClusterMode: ClusterMode = (() => {
+    if (clusterMode !== 'departments') return clusterMode;
+    switch (mode) {
+      case 'mood': return 'mood';
+      case 'forge': return 'age';
+      case 'divergence': return 'families';
+      case 'ecology':
+      case 'living':
+      default: return 'departments';
+    }
+  })();
+
   const positions = useMemo(() => {
     if (!snapshot || size.w === 0) return new Map<string, { x: number; y: number }>();
-    return computeGridPositions(snapshot.cells, clusterMode, size.w, size.h);
-  }, [snapshot, clusterMode, size.w, size.h]);
+    return computeGridPositions(snapshot.cells, modeClusterMode, size.w, size.h);
+  }, [snapshot, modeClusterMode, size.w, size.h]);
 
   const deptCentersOverlay = useMemo(() => {
     if (!snapshot) return new Map<string, { x: number; y: number }>();
