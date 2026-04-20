@@ -220,6 +220,57 @@ export function seedFromColonists(
 }
 
 /**
+ * Inject a Conway starter pattern at the flare location so new
+ * events visibly disturb the GoL grid. Call once per new event:
+ *
+ *   birth          → plant a BLOCK (stable growth)
+ *   death          → kill a 3x3 area (decay)
+ *   forge approved → plant a GLIDER (forward motion)
+ *   forge rejected → plant a BLINKER (stuck, oscillating)
+ *   reuse          → plant a TOAD (slow rhythm)
+ *   crisis         → plant an R_PENTOMINO (chaotic, long-lived)
+ *
+ * Overlay-pixel coords are mapped to grid coords using the canvas
+ * size. Out-of-bounds writes are clamped silently.
+ */
+export function injectFlareIntoGol(
+  state: GolState,
+  flare: { kind: string; x: number; y: number },
+  overlayWidth: number,
+  overlayHeight: number,
+): void {
+  const { cols, rows, grid } = state;
+  const cx = Math.floor((flare.x / Math.max(1, overlayWidth)) * cols);
+  const cy = Math.floor((flare.y / Math.max(1, overlayHeight)) * rows);
+  if (flare.kind === 'death') {
+    for (let dy = -1; dy <= 1; dy += 1) {
+      for (let dx = -1; dx <= 1; dx += 1) {
+        const x = cx + dx;
+        const y = cy + dy;
+        if (x < 0 || x >= cols || y < 0 || y >= rows) continue;
+        grid[y * cols + x] = 0;
+      }
+    }
+    return;
+  }
+  let pattern: Array<[number, number]>;
+  switch (flare.kind) {
+    case 'birth': pattern = BLOCK; break;
+    case 'forge_approved': pattern = GLIDER; break;
+    case 'forge_rejected': pattern = BLINKER; break;
+    case 'reuse': pattern = TOAD; break;
+    case 'crisis': pattern = R_PENTOMINO; break;
+    default: pattern = BLINKER;
+  }
+  for (const [dx, dy] of pattern) {
+    const x = cx + dx - 1;
+    const y = cy + dy - 1;
+    if (x < 0 || x >= cols || y < 0 || y >= rows) continue;
+    grid[y * cols + x] = 8;
+  }
+}
+
+/**
  * Advance one GoL generation using classic B3/S23 rules. No random
  * perturbation — the grid evolves deterministically from whatever
  * was seeded. This is what produces the recognizable Conway
