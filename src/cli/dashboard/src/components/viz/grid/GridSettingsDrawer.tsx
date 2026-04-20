@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
+import { useFocusTrap } from '../../../hooks/useFocusTrap';
 
 export interface GridSettings {
   /** RD animation speed multiplier applied to stepsPerFrame. */
@@ -63,7 +64,7 @@ interface DrawerProps {
  *  set of tweaks — keeps the UI skimmable, persistence lives at the
  *  SwarmViz level via localStorage. */
 export function GridSettingsDrawer({ open, settings, onChange, onClose }: DrawerProps) {
-  const rootRef = useRef<HTMLDivElement | null>(null);
+  const rootRef = useFocusTrap<HTMLDivElement>(open);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -97,6 +98,7 @@ export function GridSettingsDrawer({ open, settings, onChange, onClose }: Drawer
         ref={rootRef}
         role="dialog"
         aria-label="Grid viz settings"
+        tabIndex={-1}
         style={{
           position: 'absolute',
           top: 52,
@@ -111,6 +113,7 @@ export function GridSettingsDrawer({ open, settings, onChange, onClose }: Drawer
           fontSize: 10,
           color: 'var(--text-2)',
           zIndex: 41,
+          outline: 'none',
         }}
       >
         <div

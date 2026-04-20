@@ -901,6 +901,42 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
     [snapshot, positions],
   );
 
+  // Touch: first tap on a glyph shows the hover tooltip, second tap on
+  // the same glyph opens the popover. Matches the desktop hover-then-
+  // click intent without requiring the user to emulate a hover. Tap
+  // outside any glyph clears the tooltip and the pending-double-tap.
+  const lastTouchIdRef = useRef<string | null>(null);
+  const onTouchStart = useCallback(
+    (e: React.TouchEvent<HTMLCanvasElement>) => {
+      if (!snapshot) return;
+      const touch = e.touches[0];
+      if (!touch) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      const hit = hitTestGlyph(snapshot.cells, positions, x, y);
+      if (!hit) {
+        setHovered(null);
+        setCursor(null);
+        lastTouchIdRef.current = null;
+        onHoverChange?.(null);
+        return;
+      }
+      if (lastTouchIdRef.current === hit.agentId) {
+        setPopover({ cell: hit, x, y });
+        setHovered(null);
+        lastTouchIdRef.current = null;
+        relationshipFlareRef.current = { id: hit.agentId, intensity: 1 };
+      } else {
+        setHovered({ cell: hit, x, y });
+        setCursor({ x, y });
+        lastTouchIdRef.current = hit.agentId;
+        onHoverChange?.(hit.agentId);
+      }
+    },
+    [snapshot, positions, onHoverChange],
+  );
+
   // Close popover when the selected colonist vanishes (death during
   // scrub/live update). Keeps the UI from showing stale drilldowns.
   useEffect(() => {
@@ -908,6 +944,12 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
     const stillAlive = snapshot.cells.find(c => c.agentId === popover.cell.agentId);
     if (!stillAlive) setPopover(null);
   }, [popover, snapshot]);
+
+  // Reset the tap-sequence whenever the popover closes so the next
+  // touch starts fresh rather than resuming mid-sequence.
+  useEffect(() => {
+    if (!popover) lastTouchIdRef.current = null;
+  }, [popover]);
 
   return (
     <div
@@ -1013,6 +1055,7 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
           onMouseMove={onMouseMove}
           onMouseLeave={onMouseLeave}
           onClick={onClick}
+          onTouchStart={onTouchStart}
           style={{
             position: 'absolute',
             inset: 0,

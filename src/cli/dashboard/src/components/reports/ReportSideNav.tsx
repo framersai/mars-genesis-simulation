@@ -20,24 +20,25 @@ export interface ReportSideNavProps {
   scrollRoot?: HTMLElement | null;
 }
 
-function useIsDesktop(): boolean {
-  const [desktop, setDesktop] = useState(() =>
-    typeof window !== 'undefined' ? window.matchMedia('(min-width: 1024px)').matches : true,
+function useMatchMedia(query: string, fallback: boolean): boolean {
+  const [matches, setMatches] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(query).matches : fallback,
   );
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const mq = window.matchMedia('(min-width: 1024px)');
-    const onChange = () => setDesktop(mq.matches);
+    const mq = window.matchMedia(query);
+    const onChange = () => setMatches(mq.matches);
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
-  }, []);
-  return desktop;
+  }, [query]);
+  return matches;
 }
 
 export function ReportSideNav(props: ReportSideNavProps) {
   const { items, scrollRoot } = props;
   const [activeId, setActiveId] = useState<string | undefined>(items[0]?.id);
-  const desktop = useIsDesktop();
+  const desktop = useMatchMedia('(min-width: 1024px)', true);
+  const phone = useMatchMedia('(max-width: 767.98px)', false);
 
   useEffect(() => {
     if (typeof window === 'undefined' || items.length === 0) return;
@@ -115,28 +116,45 @@ export function ReportSideNav(props: ReportSideNavProps) {
         // reports viewport).
         background: 'var(--bg-panel)',
         borderBottom: '1px solid var(--border)',
-        padding: '6px 8px',
+        padding: phone ? '8px 10px' : '6px 8px',
         marginBottom: 12,
         overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch',
         display: 'flex',
-        gap: 4,
+        gap: phone ? 6 : 4,
         flexShrink: 0,
       }}
     >
-      {items.map(item => (
-        <a
-          key={item.id}
-          href={`#${item.id}`}
-          style={{
-            ...linkStyle,
-            flexShrink: 0,
-            color: activeId === item.id ? 'var(--amber)' : 'var(--text-3)',
-            borderBottom: activeId === item.id ? '2px solid var(--amber)' : '2px solid transparent',
-          }}
-        >
-          {item.label}
-        </a>
-      ))}
+      {items.map(item => {
+        const active = activeId === item.id;
+        // Phone uses filled pills for larger tap targets and clearer
+        // active state; tablet keeps the compact underline strip which
+        // preserves horizontal density above 480px.
+        const phoneStyle: React.CSSProperties = {
+          ...linkStyle,
+          flexShrink: 0,
+          padding: '8px 12px',
+          borderRadius: 4,
+          border: `1px solid ${active ? 'var(--amber)' : 'var(--border)'}`,
+          background: active ? 'var(--amber)' : 'var(--bg-card)',
+          color: active ? 'var(--bg-deep)' : 'var(--text-3)',
+        };
+        const tabletStyle: React.CSSProperties = {
+          ...linkStyle,
+          flexShrink: 0,
+          color: active ? 'var(--amber)' : 'var(--text-3)',
+          borderBottom: active ? '2px solid var(--amber)' : '2px solid transparent',
+        };
+        return (
+          <a
+            key={item.id}
+            href={`#${item.id}`}
+            style={phone ? phoneStyle : tabletStyle}
+          >
+            {item.label}
+          </a>
+        );
+      })}
     </nav>
   );
 }

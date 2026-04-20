@@ -2,30 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { GameState, LeaderInfo } from '../../hooks/useGameState.js';
 import { useScenarioContext, useDashboardNavigation } from '../../App';
 import { useToast } from '../shared/Toast';
-import type { AutomatonMode } from './automaton/shared.js';
-
-const AUTOMATON_MODE_KEY = 'paracosm:vizAutomatonMode';
-const AUTOMATON_COLLAPSED_KEY = 'paracosm:vizAutomatonCollapsed';
-const AUTOMATON_MAXIMIZED_KEY = 'paracosm:vizAutomatonMaximized';
-const AUTOMATON_NUDGE_KEY = 'paracosm:automatonNudgeSeen';
-
-function readStoredMode(): AutomatonMode {
-  try {
-    const raw = localStorage.getItem(AUTOMATON_MODE_KEY);
-    if (raw === 'mood' || raw === 'forge' || raw === 'ecology') return raw;
-  } catch { /* silent */ }
-  return 'mood';
-}
-function readStoredCollapsed(): boolean {
-  try { return localStorage.getItem(AUTOMATON_COLLAPSED_KEY) === '1'; }
-  catch { return false; }
-}
 import { useVizSnapshots } from './useVizSnapshots.js';
-import { SwarmPanel } from './SwarmPanel.js';
 import { TurnBanner } from './TurnBanner.js';
-import { ClusterToggleRow } from './ClusterToggleRow.js';
-import { Legend } from './Legend.js';
-import { DrilldownPanel } from './DrilldownPanel.js';
 import { VizControls } from './VizControls.js';
 import { LivingSwarmGrid } from './grid/LivingSwarmGrid.js';
 import { GridModePills, gridModeHint, type GridMode } from './grid/GridModePills.js';
@@ -70,7 +48,6 @@ function Kbd({ k, v }: { k: string; v: string }) {
 }
 import {
   computeDivergence,
-  type ClusterMode,
   type CellSnapshot,
   type TurnSnapshot,
 } from './viz-types.js';
@@ -82,12 +59,11 @@ interface SwarmVizProps {
   onNavigateToChat?: (colonistName: string) => void;
 }
 
-const CLUSTER_MODES: ClusterMode[] = ['families', 'departments', 'mood', 'age'];
-
 /**
- * VIZ tab composition root. Owns playhead state, cluster mode,
- * selected colonist, divergence tint toggle. Delegates everything
- * visual to SwarmPanel, DrilldownPanel, TurnBanner, Legend.
+ * VIZ tab composition root. Owns playhead state, grid mode, palette,
+ * chronicle filter, focused-side, and timelapse recording. Delegates
+ * everything visual to LivingSwarmGrid (canvas + HUD + popovers) and
+ * the strip widgets (TurnBanner, TimelineSparkline, EventChronicle).
  */
 export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
   const { a: snapsA, b: snapsB } = useVizSnapshots(state);
@@ -95,9 +71,6 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
   const [currentTurn, setCurrentTurn] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
-  const [mode, setMode] = useState<ClusterMode>('families');
-  const [showDivergence, setShowDivergence] = useState(true);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Grid mode (new living-colony grid). Shared across both leaders so
   // tabs toggle in lockstep. Persisted to localStorage so the user's
@@ -116,43 +89,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
     try { localStorage.setItem('paracosm:gridMode', m); } catch { /* silent */ }
   }, []);
 
-  // Automaton mode + collapsed flag. Lifted to the viz root so both
-  // leader panels render in the same lens simultaneously. Seeded from
-  // localStorage so the user's last-picked mode persists.
-  const [automatonMode, setAutomatonModeState] = useState<AutomatonMode>(() => readStoredMode());
-  const [automatonCollapsed, setAutomatonCollapsedState] = useState<boolean>(() => readStoredCollapsed());
-  const [automatonMaximized, setAutomatonMaximizedState] = useState<boolean>(() => {
-    try { return localStorage.getItem(AUTOMATON_MAXIMIZED_KEY) === '1'; }
-    catch { return false; }
-  });
-  const setAutomatonMaximized = useCallback((next: boolean) => {
-    setAutomatonMaximizedState(next);
-    try { localStorage.setItem(AUTOMATON_MAXIMIZED_KEY, next ? '1' : '0'); } catch { /* silent */ }
-  }, []);
-  const setAutomatonMode = useCallback((m: AutomatonMode) => {
-    setAutomatonModeState(m);
-    try { localStorage.setItem(AUTOMATON_MODE_KEY, m); } catch { /* silent */ }
-  }, []);
-  const toggleAutomatonCollapsed = useCallback(() => {
-    setAutomatonCollapsedState(prev => {
-      const next = !prev;
-      try { localStorage.setItem(AUTOMATON_COLLAPSED_KEY, next ? '1' : '0'); } catch { /* silent */ }
-      return next;
-    });
-  }, []);
-
-  // First-run nudge: single toast explaining the automaton the first
-  // time the user lands on the viz tab with a completed (or in-flight)
-  // run. Dismisses itself and persists so it never fires again.
   const { toast } = useToast();
-  useEffect(() => {
-    if (maxTurn === 0) return;
-    try {
-      if (localStorage.getItem(AUTOMATON_NUDGE_KEY) === '1') return;
-      localStorage.setItem(AUTOMATON_NUDGE_KEY, '1');
-    } catch { return; }
-    toast('info', 'Automaton view', 'Press 1 / 2 / 3 to switch modes (mood · forge · ecology), A to collapse the band.');
-  }, [maxTurn, toast]);
   const timerRef = useRef<number>(0);
   const prevMaxTurnRef = useRef(0);
 
@@ -711,26 +648,15 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
       else if (e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); handlePlayPause(); }
       else if (e.key === '?' || (e.shiftKey && e.key === '/')) { e.preventDefault(); setHelpOpen(h => !h); }
       else if (e.key === 'Escape' && helpOpen) { e.preventDefault(); setHelpOpen(false); }
-      else if (useNewGridFlag) {
-        if (e.key === '1') { e.preventDefault(); setGridMode('living'); }
-        else if (e.key === '2') { e.preventDefault(); setGridMode('mood'); }
-        else if (e.key === '3') { e.preventDefault(); setGridMode('forge'); }
-        else if (e.key === '4') { e.preventDefault(); setGridMode('ecology'); }
-        else if (e.key === '5') { e.preventDefault(); setGridMode('divergence'); }
-      } else {
-        if (e.key === 'm' || e.key === 'M') {
-          setMode(curr => CLUSTER_MODES[(CLUSTER_MODES.indexOf(curr) + 1) % CLUSTER_MODES.length]);
-        }
-        else if (e.key === 'd' || e.key === 'D') setShowDivergence(d => !d);
-        else if (e.key === 'a' || e.key === 'A') { e.preventDefault(); toggleAutomatonCollapsed(); }
-        else if (e.key === '1') { e.preventDefault(); setAutomatonMode('mood'); }
-        else if (e.key === '2') { e.preventDefault(); setAutomatonMode('forge'); }
-        else if (e.key === '3') { e.preventDefault(); setAutomatonMode('ecology'); }
-      }
+      else if (e.key === '1') { e.preventDefault(); setGridMode('living'); }
+      else if (e.key === '2') { e.preventDefault(); setGridMode('mood'); }
+      else if (e.key === '3') { e.preventDefault(); setGridMode('forge'); }
+      else if (e.key === '4') { e.preventDefault(); setGridMode('ecology'); }
+      else if (e.key === '5') { e.preventDefault(); setGridMode('divergence'); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [handleStepBack, handleStepForward, handlePlayPause, setAutomatonMode, toggleAutomatonCollapsed]);
+  }, [handleStepBack, handleStepForward, handlePlayPause, helpOpen, setGridMode]);
 
   // Per-side snapshot resolution with lag tolerance. Two leaders run in
   // parallel via Promise.all, but one side can lag by 10-30 seconds
@@ -776,19 +702,6 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
   }, [searchQuery, snapA, snapB, leaderA, leaderB]);
 
   const divergenceData = useMemo(() => computeDivergence(snapA, snapB), [snapA, snapB]);
-  const divergedIds = showDivergence ? divergenceData : null;
-
-  const allSnapshotsForSelected = useMemo(
-    () => (selectedId ? snapsA.concat(snapsB) : []),
-    [selectedId, snapsA, snapsB],
-  );
-
-  const byId = useMemo(() => {
-    const m = new Map<string, CellSnapshot>();
-    const pool: TurnSnapshot[] = snapsA.concat(snapsB);
-    for (const s of pool) for (const c of s.cells) m.set(c.agentId, c);
-    return m;
-  }, [snapsA, snapsB]);
 
   /**
    * HEXACO lookup is built from agent_reactions events, which carry a
@@ -896,7 +809,6 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
 
   const handleOpenChat = useCallback((name: string) => {
     onNavigateToChat?.(name);
-    setSelectedId(null);
   }, [onNavigateToChat]);
 
   if (maxTurn === 0) {
@@ -916,10 +828,6 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
     ? `A vs B: ${snapB.population - snapA.population >= 0 ? '+' : ''}${snapB.population - snapA.population} pop, ${Math.round((snapB.morale - snapA.morale) * 100)}% morale, ${snapB.foodReserve - snapA.foodReserve > 0 ? '+' : ''}${(snapB.foodReserve - snapA.foodReserve).toFixed(1)}mo food`
     : '';
 
-  // Feature flag: VITE_NEW_GRID controls which viz renders. Default is
-  // the living-colony grid. Set VITE_NEW_GRID=0 to opt back to the legacy
-  // SwarmPanel tile grid.
-  const useNewGrid = import.meta.env.VITE_NEW_GRID !== '0';
   const narrow = useMediaQuery(NARROW_QUERY);
   const phone = useMediaQuery(PHONE_QUERY);
   // Phone: force single-panel view. Side-by-side at 380-400px makes
@@ -927,18 +835,17 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
   // vertically it doubles scroll length. A/B toggle above gives the
   // user deliberate control without giving up deliberate design.
   const effectiveFocusedSide: 'a' | 'b' | null = phone ? (focusedSide ?? 'a') : focusedSide;
-  if (useNewGrid) {
-    const prevSnapA = currentTurn > 0
-      ? (snapsA[currentTurn - 1] ?? snapsA[snapsA.length - 2])
-      : undefined;
-    const prevSnapB = currentTurn > 0
-      ? (snapsB[currentTurn - 1] ?? snapsB[snapsB.length - 2])
-      : undefined;
-    // Search matches are recomputed only when the query or snapshots
-    // change, not on every parent re-render (was triggering on every
-    // tickClock bump ~30x/sec before this memo).
-    const searchMatches: SearchMatch[] = searchMatchesMemo;
-    return (
+  const prevSnapA = currentTurn > 0
+    ? (snapsA[currentTurn - 1] ?? snapsA[snapsA.length - 2])
+    : undefined;
+  const prevSnapB = currentTurn > 0
+    ? (snapsB[currentTurn - 1] ?? snapsB[snapsB.length - 2])
+    : undefined;
+  // Search matches are recomputed only when the query or snapshots
+  // change, not on every parent re-render (was triggering on every
+  // tickClock bump ~30x/sec before this memo).
+  const searchMatches: SearchMatch[] = searchMatchesMemo;
+  return (
       <div
         ref={vizRootRef}
         className="viz-content"
@@ -1586,94 +1493,4 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
         `}</style>
       </div>
     );
-  }
-
-  return (
-    <div className="viz-content" style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-      <TurnBanner state={state} currentTurn={currentTurn} />
-      <ClusterToggleRow mode={mode} onChange={setMode} />
-      {diffLine && (
-        <div style={{
-          padding: '4px 12px', fontSize: 10, fontFamily: 'var(--mono)',
-          color: 'var(--text-3)', background: 'var(--bg-panel)',
-          borderBottom: '1px solid var(--border)',
-        }}>
-          {diffLine}
-        </div>
-      )}
-      <div className="leaders-row" style={{ display: 'flex', flex: 1, minHeight: 0, gap: 4, overflow: 'hidden' }}>
-        <SwarmPanel
-          snapshot={snapA}
-          leaderName={leaderA?.name ?? 'Leader A'}
-          leaderArchetype={leaderA?.archetype ?? ''}
-          leaderColony={leaderA?.colony ?? ''}
-          leaderBio={leaderA?.instructions ?? ''}
-          sideColor="var(--vis)"
-          mode={mode}
-          selectedId={selectedId}
-          divergedIds={divergedIds?.aliveOnlyA}
-          onSelect={setSelectedId}
-          lagTurns={snapATurn < snapBTurn ? snapBTurn - snapATurn : 0}
-          side="a"
-          hexacoById={hexacoById}
-          automatonMode={automatonMode}
-          automatonCollapsed={automatonCollapsed}
-          onAutomatonModeChange={setAutomatonMode}
-          onAutomatonCollapseToggle={toggleAutomatonCollapsed}
-          forgeAttempts={forgeFeeds.a.attempts}
-          reuseCalls={forgeFeeds.a.reuses}
-          scenarioDepartments={scenario.departments.map(d => d.id)}
-          automatonMaximized={automatonMaximized}
-          onAutomatonMaximizedChange={setAutomatonMaximized}
-        />
-        <SwarmPanel
-          snapshot={snapB}
-          leaderName={leaderB?.name ?? 'Leader B'}
-          leaderArchetype={leaderB?.archetype ?? ''}
-          leaderColony={leaderB?.colony ?? ''}
-          leaderBio={leaderB?.instructions ?? ''}
-          sideColor="var(--eng)"
-          mode={mode}
-          selectedId={selectedId}
-          divergedIds={divergedIds?.aliveOnlyB}
-          onSelect={setSelectedId}
-          lagTurns={snapBTurn < snapATurn ? snapATurn - snapBTurn : 0}
-          side="b"
-          hexacoById={hexacoById}
-          automatonMode={automatonMode}
-          automatonCollapsed={automatonCollapsed}
-          onAutomatonModeChange={setAutomatonMode}
-          onAutomatonCollapseToggle={toggleAutomatonCollapsed}
-          forgeAttempts={forgeFeeds.b.attempts}
-          reuseCalls={forgeFeeds.b.reuses}
-          scenarioDepartments={scenario.departments.map(d => d.id)}
-          automatonMaximized={automatonMaximized}
-          onAutomatonMaximizedChange={setAutomatonMaximized}
-        />
-      </div>
-      <Legend />
-      <VizControls
-        currentTurn={currentTurn}
-        maxTurn={maxTurn}
-        year={snapA?.year ?? snapB?.year ?? 0}
-        playing={playing}
-        speed={speed}
-        onTurnChange={handleTurnChange}
-        onPlayPause={handlePlayPause}
-        onStepBack={handleStepBack}
-        onStepForward={handleStepForward}
-        onSpeedChange={setSpeed}
-      />
-      <DrilldownPanel
-        selectedId={selectedId}
-        snapshots={allSnapshotsForSelected}
-        byId={byId}
-        hexacoById={hexacoById}
-        onClose={() => setSelectedId(null)}
-        onSelect={setSelectedId}
-        onJumpToTurn={(turn: number) => setCurrentTurn(Math.max(0, Math.min(maxTurn - 1, turn - 1)))}
-        onOpenChat={handleOpenChat}
-      />
-    </div>
-  );
 }

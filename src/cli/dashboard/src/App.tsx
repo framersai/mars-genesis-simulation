@@ -6,6 +6,7 @@ import { useGameState } from './hooks/useGameState';
 import { useGamePersistence } from './hooks/useGamePersistence';
 import { useCitationRegistry, CitationRegistryContext } from './hooks/useCitationRegistry';
 import { useToolRegistry, ToolRegistryContext } from './hooks/useToolRegistry';
+import { useFocusTrap } from './hooks/useFocusTrap';
 import { TopBar } from './components/layout/TopBar';
 import { TabBar } from './components/layout/TabBar';
 import { ProviderErrorBanner } from './components/layout/ProviderErrorBanner';
@@ -124,6 +125,7 @@ function AppContent() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [verdictModalOpen]);
+  const verdictDialogRef = useFocusTrap<HTMLDivElement>(verdictModalOpen);
 
   // Dynamic page title
   useEffect(() => {
@@ -927,6 +929,8 @@ function AppContent() {
               }}
             >
               <div
+                ref={verdictDialogRef}
+                tabIndex={-1}
                 onClick={e => e.stopPropagation()}
                 style={{
                   background: 'linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-deep) 100%)',
@@ -938,6 +942,7 @@ function AppContent() {
                   boxShadow: '0 12px 60px rgba(0,0,0,0.6)',
                   fontFamily: 'var(--sans)', color: 'var(--text-1)',
                   position: 'relative',
+                  outline: 'none',
                 }}
               >
                 <button
