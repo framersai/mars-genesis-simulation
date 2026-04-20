@@ -41,13 +41,15 @@ export interface GolConfig {
 }
 
 export const DEFAULT_GOL_CONFIG: GolConfig = {
-  // 64x32 chosen so a 3-4 colonist colony produces ~12-20 live cells
-  // — enough that distinct patterns (blocks, blinkers, gliders) read
-  // as separate glyphs rather than collapsing into a single blob at
-  // 32x16. Cell tiles land at ~8-12px on a typical laptop viewport,
-  // still touch-legible without drowning glyph markers on top.
-  cols: 64,
-  rows: 32,
+  // Chunky 12×6 grid = 72 cells total. At typical 600-700px panel
+  // width, each tile renders ~50×55px — big enough to read as
+  // primary visual texture rather than pixel specks. Prior 20×10,
+  // 32×16, 64×32 iterations all produced tiles that were too fine
+  // for the low alive-colonist count (3-6 colonists produce 12-20
+  // alive cells; at high density those cluster as recognizable
+  // oscillators, at low density as faint dots).
+  cols: 12,
+  rows: 6,
   seedRadius: 2,
 };
 
@@ -340,13 +342,11 @@ export function drawGol(
   if (intensity <= 0) return;
   const cw = overlayWidth / cols;
   const ch = overlayHeight / rows;
-  // Draw cells as SQUARES sized by the smaller of (cw, ch). Prior
-  // implementation used cw / ch independently which produced tall
-  // rectangles (22×25px) at typical laptop widths. Users read the
-  // vertical-bar arrangement as "weird diamond-like animations"
-  // rather than Conway cells. Square tiles centered in their slots
-  // read as proper cellular automata.
-  const tile = Math.max(1, Math.min(cw, ch) - 4);
+  // Draw cells as SQUARES sized by the smaller of (cw, ch). Only 2px
+  // subtracted for gap so tiles are chunky — at 12×6 default grid
+  // that gives ~45px solid squares on a typical panel, visually
+  // unambiguous Conway cells.
+  const tile = Math.max(1, Math.min(cw, ch) - 2);
   const offX = (cw - tile) / 2;
   const offY = (ch - tile) / 2;
   ctx.save();
