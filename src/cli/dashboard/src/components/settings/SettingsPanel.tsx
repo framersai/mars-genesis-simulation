@@ -11,6 +11,10 @@ import {
   type DashboardEconomicsProfileId,
   type DashboardServerMode,
 } from './economicsProfiles';
+import {
+  SETTINGS_LABEL_STYLE,
+  SETTINGS_SECTION_HEADER_STYLE,
+} from './shared/settingsStyles';
 
 const DEFAULT_HEXACO: Record<string, number> = {
   openness: 0.5, conscientiousness: 0.5, extraversion: 0.5,
@@ -81,12 +85,6 @@ const inputStyle = {
   width: '100%', background: 'var(--bg-card)', color: 'var(--text-1)',
   border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px',
   fontFamily: 'var(--sans)', fontSize: '14px', boxSizing: 'border-box' as const,
-};
-
-const labelStyle = {
-  display: 'block', fontSize: '12px', color: 'var(--text-3)',
-  textTransform: 'uppercase' as const, letterSpacing: '0.5px',
-  fontWeight: 700, marginBottom: '4px',
 };
 
 export function SettingsPanel() {
@@ -324,7 +322,7 @@ export function SettingsPanel() {
           padding: '12px 16px', background: 'var(--bg-panel)', border: '1px solid var(--border)',
           borderRadius: '8px', boxShadow: 'var(--card-shadow)',
         }}>
-          <label htmlFor="scenario-select" style={{ fontSize: '12px', color: 'var(--text-3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', flexShrink: 0 }}>
+          <label htmlFor="scenario-select" style={{ ...SETTINGS_LABEL_STYLE, marginBottom: 0, flexShrink: 0 }}>
             Scenario
           </label>
           <select
@@ -379,7 +377,7 @@ export function SettingsPanel() {
         background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: '8px',
         padding: '16px', marginBottom: '16px', boxShadow: 'var(--card-shadow)',
       }}>
-        <legend style={{ fontSize: '14px', fontFamily: 'var(--mono)', color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px', padding: '0 8px' }}>
+        <legend style={{ ...SETTINGS_SECTION_HEADER_STYLE, padding: '0 8px' }}>
           Simulation
         </legend>
         {/* Demo-mode cap hint: rendered inline with the Simulation
@@ -400,7 +398,7 @@ export function SettingsPanel() {
         )}
         <div className="responsive-grid-4" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '12px' }}>
           <div>
-            <label htmlFor="turns-input" style={labelStyle}>
+            <label htmlFor="turns-input" style={SETTINGS_LABEL_STYLE}>
               Turns
               {hostedDemo && !hasSessionLlmKey && (
                 <span style={{ color: 'var(--amber)', fontSize: 9, fontWeight: 400, marginLeft: 4 }} title={`Hosted demo caps turns at ${demoCaps.maxTurns}. Add a session API key to unlock.`}>
@@ -425,7 +423,7 @@ export function SettingsPanel() {
             />
           </div>
           <div>
-            <label htmlFor="ypt-input" style={labelStyle}>Yrs/Turn</label>
+            <label htmlFor="ypt-input" style={SETTINGS_LABEL_STYLE}>Yrs/Turn</label>
             <input
               id="ypt-input"
               type="number"
@@ -439,15 +437,15 @@ export function SettingsPanel() {
             />
           </div>
           <div>
-            <label htmlFor="seed-input" style={labelStyle}>Seed</label>
+            <label htmlFor="seed-input" style={SETTINGS_LABEL_STYLE}>Seed</label>
             <input id="seed-input" type="number" value={seed} onChange={e => setSeed(parseInt(e.target.value) || 950)} style={inputStyle} />
           </div>
           <div>
-            <label htmlFor="year-input" style={labelStyle}>Start Year</label>
+            <label htmlFor="year-input" style={SETTINGS_LABEL_STYLE}>Start Year</label>
             <input id="year-input" type="number" value={startYear} onChange={e => setStartYear(parseInt(e.target.value) || 2035)} style={inputStyle} />
           </div>
           <div>
-            <label htmlFor="pop-input" style={labelStyle}>
+            <label htmlFor="pop-input" style={SETTINGS_LABEL_STYLE}>
               Population
               {hostedDemo && !hasSessionLlmKey && (
                 <span style={{ color: 'var(--amber)', fontSize: 9, fontWeight: 400, marginLeft: 4 }} title="Hosted demo caps population at 30. Add a session API key to unlock.">
@@ -472,21 +470,21 @@ export function SettingsPanel() {
         </div>
         <div className="responsive-grid-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginTop: '12px' }}>
           <div>
-            <label htmlFor="provider-select" style={labelStyle}>Provider</label>
+            <label htmlFor="provider-select" style={SETTINGS_LABEL_STYLE}>Provider</label>
             <select id="provider-select" className="pc-select" value={provider} onChange={e => setProvider(e.target.value)} style={inputStyle}>
               <option value="openai">OpenAI</option>
               <option value="anthropic">Anthropic</option>
             </select>
           </div>
           <div>
-            <label htmlFor="search-select" style={labelStyle}>Live Search</label>
+            <label htmlFor="search-select" style={SETTINGS_LABEL_STYLE}>Live Search</label>
             <select id="search-select" className="pc-select" value={String(liveSearch)} onChange={e => setLiveSearch(e.target.value === 'true')} style={inputStyle}>
               <option value="false">Off</option>
               <option value="true">On (requires search API keys)</option>
             </select>
           </div>
           <div>
-            <label htmlFor="economics-select" style={labelStyle}>
+            <label htmlFor="economics-select" style={SETTINGS_LABEL_STYLE}>
               Economics
               {hostedDemo && !hasSessionLlmKey && (
                 <span style={{ color: 'var(--amber)', fontSize: 9, fontWeight: 400, marginLeft: 4 }}>
@@ -525,7 +523,7 @@ export function SettingsPanel() {
         background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: '8px',
         padding: '16px', marginBottom: '16px', boxShadow: 'var(--card-shadow)',
       }}>
-        <legend style={{ fontSize: '14px', fontFamily: 'var(--mono)', color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px', padding: '0 8px' }}>
+        <legend style={{ ...SETTINGS_SECTION_HEADER_STYLE, padding: '0 8px' }}>
           API Keys
         </legend>
         <div style={{ fontSize: '11px', color: 'var(--text-2)', marginBottom: '12px', lineHeight: 1.7 }}>
@@ -558,7 +556,7 @@ export function SettingsPanel() {
             ['cohere', 'Cohere (rerank)', 'Optional. Neural reranking of search results for citation quality.'],
           ] as const).map(([key, label, desc]) => (
             <div key={key}>
-              <label htmlFor={`key-${key}`} style={labelStyle}>
+              <label htmlFor={`key-${key}`} style={SETTINGS_LABEL_STYLE}>
                 {label}
                 {envKeys[key] && (
                   <span style={{ color: 'var(--color-success, #6aad48)', fontWeight: 400, textTransform: 'none', letterSpacing: 0, marginLeft: '6px' }}>
@@ -591,7 +589,7 @@ export function SettingsPanel() {
           background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: '8px',
           padding: '16px', marginBottom: '16px', boxShadow: 'var(--card-shadow)',
         }}>
-          <legend style={{ fontSize: '14px', fontFamily: 'var(--mono)', color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.5px', padding: '0 8px' }}>
+          <legend style={{ ...SETTINGS_SECTION_HEADER_STYLE, padding: '0 8px' }}>
             Model Tiers
           </legend>
           <div style={{ fontSize: '11px', color: 'var(--text-2)', marginBottom: '12px', lineHeight: 1.6 }}>
@@ -602,7 +600,7 @@ export function SettingsPanel() {
           <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             {(Object.keys(TIER_LABELS) as ModelTier[]).map(tier => (
               <div key={tier}>
-                <label htmlFor={`model-${tier}`} style={labelStyle}>
+                <label htmlFor={`model-${tier}`} style={SETTINGS_LABEL_STYLE}>
                   {TIER_LABELS[tier].label}
                 </label>
                 <select

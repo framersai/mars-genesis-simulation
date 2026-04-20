@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { emitScenarioUpdated, subscribeScenarioUpdates } from '../../scenario-sync';
 import { buildScenarioCompileRequest } from './scenarioCompileRequest';
+import { SETTINGS_LABEL_STYLE } from './shared/settingsStyles';
 
 interface AdminConfig {
   adminWrite: boolean;
@@ -292,7 +293,7 @@ export function ScenarioEditor() {
         </summary>
         <div style={{ padding: '0 16px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div>
-            <label style={labelStyle}>Seed Text</label>
+            <label style={SETTINGS_LABEL_STYLE}>Seed Text</label>
             <textarea
               value={seedText}
               onChange={e => setSeedText(e.target.value)}
@@ -301,11 +302,11 @@ export function ScenarioEditor() {
             />
           </div>
           <div>
-            <label style={labelStyle}>Seed URL (fetched via Firecrawl)</label>
+            <label style={SETTINGS_LABEL_STYLE}>Seed URL (fetched via Firecrawl)</label>
             <input value={seedUrl} onChange={e => setSeedUrl(e.target.value)} placeholder="https://example.com/article" style={inputStyle} />
           </div>
           <div>
-            <label style={labelStyle}>Max Web Searches</label>
+            <label style={SETTINGS_LABEL_STYLE}>Max Web Searches</label>
             <input
               value={maxSearches}
               onChange={e => setMaxSearches(e.target.value)}
@@ -315,7 +316,7 @@ export function ScenarioEditor() {
             />
           </div>
           <div>
-            <label style={labelStyle}>Compile Provider Override</label>
+            <label style={SETTINGS_LABEL_STYLE}>Compile Provider Override</label>
             <input
               value={compileProvider}
               onChange={e => setCompileProvider(e.target.value)}
@@ -324,7 +325,7 @@ export function ScenarioEditor() {
             />
           </div>
           <div>
-            <label style={labelStyle}>Compile Model Override</label>
+            <label style={SETTINGS_LABEL_STYLE}>Compile Model Override</label>
             <input
               value={compileModel}
               onChange={e => setCompileModel(e.target.value)}
@@ -415,11 +416,6 @@ const actionBtnStyle: React.CSSProperties = {
   padding: '8px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
   cursor: 'pointer', fontFamily: 'var(--sans)', transition: 'all .2s',
   opacity: 1,
-};
-
-const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: '10px', color: 'var(--text-3)',
-  textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700, marginBottom: '4px',
 };
 
 const inputStyle: React.CSSProperties = {
