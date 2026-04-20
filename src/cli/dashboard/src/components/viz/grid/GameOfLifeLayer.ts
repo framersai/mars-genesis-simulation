@@ -222,6 +222,15 @@ export function drawGol(
   if (intensity <= 0) return;
   const cw = overlayWidth / cols;
   const ch = overlayHeight / rows;
+  // Draw cells as SQUARES sized by the smaller of (cw, ch). Prior
+  // implementation used cw / ch independently which produced tall
+  // rectangles (22×25px) at typical laptop widths. Users read the
+  // vertical-bar arrangement as "weird diamond-like animations"
+  // rather than Conway cells. Square tiles centered in their slots
+  // read as proper cellular automata.
+  const tile = Math.max(1, Math.min(cw, ch) - 4);
+  const offX = (cw - tile) / 2;
+  const offY = (ch - tile) / 2;
   ctx.save();
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
@@ -233,7 +242,7 @@ export function drawGol(
       const alpha = Math.min(1, (age / 8) * 0.9 * intensity);
       ctx.fillStyle = sideColor;
       ctx.globalAlpha = alpha;
-      ctx.fillRect(x * cw + 2, y * ch + 2, Math.max(1, cw - 4), Math.max(1, ch - 4));
+      ctx.fillRect(x * cw + offX, y * ch + offY, tile, tile);
     }
   }
   ctx.restore();

@@ -535,7 +535,12 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
     if (turnChanged || gridEmpty) {
       lastGolTurnRef.current = snapshot.turn;
       seedFromColonists(gol, snapshot.cells, positions, size.w, size.h);
-      const warmup = reducedMotion ? 6 : 12;
+      // Shorter warmup — just enough for the seed patterns to bloom
+      // into recognizable oscillators without evolving into a late-
+      // stage random soup. 5 ticks preserves blinkers / gliders /
+      // still-lifes near their initial placement, so the pattern
+      // reads as "seeded by the turn state" not "random chaos".
+      const warmup = reducedMotion ? 3 : 5;
       for (let i = 0; i < warmup; i += 1) tickGol(gol);
     }
     // No per-frame ticking. The pattern is drawn once per render but

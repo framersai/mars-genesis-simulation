@@ -10,7 +10,13 @@ export function hitTestGlyph(
   x: number,
   y: number,
 ): CellSnapshot | null {
-  const slop = 6;
+  // Generous hit radius so users don't have to pixel-hunt on 3-5px
+  // glyphs. 18px slop means any cursor within ~23px of a featured
+  // glyph's center triggers the hover popover, which addresses
+  // consistent feedback that 'hovering shows no tooltip' — the
+  // actual issue was the hit target being too tight relative to
+  // the discrete Conway tiles rendered around it.
+  const slop = 18;
   for (let i = cells.length - 1; i >= 0; i--) {
     const c = cells[i];
     if (!c.alive) continue;
