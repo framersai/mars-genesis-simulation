@@ -239,11 +239,25 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
   // minified bundle because React dep-arrays evaluate inline during
   // render (unlike the effect bodies themselves).
   const [gridSettings, setGridSettingsState] = useState<GridSettings>(() => {
+    // Schema version tagged into localStorage so default-changes
+    // propagate to users with older stored settings. Bumping when a
+    // default flips (most recently: `lines` true → false, `deptLabels`
+    // default off) forces a clean reset for existing localStorage
+    // entries instead of letting the stored `true` override the new
+    // `false`. Users who customized get reset once; they can re-toggle
+    // from the drawer after.
+    const SETTINGS_VERSION = 2;
     try {
       const raw = localStorage.getItem('paracosm:gridSettings');
       if (raw) {
-        const parsed = JSON.parse(raw) as Partial<GridSettings>;
-        return { ...DEFAULT_GRID_SETTINGS, ...parsed };
+        const parsed = JSON.parse(raw) as Partial<GridSettings> & { __v?: number };
+        if (parsed.__v === SETTINGS_VERSION) {
+          const { __v, ...rest } = parsed;
+          void __v;
+          return { ...DEFAULT_GRID_SETTINGS, ...rest };
+        }
+        // Stale schema — drop the stored blob and use defaults.
+        localStorage.removeItem('paracosm:gridSettings');
       }
     } catch {
       /* silent */
@@ -253,7 +267,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
   const setGridSettings = useCallback((next: GridSettings) => {
     setGridSettingsState(next);
     try {
-      localStorage.setItem('paracosm:gridSettings', JSON.stringify(next));
+      localStorage.setItem('paracosm:gridSettings', JSON.stringify({ ...next, __v: 2 }));
     } catch {
       /* silent */
     }
@@ -264,8 +278,15 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
   // and back) via sessionStorage — keeping the Set in a local ref would
   // reset on every remount and the user would see the same crisis toast
   // replay each time they return to the Sim tab.
+  //
+  // Gated on `state.isRunning` so completed / historical runs don't
+  // fire toasts on mount. User feedback that transient notifications
+  // popping on Viz tab open "makes no sense" — a finished sim's past
+  // crises aren't fresh news; the user is inspecting historical data,
+  // not monitoring a live run.
   useEffect(() => {
     if (!gridSettings.alerts) return;
+    if (!state.isRunning) return;
     const crisisKinds = new Set(['event_start', 'director_crisis']);
     const storageKey = 'paracosm:seenCrisisToasts';
     const readSeen = (): Set<string> => {
@@ -317,7 +338,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
       if (prev && prev.key === latest.key) return prev;
       return { ...latest, expiresAt: performance.now() + 5500 };
     });
-  }, [state.a.events, state.b.events, gridSettings.alerts]);
+  }, [state.a.events, state.b.events, gridSettings.alerts, state.isRunning]);
 
   // Dismiss crisis toast after timeout.
   useEffect(() => {
@@ -366,6 +387,11 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
   }, []);
   useEffect(() => {
     if (!gridSettings.alerts) return;
+    // Same reasoning as the crisis toast above: historical threshold
+    // crossings from a completed sim aren't fresh news. Only surface
+    // alerts while the sim is actively running so the user isn't
+    // spammed on tab open with past morale crashes and food drops.
+    if (!state.isRunning) return;
     const seen = readSeenAlerts();
     const fire = (key: string, toast: Omit<
       NonNullable<typeof alertToast>,
@@ -400,7 +426,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
     check('a', snapsA);
     check('b', snapsB);
     writeSeenAlerts(seen);
-  }, [snapsA, snapsB, gridSettings.alerts, readSeenAlerts, writeSeenAlerts]);
+  }, [snapsA, snapsB, gridSettings.alerts, readSeenAlerts, writeSeenAlerts, state.isRunning]);
   useEffect(() => {
     if (!alertToast) return;
     const remaining = alertToast.expiresAt - performance.now();
