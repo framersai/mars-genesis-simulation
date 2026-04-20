@@ -14,15 +14,6 @@ import {
   drawEcologyResourceMap,
   drawDivergenceHighlight,
 } from './ModeOverlayLayer.js';
-import {
-  createGolState,
-  seedFromColonists,
-  tickGol,
-  drawGol,
-  hashSeedLayout,
-  DEFAULT_GOL_CONFIG,
-  type GolState,
-} from './GameOfLifeLayer.js';
 import { useGridState, type ForgeAttempt, type ReuseCall } from './useGridState.js';
 import { computeDeptCenters } from './deptCenters.js';
 import { GridRenderer } from '../../../lib/webgl/gridRenderer.js';
@@ -244,23 +235,6 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
     const raf = requestAnimationFrame(() => setRevealed(true));
     return () => cancelAnimationFrame(raf);
   }, [reducedMotion]);
-  // Conway Game of Life overlay state. Persistent across renders so
-  // the discrete-cell pattern evolves continuously rather than
-  // resetting every frame. Re-seeded on turn change or when the
-  // grid is empty; evolves via classic B3/S23 in between.
-  const golStateRef = useRef<GolState>(createGolState(DEFAULT_GOL_CONFIG.cols, DEFAULT_GOL_CONFIG.rows));
-  // Separate last-seen-turn ref for GoL so the GoL re-seed logic is
-  // independent of the RD pulse ref (which updates earlier in the
-  // same effect). Sharing one ref caused turnChanged to always read
-  // false by the time GoL ran → grid never seeded → empty canvas.
-  const lastGolTurnRef = useRef<number>(-1);
-  // Content-addressed cache of stabilized GoL grids keyed by the
-  // seed-layout hash. Turn-scrubbing back to a previously-visited
-  // turn short-circuits the seed + 5 ticks work (~20k cell ops) and
-  // pastes the cached grid directly. Capped at 64 entries via LRU-ish
-  // eviction so rapid scrubs across many unique layouts can't balloon
-  // memory (each entry is ~512 bytes of Uint8Array).
-  const golCacheRef = useRef<Map<string, Uint8Array>>(new Map());
   // Relationship-flare: when a colonist is clicked, brighten their
   // partner/child arcs briefly (~1s decay). Ref, not state, so the
   // decay itself doesn't force re-render — consumed in the render
@@ -545,9 +519,9 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
     const crosshairStroke =
       (cs && hexToRgba(cs.getPropertyValue('--text-2').trim(), 0.22)) ||
       'rgba(216, 204, 176, 0.22)';
-    // Bumped from 0.4/0.7 → 0.7/0.95 so the "→ Name" tracer reads at
-    // a glance over dense Conway tiles. Prior values were correct for
-    // a near-empty canvas but lost against the new GoL-tile backdrop.
+    // "→ Name" tracer values tuned for readability over the RD field
+    // wash. Stroke + fill alpha high enough to cut through the tinted
+    // backdrop at normal cursor speeds.
     const crosshairTracerStroke =
       (cs && hexToRgba(cs.getPropertyValue('--text-2').trim(), 0.7)) ||
       'rgba(216, 204, 176, 0.7)';
@@ -555,82 +529,6 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
       (cs && hexToRgba(cs.getPropertyValue('--text-2').trim(), 0.95)) ||
       'rgba(216, 204, 176, 0.95)';
     ctx.clearRect(0, 0, size.w, size.h);
-    // Conway Game of Life pass — discrete-cell pattern layered UNDER
-    // the seeds / glyphs / HUD so the colonist markers still read as
-    // the primary foreground.
-    //
-    // Strategy: on turn change (or first mount), seed the grid from
-    // colonist positions AND run a burst of ~12 generations
-    // synchronously to let the Conway pattern stabilize into its
-    // period-2 oscillators, gliders, and still-lifes. Then STOP
-    // ticking — the rendered pattern stays static until the next
-    // turn change. This addresses user feedback that per-frame
-    // evolution looked like "weird animations" on tab open, and that
-    // a completed run should present a static final pattern rather
-    // than an indefinitely-running simulation inside a simulation.
-    //
-    // Reduced-motion users get a shorter warmup (6 generations) for
-    // the same static result but at lower CPU cost.
-    const gol = golStateRef.current;
-    const turnChanged = snapshot.turn !== lastGolTurnRef.current;
-    let gridEmpty = true;
-    for (let i = 0; i < gol.grid.length; i += 1) {
-      if (gol.grid[i] > 0) { gridEmpty = false; break; }
-    }
-    if (turnChanged || gridEmpty) {
-      lastGolTurnRef.current = snapshot.turn;
-      // Cache lookup: same turn + same alive-colonist layout on this
-      // side should always produce the same stabilized Conway grid.
-      // Skip the seed + warmup entirely when we've computed it
-      // before — makes rapid turn scrubbing feel instant.
-      const cacheKey = hashSeedLayout(
-        snapshot.turn,
-        snapshot.cells,
-        positions,
-        gol.cols,
-        gol.rows,
-      );
-      const cached = golCacheRef.current.get(cacheKey);
-      if (cached && cached.length === gol.grid.length) {
-        gol.grid.set(cached);
-      } else {
-        seedFromColonists(gol, snapshot.cells, positions, size.w, size.h);
-        // Shorter warmup — just enough for the seed patterns to bloom
-        // into recognizable oscillators without evolving into a late-
-        // stage random soup. 5 ticks preserves blinkers / gliders /
-        // still-lifes near their initial placement, so the pattern
-        // reads as "seeded by the turn state" not "random chaos".
-        const warmup = reducedMotion ? 3 : 5;
-        for (let i = 0; i < warmup; i += 1) tickGol(gol);
-        // Cache the stabilized grid. LRU-ish cap at 64 entries so a
-        // long scrub session can't balloon memory. Map iteration is
-        // insertion-ordered so delete-first-entry = delete-oldest.
-        golCacheRef.current.set(cacheKey, new Uint8Array(gol.grid));
-        if (golCacheRef.current.size > 64) {
-          const firstKey = golCacheRef.current.keys().next().value;
-          if (firstKey) golCacheRef.current.delete(firstKey);
-        }
-      }
-    }
-    // No per-frame ticking. The pattern is drawn once per render but
-    // does not evolve until the turn changes again.
-    // GoL layer dims with the same mode-config as the RD field so
-    // ecology / forge don't drown the strip / forge-flare overlays.
-    // Canvas 2D's ctx.fillStyle does NOT resolve `var(--x)` CSS
-    // variables — assigning an unresolved value silently drops the
-    // fill (this was the bug that made the GoL overlay invisible).
-    // Always pass a concrete rgb/hex string resolved upfront.
-    const golColor = mode === 'mood'
-      ? resolveCssColor(moodTintedSideColor, containerRef.current)
-      : resolvedSide;
-    drawGol(
-      ctx,
-      gol,
-      size.w,
-      size.h,
-      golColor,
-      fieldIntensity * 0.9,
-    );
     if (mode !== 'ecology') drawSeeds(ctx, snapshot.cells, positions);
     if (mode !== 'ecology' && settings.deptRings) drawDeptRings(ctx, snapshot.cells, positions);
     if (settings.ghostTrail && previousSnapshot) {
@@ -710,7 +608,7 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
         textMuted,
       );
     // Mode-specific overlays. Each runs AFTER the base layers so its
-    // own visual signature rides on top of the RD/GoL backdrop, and
+    // own visual signature rides on top of the RD backdrop, and
     // BEFORE the HUD so the corner readouts stay readable.
     if (mode === 'forge' && forgeAttempts && forgeAttempts.length > 0) {
       drawForgeHeatmap(

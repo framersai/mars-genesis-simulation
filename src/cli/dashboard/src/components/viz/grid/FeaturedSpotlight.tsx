@@ -64,14 +64,14 @@ export function FeaturedSpotlight({
       aria-live="polite"
       style={{
         position: 'absolute',
-        top: 60,
-        left: 8,
-        right: 8,
+        bottom: 12,
+        right: 12,
         display: 'flex',
         flexDirection: 'column',
         gap: 4,
         pointerEvents: 'none',
         zIndex: 7,
+        maxWidth: 240,
       }}
     >
       {visible.map(sp => (
@@ -79,44 +79,38 @@ export function FeaturedSpotlight({
           key={sp.cell.agentId}
           type="button"
           onClick={() => onSelect?.(sp.cell)}
-          aria-label={`Spotlight: ${sp.cell.name}`}
+          aria-label={`Spotlight: ${sp.cell.name} · ${sp.cell.department}`}
+          title={`${sp.cell.name} · ${sp.cell.role} · ${sp.cell.department} · mood: ${sp.cell.mood}`}
           style={{
             pointerEvents: 'auto',
-            padding: '6px 10px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '4px 10px',
             background: 'var(--bg-panel)',
             border: `1px solid ${sideColor}66`,
             borderLeft: `3px solid ${sideColor}`,
             borderRadius: 3,
             fontFamily: 'var(--mono)',
+            fontSize: 11,
             color: 'var(--text-2)',
             textAlign: 'left',
             cursor: 'pointer',
             boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4)',
             animation: 'paracosm-spotlight-in 380ms ease-out',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: '100%',
           }}
         >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              fontSize: 8,
-              letterSpacing: '0.12em',
-              color: sideColor,
-              textTransform: 'uppercase',
-              fontWeight: 800,
-              marginBottom: 2,
-            }}
-          >
-            <span>★ Featured</span>
-            <span style={{ color: 'var(--text-4)' }}>T{sp.turn}</span>
-          </div>
-          <div style={{ fontSize: 13, color: 'var(--text-1)', fontFamily: 'var(--sans)', fontWeight: 700 }}>
+          <span style={{ color: sideColor, fontSize: 10, flexShrink: 0 }} aria-hidden="true">★</span>
+          <span style={{ color: 'var(--text-1)', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {sp.cell.name}
-          </div>
-          <div style={{ fontSize: 10, color: 'var(--text-3)' }}>
-            {sp.cell.role} · {sp.cell.department.toUpperCase()} · mood: {sp.cell.mood}
-          </div>
+          </span>
+          <span style={{ color: 'var(--text-3)', fontSize: 10, flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            {sp.cell.department}
+          </span>
         </button>
       ))}
     </div>
