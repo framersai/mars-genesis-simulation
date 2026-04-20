@@ -1,5 +1,10 @@
 import { useEffect } from 'react';
 import { useFocusTrap } from '../../../hooks/useFocusTrap';
+import {
+  SETTINGS_LABEL_STYLE,
+  SETTINGS_SECTION_HEADER_STYLE,
+  SETTINGS_RESET_BUTTON_STYLE,
+} from '../../settings/shared/settingsStyles';
 
 export interface GridSettings {
   /** RD animation speed multiplier applied to stepsPerFrame. */
@@ -122,14 +127,9 @@ export function GridSettingsDrawer({ open, settings, onChange, onClose }: Drawer
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: 8,
-            fontSize: 9,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: 'var(--text-3)',
-            fontWeight: 800,
           }}
         >
-          <span>Viz Settings</span>
+          <span style={SETTINGS_SECTION_HEADER_STYLE}>Viz Settings</span>
           <button
             type="button"
             onClick={onClose}
@@ -205,20 +205,7 @@ export function GridSettingsDrawer({ open, settings, onChange, onClose }: Drawer
         <button
           type="button"
           onClick={() => onChange(DEFAULT_GRID_SETTINGS)}
-          style={{
-            marginTop: 10,
-            width: '100%',
-            padding: '5px 8px',
-            background: 'var(--bg-card)',
-            color: 'var(--text-3)',
-            border: '1px solid var(--border)',
-            borderRadius: 3,
-            cursor: 'pointer',
-            fontFamily: 'var(--mono)',
-            fontSize: 9,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-          }}
+          style={{ ...SETTINGS_RESET_BUTTON_STYLE, marginTop: 10 }}
         >
           Reset defaults
         </button>
@@ -238,7 +225,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
         marginBottom: 6,
       }}
     >
-      <span style={{ color: 'var(--text-3)', fontSize: 9, letterSpacing: '0.06em' }}>{label}</span>
+      <span style={{ ...SETTINGS_LABEL_STYLE, display: 'inline', marginBottom: 0 }}>{label}</span>
       <div style={{ display: 'flex', gap: 0 }}>{children}</div>
     </div>
   );
