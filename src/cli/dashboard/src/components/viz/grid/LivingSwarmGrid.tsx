@@ -17,6 +17,7 @@ import {
   seedFromColonists,
   tickGol,
   drawGol,
+  injectFlareIntoGol,
   DEFAULT_GOL_CONFIG,
   type GolState,
 } from './GameOfLifeLayer.js';
@@ -196,14 +197,14 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
     const raf = requestAnimationFrame(() => setRevealed(true));
     return () => cancelAnimationFrame(raf);
   }, [reducedMotion]);
-  // Conway Game of Life ambient overlay. Persistent across renders so
-  // the pattern evolves turn-by-turn instead of resetting every frame.
-  // Seeded from colonist mood+position on turn change, 5 warmup ticks
-  // to stabilize into recognizable Conway patterns, then STATIC until
-  // the next turn. Drawn with low alpha as ambient texture underneath
-  // the glyphs — not a competing visualization.
+  // Conway Game of Life ambient overlay. Seeded from colonist
+  // mood + position on turn change (5 warmup ticks to stabilize into
+  // recognizable Conway patterns), and advanced one generation per
+  // incoming event flare — so new births / deaths / forges / crises
+  // cause the grid to react visibly instead of staying static.
   const golStateRef = useRef<GolState>(createGolState(DEFAULT_GOL_CONFIG.cols, DEFAULT_GOL_CONFIG.rows));
   const lastGolTurnRef = useRef<number>(-1);
+  const lastFlareSignatureRef = useRef<string | null>(null);
 
   // Relationship-flare: when a colonist is clicked, brighten their
   // partner/child arcs briefly (~1s decay). Ref, not state, so the
@@ -351,22 +352,38 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
       (cs && hexToRgba(cs.getPropertyValue('--text-2').trim(), 0.95)) ||
       'rgba(216, 204, 176, 0.95)';
     ctx.clearRect(0, 0, size.w, size.h);
-    // Conway Game of Life ambient layer. Seeded once per turn (no
-    // per-frame evolution — that reads as "weird animations"), then
-    // rendered statically underneath everything else with low alpha
-    // so it's texture, not foreground. The pattern encodes colony
-    // mood: mood-driven starter patterns reflect the dominant
-    // emotional state of the seeding colonists.
+    // Conway Game of Life ambient layer. On turn change: fresh seed +
+    // 5-tick warmup from colonist mood + position. On any new event
+    // flare (birth / death / forge / crisis): tick one generation
+    // so the grid reacts visibly — birth drops a live seed at the
+    // flare location, death kills a small radius, forge drops a
+    // glider at the department centroid, crisis drops an R-pentomino
+    // at colony center. Each new flare event advances the CA by one
+    // generation so the grid feels like it's responding to the sim.
     const gol = golStateRef.current;
     if (snapshot.turn !== lastGolTurnRef.current) {
       lastGolTurnRef.current = snapshot.turn;
       seedFromColonists(gol, snapshot.cells, positions, size.w, size.h);
       const warmup = reducedMotion ? 3 : 5;
       for (let i = 0; i < warmup; i += 1) tickGol(gol);
+      lastFlareSignatureRef.current = visibleFlares.length
+        ? `${visibleFlares[0].kind}|${visibleFlares[0].x}|${visibleFlares[0].y}`
+        : null;
+    } else if (visibleFlares.length > 0) {
+      // Detect a newly-added flare via signature of the first flare
+      // (queue is stable order; new flares push to front). When a new
+      // event arrives, inject its effect + advance one generation so
+      // the GoL reacts to the event.
+      const topSig = `${visibleFlares[0].kind}|${visibleFlares[0].x}|${visibleFlares[0].y}`;
+      if (topSig !== lastFlareSignatureRef.current) {
+        lastFlareSignatureRef.current = topSig;
+        injectFlareIntoGol(gol, visibleFlares[0], size.w, size.h);
+        if (!reducedMotion) tickGol(gol);
+      }
     }
-    // Low alpha (0.25) so tiles read as ambient texture, not competing
-    // with the glyphs. Color follows the resolved side tint.
-    drawGol(ctx, gol, size.w, size.h, resolvedSide, 0.25);
+    // Medium alpha (0.45) so tiles read as clearly present but not
+    // competing with the glyph foreground. Color follows side tint.
+    drawGol(ctx, gol, size.w, size.h, resolvedSide, 0.45);
     drawFlares(ctx, visibleFlares);
     if (mode !== 'ecology')
       drawGlyphs(
