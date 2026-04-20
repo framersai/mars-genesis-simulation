@@ -6,6 +6,14 @@ interface LinesOpts {
   flareAgentId?: string | null;
   /** 0..1 flare intensity; decays per-tick at the render site. */
   flareIntensity?: number;
+  /**
+   * When true, draw ONLY the lines that touch `flareAgentId` — skip
+   * every other partner-arc and child-line on the grid. Used when
+   * the user clicks a colonist with the global `settings.lines`
+   * toggle off: the click should reveal just that colonist's
+   * network, not re-enable the full relationship graph.
+   */
+  focusOnly?: boolean;
 }
 
 /**
@@ -26,6 +34,7 @@ export function drawLines(
   for (const c of cells) if (c.alive) byId.set(c.agentId, c);
   const flareId = opts.flareAgentId ?? null;
   const flareT = Math.max(0, Math.min(1, opts.flareIntensity ?? 0));
+  const focusOnly = opts.focusOnly ?? false;
 
   ctx.save();
   ctx.lineCap = 'round';
@@ -44,6 +53,10 @@ export function drawLines(
     drawnPartners.add(pairKey);
     const touchesFlare =
       flareId !== null && (c.agentId === flareId || c.partnerId === flareId);
+    // focusOnly short-circuit: only render lines touching the
+    // focused colonist. Makes click-focus reveal a single network
+    // instead of the full relationship graph.
+    if (focusOnly && !touchesFlare) continue;
     ctx.strokeStyle = sideColor;
     ctx.globalAlpha = touchesFlare ? 0.32 + 0.5 * flareT : 0.32;
     ctx.lineWidth = touchesFlare ? 1 + 1.4 * flareT : 1;
@@ -74,6 +87,7 @@ export function drawLines(
       const pb = positions.get(childId);
       if (!pb) continue;
       const touchesFlare = flareId !== null && (c.agentId === flareId || childId === flareId);
+      if (focusOnly && !touchesFlare) continue;
       ctx.save();
       ctx.globalAlpha = touchesFlare ? 0.5 + 0.45 * flareT : 0.5;
       ctx.lineWidth = touchesFlare ? 0.8 + 1.4 * flareT : 0.8;

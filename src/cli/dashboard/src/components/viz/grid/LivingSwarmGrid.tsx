@@ -99,6 +99,14 @@ interface LivingSwarmGridProps {
    * chronicle rows. `'all'` (default when omitted) is a passthrough.
    */
   eventFilter?: 'all' | 'birth' | 'death' | 'forge' | 'crisis';
+  /**
+   * The chronicle pill the user is currently hovering (or null when
+   * the cursor left the strip). When the hovered pill's `side`
+   * matches this panel's side, the panel border briefly pulses in
+   * the event's category color — making the chronicle row feel
+   * directly connected to the canvas.
+   */
+  chronicleHover?: { kind: 'birth' | 'death' | 'forge' | 'crisis'; side: 'a' | 'b'; turn: number } | null;
 }
 
 function resolveRgb(color: string, element: HTMLElement | null): [number, number, number] {
@@ -180,6 +188,7 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
     onToggleFocus,
     onOpenChat,
     eventFilter = 'all',
+    chronicleHover = null,
   } = props;
   const isFocused = focusedSide === side;
 
@@ -209,6 +218,26 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
    *  the render effect reads `.current` inline. */
   const pulseRef = useRef<number>(0);
   const lastTurnRef = useRef<number>(-1);
+  /**
+   * Mount-time staged reveal. Uses a CSS-driven cover-div approach
+   * rather than canvas globalAlpha because the canvas layers mutate
+   * alpha internally via save/restore, which would clobber any
+   * outer alpha. The cover div starts opaque (hiding the canvas
+   * entirely) then transitions to transparent over 400ms — gives
+   * the tab a smooth "curtain rise" on mount without requiring any
+   * per-frame redraw. Reduced-motion users get instant reveal.
+   */
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => {
+    if (reducedMotion) {
+      setRevealed(true);
+      return;
+    }
+    // Start on next frame so the CSS transition fires (setting
+    // revealed=true synchronously would skip the transition).
+    const raf = requestAnimationFrame(() => setRevealed(true));
+    return () => cancelAnimationFrame(raf);
+  }, [reducedMotion]);
   // Conway Game of Life overlay state. Persistent across renders so
   // the discrete-cell pattern evolves continuously rather than
   // resetting every frame. Re-seeded on turn change or when the
@@ -591,16 +620,35 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
         ghostColors,
       );
     }
-    if (settings.lines && (mode === 'living' || mode === 'mood')) {
+    // Relationship lines render in two distinct modes:
+    //
+    //  - `settings.lines` ON: full relationship graph (every partner
+    //    arc + every parent/child line on the grid).
+    //  - `settings.lines` OFF (default): only draw the focused
+    //    network for a recently-clicked colonist, via the
+    //    relationshipFlare ref. Users who click a glyph get to see
+    //    just THAT colonist's partners/children highlighted in
+    //    side-color for ~1s, with zero background clutter from
+    //    unrelated colonists. Addresses the pattern where the
+    //    always-on relationship graph read as "weird diamond
+    //    animations" over a dense grid.
+    if (mode === 'living' || mode === 'mood') {
       // Decay relationship flare ~0.03/frame → ~1s total at 30fps.
       relationshipFlareRef.current.intensity = Math.max(
         0,
         relationshipFlareRef.current.intensity - 0.03,
       );
-      drawLines(ctx, snapshot.cells, positions, resolvedSide, {
-        flareAgentId: relationshipFlareRef.current.id,
-        flareIntensity: relationshipFlareRef.current.intensity,
-      });
+      const flareActive =
+        !settings.lines &&
+        relationshipFlareRef.current.id !== null &&
+        relationshipFlareRef.current.intensity > 0.05;
+      if (settings.lines || flareActive) {
+        drawLines(ctx, snapshot.cells, positions, resolvedSide, {
+          flareAgentId: relationshipFlareRef.current.id,
+          flareIntensity: relationshipFlareRef.current.intensity,
+          focusOnly: !settings.lines,
+        });
+      }
     }
     // Draw the filtered flare subset on the overlay. Using the
     // pre-filtered `visibleFlares` keeps the main canvas in lock-step
@@ -833,22 +881,45 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
           backgroundSize: settings.dust
             ? '140px 140px, 160px 160px, 130px 130px, 170px 170px, 150px 150px, 180px 180px, 165px 165px, auto'
             : 'auto',
-          border: `1px solid ${snapshot
-            ? snapshot.morale >= 0.6
-              ? 'rgba(106, 173, 72, 0.55)'
-              : snapshot.morale >= 0.3
-              ? 'rgba(232, 180, 74, 0.55)'
-              : 'rgba(196, 74, 30, 0.65)'
-            : `${sideColor}33`}`,
+          // Border + boxShadow cycle between the morale-derived
+          // default and a chronicle-hover override. When the user
+          // hovers a chronicle pill that belongs to THIS side, the
+          // panel pulses in the event's category color so the two
+          // UI surfaces read as connected. Fades back to the morale
+          // color on pointer leave via the 400ms border-color
+          // transition already in place.
+          border: `2px solid ${
+            chronicleHover && chronicleHover.side === side
+              ? ({
+                  birth: 'rgba(154, 205, 96, 0.95)',
+                  death: 'rgba(200, 95, 80, 0.95)',
+                  forge: 'rgba(232, 180, 74, 0.95)',
+                  crisis: 'rgba(196, 74, 30, 0.95)',
+                } as const)[chronicleHover.kind]
+              : snapshot
+              ? snapshot.morale >= 0.6
+                ? 'rgba(106, 173, 72, 0.55)'
+                : snapshot.morale >= 0.3
+                ? 'rgba(232, 180, 74, 0.55)'
+                : 'rgba(196, 74, 30, 0.65)'
+              : `${sideColor}33`
+          }`,
           borderRadius: 4,
-          boxShadow: snapshot
+          boxShadow: chronicleHover && chronicleHover.side === side
+            ? `0 0 24px ${({
+                birth: 'rgba(154, 205, 96, 0.55)',
+                death: 'rgba(200, 95, 80, 0.55)',
+                forge: 'rgba(232, 180, 74, 0.55)',
+                crisis: 'rgba(196, 74, 30, 0.55)',
+              } as const)[chronicleHover.kind]}`
+            : snapshot
             ? snapshot.morale >= 0.6
               ? '0 0 16px rgba(106, 173, 72, 0.18)'
               : snapshot.morale >= 0.3
               ? '0 0 16px rgba(232, 180, 74, 0.12)'
               : '0 0 20px rgba(196, 74, 30, 0.25)'
             : 'none',
-          transition: 'border-color 400ms ease, box-shadow 400ms ease',
+          transition: 'border-color 200ms ease, box-shadow 200ms ease',
         }}
       >
         <canvas
@@ -897,6 +968,25 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
             WebGL2 unavailable
           </div>
         )}
+        {/* Staged fade-in cover. Starts opaque on mount, transitions
+            to transparent so the canvas emerges over 400ms with a
+            slight radial reveal — feels intentional instead of
+            popping all layers on cold. CSS-driven to avoid per-frame
+            state churn; pointer-events:none so it never intercepts
+            hover / click on the canvas beneath. */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            background:
+              'radial-gradient(circle at 50% 50%, rgba(10,8,6,0) 0%, rgba(10,8,6,0.6) 60%, rgba(10,8,6,1) 100%)',
+            opacity: revealed ? 0 : 1,
+            transition: 'opacity 400ms cubic-bezier(0.22, 0.61, 0.36, 1)',
+            zIndex: 2,
+          }}
+        />
         {/* Legend caption — bottom-right of each panel. Explains the
             two visual layers users are seeing so hovering specific
             Conway cells doesn't feel like a broken UI. Clicking
