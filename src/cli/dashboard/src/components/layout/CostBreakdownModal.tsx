@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import type { CostBreakdown, CostSiteBreakdown } from '../../hooks/useGameState';
 import { useRetryStats } from '../../hooks/useRetryStats';
 
@@ -53,6 +54,7 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+  const dialogRef = useFocusTrap<HTMLDivElement>(true);
 
   // Fetch /retry-stats when the modal opens. Shows cross-run schema +
   // forge reliability trends from the server's ring buffer.
@@ -80,6 +82,8 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
       }}
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         onClick={e => e.stopPropagation()}
         style={{
           background: 'var(--bg-panel)',
@@ -93,6 +97,7 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
           fontFamily: 'var(--sans)',
           color: 'var(--text-1)',
           boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
+          outline: 'none',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { useFocusTrap } from '../../../hooks/useFocusTrap';
 import type { ForgeAttempt, ReuseCall } from './useGridState.js';
 
 export interface ForgeLineagePayload {
@@ -57,6 +58,7 @@ export function ForgeLineageModal({
     return { mine, mineReuses, firstApproved };
   }, [payload, forgeAttemptsA, forgeAttemptsB, reuseCallsA, reuseCallsB]);
 
+  const dialogRef = useFocusTrap<HTMLDivElement>(!!payload);
   if (!payload || !data) return null;
 
   return (
@@ -77,6 +79,8 @@ export function ForgeLineageModal({
       }}
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         onClick={e => e.stopPropagation()}
         style={{
           background: 'var(--bg-panel)',
@@ -91,6 +95,7 @@ export function ForgeLineageModal({
           fontFamily: 'var(--mono)',
           color: 'var(--text-2)',
           boxShadow: '0 10px 32px rgba(0, 0, 0, 0.6)',
+          outline: 'none',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
