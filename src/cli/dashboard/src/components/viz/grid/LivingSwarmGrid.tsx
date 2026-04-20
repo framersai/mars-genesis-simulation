@@ -204,6 +204,7 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
   // cause the grid to react visibly instead of staying static.
   const golStateRef = useRef<GolState>(createGolState(DEFAULT_GOL_CONFIG.cols, DEFAULT_GOL_CONFIG.rows));
   const lastGolTurnRef = useRef<number>(-1);
+  const lastGolModeRef = useRef<string>('');
   const lastFlareSignatureRef = useRef<string | null>(null);
 
   // Relationship-flare: when a colonist is clicked, brighten their
@@ -361,10 +362,31 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
     // at colony center. Each new flare event advances the CA by one
     // generation so the grid feels like it's responding to the sim.
     const gol = golStateRef.current;
-    if (snapshot.turn !== lastGolTurnRef.current) {
+    const modeChanged = mode !== lastGolModeRef.current;
+    const turnChanged = snapshot.turn !== lastGolTurnRef.current;
+    if (turnChanged || modeChanged) {
       lastGolTurnRef.current = snapshot.turn;
+      lastGolModeRef.current = mode;
       seedFromColonists(gol, snapshot.cells, positions, size.w, size.h);
-      const warmup = reducedMotion ? 3 : 5;
+      // Mode determines warmup depth so clicking a mode pill produces
+      // a visibly different CA state: LIVING = stabilized (5 ticks),
+      // MOOD = fresh seed (0 ticks, patterns sit unstabilized), FORGE
+      // = over-evolved (8 ticks, gliders escape), ECOLOGY = minimal
+      // (2 ticks), DIVERGENCE = extreme (12 ticks, chaos).
+      let warmup: number;
+      if (reducedMotion) {
+        warmup = 3;
+      } else if (mode === 'mood') {
+        warmup = 0;
+      } else if (mode === 'ecology') {
+        warmup = 2;
+      } else if (mode === 'forge') {
+        warmup = 8;
+      } else if (mode === 'divergence') {
+        warmup = 12;
+      } else {
+        warmup = 5;
+      }
       for (let i = 0; i < warmup; i += 1) tickGol(gol);
       lastFlareSignatureRef.current = visibleFlares.length
         ? `${visibleFlares[0].kind}|${visibleFlares[0].x}|${visibleFlares[0].y}`
@@ -381,9 +403,10 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
         if (!reducedMotion) tickGol(gol);
       }
     }
-    // Medium alpha (0.45) so tiles read as clearly present but not
-    // competing with the glyph foreground. Color follows side tint.
-    drawGol(ctx, gol, size.w, size.h, resolvedSide, 0.45);
+    // Higher alpha (0.65) so the chunky tiles read as the primary
+    // visual texture. Color follows side tint — amber for A, teal
+    // for B — so the two panels stay distinguishable at a glance.
+    drawGol(ctx, gol, size.w, size.h, resolvedSide, 0.65);
     drawFlares(ctx, visibleFlares);
     if (mode !== 'ecology')
       drawGlyphs(
