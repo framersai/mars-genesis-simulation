@@ -32,7 +32,7 @@ import { GridModePills, gridModeHint, type GridMode } from './grid/GridModePills
 import { GridHelpOverlay } from './grid/GridHelpOverlay.js';
 import { useMediaQuery, NARROW_QUERY } from './grid/useMediaQuery.js';
 import { TimelineSparkline } from './grid/TimelineSparkline.js';
-import { EventChronicle, type ChronicleFilter } from './grid/EventChronicle.js';
+import { EventChronicle, type ChronicleFilter, type ChronicleEvent } from './grid/EventChronicle.js';
 import { TurnProgress } from './grid/TurnProgress.js';
 import { ColonistSearch, type SearchMatch } from './grid/ColonistSearch.js';
 import {
@@ -213,6 +213,13 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
   // flares continued to fire for every event regardless. Controlled
   // pattern keeps a single source of truth for both widgets.
   const [chronicleFilter, setChronicleFilter] = useState<ChronicleFilter>('all');
+  // Hovered chronicle event — propagated to LivingSwarmGrid so the
+  // matching side's panel flashes the event's category color while
+  // the cursor is on the pill. Makes the chronicle row feel connected
+  // to the main canvas instead of a detached dot strip.
+  const [hoveredChronicleEvent, setHoveredChronicleEvent] = useState<
+    { kind: ChronicleEvent['kind']; side: 'a' | 'b'; turn: number } | null
+  >(null);
   const [searchQuery, setSearchQuery] = useState('');
   // Latest crisis event that hasn't been dismissed — drives the toast
   // banner. Keyed by turn + category so the same crisis is announced
@@ -1040,6 +1047,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
           onHoverTurnChange={setHoveredTurn}
           filter={chronicleFilter}
           onFilterChange={setChronicleFilter}
+          onHoverEventChange={setHoveredChronicleEvent}
           onForgeSelect={(toolName, side) =>
             setForgeLineage({
               toolName,
@@ -1117,6 +1125,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
             onToggleFocus={toggleFocus}
             onOpenChat={handleOpenChat}
             eventFilter={chronicleFilter}
+            chronicleHover={hoveredChronicleEvent}
           />
           </div>
           <div
@@ -1160,6 +1169,7 @@ export function ColonyViz({ state, onNavigateToChat }: ColonyVizProps) {
             onToggleFocus={toggleFocus}
             onOpenChat={handleOpenChat}
             eventFilter={chronicleFilter}
+            chronicleHover={hoveredChronicleEvent}
           />
           </div>
         </div>

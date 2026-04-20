@@ -37,9 +37,16 @@ interface EventChronicleProps {
    */
   filter?: ChronicleFilter;
   onFilterChange?: (next: ChronicleFilter) => void;
+  /**
+   * Fires when the user hovers a chronicle event pill. The parent can
+   * propagate the hovered kind + side to the main canvas so the panel
+   * flashes the event's category color while the cursor is on the
+   * pill. Makes the chronicle row feel connected to the canvas.
+   */
+  onHoverEventChange?: (ev: { kind: ChronicleEvent['kind']; side: 'a' | 'b'; turn: number } | null) => void;
 }
 
-export type { ChronicleFilter };
+export type { ChronicleFilter, ChronicleEvent };
 
 const KIND_COLORS: Record<ChronicleEvent['kind'], string> = {
   birth: 'rgba(154, 205, 96, 0.95)',
@@ -71,6 +78,7 @@ export function EventChronicle({
   onForgeSelect,
   filter: controlledFilter,
   onFilterChange,
+  onHoverEventChange,
 }: EventChronicleProps) {
   const chronicle = useMemo<ChronicleEvent[]>(() => {
     const out: ChronicleEvent[] = [];
@@ -224,10 +232,22 @@ export function EventChronicle({
                   onJumpToTurn(evTurn0);
                 }
               }}
-              onMouseEnter={() => onHoverTurnChange?.(evTurn0)}
-              onMouseLeave={() => onHoverTurnChange?.(null)}
-              onFocus={() => onHoverTurnChange?.(evTurn0)}
-              onBlur={() => onHoverTurnChange?.(null)}
+              onMouseEnter={() => {
+                onHoverTurnChange?.(evTurn0);
+                onHoverEventChange?.({ kind: ev.kind, side: ev.side, turn: ev.turn });
+              }}
+              onMouseLeave={() => {
+                onHoverTurnChange?.(null);
+                onHoverEventChange?.(null);
+              }}
+              onFocus={() => {
+                onHoverTurnChange?.(evTurn0);
+                onHoverEventChange?.({ kind: ev.kind, side: ev.side, turn: ev.turn });
+              }}
+              onBlur={() => {
+                onHoverTurnChange?.(null);
+                onHoverEventChange?.(null);
+              }}
               title={ev.label}
               aria-label={ev.label}
               style={{
