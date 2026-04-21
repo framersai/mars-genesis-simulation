@@ -259,24 +259,56 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
             <div className="topbar-progress w-20 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border)' }} role="progressbar" aria-valuenow={gameState.turn} aria-valuemin={0} aria-valuemax={gameState.maxTurns} aria-label={`Simulation progress, turn ${gameState.turn} of ${gameState.maxTurns}`}>
               <div className="h-full rounded-full transition-all" style={{ width: `${Math.round((gameState.turn / gameState.maxTurns) * 100)}%`, background: 'linear-gradient(90deg, var(--side-a), var(--side-b))' }} />
             </div>
-            {sse.validationFallbacks.length > 0 && (
-              <span
-                title={`Validation fallbacks (schema retries exhausted; sim continued with empty skeleton):\n${sse.validationFallbacks.map(b => `  ${b.schemaName}: ${b.count}× (last: ${b.lastSite ?? 'n/a'})`).join('\n')}`}
-                aria-label={`${sse.validationFallbacks.reduce((sum, b) => sum + b.count, 0)} validation fallbacks`}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 4,
-                  padding: '1px 6px', borderRadius: 3,
-                  background: 'rgba(232, 180, 74, 0.14)',
-                  border: '1px solid var(--amber, #e8b44a)',
-                  color: 'var(--amber, #e8b44a)',
-                  fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 700,
-                  cursor: 'help',
-                }}
-              >
-                <span aria-hidden="true">⚠</span>
-                {sse.validationFallbacks.reduce((sum, b) => sum + b.count, 0)}
-              </span>
-            )}
+            {sse.validationFallbacks.length > 0 && (() => {
+              const total = sse.validationFallbacks.reduce((sum, b) => sum + b.count, 0);
+              return (
+                <Tooltip
+                  content={
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--amber)', marginBottom: 6 }}>
+                        ⚠ {total} validation fallback{total === 1 ? '' : 's'}
+                      </div>
+                      <div style={{ marginBottom: 8 }}>
+                        An LLM call returned a JSON payload that failed zod
+                        schema validation. After retries were exhausted the
+                        orchestrator continued with an empty skeleton so the
+                        sim wouldn't abort mid-turn. Numbers here let you
+                        spot which schema is misbehaving.
+                      </div>
+                      <div style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid var(--border)' }}>
+                        {sse.validationFallbacks.map(b => (
+                          <div key={b.schemaName} style={{
+                            fontFamily: 'var(--mono)', fontSize: 11,
+                            color: 'var(--text-2)',
+                            display: 'flex', justifyContent: 'space-between', gap: 12,
+                          }}>
+                            <span>{b.schemaName}</span>
+                            <span style={{ color: 'var(--text-3)' }}>
+                              {b.count}× {b.lastSite ? `(last: ${b.lastSite})` : ''}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  }
+                >
+                  <span
+                    aria-label={`${total} validation fallback${total === 1 ? '' : 's'}`}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      padding: '1px 6px', borderRadius: 3,
+                      background: 'rgba(232, 180, 74, 0.14)',
+                      border: '1px solid var(--amber, #e8b44a)',
+                      color: 'var(--amber, #e8b44a)',
+                      fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 700,
+                    }}
+                  >
+                    <span aria-hidden="true">⚠</span>
+                    {total}
+                  </span>
+                </Tooltip>
+              );
+            })()}
           </div>
         )}
         <div className="topbar-center hidden md:block truncate" style={{ color: 'var(--text-3)', fontFamily: 'var(--mono)', fontSize: '10px' }}>
