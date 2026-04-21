@@ -135,8 +135,31 @@ jobs:
         run: |
           SSH="ssh -i ~/.ssh/deploy_key root@${{ env.SERVER_IP }}"
 
-          # Sync build to server (exclude .env and node_modules so they persist)
-          rsync -azP --delete --exclude='.env' --exclude='node_modules' \
+          # Sync build to server.
+          #
+          # --delete removes paths on the server that aren't in the
+          # artifact so old JS bundles + orphaned docs clean up on
+          # each deploy. The excludes below are paths that DO NOT
+          # belong in the artifact but MUST survive a deploy:
+          #   .env              — hand-authored, holds API keys + caps.
+          #   node_modules      — installed separately via npm ci.
+          #   data/             — SQLite session store for cached runs.
+          #                       Without this exclude, every deploy
+          #                       wipes /opt/paracosm/data/sessions.db
+          #                       because rsync sees it as "not in
+          #                       source → delete it." The server
+          #                       creates data/ on first boot and
+          #                       owns its lifecycle from there.
+          #   .event-buffer.json — transient SSE event buffer, written
+          #                       per-run so the dashboard can rehydrate
+          #                       after a restart. Regenerable.
+          #   logs/             — runtime logs (pm2 stdout/stderr).
+          rsync -azP --delete \
+            --exclude='.env' \
+            --exclude='node_modules' \
+            --exclude='data/' \
+            --exclude='.event-buffer.json' \
+            --exclude='logs/' \
             -e "ssh -i ~/.ssh/deploy_key" \
             build/ root@${{ env.SERVER_IP }}:${{ env.APP_DIR }}/
 
