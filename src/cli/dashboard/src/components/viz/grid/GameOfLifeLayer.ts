@@ -391,17 +391,20 @@ export function seedFromColonists(
   // BIRTHS seeds BLOCK at every native-born cell (generation > 0),
   // and so on. This answers "show me the deaths" with "here's where
   // each death happened" instead of an empty canvas.
-  // Death filter: leave Conway grid empty here — dead markers render
-  // as a separate canvas pass (drawDeadMarkers) with distinct hollow
-  // tombstone squares instead of the filled-square live Conway tiles.
-  // Keeping them in separate layers means the viewer immediately
-  // distinguishes "live cell here" vs "someone died here".
-  if (eventFilter === 'death') return;
-  // Birth filter: same pattern as death — render distinct markers
-  // in a separate canvas pass (drawBirthMarkers) rather than Conway
-  // tiles. Leaves the Conway grid empty so only the green "+" birth
-  // markers show.
-  if (eventFilter === 'birth') return;
+  // Death filter: keep the mood-driven Conway seed running (same as
+  // 'all' below) so the CA texture stays visible behind the overlay
+  // tombstone markers. Previously this branch returned early and
+  // cleared the grid, which meant sides with only 1 death showed a
+  // nearly-empty canvas — the markers were there but lost without
+  // the surrounding Conway context. Death markers still render as
+  // a distinct gray X overlay in LivingSwarmGrid.
+  // Fall through to the default mood-driven seed below.
+  // Birth filter: same pattern as death — keep the mood-driven
+  // Conway seed running so the ambient CA texture is preserved, and
+  // let drawBirthMarkers render green + overlays on top in
+  // LivingSwarmGrid. Sides with few births would otherwise show a
+  // nearly-empty canvas with a single marker.
+  // Fall through to the default mood-driven seed below.
 
   const filterPattern = patternForFilter(eventFilter);
   for (let i = 0; i < cells.length; i += 1) {
