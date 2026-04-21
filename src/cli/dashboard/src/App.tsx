@@ -344,15 +344,24 @@ function AppContent() {
   // page so new viewers get oriented without having to find the
   // HOW IT WORKS button. Gated on a localStorage flag
   // (`paracosm:tourSeen`) so returning users don't get the tour
-  // replayed every time they open the app. The flag gets set both
-  // when they finish the tour and when they skip it — so either
-  // way, one exposure is enough.
+  // replayed every time they open the app.
+  //
+  // We set the flag IMMEDIATELY on auto-start fire (not just when
+  // the tour ends). Reason: React 19's StrictMode double-runs
+  // effects in dev, SPA navigations / query-param changes can
+  // remount AppContent, and various dismissal paths (click-away,
+  // Escape, browser back) don't all reliably call handleTourEnd
+  // before the component unmounts. Pinning the flag at fire-time
+  // guarantees once-ever auto-start behavior regardless of how
+  // the user exits the tour. Manual re-play via HOW IT WORKS still
+  // works since that path bypasses this effect.
   useEffect(() => {
     try {
       if (localStorage.getItem('paracosm:tourSeen') === '1') return;
+      localStorage.setItem('paracosm:tourSeen', '1');
     } catch {
-      // Privacy mode / quota error: skip autostart to avoid looping
-      // a tour every page load when we can't persist the seen flag.
+      // Privacy mode / quota error: skip autostart — if we can't
+      // persist "seen", don't fire or the tour loops forever.
       return;
     }
     // Defer one tick so the initial layout (tab bar, topbar, sim

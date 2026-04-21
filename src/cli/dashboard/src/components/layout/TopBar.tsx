@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTheme } from '../../theme/ThemeProvider';
 import type { ScenarioClientPayload } from '../../hooks/useScenario';
 import type { GameState } from '../../hooks/useGameState';
 import type { useSSE } from '../../hooks/useSSE';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useSessions } from '../../hooks/useSessions';
 import { Tooltip } from '../shared/Tooltip';
 import { LoadMenu } from './LoadMenu';
+import { buildReplayHref } from './LoadMenu.helpers';
 
 /**
  * Mirror the full useSSE return shape so TopBar can read providerError,
@@ -66,6 +68,13 @@ const toolBtnStyle: React.CSSProperties = {
 export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRun, onTour, onCopy, launching = false }: TopBarProps) {
   const { resolved, setTheme } = useTheme();
   const hasEvents = gameState.a.events.length > 0 || gameState.b.events.length > 0;
+
+  // Shared sessions catalog fetch — drives the REPLAY button's
+  // enabled state (and which session it replays by default) +
+  // memoizes so the LoadMenu inside the same topbar doesn't fire
+  // a duplicate /sessions request on every render.
+  const sessionsState = useSessions();
+  const sessionsList = useMemo(() => sessionsState.sessions, [sessionsState.sessions]);
 
   // Secondary run actions (Save / Copy / Clear) consolidate behind a
   // single overflow trigger so the right cluster does not carry 9+
@@ -378,21 +387,98 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
             in-flight launch). Swaps to a disabled 'LAUNCHING...' chip
             during the launching window so the UI doesn't appear
             frozen — prior behaviour silently showed nothing. */}
-        {onRun && !gameState.isRunning && !launching && (
-          <button
-            onClick={onRun}
-            style={{
-              background: 'linear-gradient(135deg, var(--rust), #c44a1e)', color: '#fff',
-              border: 'none', padding: '3px 14px', borderRadius: '4px',
-              fontSize: '11px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--mono)',
-              letterSpacing: '0.5px',
-            }}
-            title="Launch simulation with current settings"
-            aria-label="Run simulation"
-          >
-            RUN
-          </button>
-        )}
+        {onRun && !gameState.isRunning && !launching && (() => {
+          const latestReplayId = sessionsList.length > 0 ? sessionsList[0].id : null;
+          const replayLabel = latestReplayId
+            ? `Replay the most recent cached run${sessionsList[0].title ? ` — ${sessionsList[0].title}` : ''}`
+            : 'No cached runs yet — run a new simulation first';
+          return (
+            <>
+              <Tooltip
+                content={
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--amber)', marginBottom: 6 }}>
+                      Replay latest cached run
+                    </div>
+                    <div>
+                      {latestReplayId
+                        ? 'Loads the most recent server-saved run and streams its events through the dashboard as if it were live. Zero LLM cost. Use the LOAD menu to pick any other cached run.'
+                        : 'No cached runs yet. Run a new simulation first — when it finishes, the server writes the session to the cache and this button unlocks.'}
+                    </div>
+                  </div>
+                }
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!latestReplayId) return;
+                    window.location.href = buildReplayHref(window.location.href, latestReplayId);
+                  }}
+                  disabled={!latestReplayId}
+                  style={{
+                    background: latestReplayId
+                      ? 'linear-gradient(135deg, var(--amber), #b88a1f)'
+                      : 'var(--bg-card)',
+                    color: latestReplayId ? 'var(--bg-canvas)' : 'var(--text-4)',
+                    border: 'none',
+                    padding: '3px 12px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: latestReplayId ? 'pointer' : 'not-allowed',
+                    fontFamily: 'var(--mono)',
+                    letterSpacing: '0.5px',
+                    opacity: latestReplayId ? 1 : 0.6,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
+                  }}
+                  aria-label={replayLabel}
+                >
+                  <span aria-hidden="true">↻</span>
+                  REPLAY
+                </button>
+              </Tooltip>
+              <Tooltip
+                content={
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--amber)', marginBottom: 6 }}>
+                      Run new simulation
+                    </div>
+                    <div>
+                      Launch a fresh run against the current Settings. Both
+                      leaders execute in parallel; the dashboard streams
+                      every event in real time. Uses provider credits.
+                    </div>
+                  </div>
+                }
+              >
+                <button
+                  onClick={onRun}
+                  style={{
+                    background: 'linear-gradient(135deg, var(--rust), #c44a1e)',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '3px 14px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontFamily: 'var(--mono)',
+                    letterSpacing: '0.5px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
+                  }}
+                  aria-label="Run new simulation"
+                >
+                  <span aria-hidden="true">▶</span>
+                  RUN
+                </button>
+              </Tooltip>
+            </>
+          );
+        })()}
         {launching && !gameState.isRunning && (
           <span
             style={{
