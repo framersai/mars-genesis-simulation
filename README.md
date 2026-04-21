@@ -258,14 +258,14 @@ Cache hits show up as `cached` in the progress callback. First-run cost is rough
 
 ## Cost Envelope
 
-Running a simulation calls real LLM APIs against your key. Typical spend per run on provider defaults (6 turns, 5 departments, 100 agents, up to 3 events per turn):
+Running a simulation calls real LLM APIs against your key. Typical spend per run on provider defaults (6 turns, 5 departments, 100 agents, up to 3 events per turn). Paracosm assigns a different tier per role so flagship cost only lands where it earns its keep (forge-code correctness):
 
-| Provider | Commander / Departments / Director | Judge | Reactions | Per-run total |
-|----------|-------------------------------------|-------|-----------|---------------|
-| OpenAI   | `gpt-5.4`              | `gpt-4o-mini`              | `gpt-4o-mini`              | ~$1-3  |
-| Anthropic| `claude-sonnet-4-6`    | `claude-haiku-4-5-20251001`| `claude-haiku-4-5-20251001`| ~$3-7  |
+| Provider  | Departments (flagship) | Commander / Director / Judge (mid-tier) | Reactions (cheapest) | Per-run total |
+|-----------|------------------------|------------------------------------------|----------------------|---------------|
+| OpenAI    | `gpt-5.4`              | `gpt-5.4-mini`                           | `gpt-5.4-nano`       | ~$1-3  |
+| Anthropic | `claude-sonnet-4-6`    | `claude-haiku-4-5-20251001`              | `claude-haiku-4-5-20251001` | ~$3-7  |
 
-The single biggest lever is the judge model — it runs once per forge attempt (easily 60+ calls per 6-turn run) so keeping it on the cheap tier is what makes the run affordable. Running the judge on a flagship model triples the total.
+The single biggest lever is the judge model — it runs once per forge attempt (easily 60+ calls per 6-turn run) so keeping it on the mid-tier is what makes the run affordable. Promoting the judge to flagship triples the total. Override any role via `models` on `RunOptions`: `{ models: { judge: 'gpt-5.4' } }` if you want to pay for stricter review.
 
 The orchestrator's `runSimulation()` returns a `cost` field with token counts, LLM call counts, and USD spend aggregated from every tracked call (director, departments, commander, judge, agent reactions). The dashboard StatsBar shows this live.
 

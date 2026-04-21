@@ -1657,7 +1657,16 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
     if (pathname === '/' || pathname === '/index.html') {
       const landingPath = resolve(__dirname, 'dashboard/landing.html');
       if (existsSync(landingPath)) {
-        const html = readFileSync(landingPath, 'utf-8');
+        // Inject the package version into the schema.org LD+JSON block
+        // so search engines and social previews show the real current
+        // release instead of the stale literal that sat there
+        // (`0.1.0` lingered in the HTML long after we shipped 0.4.x).
+        // The placeholder is what lives on disk; we swap it per-request
+        // since it's a one-line string replace on a cached template.
+        const html = readFileSync(landingPath, 'utf-8').replace(
+          /__PARACOSM_VERSION__/g,
+          PARACOSM_VERSION,
+        );
         res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-cache' });
         res.end(html);
         return;
