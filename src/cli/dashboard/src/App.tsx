@@ -891,7 +891,33 @@ function AppContent() {
               <ChatPanel state={gameState} onChatUsage={handleChatUsage} />
             </div>
 
-            {activeTab === 'log' && (
+            {activeTab === 'log' && (() => {
+              // Hash-driven filter: ToolboxSection's "↗ LOG" button
+              // sets `#log=<toolName>` before navigating here so the
+              // user lands on a view scoped to that one tool's forge
+              // / dept_done / reuse events instead of the full
+              // ~1000-event stream. Read once per render on hash.
+              const hashTool = (() => {
+                if (typeof window === 'undefined') return '';
+                const h = window.location.hash.replace(/^#/, '');
+                const match = h.match(/(?:^|&)log=([^&]+)/);
+                return match ? decodeURIComponent(match[1]) : '';
+              })();
+              const logFilter = hashTool.toLowerCase();
+              const filteredEvents = logFilter
+                ? effectiveEvents.filter(e => {
+                    const d = (e.data ?? {}) as Record<string, unknown>;
+                    const name = typeof d.name === 'string' ? d.name.toLowerCase() : '';
+                    if (name && name.includes(logFilter)) return true;
+                    const tools = Array.isArray(d.forgedTools) ? d.forgedTools : [];
+                    return tools.some(t => {
+                      const tt = t as Record<string, unknown>;
+                      const tn = typeof tt.name === 'string' ? tt.name.toLowerCase() : '';
+                      return tn.includes(logFilter);
+                    });
+                  })
+                : effectiveEvents;
+              return (
               <div
                 ref={logScrollRef}
                 onScroll={onLogScroll}
@@ -901,11 +927,45 @@ function AppContent() {
                 aria-live="polite"
                 style={{ background: 'var(--bg-deep)', color: 'var(--text-3)' }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <h2 style={{ color: 'var(--text-1)', fontSize: '14px', fontWeight: 700 }}>Event Log ({effectiveEvents.length} events)</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: 12, flexWrap: 'wrap' }}>
+                  <h2 style={{ color: 'var(--text-1)', fontSize: '14px', fontWeight: 700 }}>
+                    Event Log ({filteredEvents.length}
+                    {logFilter ? ` of ${effectiveEvents.length}` : ''} events)
+                  </h2>
+                  {logFilter && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--mono)', fontSize: 11 }}>
+                      <span style={{ color: 'var(--text-3)' }}>filtered to tool</span>
+                      <span style={{ color: 'var(--amber)', fontWeight: 800 }}>{hashTool}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const url = new URL(window.location.href);
+                          url.hash = '';
+                          window.history.replaceState({}, '', url.toString());
+                          window.dispatchEvent(new HashChangeEvent('hashchange'));
+                        }}
+                        style={{
+                          padding: '2px 8px', borderRadius: 3,
+                          background: 'var(--bg-card)', color: 'var(--text-3)',
+                          border: '1px solid var(--border)', cursor: 'pointer',
+                          fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 700,
+                          letterSpacing: '0.06em', textTransform: 'uppercase',
+                        }}
+                        aria-label="Clear log filter"
+                      >
+                        Clear filter
+                      </button>
+                    </div>
+                  )}
                 </div>
-                {effectiveEvents.length === 0 && <div style={{ color: 'var(--text-3)', padding: '20px 0' }}>No events yet. Run a simulation to see the raw SSE event stream.</div>}
-                {effectiveEvents.map((e, i) => {
+                {filteredEvents.length === 0 && (
+                  <div style={{ color: 'var(--text-3)', padding: '20px 0' }}>
+                    {logFilter
+                      ? `No events matched "${hashTool}". Clear the filter or check the tool name spelling.`
+                      : 'No events yet. Run a simulation to see the raw SSE event stream.'}
+                  </div>
+                )}
+                {filteredEvents.map((e, i) => {
                   const typeColors: Record<string, string> = {
                     status: 'var(--teal)', turn_start: 'var(--rust)', turn_done: 'var(--rust)',
                     dept_start: 'var(--text-3)', dept_done: 'var(--green)',
@@ -940,7 +1000,8 @@ function AppContent() {
                   );
                 })}
               </div>
-            )}
+              );
+            })()}
 
             {/* About tab redirects to the landing page */}
           </main>

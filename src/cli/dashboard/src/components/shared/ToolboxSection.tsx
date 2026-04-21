@@ -1,4 +1,6 @@
 import type { ToolRegistry, ToolEntry } from '../../hooks/useToolRegistry';
+import { useDashboardNavigation } from '../../App';
+import { Tooltip } from './Tooltip';
 
 interface ToolboxSectionProps {
   registry: ToolRegistry;
@@ -20,7 +22,21 @@ interface ToolboxSectionProps {
  * (always-on). Inline tool cards in EventCard reference these by name.
  */
 export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible = false, defaultOpen = false, onToggle }: ToolboxSectionProps) {
+  const navigateTab = useDashboardNavigation();
   if (registry.list.length === 0) return null;
+
+  const jumpToLog = (toolName: string) => {
+    // Drop a search-hash the Log tab can read, then navigate. The Log
+    // tab filters to forge_attempt / dept_done entries matching the
+    // tool name so users land on the exact event that forged (or
+    // reused) this tool instead of scrolling through the whole feed.
+    try {
+      window.location.hash = `log=${encodeURIComponent(toolName)}`;
+    } catch {
+      /* silent */
+    }
+    navigateTab('log');
+  };
 
   const inner = (
     <ol style={{
@@ -70,6 +86,43 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
                 <span style={{ fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--text-3)' }}>
                   {entry.mode}
                 </span>
+                <Tooltip
+                  content={
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--amber)', marginBottom: 6 }}>
+                        Open in sim log
+                      </div>
+                      <div>
+                        Jumps to the Log tab and filters the event stream
+                        to <code>{entry.name}</code> — showing every
+                        forge_attempt, dept_done, and reuse event this
+                        tool fired in. Useful for tracing the exact
+                        moment a tool was created and every downstream
+                        department that reused it.
+                      </div>
+                    </div>
+                  }
+                >
+                  <button
+                    type="button"
+                    onClick={() => jumpToLog(entry.name)}
+                    aria-label={`Open ${entry.name} in simulation log`}
+                    style={{
+                      marginLeft: 'auto', display: 'inline-flex',
+                      alignItems: 'center', gap: 4,
+                      padding: '2px 8px', borderRadius: 3,
+                      background: 'var(--bg-panel)',
+                      color: 'var(--amber)',
+                      border: '1px solid var(--amber-dim, var(--border))',
+                      cursor: 'pointer',
+                      fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 800,
+                      letterSpacing: '0.06em', textTransform: 'uppercase',
+                    }}
+                  >
+                    <span aria-hidden="true">↗</span>
+                    log
+                  </button>
+                </Tooltip>
               </div>
               {entry.description && entry.description !== entry.name && (
                 <div style={{ color: 'var(--text-2)', marginBottom: 4 }}>
