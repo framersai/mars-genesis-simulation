@@ -1,0 +1,180 @@
+// LoadPreviewModal styles. Matches the VerdictModal visual language so
+// the dashboard's modal dialogs feel consistent.
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(10, 8, 6, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.dialog {
+  background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-deep) 100%);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent, var(--amber));
+  border-radius: 10px;
+  padding: 20px 24px;
+  max-width: 480px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.6);
+  font-family: var(--sans);
+  color: var(--text-1);
+  position: relative;
+  outline: none;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-1);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  padding: 4px 8px;
+  margin: -4px -8px;
+
+  &:hover { color: var(--text-1); }
+  &:focus-visible {
+    outline: 2px solid var(--accent, var(--amber));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+.fileInfo {
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.fileName {
+  color: var(--text-1);
+  font-family: var(--mono, monospace);
+  word-break: break-all;
+}
+
+.fileMeta {
+  margin-top: 2px;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.metaTable {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 6px 14px;
+  font-size: 13px;
+}
+
+.metaLabel {
+  color: var(--text-3);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  align-self: center;
+}
+
+.metaValue {
+  color: var(--text-1);
+  word-break: break-word;
+}
+
+.schemaBadge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(90, 160, 110, 0.18);
+  color: var(--text-1);
+  border: 1px solid rgba(90, 160, 110, 0.38);
+
+  &.legacy {
+    background: rgba(90, 130, 180, 0.18);
+    border-color: rgba(90, 130, 180, 0.38);
+  }
+}
+
+.warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(200, 140, 60, 0.12);
+  border: 1px solid rgba(200, 140, 60, 0.35);
+  border-radius: 6px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.45;
+}
+
+.warningIcon {
+  font-size: 16px;
+  line-height: 1.2;
+  color: var(--amber, #d49a3c);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-deep);
+  color: var(--text-1);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+
+  &:hover { background: var(--bg-panel); }
+  &:focus-visible {
+    outline: 2px solid var(--accent, var(--amber));
+    outline-offset: 2px;
+  }
+}
+
+.primary {
+  background: rgba(90, 160, 110, 0.25);
+  border-color: rgba(90, 160, 110, 0.5);
+  color: var(--text-1);
+
+  &:hover { background: rgba(90, 160, 110, 0.4); }
+}
+
+.warningConfirm {
+  background: rgba(200, 140, 60, 0.25);
+  border-color: rgba(200, 140, 60, 0.5);
+
+  &:hover { background: rgba(200, 140, 60, 0.4); }
+}
