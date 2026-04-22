@@ -18,25 +18,13 @@ import {
   type PreviewState,
 } from './useLoadPreview.helpers.js';
 import type { SimEvent } from './useSSE';
-
-/**
- * Minimum shape the hook needs from a parsed save file. Kept narrow so
- * the hook doesn't depend on useGamePersistence's full GameData type.
- * Structural typing accepts any object with the listed fields.
- */
-interface ParsedSaveFile {
-  events?: SimEvent[];
-  results?: unknown[];
-  verdict?: Record<string, unknown> | null;
-  schemaVersion?: number;
-  startedAt?: string;
-}
+import type { ParseResult } from './useGamePersistence';
 
 export interface UseLoadPreviewOptions {
   /** Native file picker — typically `persistence.pickFile`. */
   pickFile: () => Promise<File | null>;
   /** Parser + migration hop — typically `persistence.parseFile`. */
-  parseFile: (file: File) => Promise<ParsedSaveFile | null>;
+  parseFile: (file: File) => Promise<ParseResult>;
   /**
    * Called on confirm. Receives the parsed + migrated save-file payload.
    * Host does whatever it needs (dispatch to SSE, switch tabs, toast).
@@ -46,7 +34,7 @@ export interface UseLoadPreviewOptions {
     results: unknown[];
     verdict: Record<string, unknown> | null;
   }) => void;
-  /** Called when a pick fails (non-JSON, empty events, parse error). */
+  /** Called when a pick fails (non-JSON, empty events, parse error, too-new schema). */
   onError?: (reason: string) => void;
 }
 
@@ -80,12 +68,20 @@ export function useLoadPreview(opts: UseLoadPreviewOptions): UseLoadPreviewApi {
     dispatch({ type: 'open-started' });
     try {
       const parsed = await opts.parseFile(file);
-      if (!parsed) {
+      if (!parsed.ok) {
         dispatch({ type: 'open-failed' });
-        opts.onError?.('No valid game data found in file.');
+        if (parsed.reason === 'too-new') {
+          opts.onError?.(
+            `This file was saved under schema v${parsed.fileVersion}; ` +
+              `this dashboard supports up to v${parsed.dashboardVersion}. ` +
+              `Update the dashboard to load it.`,
+          );
+        } else {
+          opts.onError?.('No valid game data found in file.');
+        }
         return;
       }
-      const metadata = extractPreviewMetadata(parsed, {
+      const metadata = extractPreviewMetadata(parsed.data, {
         name: file.name,
         size: file.size,
       });
@@ -94,7 +90,7 @@ export function useLoadPreview(opts: UseLoadPreviewOptions): UseLoadPreviewApi {
         opts.onError?.('No valid game data found in file.');
         return;
       }
-      dispatch({ type: 'open-succeeded', metadata, data: parsed });
+      dispatch({ type: 'open-succeeded', metadata, data: parsed.data });
     } catch {
       dispatch({ type: 'open-failed' });
       opts.onError?.('Failed to read file.');
@@ -109,7 +105,11 @@ export function useLoadPreview(opts: UseLoadPreviewOptions): UseLoadPreviewApi {
 
   const confirm = useCallback(() => {
     if (state.kind !== 'preview') return;
-    const data = state.data as ParsedSaveFile;
+    const data = state.data as {
+      events?: SimEvent[];
+      results?: unknown[];
+      verdict?: Record<string, unknown> | null;
+    };
     dispatch({ type: 'confirm' });
     opts.onConfirm({
       events: (data.events ?? []) as SimEvent[],

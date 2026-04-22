@@ -75,16 +75,11 @@ Only `SchemaVersionTooNewError` is user-facing. `SchemaVersionGapError` is a dev
 
 **Why chain-of-responsibility** over a single if-else ladder: new migrations are localized to a single `migrations[N]` entry plus a single `CURRENT_SCHEMA_VERSION` bump. The rest of the code doesn't need to know the version graph.
 
-**Version badge semantics in the preview modal.**
+**Version surface in the preview modal.**
 
-| Condition | Badge text | Badge color | Confirm button |
-|---|---|---|---|
-| `file.schemaVersion === CURRENT` | `v${CURRENT}` | green | enabled |
-| `file.schemaVersion < CURRENT` (migratable) | `v${file} → v${CURRENT} (migrated)` | blue | enabled |
-| `file.schemaVersion === undefined` (legacy) | `legacy → v${CURRENT} (migrated)` | blue | enabled |
-| `file.schemaVersion > CURRENT` | `v${file} (unsupported)` | red | disabled, "This file requires a newer paracosm" |
+The modal's F9 "Schema" row already renders as a chip: `v2` (green, current) or `legacy (pre-0.5.0)` (blue, migrated). F11 leaves the happy-path UI unchanged — the migration chain's transparent lift from v1 → current is what the blue `legacy` chip already represents.
 
-The preview modal already has a "Schema" row from F9. F11 extends that row into a badge-shaped chip with the variants above.
+**Too-new case: actionable toast, no modal.** When a file declares a schemaVersion newer than this dashboard supports, the flow surfaces an error toast with version-specific copy (`"This file was saved under schema v3; this dashboard supports up to v2. Update the dashboard to load it."`) and no modal opens. A disabled-confirm modal was considered but rejected: it would let the user see metadata they can't act on, and the actionable path (update the dashboard) is already one click outside the app. Toast is simpler + better UX.
 
 ---
 
@@ -177,9 +172,9 @@ Single commit.
 
 - `CURRENT_SCHEMA_VERSION` is defined once in `useGamePersistence.ts` and used everywhere that reads/writes the version
 - Loading a current-version file works unchanged from user perspective
-- Loading a legacy file (no schemaVersion) runs the existing migration transparently and shows the "migrated" badge
-- Loading a forward-incompatible file shows the red "unsupported" badge, disables the confirm button, and displays an actionable message
-- `SchemaVersionTooNewError` is thrown + caught; `SchemaVersionGapError` never fires in production
+- Loading a legacy file (no schemaVersion) runs the existing migration transparently and shows the "legacy" badge
+- Loading a forward-incompatible file shows an actionable error toast with fileVersion + dashboardVersion + update instruction; no modal opens
+- `SchemaVersionTooNewError` is thrown by the chain + caught by parseFile; `SchemaVersionGapError` never fires in production
 - Migration-chain unit tests cover: identity, legacy-to-current, too-new, synthetic future chain (with a stubbed `2 → 3`)
 - No regressions in the 77 existing dashboard tests
 - F23 shipping later only requires: (1) bump `CURRENT_SCHEMA_VERSION` to 3, (2) drop in a `migrations[2]` function, (3) no other F11 changes
