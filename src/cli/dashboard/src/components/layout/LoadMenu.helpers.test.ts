@@ -13,11 +13,11 @@ test('formatExplicit renders MMM D · HH:mm in local TZ', () => {
   assert.match(out, /^[A-Z][a-z]{2} \d{1,2} · \d{2}:\d{2}$/);
 });
 
-test('shouldShowCacheRow hides on unavailable/error, shows otherwise', () => {
+test('shouldShowCacheRow returns true for every status so the user gets a hint on error/unavailable', () => {
   assert.equal(shouldShowCacheRow('loading'), true);
   assert.equal(shouldShowCacheRow('ready'), true);
-  assert.equal(shouldShowCacheRow('unavailable'), false);
-  assert.equal(shouldShowCacheRow('error'), false);
+  assert.equal(shouldShowCacheRow('unavailable'), true);
+  assert.equal(shouldShowCacheRow('error'), true);
 });
 
 test('cacheExpandedBody picks the right branch per state', () => {

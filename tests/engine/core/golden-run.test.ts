@@ -23,7 +23,7 @@ test('golden-run: 3-turn kernel produces deterministic population and state', ()
 
   const initial = kernel.getState();
   assert.equal(initial.agents.length, 100);
-  assert.equal(initial.colony.population, 100);
+  assert.equal(initial.systems.population, 100);
   assert.equal(initial.metadata.seed, SEED);
   assert.equal(initial.metadata.startYear, 2035);
 

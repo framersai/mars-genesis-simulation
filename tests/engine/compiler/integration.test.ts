@@ -64,10 +64,10 @@ Return JSON: {"title","crisis","options":[{"id","label","description","isRisky"}
           lines.push('CREW HEALTH:', 'Avg psych: ' + (alive.length ? (alive.reduce((s, c) => s + (c.health?.psychScore || 0), 0) / alive.length).toFixed(2) : 'N/A'));
           break;
         case 'engineering':
-          lines.push('HULL:', 'Integrity: ' + (ctx.state.colony?.hullIntegrity || 'unknown') + '% | Power: ' + (ctx.state.colony?.powerKw || 0) + 'kW');
+          lines.push('HULL:', 'Integrity: ' + (ctx.state.systems?.hullIntegrity || 'unknown') + '% | Power: ' + (ctx.state.systems?.powerKw || 0) + 'kW');
           break;
         case 'life-support':
-          lines.push('LIFE SUPPORT:', 'O2: ' + (ctx.state.colony?.oxygenReserveHours || 0) + 'h | Food: ' + (ctx.state.colony?.foodMonthsReserve || 0) + 'mo');
+          lines.push('LIFE SUPPORT:', 'O2: ' + (ctx.state.systems?.oxygenReserveHours || 0) + 'h | Food: ' + (ctx.state.systems?.foodMonthsReserve || 0) + 'mo');
           break;
         default:
           lines.push('[' + ctx.department + '] Station systems nominal.');
@@ -206,7 +206,7 @@ describe('Submarine scenario compilation', () => {
 
     // Fingerprint returns summary
     const fp = scenario.hooks.fingerprintHook!(
-      { agents: [], colony: {}, politics: {}, metadata: {} } as any,
+      { agents: [], systems: {}, politics: {}, metadata: {} } as any,
       [{ turn: 1, year: 2038, outcome: 'risky_success' }],
       { name: 'Test', archetype: 'test', hexaco: { openness: 0.9 } } as any,
       { engineering: ['tool1'] },

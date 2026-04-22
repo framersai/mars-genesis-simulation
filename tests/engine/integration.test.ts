@@ -80,7 +80,7 @@ test('marsScenario hooks are all registered', () => {
 
 test('marsScenario.hooks.fingerprintHook produces valid fingerprint', () => {
   const fp = marsScenario.hooks.fingerprintHook!(
-    { colony: { morale: 0.7 }, politics: { earthDependencyPct: 50 }, agents: [{ health: { alive: true }, core: { marsborn: false } }] } as any,
+    { systems: { morale: 0.7 }, politics: { earthDependencyPct: 50 }, agents: [{ health: { alive: true }, core: { marsborn: false } }] } as any,
     [{ turn: 1, year: 2035, outcome: 'conservative_success' }],
     { hexaco: { extraversion: 0.5, conscientiousness: 0.5 } } as any,
     {}, 3,
