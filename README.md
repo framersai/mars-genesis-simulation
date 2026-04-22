@@ -136,7 +136,7 @@ const leaders = [
   {
     name: 'Captain Reyes',
     archetype: 'The Pragmatist',
-    colony: 'Station Alpha',
+    unit: 'Station Alpha',
     hexaco: { openness: 0.4, conscientiousness: 0.9,
               extraversion: 0.3, agreeableness: 0.6,
               emotionality: 0.5, honestyHumility: 0.8 },
@@ -145,7 +145,7 @@ const leaders = [
   {
     name: 'Captain Okafor',
     archetype: 'The Innovator',
-    colony: 'Station Beta',
+    unit: 'Station Beta',
     hexaco: { openness: 0.9, conscientiousness: 0.4,
               extraversion: 0.8, agreeableness: 0.5,
               emotionality: 0.3, honestyHumility: 0.6 },
@@ -167,7 +167,7 @@ const results = await Promise.all(
       //
       // For full intellisense on per-event data, narrow via e.type:
       //   if (e.type === 'event_start') e.data.title          // string
-      //   if (e.type === 'outcome')     e.data.colonyDeltas   // Record<string,number>
+      //   if (e.type === 'outcome')     e.data.systemDeltas   // Record<string,number>
       //   if (e.type === 'forge_attempt') e.data.approved     // boolean
       onEvent(e) { console.log(leader.name, e.type, e.data.summary); },
     })
