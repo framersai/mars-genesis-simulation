@@ -53,9 +53,10 @@ interface CommanderSnapshot {
 
 /**
  * Minimal event shape this card needs. Compatible with both the live
- * `SimEvent` stream (carries `leader`) and the per-side `ProcessedEvent[]`
- * that `useGameState` exposes (where every event on `state.a.events` is
- * already attributed to leader A and the `leader` field is optional).
+ * `SimEvent` stream (carries `leader`) and the per-leader `ProcessedEvent[]`
+ * that `useGameState` exposes (where every event on
+ * `state.leaders[leaderIds[i]].events` is already attributed to that
+ * leader and the `leader` field is optional).
  */
 interface TrajectoryEvent {
   type: string;
@@ -65,8 +66,9 @@ interface TrajectoryEvent {
 
 /**
  * Either a strict HEXACO snapshot or the looser `Record<string, number>`
- * shape used on LeaderConfig. Widening the prop type so `state.a.leader?.hexaco`
- * (typed as a loose record) flows in without a cast.
+ * shape used on LeaderConfig. Widening the prop type so
+ * `state.leaders[id].leader?.hexaco` (typed as a loose record) flows in
+ * without a cast.
  */
 type BaselineHexacoInput = CommanderSnapshot | Record<string, number>;
 
@@ -94,8 +96,9 @@ function extractCommanderTrajectory(
   const out: Array<{ turn: number; hexaco: CommanderSnapshot }> = [];
   for (const e of events) {
     if (e.type !== 'drift' || !e.data) continue;
-    // Accept events without a leader field (ProcessedEvent on state.a/b
-    // is already attributed to one side); filter only when present.
+    // Accept events without a leader field (ProcessedEvent on a
+    // per-leader bucket in state.leaders is already attributed to that
+    // leader); filter only when present.
     if (e.leader !== undefined && e.leader !== leaderName) continue;
     const commander = (e.data as Record<string, unknown>).commander as CommanderSnapshot | undefined;
     const turn = (e.data as Record<string, unknown>).turn as number | undefined;

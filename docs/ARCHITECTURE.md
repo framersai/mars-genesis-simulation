@@ -214,6 +214,35 @@ Tools start at session scope and can be promoted:
 - Session → Agent (5+ uses, >0.8 confidence, two-reviewer panel)
 - Agent → Shared (human approval required)
 
+**Forge observability chain.** Every forge attempt (approved or rejected) threads through five AgentOS utilities for live health tracking:
+
+```
+wrapForgeTool        normalize LLM args, run pre-judge shape check, capture every attempt
+   │                 (source: @framers/agentos/emergent)
+   ▼
+inferSchemaFromTestCases   rescue forges with concrete testCases but no declared properties
+   │                 (source: @framers/agentos/emergent)
+   ▼
+validateForgeShape   pre-judge rejections short-circuit the judge LLM call
+   │                 (source: @framers/agentos/emergent)
+   ▼
+EmergentJudge        LLM-as-judge safety + correctness review
+   │
+   ▼
+capture callback     feeds CapturedForge into paracosm's per-dept bucket
+   │                 (paracosm/src/runtime/orchestrator.ts)
+   ▼
+ForgeStatsAggregator aggregates attempts + classifies rejection reasons
+   │                 (source: @framers/agentos/emergent; composed into CostTracker)
+   ▼
+SSE forge_attempt   live dashboard card per forge
+SSE _cost.forgeStats  live approval-rate + histogram on every subsequent event
+finalCost().forgeStats land in the run artifact JSON
+/retry-stats.forges   cross-run rollup over last 100 completed runs
+```
+
+Rejection categories (from `classifyForgeRejection`): `schema_extra_field`, `shape_check`, `syntax_error`, `parse_error`, `judge_correctness`, `other`. A growing `other` bucket is the signal to read raw rejection text and extend the pattern set. See [AgentOS Emergent Capabilities: Forge Observability](https://docs.agentos.sh/docs/architecture/emergent-capabilities#forge-observability) for the full five-utility API.
+
 ### HEXACO Personality Model
 
 Each commander and colonist has a HEXACO personality profile (Ashton & Lee, 2007): six orthogonal trait dimensions measured on a [0, 1] scale.
@@ -407,7 +436,7 @@ const result = await runSimulation(leader, [], {
   onEvent(e) { console.log(e.type, e.data?.title); },
 });
 
-console.log(result.finalState.colony.population);
+console.log(result.finalState.systems.population);
 console.log(result.totalToolsForged);
 ```
 
