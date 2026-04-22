@@ -453,11 +453,11 @@ export function extractColonistMemories(
 export function extractColonistRoster(
   simEvents: Array<{ type: string; leader: string; data: Record<string, unknown> }>,
 ): ColonistRosterEntry[] {
-  // Find the LATEST colony_snapshot (last turn has most births/deaths resolved).
+  // Find the LATEST systems_snapshot (last turn has most births/deaths resolved).
   let latestSnapshot: Array<Record<string, unknown>> | null = null;
   for (let i = simEvents.length - 1; i >= 0; i--) {
     const evt = simEvents[i];
-    if (evt.type === 'colony_snapshot' && Array.isArray(evt.data?.agents)) {
+    if (evt.type === 'systems_snapshot' && Array.isArray(evt.data?.agents)) {
       latestSnapshot = evt.data.agents as Array<Record<string, unknown>>;
       break;
     }

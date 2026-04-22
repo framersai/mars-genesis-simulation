@@ -9,7 +9,7 @@ const makeState = (overrides: any = {}) => ({
     simulationId: 'sim-1', leaderId: 'Commander', seed: 950,
     startYear: 2042, currentYear: 2043, currentTurn: 1,
   },
-  colony: {
+  systems: {
     population: 1, powerKw: 400, foodMonthsReserve: 18,
     waterLitersPerDay: 800, pressurizedVolumeM3: 3000,
     lifeSupportCapacity: 120, infrastructureModules: 3,
