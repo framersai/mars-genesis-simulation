@@ -1,6 +1,11 @@
 import { useCallback } from 'react';
 import type { SimEvent } from './useSSE';
 import { migrateLegacyEventShape } from './migrateLegacyEventShape';
+import {
+  CURRENT_SCHEMA_VERSION,
+  runMigrationChain,
+  SchemaVersionTooNewError,
+} from './schemaMigration';
 
 function storageKey(scenarioShortName: string, key: string) {
   return `${scenarioShortName}-${key}`;
@@ -17,6 +22,30 @@ export interface SavedScenarioStamp {
   version: string;
   shortName: string;
 }
+
+/**
+ * Result of a parseFile call. Successful parse carries the migrated
+ * data plus metadata about whether migration was needed; failures carry
+ * a narrow reason the UI can branch on.
+ */
+export type ParseResult =
+  | {
+      ok: true;
+      data: GameData;
+      /** Version the file declared (or 1 when absent). */
+      fromVersion: number;
+      /** True when the migration chain applied at least one step. */
+      migrated: boolean;
+    }
+  | { ok: false; reason: 'empty' | 'parse-failed' }
+  | {
+      ok: false;
+      reason: 'too-new';
+      /** Version declared in the file that we can't handle. */
+      fileVersion: number;
+      /** Highest version this dashboard build supports. */
+      dashboardVersion: number;
+    };
 
 interface GameData {
   config: Record<string, unknown> | null;
@@ -75,41 +104,66 @@ export function useGamePersistence(
   }, []);
 
   /**
-   * Parse a picked File into a migration-complete {@link GameData}.
-   * Returns `null` for files that aren't valid save payloads (parse
-   * failure, missing events, empty events). Legacy (pre-0.5.0) files
-   * are migrated via {@link migrateLegacyEventShape}.
+   * Parse a picked File into a migration-complete {@link GameData} +
+   * version metadata. The {@link runMigrationChain} chain lifts older
+   * shapes up to {@link CURRENT_SCHEMA_VERSION}; forward-incompatible
+   * files return `{ ok: false, reason: 'too-new' }` so the UI can
+   * surface a block-load state instead of silently dropping fields.
    */
-  const parseFile = useCallback((file: File): Promise<GameData | null> => {
+  const parseFile = useCallback((file: File): Promise<ParseResult> => {
     return new Promise(resolve => {
       const reader = new FileReader();
       reader.onload = () => {
         try {
-          const data = JSON.parse(reader.result as string);
-          if (!data.events?.length) { resolve(null); return; }
-          const migrated = migrateLegacyEventShape(data.events, data.results);
-          resolve({
-            ...data,
-            events: migrated.events as SimEvent[],
-            results: migrated.results ?? data.results ?? [],
-          });
-        } catch { resolve(null); }
+          const raw = JSON.parse(reader.result as string) as Record<string, unknown>;
+          if (!Array.isArray(raw.events) || (raw.events as unknown[]).length === 0) {
+            resolve({ ok: false, reason: 'empty' });
+            return;
+          }
+          const fromVersion = typeof raw.schemaVersion === 'number' ? raw.schemaVersion : 1;
+          try {
+            const migrated = runMigrationChain(raw as never);
+            // Structural cast: migrated satisfies the readable subset of
+            // GameData (events/results/verdict/startedAt). `config` on
+            // GameData is a save-time-only field that loaders never need.
+            resolve({
+              ok: true,
+              data: migrated as unknown as GameData,
+              fromVersion,
+              migrated: fromVersion < CURRENT_SCHEMA_VERSION,
+            });
+          } catch (err) {
+            if (err instanceof SchemaVersionTooNewError) {
+              resolve({
+                ok: false,
+                reason: 'too-new',
+                fileVersion: err.fileVersion,
+                dashboardVersion: err.dashboardVersion,
+              });
+              return;
+            }
+            resolve({ ok: false, reason: 'parse-failed' });
+          }
+        } catch {
+          resolve({ ok: false, reason: 'parse-failed' });
+        }
       };
-      reader.onerror = () => resolve(null);
+      reader.onerror = () => resolve({ ok: false, reason: 'parse-failed' });
       reader.readAsText(file);
     });
   }, []);
 
   /**
    * Back-compat composed load: pick + parse. Retained so pre-F9 callers
-   * that want the fire-and-forget shape keep working. New callers that
-   * need a preview step should use `pickFile` + `parseFile` directly
-   * via {@link useLoadPreview}.
+   * that want the fire-and-forget shape keep working. Collapses any
+   * non-ok parse result to `null` since legacy callers can't surface
+   * the richer failure reasons.
    */
   const load = useCallback(async (): Promise<GameData | null> => {
     const file = await pickFile();
     if (!file) return null;
-    return parseFile(file);
+    const result = await parseFile(file);
+    return result.ok ? result.data : null;
   }, [pickFile, parseFile]);
 
   const cacheEvents = useCallback((events: SimEvent[], results: unknown[]) => {
