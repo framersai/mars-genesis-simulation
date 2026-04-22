@@ -4,6 +4,8 @@ import { useScenario, type ScenarioClientPayload } from './hooks/useScenario';
 import { useSSE } from './hooks/useSSE';
 import { useGameState } from './hooks/useGameState';
 import { useGamePersistence } from './hooks/useGamePersistence';
+import { useLoadPreview } from './hooks/useLoadPreview';
+import { LoadPreviewModal } from './components/layout/LoadPreviewModal';
 import { useForgeToasts } from './hooks/useForgeToasts';
 import { useTerminalToast } from './hooks/useTerminalToast';
 import { useSimSavedToast } from './hooks/useSimSavedToast';
@@ -156,7 +158,11 @@ function AppContent() {
 
   const citationRegistry = useCitationRegistry(gameState);
   const toolRegistry = useToolRegistry(gameState);
-  const persistence = useGamePersistence(scenario.labels.shortName);
+  const persistence = useGamePersistence(scenario.labels.shortName, {
+    id: scenario.id,
+    version: scenario.version,
+    shortName: scenario.labels.shortName,
+  });
   const [activeTab, setActiveTabState] = useState<DashboardTab>(() => getDashboardTabFromHref(window.location.href));
   const setActiveTab = useCallback((tab: DashboardTab) => {
     if (tab === 'about') {
@@ -174,16 +180,19 @@ function AppContent() {
     toast('success', 'Saved', `${sse.events.length} events${sse.verdict ? ' + verdict' : ''} saved to file.`);
   }, [sse.events, sse.results, sse.verdict, persistence, toast]);
 
-  const handleLoad = useCallback(async () => {
-    const data = await persistence.load();
-    if (data) {
-      sse.loadEvents(data.events, data.results, data.verdict ?? null);
-      toast('info', 'Loaded', `${data.events.length} events loaded.`);
+  const loadPreview = useLoadPreview({
+    pickFile: persistence.pickFile,
+    parseFile: persistence.parseFile,
+    onConfirm: ({ events, results, verdict }) => {
+      sse.loadEvents(events, results, verdict);
+      toast('info', 'Loaded', `${events.length} events loaded.`);
       setActiveTab('sim');
-    } else {
-      toast('error', 'Load Failed', 'No valid game data found in file.');
-    }
-  }, [persistence, toast, sse]);
+    },
+    onError: (reason) => {
+      toast('error', 'Load Failed', reason);
+    },
+  });
+  const handleLoad = loadPreview.openPicker;
 
   const handleClear = useCallback(() => {
     if (!confirm('Clear all simulation data? This cannot be undone.')) return;
@@ -581,6 +590,15 @@ function AppContent() {
             <VerdictModal
               verdict={sse.verdict as Record<string, unknown>}
               onClose={() => setVerdictModalOpen(false)}
+            />
+          )}
+          {loadPreview.metadata && (
+            <LoadPreviewModal
+              metadata={loadPreview.metadata}
+              showOverwriteWarning={sse.events.length > 0 && !replaySessionId}
+              currentEventCount={sse.events.length}
+              onConfirm={loadPreview.confirm}
+              onCancel={loadPreview.cancel}
             />
           )}
           {tourActive && (
