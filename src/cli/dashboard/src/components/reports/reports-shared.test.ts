@@ -29,13 +29,13 @@ test('collectMetricSeries extracts six metrics per side from turn_done events', 
   const state = {
     a: {
       events: [
-        { id: '1', type: 'turn_done', turn: 1, data: { colony: { population: 30, morale: 0.8, foodMonthsReserve: 100, powerKw: 500, infrastructureModules: 5, scienceOutput: 10 } } },
-        { id: '2', type: 'turn_done', turn: 2, data: { colony: { population: 28, morale: 0.7, foodMonthsReserve: 95, powerKw: 480, infrastructureModules: 6, scienceOutput: 15 } } },
+        { id: '1', type: 'turn_done', turn: 1, data: { systems: { population: 30, morale: 0.8, foodMonthsReserve: 100, powerKw: 500, infrastructureModules: 5, scienceOutput: 10 } } },
+        { id: '2', type: 'turn_done', turn: 2, data: { systems: { population: 28, morale: 0.7, foodMonthsReserve: 95, powerKw: 480, infrastructureModules: 6, scienceOutput: 15 } } },
       ],
     },
     b: {
       events: [
-        { id: '3', type: 'turn_done', turn: 1, data: { colony: { population: 29, morale: 0.75, foodMonthsReserve: 90, powerKw: 450, infrastructureModules: 5, scienceOutput: 12 } } },
+        { id: '3', type: 'turn_done', turn: 1, data: { systems: { population: 29, morale: 0.75, foodMonthsReserve: 90, powerKw: 450, infrastructureModules: 5, scienceOutput: 12 } } },
       ],
     },
   } as unknown as GameState;
@@ -56,7 +56,7 @@ test('collectMetricSeries drops events without a colony payload', () => {
     a: {
       events: [
         { id: '1', type: 'turn_start', turn: 1, data: {} },
-        { id: '2', type: 'turn_done', turn: 1, data: { colony: { population: 30, morale: 0.8, foodMonthsReserve: 100, powerKw: 500, infrastructureModules: 5, scienceOutput: 10 } } },
+        { id: '2', type: 'turn_done', turn: 1, data: { systems: { population: 30, morale: 0.8, foodMonthsReserve: 100, powerKw: 500, infrastructureModules: 5, scienceOutput: 10 } } },
         { id: '3', type: 'agent_reactions', turn: 1, data: {} },
       ],
     },

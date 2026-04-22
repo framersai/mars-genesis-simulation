@@ -14,17 +14,17 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { extractColonistRoster, type ColonistRosterEntry } from '../../src/runtime/chat-agents.js';
 
-// Build a minimal colony_snapshot SSE event mimicking the orchestrator emit.
+// Build a minimal systems_snapshot SSE event mimicking the orchestrator emit.
 function makeSnapshot(agents: Array<Record<string, unknown>>, turn = 6) {
   return {
-    type: 'colony_snapshot' as const,
+    type: 'systems_snapshot' as const,
     leader: 'Test',
     data: { turn, year: 2075, agents, population: agents.length, morale: 0.8, foodReserve: 12, births: 0, deaths: 0 },
   };
 }
 
 describe('extractColonistRoster', () => {
-  it('extracts the full roster from the latest colony_snapshot', () => {
+  it('extracts the full roster from the latest systems_snapshot', () => {
     const events = [
       makeSnapshot([
         { agentId: 'a1', name: 'Alice', department: 'medical', role: 'CMO', rank: 'chief', alive: true, marsborn: false, age: 40 },
@@ -68,7 +68,7 @@ describe('extractColonistRoster', () => {
     assert.ok(alice.childrenIds?.includes('Nova'), 'Alice childrenIds should resolve to ["Nova"]');
   });
 
-  it('returns empty array when no colony_snapshot events exist', () => {
+  it('returns empty array when no systems_snapshot events exist', () => {
     const events = [
       { type: 'turn_start', leader: 'Test', data: { turn: 1 } },
       { type: 'outcome', leader: 'Test', data: { turn: 1 } },
