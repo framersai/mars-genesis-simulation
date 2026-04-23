@@ -70,7 +70,13 @@ function delta(curr: number, prev: number | undefined): string {
 function deltaClass(d: string, tone: 'gain' | 'lossIsRed' | 'neutral'): string {
   if (!d) return '';
   if (tone === 'neutral') return styles.deltaNeutral;
-  if (tone === 'lossIsRed') return styles.deltaNegative;
+  // `lossIsRed` inverts the usual sign→color mapping: for a metric
+  // where growth is bad (deaths), positive deltas read red and
+  // negative deltas read green. Deaths only accumulate in paracosm
+  // today, so the negative-delta branch is defensive for future use.
+  if (tone === 'lossIsRed') {
+    return d.startsWith('-') ? styles.deltaPositive : styles.deltaNegative;
+  }
   return d.startsWith('+') ? styles.deltaPositive : styles.deltaNegative;
 }
 
