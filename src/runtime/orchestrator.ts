@@ -121,9 +121,9 @@ export interface SimEventPayloadMap {
     pacing?: unknown;
   };
   /** Department agent starts analyzing an event. `department` is the scenario-defined id. */
-  dept_start: { department: string; eventIndex: number };
+  specialist_start: { department: string; eventIndex: number };
   /** Department finished analyzing. `citationList` is truncated to 5; full list lives on the returned report. */
-  dept_done: {
+  specialist_done: {
     department: string;
     summary: string;
     eventIndex: number;
@@ -148,9 +148,9 @@ export interface SimEventPayloadMap {
     eventIndex?: number;
   };
   /** Commander is about to read department reports and pick an option. */
-  commander_deciding: { eventIndex: number };
+  decision_pending: { eventIndex: number };
   /** Commander picked. `reasoning` is the full CoT; `rationale` is the compressed version. */
-  commander_decided: {
+  decision_made: {
     decision: string;
     rationale: string;
     reasoning: string;
@@ -167,7 +167,7 @@ export interface SimEventPayloadMap {
     eventIndex: number;
   };
   /** Per-turn HEXACO drift for promoted agents + the commander. */
-  drift: { agents: Record<string, { name: string; hexaco: Record<string, number> }>; commander: unknown };
+  personality_drift: { agents: Record<string, { name: string; hexaco: Record<string, number> }>; commander: unknown };
   /** Rollup of ~100 agent reactions for the turn (sliced preview only; full list on result). */
   agent_reactions: { reactions: unknown[]; moodSummary?: unknown };
   /** Social-media-style per-turn posts from featured agents. */
@@ -271,9 +271,9 @@ export function buildEventSummary(type: SimEventType, data: Record<string, unkno
       const cat = d.category ? ` (${d.category})` : '';
       return `event: ${title}${cat}`;
     }
-    case 'dept_start':
+    case 'specialist_start':
       return `${d.department ?? 'department'} analyzing`;
-    case 'dept_done': {
+    case 'specialist_done': {
       const s = trunc(d.summary, 80);
       return `${d.department ?? 'department'} report: ${s}`;
     }
@@ -281,15 +281,15 @@ export function buildEventSummary(type: SimEventType, data: Record<string, unkno
       const verb = d.approved === true ? 'forged' : 'rejected';
       return `${d.department ?? 'department'} ${verb} ${d.name ?? 'tool'}`;
     }
-    case 'commander_deciding':
+    case 'decision_pending':
       return 'commander deciding';
-    case 'commander_decided':
+    case 'decision_made':
       return `commander decided: ${trunc(d.decision, 80)}`;
     case 'outcome': {
       const cat = d.category ? ` (${d.category})` : '';
       return `outcome: ${d.outcome ?? 'unknown'}${cat}`;
     }
-    case 'drift':
+    case 'personality_drift':
       return 'hexaco drift';
     case 'agent_reactions': {
       const n = Array.isArray(d.reactions) ? d.reactions.length : 0;
@@ -1125,7 +1125,7 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
           ? '\n\nTURN 1 IS A BOOTSTRAP TURN. You MUST call forge_tool at least once this turn to contribute a reusable computational tool to the shared toolbox. Later turns will reuse what you forge here. Pick a quantifiable aspect of THIS event (e.g. a risk score, a capacity calculator, a resource allocator) and forge a tool that computes it. Do not skip the forge — the whole run depends on building a toolbox every turn can draw from.\n'
           : '';
         const ctx = baseCtx + bootstrapDirective + availableToolsBlock;
-        emit('dept_start', { turn, year, department: dept, eventIndex: ei });
+        emit('specialist_start', { turn, year, department: dept, eventIndex: ei });
         // Snapshot the dept's forge bucket index BEFORE the LLM call so we
         // can attribute new forges to this specific dept_done. The LLM
         // self-reports `forgedToolsUsed` in JSON but frequently omits tools
@@ -1336,7 +1336,7 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
               history: ledgerEntry.history,
             };
           });
-          emit('dept_done', { turn, year, department: dept, summary: report.summary, eventIndex: ei, citations: report.citations.length, citationList: report.citations.slice(0, 5).map(c => ({ text: c.text, url: c.url, doi: c.doi })), risks: report.risks, forgedTools: validTools, recommendedActions: report.recommendedActions?.slice(0, 2) });
+          emit('specialist_done', { turn, year, department: dept, summary: report.summary, eventIndex: ei, citations: report.citations.length, citationList: report.citations.slice(0, 5).map(c => ({ text: c.text, url: c.url, doi: c.doi })), risks: report.risks, forgedTools: validTools, recommendedActions: report.recommendedActions?.slice(0, 2) });
           if (validTools.length) {
             const names = validTools.map(t => t.name).filter(Boolean);
             if (names.length) toolRegs[dept] = [...(toolRegs[dept] || []), ...names];
@@ -1451,7 +1451,7 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
         console.log(`  [abort] Skipping commander decision for turn ${turn} event ${ei + 1}.`);
         break;
       }
-      emit('commander_deciding', { turn, year, eventIndex: ei });
+      emit('decision_pending', { turn, year, eventIndex: ei });
       const cmdResult = await sendAndValidate({
         session: cmdSess,
         prompt: cmdPrompt,
@@ -1469,7 +1469,7 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
       }
       const decision = decisionParsed as unknown as CommanderDecision;
       console.log(`  [commander] ${decision.decision.slice(0, 120)}...`);
-      emit('commander_decided', {
+      emit('decision_made', {
         turn, year,
         decision: decision.decision,
         rationale: decision.rationale,
@@ -1606,7 +1606,7 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
       emotionality: +commanderHexacoLive.emotionality.toFixed(3),
       honestyHumility: +commanderHexacoLive.honestyHumility.toFixed(3),
     };
-    emit('drift', { turn, year, agents: driftData, commander: commanderHexacoSnapshot });
+    emit('personality_drift', { turn, year, agents: driftData, commander: commanderHexacoSnapshot });
 
     // Agent reactions (once per turn, reacting to ALL events). Runs the
     // full roster on turn 1; turn 2+ uses progressive reactions to pick
