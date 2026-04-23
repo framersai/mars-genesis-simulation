@@ -10,7 +10,7 @@ const baseInputs = {
   seed: 42,
   startedAt: '2026-04-22T10:00:00.000Z',
   completedAt: '2026-04-22T10:05:00.000Z',
-  timeUnit: { singular: 'year', plural: 'years' },
+  timeUnit: { singular: 'time', plural: 'years' },
   turnArtifacts: [],
   commanderDecisions: [],
   forgedToolbox: [],
@@ -38,7 +38,7 @@ test('buildRunArtifact maps turnArtifacts to trajectory.timepoints', () => {
     turnArtifacts: [
       {
         turn: 1,
-        year: 2035,
+        time: 2035,
         stateSnapshotAfter: { population: 100, morale: 0.7 },
         departmentReports: [
           { department: 'medical', summary: 'Stable', confidence: 0.8, risks: [], opportunities: [], citations: [], recommendedActions: [], openQuestions: [] },
@@ -60,7 +60,7 @@ test('buildRunArtifact maps commanderDecisions to decisions[]', () => {
     ...baseInputs,
     mode: 'turn-loop' as const,
     commanderDecisions: [
-      { turn: 1, year: 2036, actor: 'Captain Reyes', decision: 'Reinforce', rationale: 'Safety.', reasoning: '1. ...', outcome: 'conservative_success' as const },
+      { turn: 1, time: 2036, actor: 'Captain Reyes', decision: 'Reinforce', rationale: 'Safety.', reasoning: '1. ...', outcome: 'conservative_success' as const },
     ],
   };
   const artifact = buildRunArtifact(inputs);

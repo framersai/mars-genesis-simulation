@@ -5,7 +5,7 @@ import { marsFingerprint } from '../../../src/engine/mars/fingerprint.js';
 test('marsFingerprint classifies high-morale colony as antifragile', () => {
   const result = marsFingerprint(
     { systems: { morale: 0.75 }, politics: { earthDependencyPct: 30 }, agents: [{ health: { alive: true }, core: { marsborn: true } }, { health: { alive: true }, core: { marsborn: false } }] },
-    [{ turn: 1, year: 2035, outcome: 'risky_success' }, { turn: 2, year: 2037, outcome: 'risky_success' }],
+    [{ turn: 1, time: 2035, outcome: 'risky_success' }, { turn: 2, time: 2037, outcome: 'risky_success' }],
     { hexaco: { extraversion: 0.9, conscientiousness: 0.3 } },
     { medical: ['tool1', 'tool2', 'tool3'] },
     3,
@@ -20,7 +20,7 @@ test('marsFingerprint classifies high-morale colony as antifragile', () => {
 test('marsFingerprint classifies low-morale colony as brittle', () => {
   const result = marsFingerprint(
     { systems: { morale: 0.2 }, politics: { earthDependencyPct: 80 }, agents: [{ health: { alive: true }, core: { marsborn: false } }] },
-    [{ turn: 1, year: 2035, outcome: 'conservative_success' }, { turn: 2, year: 2037, outcome: 'conservative_success' }],
+    [{ turn: 1, time: 2035, outcome: 'conservative_success' }, { turn: 2, time: 2037, outcome: 'conservative_success' }],
     { hexaco: { extraversion: 0.3, conscientiousness: 0.9 } },
     {},
     3,

@@ -16,7 +16,7 @@ const keyPersonnel: KeyPersonnel[] = [
 
 test('SimulationKernel respects initial population and starting resources', () => {
   const kernel = new SimulationKernel(950, 'Commander', keyPersonnel, {
-    startYear: 2042,
+    startTime: 2042,
     initialPopulation: 120,
     startingResources: {
       foodMonthsReserve: 24,
@@ -34,8 +34,8 @@ test('SimulationKernel respects initial population and starting resources', () =
   });
 
   const state = kernel.getState();
-  assert.equal(state.metadata.startYear, 2042);
-  assert.equal(state.metadata.currentYear, 2042);
+  assert.equal(state.metadata.startTime, 2042);
+  assert.equal(state.metadata.currentTime, 2042);
   assert.equal(state.systems.population, 120);
   assert.equal(state.agents.length, 120);
   assert.equal(state.systems.foodMonthsReserve, 24);

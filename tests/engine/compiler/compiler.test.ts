@@ -22,7 +22,7 @@ const MOCK_SCENARIO = {
   engineArchetype: 'closed_turn_based_settlement',
   labels: { name: 'Test Base', shortName: 'test', populationNoun: 'crew members', settlementNoun: 'base', currency: 'credits' },
   theme: { primaryColor: '#22c55e', accentColor: '#86efac', cssVariables: {} },
-  setup: { defaultTurns: 8, defaultSeed: 100, defaultStartYear: 2040, defaultPopulation: 30, configurableSections: ['leaders'] },
+  setup: { defaultTurns: 8, defaultSeed: 100, defaultStartTime: 2040, defaultPopulation: 30, configurableSections: ['leaders'] },
   departments: [
     { id: 'medical', label: 'Medical', role: 'Doctor', icon: '🏥', defaultModel: 'test', instructions: 'Analyze health' },
     { id: 'engineering', label: 'Engineering', role: 'Engineer', icon: '⚙️', defaultModel: 'test', instructions: 'Analyze infra' },
@@ -73,7 +73,7 @@ describe('Hook validators', () => {
     const hook = (ctx: any) => {
       for (const c of ctx.agents) {
         if (!c.health.alive) continue;
-        c.health.boneDensityPct = Math.max(50, c.health.boneDensityPct - 0.5 * ctx.yearDelta);
+        c.health.boneDensityPct = Math.max(50, c.health.boneDensityPct - 0.5 * ctx.timeDelta);
       }
     };
     const result = validateProgressionHook(hook);
@@ -118,7 +118,7 @@ describe('Hook validators', () => {
 describe('compileScenario with mock LLM', () => {
   /** Mock generateText that returns appropriate responses for each hook type. */
   const mockResponses: Record<string, string> = {
-    progression: '(ctx) => { for (const c of ctx.agents) { if (!c.health.alive) continue; c.health.boneDensityPct = Math.max(50, c.health.boneDensityPct - 0.3 * ctx.yearDelta); } }',
+    progression: '(ctx) => { for (const c of ctx.agents) { if (!c.health.alive) continue; c.health.boneDensityPct = Math.max(50, c.health.boneDensityPct - 0.3 * ctx.timeDelta); } }',
     director: 'You are the Crisis Director for a base simulation. Departments: medical, engineering. Generate crises with 2-3 options, one risky. Categories: environmental, resource, medical. Return JSON with title, crisis, options, riskyOptionId, riskSuccessProbability, category, researchKeywords, relevantDepartments, turnSummary.',
     prompts: '(ctx) => { const lines = []; if (ctx.department === "medical") lines.push("HEALTH: population alive"); else lines.push("INFRA: systems nominal"); return lines; }',
     milestones: JSON.stringify({

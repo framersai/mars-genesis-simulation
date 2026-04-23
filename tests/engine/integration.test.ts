@@ -45,17 +45,17 @@ test('Mars milestones align with scenario setup defaults', () => {
 
 test('Mars scenario progression hook modifies colonist radiation', () => {
   const colonist = {
-    core: { marsborn: false, birthYear: 2000 },
+    core: { marsborn: false, birthTime: 2000 },
     health: { alive: true, boneDensityPct: 100, cumulativeRadiationMsv: 0 },
     social: { earthContacts: 5 },
     career: { yearsExperience: 0 },
   };
   marsScenario.hooks.progressionHook!({
     agents: [colonist as any],
-    yearDelta: 1,
-    year: 2036,
+    timeDelta: 1,
+    time: 2036,
     turn: 1,
-    startYear: 2035,
+    startTime: 2035,
     rng: { chance: () => false } as any,
   });
   assert.ok(colonist.health.cumulativeRadiationMsv > 200);
@@ -81,7 +81,7 @@ test('marsScenario hooks are all registered', () => {
 test('marsScenario.hooks.fingerprintHook produces valid fingerprint', () => {
   const fp = marsScenario.hooks.fingerprintHook!(
     { systems: { morale: 0.7 }, politics: { earthDependencyPct: 50 }, agents: [{ health: { alive: true }, core: { marsborn: false } }] } as any,
-    [{ turn: 1, year: 2035, outcome: 'conservative_success' }],
+    [{ turn: 1, time: 2035, outcome: 'conservative_success' }],
     { hexaco: { extraversion: 0.5, conscientiousness: 0.5 } } as any,
     {}, 3,
   );
@@ -101,7 +101,7 @@ test('marsScenario.hooks.politicsHook returns null for non-political category', 
 });
 
 test('marsScenario.hooks.reactionContextHook returns Mars-born phrasing', () => {
-  const ctx = marsScenario.hooks.reactionContextHook!({ core: { marsborn: true } } as any, { year: 2060, turn: 1 });
+  const ctx = marsScenario.hooks.reactionContextHook!({ core: { marsborn: true } } as any, { time: 2060, turn: 1 });
   assert.ok(ctx.includes('Mars-born'));
 });
 

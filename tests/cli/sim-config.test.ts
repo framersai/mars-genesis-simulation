@@ -37,7 +37,7 @@ test('normalizeSimulationConfig applies defaults for omitted optional fields', (
 
   assert.equal(config.turns, 12);
   assert.equal(config.seed, 950);
-  assert.equal(config.startYear, 2035);
+  assert.equal(config.startTime, 2035);
   assert.equal(config.initialPopulation, 100);
   assert.equal(config.liveSearch, false);
   assert.deepEqual(config.activeDepartments, ['medical', 'engineering', 'agriculture', 'psychology', 'governance']);
@@ -64,7 +64,7 @@ test('normalizeSimulationConfig preserves explicit setup overrides', () => {
     leaders: [leaderA, leaderB],
     turns: 6,
     seed: 4242,
-    startYear: 2042,
+    startTime: 2042,
     population: 140,
     liveSearch: true,
     activeDepartments: ['medical', 'engineering', 'psychology'],
@@ -89,7 +89,7 @@ test('normalizeSimulationConfig preserves explicit setup overrides', () => {
 
   assert.equal(config.turns, 6);
   assert.equal(config.seed, 4242);
-  assert.equal(config.startYear, 2042);
+  assert.equal(config.startTime, 2042);
   assert.equal(config.initialPopulation, 140);
   assert.equal(config.liveSearch, true);
   assert.deepEqual(config.activeDepartments, ['medical', 'engineering', 'psychology']);

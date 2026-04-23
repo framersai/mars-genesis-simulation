@@ -54,7 +54,7 @@ const customScenario = {
   setup: {
     defaultTurns: 6,
     defaultSeed: 321,
-    defaultStartYear: 2048,
+    defaultStartTime: 2048,
     defaultPopulation: 40,
     configurableSections: ['leaders', 'departments', 'models'],
   },
@@ -192,7 +192,7 @@ test('POST /setup normalizes config and hands it to the simulation runner', asyn
         leaders: [leaderA, leaderB],
         provider: 'anthropic',
         turns: 1,
-        startYear: 2042,
+        startTime: 2042,
         population: 110,
         activeDepartments: ['medical', 'engineering', 'governance'],
         startingResources: {
@@ -223,7 +223,7 @@ test('POST /setup normalizes config and hands it to the simulation runner', asyn
     assert.ok(capturedRun);
     const cfg = captured as NormalizedSimulationConfig;
     assert.equal(cfg.provider, 'anthropic');
-    assert.equal(cfg.startYear, 2042);
+    assert.equal(cfg.startTime, 2042);
     assert.equal(cfg.initialPopulation, 110);
     assert.deepEqual(cfg.activeDepartments, ['medical', 'engineering', 'governance']);
     assert.equal(cfg.startingResources.pressurizedVolumeM3, 4100);
@@ -599,9 +599,9 @@ function makeConfig(): NormalizedSimulationConfig {
   return {
     leaders: [leaderA, leaderB],
     turns: 3,
-    yearsPerTurn: 0,
+    timePerTurn: 0,
     seed: 1,
-    startYear: 2035,
+    startTime: 2035,
     initialPopulation: 20,
     provider: 'anthropic',
   } as unknown as NormalizedSimulationConfig;
