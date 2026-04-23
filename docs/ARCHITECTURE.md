@@ -92,7 +92,7 @@ DEPARTMENT REPORT               (LLM returns citations[]; orchestrator auto-fill
                                   from packet if LLM omits them — provenance
                                   guarantee)
   ↓
-SSE dept_done event             (citationList[]: text, url, doi)
+SSE specialist_done event       (citationList[]: text, url, doi)
   ↓
 DASHBOARD REPORTS TAB           (clickable citation links beneath each summary)
 ```
