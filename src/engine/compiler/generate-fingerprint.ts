@@ -24,7 +24,7 @@ DEPARTMENTS: ${depts}
 Function signature: (finalState, outcomeLog, leader, toolRegs, maxTurns) => Record<string, string>
 
 Inputs:
-- finalState: { agents, systems, capacities, politics, statuses, environment, metadata: { currentTime, startTime, currentTurn } }
+- finalState: { agents, systems, politics, metadata: { currentTime, startTime, currentTurn } }
 - outcomeLog: [{ turn, time, outcome: 'risky_success' | 'risky_failure' | 'conservative_success' | 'conservative_failure' }]
 - leader: { name, archetype, hexaco }
 - toolRegs: Record<dept, string[]> (department -> tool names)

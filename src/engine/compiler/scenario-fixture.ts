@@ -1,9 +1,15 @@
 /**
- * Build a SimulationState-shaped fixture derived from a scenario's own
- * `world.*` declarations. Used by every compiler generator's smokeTest
- * so validation runs against a shape that matches the scenario being
- * compiled — not a hardcoded Mars fixture that produces false positives
- * and false negatives for non-Mars scenarios.
+ * Build a runtime-accurate `SimulationState`-shaped fixture derived
+ * from a scenario's own `world.*` declarations. Used by every compiler
+ * generator's smokeTest so validation runs against the shape the hook
+ * will actually see at runtime — not a hardcoded Mars fixture that
+ * produces false positives and false negatives for non-Mars scenarios.
+ *
+ * Important: paracosm's runtime `SimulationState` has ONLY `systems`,
+ * `politics`, `agents`, `metadata` at the top level. `world.metrics`
+ * AND `world.capacities` both flatten into `state.systems`;
+ * `world.statuses` and `world.environment` are scenario-declaration
+ * vocabulary with no runtime projection. The fixture reflects that.
  *
  * @module paracosm/engine/compiler/scenario-fixture
  */
@@ -20,10 +26,7 @@ interface MetricDefinition {
 
 export interface ScenarioFixture {
   systems: Record<string, number>;
-  capacities: Record<string, number>;
-  statuses: Record<string, string | boolean>;
   politics: Record<string, number | string | boolean>;
-  environment: Record<string, number | string | boolean>;
   metadata: {
     simulationId: string;
     leaderId: string;
@@ -55,14 +58,26 @@ function coerceAny(def: MetricDefinition): number | string | boolean {
   return coerceInitial(def);
 }
 
-function buildBag<T>(
+function mergeBagsNumeric(
+  ...bags: Array<Record<string, MetricDefinition> | undefined>
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const bag of bags) {
+    if (!bag) continue;
+    for (const [key, def] of Object.entries(bag)) {
+      out[key] = coerceNumeric(def);
+    }
+  }
+  return out;
+}
+
+function buildPoliticsBag(
   bag: Record<string, MetricDefinition> | undefined,
-  coerce: (def: MetricDefinition) => T,
-): Record<string, T> {
-  const out: Record<string, T> = {};
+): Record<string, number | string | boolean> {
+  const out: Record<string, number | string | boolean> = {};
   if (!bag) return out;
   for (const [key, def] of Object.entries(bag)) {
-    out[key] = coerce(def);
+    out[key] = coerceAny(def);
   }
   return out;
 }
@@ -112,12 +127,16 @@ function buildSyntheticAgent(startTime: number): Agent {
 }
 
 /**
- * Build a SimulationState-shaped fixture from a scenario JSON.
+ * Build a runtime-accurate `SimulationState`-shaped fixture from a
+ * scenario JSON. `state.systems` is a FLAT bag merged from the scenario's
+ * `world.metrics` AND `world.capacities` declarations (both map to
+ * runtime numbers under `state.systems`). `state.politics` carries
+ * `world.politics`. Mars-heritage defaults (population, morale) are
+ * overlaid so hooks that reference those still validate.
  *
- * Throws if `world.metrics` is missing — post-0.5.0 scenarios all carry
- * the five world bags, so a missing one indicates malformed input and
- * should surface fast rather than silently falling back to a stale Mars
- * fixture.
+ * Throws if `world.metrics` is missing — post-0.5.0 scenarios all
+ * carry the declaration bag, so a missing one indicates malformed
+ * input and should surface fast rather than falling back silently.
  */
 export function buildScenarioFixture(scenarioJson: Record<string, unknown>): ScenarioFixture {
   const world = scenarioJson.world as
@@ -137,12 +156,19 @@ export function buildScenarioFixture(scenarioJson: Record<string, unknown>): Sce
   const startTime = typeof setup.defaultStartTime === 'number' ? setup.defaultStartTime : 0;
   const scenarioId = (scenarioJson.id as string) ?? 'fixture-scenario';
 
+  // Mars-heritage defaults the kernel always populates, so hooks that
+  // read these continue to pass smokeTest even when the scenario doesn't
+  // declare them. Scenario-declared metrics and capacities overlay on
+  // top to populate the scenario's own keys.
+  const marsHeritageSystems: Record<string, number> = {
+    population: 100,
+    morale: 0.75,
+  };
+  const systems = { ...marsHeritageSystems, ...mergeBagsNumeric(world.metrics, world.capacities) };
+
   return {
-    systems: buildBag(world.metrics, coerceNumeric),
-    capacities: buildBag(world.capacities, coerceNumeric),
-    statuses: buildBag(world.statuses, coerceAny) as Record<string, string | boolean>,
-    politics: buildBag(world.politics, coerceAny),
-    environment: buildBag(world.environment, coerceAny),
+    systems,
+    politics: buildPoliticsBag(world.politics),
     metadata: {
       simulationId: `fixture-${scenarioId}`,
       leaderId: 'fixture-leader',

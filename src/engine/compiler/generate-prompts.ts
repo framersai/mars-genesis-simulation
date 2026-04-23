@@ -25,7 +25,7 @@ ${depts}
 Function signature: (ctx) => string[]
 ctx shape:
 - ctx.department: string (department ID)
-- ctx.state: { agents, systems, capacities, politics, statuses, environment, metadata: { currentTime, startTime, currentTurn } }
+- ctx.state: { agents, systems, politics, metadata: { currentTime, startTime, currentTurn } }
 - ctx.scenario: any
 - ctx.researchPacket: { canonicalFacts[], counterpoints[], departmentNotes }
 
@@ -35,7 +35,7 @@ For each department, compute and return 2-4 lines of scenario-relevant stats fro
 
 Rules:
 1. Switch on ctx.department with a case per department ID listed above.
-2. Access ctx.state.agents (filter alive), and any of the five state bags (systems, capacities, politics, statuses, environment).
+2. Access ctx.state.agents (filter alive), ctx.state.systems, ctx.state.politics. These are the only state bags present at runtime.
 3. Reference only the keys listed in AVAILABLE STATE SHAPE. Bad key access throws at validation or runtime.
 4. Return string[]; empty array for unknown departments.
 5. NO external imports, NO async.`;
