@@ -33,9 +33,9 @@ const mockGenerateText = async (
       for (const c of ctx.agents) {
         if (!c.health.alive) continue;
         // Pressure stress degrades psych score
-        c.health.psychScore = Math.max(0.1, c.health.psychScore - 0.02 * ctx.yearDelta);
+        c.health.psychScore = Math.max(0.1, c.health.psychScore - 0.02 * ctx.timeDelta);
         // Confined spaces reduce bone density (less exercise)
-        c.health.boneDensityPct = Math.max(60, c.health.boneDensityPct - 0.2 * ctx.yearDelta);
+        c.health.boneDensityPct = Math.max(60, c.health.boneDensityPct - 0.2 * ctx.timeDelta);
       }
     }`;
   }
@@ -131,7 +131,7 @@ Return JSON: {"title","crisis","options":[{"id","label","description","isRisky"}
       if (colonist.core?.marsborn) {
         lines.push('Born aboard the station, has never seen the surface.');
       } else {
-        lines.push('Surface-born, ' + (ctx.year - 2038) + ' years underwater.');
+        lines.push('Surface-born, ' + (ctx.time - 2038) + ' years underwater.');
       }
       if (colonist.health?.psychScore < 0.4) lines.push('Showing signs of deep-sea isolation syndrome.');
       return lines.join(' ');
@@ -178,15 +178,15 @@ describe('Submarine scenario compilation', () => {
 
     // Progression hook modifies psych score
     const testColonist = {
-      core: { marsborn: false, birthYear: 2010, name: 'Test' },
+      core: { marsborn: false, birthTime: 2010, name: 'Test' },
       health: { alive: true, boneDensityPct: 95, cumulativeRadiationMsv: 0, psychScore: 0.7 },
     };
     scenario.hooks.progressionHook!({
       agents: [testColonist as any],
-      yearDelta: 2,
-      year: 2040,
+      timeDelta: 2,
+      time: 2040,
       turn: 2,
-      startYear: 2038,
+      startTime: 2038,
       rng: { chance: () => false, next: () => 0.5, pick: (arr: any) => arr[0], int: (a: number) => a },
     });
     assert.ok(testColonist.health.psychScore < 0.7, 'Psych score should degrade underwater');
@@ -207,7 +207,7 @@ describe('Submarine scenario compilation', () => {
     // Fingerprint returns summary
     const fp = scenario.hooks.fingerprintHook!(
       { agents: [], systems: {}, politics: {}, metadata: {} } as any,
-      [{ turn: 1, year: 2038, outcome: 'risky_success' }],
+      [{ turn: 1, time: 2038, outcome: 'risky_success' }],
       { name: 'Test', archetype: 'test', hexaco: { openness: 0.9 } } as any,
       { engineering: ['tool1'] },
       8,

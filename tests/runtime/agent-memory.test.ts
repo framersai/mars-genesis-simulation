@@ -6,7 +6,7 @@ import type { AgentReaction } from '../../src/runtime/agent-reactions.js';
 
 function makeAgent(id: string, name: string): Agent {
   return {
-    core: { id, name, birthYear: 2010, marsborn: false, department: 'engineering' as any, role: 'engineer' },
+    core: { id, name, birthTime: 2010, marsborn: false, department: 'engineering' as any, role: 'engineer' },
     health: { alive: true, boneDensityPct: 90, cumulativeRadiationMsv: 100, psychScore: 0.7, conditions: [] },
     career: { specialization: 'Structural', yearsExperience: 5, rank: 'senior', achievements: [] },
     social: { childrenIds: [], friendIds: [], earthContacts: 3 },
@@ -53,7 +53,7 @@ describe('Agent persistent memory', () => {
     // Fill 20 short-term entries
     for (let i = 0; i < 20; i++) {
       c.memory.shortTerm.push({
-        turn: i, year: 2035 + i, content: `Event ${i}`,
+        turn: i, time: 2035 + i, content: `Event ${i}`,
         valence: i % 2 === 0 ? 'positive' : 'negative',
         category: 'environmental', salience: 0.3 + (i % 5) * 0.1,
       });
@@ -99,7 +99,7 @@ describe('Agent persistent memory', () => {
 
   it('buildMemoryContext includes memories and stances', () => {
     const c = makeAgent('col-experienced', 'Experienced');
-    c.memory.shortTerm.push({ turn: 1, year: 2035, content: 'Crisis: survived a storm', valence: 'negative', category: 'environmental', salience: 0.8 });
+    c.memory.shortTerm.push({ turn: 1, time: 2035, content: 'Crisis: survived a storm', valence: 'negative', category: 'environmental', salience: 0.8 });
     c.memory.longTerm.push('Mostly negative experiences with environmental crises.');
     c.memory.stances.environmental = -0.6;
 

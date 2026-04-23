@@ -17,7 +17,7 @@ const KEY_PERSONNEL = [
 
 test('golden-run: 3-turn kernel produces deterministic population and state', () => {
   const kernel = new SimulationKernel(SEED, 'Test Commander', KEY_PERSONNEL, {
-    startYear: 2035,
+    startTime: 2035,
     initialPopulation: 100,
   });
 
@@ -25,22 +25,22 @@ test('golden-run: 3-turn kernel produces deterministic population and state', ()
   assert.equal(initial.agents.length, 100);
   assert.equal(initial.systems.population, 100);
   assert.equal(initial.metadata.seed, SEED);
-  assert.equal(initial.metadata.startYear, 2035);
+  assert.equal(initial.metadata.startTime, 2035);
 
-  // Turn 1: advance to year 2037
+  // Turn 1: advance to time 2037
   const t1 = kernel.advanceTurn(1, 2037, marsProgressionHook);
   assert.equal(t1.metadata.currentTurn, 1);
-  assert.equal(t1.metadata.currentYear, 2037);
+  assert.equal(t1.metadata.currentTime, 2037);
 
-  // Turn 2: advance to year 2040
+  // Turn 2: advance to time 2040
   const t2 = kernel.advanceTurn(2, 2040, marsProgressionHook);
   assert.equal(t2.metadata.currentTurn, 2);
-  assert.equal(t2.metadata.currentYear, 2040);
+  assert.equal(t2.metadata.currentTime, 2040);
 
-  // Turn 3: advance to year 2043
+  // Turn 3: advance to time 2043
   const t3 = kernel.advanceTurn(3, 2043, marsProgressionHook);
   assert.equal(t3.metadata.currentTurn, 3);
-  assert.equal(t3.metadata.currentYear, 2043);
+  assert.equal(t3.metadata.currentTime, 2043);
 
   // Golden assertions: these values are deterministic from seed 950
   // If any of these fail after a code change, the kernel behavior changed

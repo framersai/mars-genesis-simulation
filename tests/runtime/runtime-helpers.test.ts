@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { applyCustomEventToCrisis, buildPromotionPrompt, buildYearSchedule } from '../../src/runtime/runtime-helpers.js';
+import { applyCustomEventToCrisis, buildPromotionPrompt, buildTimeSchedule } from '../../src/runtime/runtime-helpers.js';
 
 test('buildPromotionPrompt matches the actual five-department promotion set', () => {
   const prompt = buildPromotionPrompt('candidate summary');
@@ -18,6 +18,6 @@ test('applyCustomEventToCrisis appends matching user event text to the crisis', 
   assert.match(crisis.turnSummary, /user event/i);
 });
 
-test('buildYearSchedule offsets the simulation timeline from the configured start year', () => {
-  assert.deepEqual(buildYearSchedule(2042, 3), [2042, 2044, 2047]);
+test('buildTimeSchedule offsets the simulation timeline from the configured start time', () => {
+  assert.deepEqual(buildTimeSchedule(2042, 3), [2042, 2044, 2047]);
 });

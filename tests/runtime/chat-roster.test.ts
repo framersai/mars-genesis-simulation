@@ -19,7 +19,7 @@ function makeSnapshot(agents: Array<Record<string, unknown>>, turn = 6) {
   return {
     type: 'systems_snapshot' as const,
     leader: 'Test',
-    data: { turn, year: 2075, agents, population: agents.length, morale: 0.8, foodReserve: 12, births: 0, deaths: 0 },
+    data: { turn, time: 2075, agents, population: agents.length, morale: 0.8, foodReserve: 12, births: 0, deaths: 0 },
   };
 }
 

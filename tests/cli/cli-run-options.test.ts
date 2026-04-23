@@ -7,7 +7,7 @@ test('parseCliRunOptions preserves backward-compatible positional turns and new 
     '5',
     '--live',
     '--seed', '123',
-    '--start-year', '2044',
+    '--start-time', '2044',
     '--provider', 'anthropic',
     '--commander-model', 'claude-sonnet-4-6',
     '--department-model', 'claude-haiku-4-5-20251001',
@@ -17,7 +17,7 @@ test('parseCliRunOptions preserves backward-compatible positional turns and new 
   assert.equal(options.maxTurns, 5);
   assert.equal(options.liveSearch, true);
   assert.equal(options.seed, 123);
-  assert.equal(options.startYear, 2044);
+  assert.equal(options.startTime, 2044);
   assert.equal(options.provider, 'anthropic');
   assert.equal(options.models?.commander, 'claude-sonnet-4-6');
   assert.equal(options.models?.departments, 'claude-haiku-4-5-20251001');

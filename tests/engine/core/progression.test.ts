@@ -7,7 +7,7 @@ import { marsProgressionHook } from '../../../src/engine/mars/progression-hooks.
 const makeState = (overrides: any = {}) => ({
   metadata: {
     simulationId: 'sim-1', leaderId: 'Commander', seed: 950,
-    startYear: 2042, currentYear: 2043, currentTurn: 1,
+    startTime: 2042, currentTime: 2043, currentTurn: 1,
   },
   systems: {
     population: 1, powerKw: 400, foodMonthsReserve: 18,
@@ -16,7 +16,7 @@ const makeState = (overrides: any = {}) => ({
     scienceOutput: 0, morale: 0.85,
   },
   agents: [{
-    core: { id: 'col-1', name: 'Alex Rivera', birthYear: 2020, marsborn: false, department: 'science', role: 'Analyst' },
+    core: { id: 'col-1', name: 'Alex Rivera', birthTime: 2020, marsborn: false, department: 'science', role: 'Analyst' },
     hexaco: { openness: 0.5, conscientiousness: 0.5, extraversion: 0.5, agreeableness: 0.5, emotionality: 0.5, honestyHumility: 0.5 },
     hexacoHistory: [],
     health: { alive: true, cumulativeRadiationMsv: 0, boneDensityPct: 100, psychScore: 0.8, conditions: [] },
