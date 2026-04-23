@@ -8,117 +8,133 @@ F23 generic time-units rename. Retires the last Mars-ism from the public type sy
 
 ### Breaking Changes
 
-- **Scenario setup:** `defaultStartYear` → `defaultStartTime`; `defaultYearsPerTurn` → `defaultTimePerTurn`.
-- **Simulation metadata:** `startYear` → `startTime`; `currentYear` → `currentTime`.
-- **Progression / reaction / fingerprint hook contexts:** `year` / `yearDelta` / `startYear` → `time` / `timeDelta` / `startTime`.
-- **Agent core:** `birthYear` → `birthTime`; `deathYear` → `deathTime`.
-- **Snapshots and events:** `year` field on turn-stamped payloads (`hexacoHistory[]`, `lifeEvents[]`, `TurnEvent`, `AgentMemoryEntry`, snapshot events) → `time`.
-- **Kernel:** `advanceTurn(nextTurn, nextTime, progressionHook?)`; `applyDrift` third argument is `timeDelta`.
-- **Scenario (legacy turn struct):** `Scenario.year` → `Scenario.time`.
-- **Runtime options:** `yearsPerTurn` → `timePerTurn` on `RunOptions`.
-- **Internal helper:** `buildYearSchedule` renamed to `buildTimeSchedule`.
-
-Preserved on purpose (`yearsExperience` on `AgentCareer`, `ratePerYear` on `AgentFieldDefinition.mortalityContribution`, narrative display copy like "Year 2043"). These are either non-API or scenario-specific narrative and get threaded through `labels.timeUnitNoun` in F23.1.
+- F23 generic time-units rename (year to time, 0.7.0) ([ec03012](https://github.com/framersai/paracosm/commit/ec030125d141f1890e8bf76421bef7360e09e9d8))
 
 ### Features
 
-- `ScenarioLabels.timeUnitNoun?: string` + `timeUnitNounPlural?: string` additive fields for display copy. Default when absent: `'tick'` / `'ticks'`. Mars, Lunar, and the submarine example set them to `'year'` / `'years'` explicitly.
+- runtime: RunOptions accepts subject + intervention pass-through ([7c9a083](https://github.com/framersai/paracosm/commit/7c9a0837a12abf1ea346e2926312fce069ba0196))
+- runtime: buildRunArtifact threads subject + intervention through ([c001d2d](https://github.com/framersai/paracosm/commit/c001d2d10ed3b90eba1fb9a1d235f69d631d518b))
+- schema: RunArtifact carries optional subject + intervention ([33a89e9](https://github.com/framersai/paracosm/commit/33a89e925940a928652d3d4e455a1eacaf6e6995))
+- schema: expose SubjectConfig + InterventionConfig TS types ([0092c9a](https://github.com/framersai/paracosm/commit/0092c9ae5c88551db1c96fc6bc3331d8a5089035))
+- schema: SubjectConfig + SubjectSignal + SubjectMarker primitives ([e02aa7c](https://github.com/framersai/paracosm/commit/e02aa7c99657addaef8e588177918542ff8aa1ed))
 
-### Migration
+### Bug Fixes
 
-**External TypeScript consumers** (apply a grep-and-replace across your codebase):
+- runtime: coderabbit review - outcome cast to Decision['outcome'] ([a48ed4b](https://github.com/framersai/paracosm/commit/a48ed4b1581a965394479ba2ff05c733403ece49))
+- coderabbit review cleanup for 0.6.0 release ([b6ce034](https://github.com/framersai/paracosm/commit/b6ce034c418aa142163c0e84ab14fbe26574a369))
+- runtime: chat-agents evt.type checks use new event names ([27b15c5](https://github.com/framersai/paracosm/commit/27b15c536afe31498e996c7703825926cd232075))
 
-```ts
-// Before:
-const opts = { scenario, maxTurns: 6, seed: 42, startYear: 2035, yearsPerTurn: 8 };
-const result = await runSimulation(leader, [], opts);
-console.log(result.metadata.currentYear, result.metadata.startYear);
+<details>
+<summary>Other</summary>
 
-// After:
-const opts = { scenario, maxTurns: 6, seed: 42, startTime: 2035, timePerTurn: 8 };
-const result = await runSimulation(leader, [], opts);
-console.log(result.metadata.currentTime, result.metadata.startTime);
-```
+- release: 0.7.0 F23 generic time-units breaking rename ([c35f83d](https://github.com/framersai/paracosm/commit/c35f83d8f9d4da48a49578581b5e612d477a943f))
+- paracosm: F23 refresh tests + add v2 to v3 migration tests ([0ac1345](https://github.com/framersai/paracosm/commit/0ac13459b4062dfa02b5dd5d84274ff4ebace5f8))
+- architecture: rename stale dept_done SSE event to specialist_done ([471dd4a](https://github.com/framersai/paracosm/commit/471dd4ae419a50894b981ea9012035903fb7cf31))
+- handoff: 2026-04-23 v0.6.0-shipped next-session handoff ([031cf7e](https://github.com/framersai/paracosm/commit/031cf7e55fc98c1953285df04b1a1db2a6f306cd))
+- 0.6.0 consistency pass — scrub legacy API refs + add subject/intervention teaser ([ac774ec](https://github.com/framersai/paracosm/commit/ac774ec1edaaf398bc91274fee67eac2eb044ac4))
+- changelog: SubjectConfig + InterventionConfig under 0.6.0 Features ([04c56db](https://github.com/framersai/paracosm/commit/04c56db909896aa832349da7a2930d3bafb62afd))
+- adoption: digital-twin worked example for SubjectConfig + InterventionConfig ([2c0e08e](https://github.com/framersai/paracosm/commit/2c0e08e3e691520f0b4cd9ca0d30ce07cf426aaf))
+- schema: regen JSON Schema with subject + intervention primitives ([b6bc02e](https://github.com/framersai/paracosm/commit/b6bc02ead48a5a97852cf2461d9c8faafdd6272e))
+- schema: InterventionConfig primitive test coverage ([351a67b](https://github.com/framersai/paracosm/commit/351a67b835118012454146973a5ffc22c95713bc))
+- plan: SubjectConfig + InterventionConfig implementation plan ([a5878bb](https://github.com/framersai/paracosm/commit/a5878bbf3874c255fd12f42843e01cc5e9d283e1))
+- spec: SubjectConfig + InterventionConfig input primitives (P4 + P5) ([c8e9ec8](https://github.com/framersai/paracosm/commit/c8e9ec84e6955a51765181a5b90c8c58b6e364ba))
 
-**Scenario JSON authors:**
+</details>
 
-```jsonc
-// Before:
-"setup": { "defaultStartYear": 2035, "defaultYearsPerTurn": 8 }
-
-// After (Mars-equivalent default copy):
-"labels": { "timeUnitNoun": "year", "timeUnitNounPlural": "years" },
-"setup": { "defaultStartTime": 2035, "defaultTimePerTurn": 8 }
-```
-
-**Compiled scenario cache.** `COMPILE_SCHEMA_VERSION` bumps 3 → 4. Every previously-compiled hook on a user's disk regenerates on next `compileScenario()` call. One-time cost ~$0.10 per scenario per user.
-
-**Saved dashboard runs.** `CURRENT_SCHEMA_VERSION` bumps 2 → 3. A pre-0.7 `output/v3-*.json` loaded through the dashboard's file picker runs through `migrations[2]`, which recursively aliases legacy year-family keys onto time-family equivalents on events, results, nested metadata, and agent cores. Aliases only where the new key is absent, so a mixed file is safe. Legacy keys stay in place for forward-compat debugging.
-
-**Downstream `^0.6.x` caret ranges** refuse to auto-upgrade to 0.7, which is intentional. Pin `^0.6.x` if you need the pre-F23 shape; bump to `^0.7.0` after applying the grep-and-replace above.
-
-### Rollback
-
-`git revert` the three F23 commits and ship a `0.7.1` patch. No persistent state changes beyond cached compiled hooks, which regenerate harmlessly on first post-rollback run.
+---
 
 ## 0.6.0 (2026-04-22)
 
 Universal JSON result schema. `runSimulation()` now returns `Promise<RunArtifact>` — one Zod-validated shape covering civilization sims (turn-loop), digital-twin simulations (batch-trajectory), and one-shot forecasts (batch-point). Public primitives + schemas live under the new `paracosm/schema` subpath export. Five SSE event types renamed for consistency with the primitive vocabulary.
 
-### Breaking Changes
-
-- `runSimulation()` return type is `Promise<RunArtifact>` (was an anonymous inline object). Field rebucketing:
-  - `turnArtifacts[]` → `trajectory.timepoints[]` (each with `worldSnapshot.metrics`)
-  - `commanderDecisions[]` → `decisions[]`
-  - `forgedToolbox[]` → `forgedTools[]`
-  - `citationCatalog[]` → `citations[]`
-  - `totalCitations` / `totalToolsForged` → compute from array lengths
-  - `finalState.systems` → `finalState.metrics`
-  - `leader.{hexaco,hexacoBaseline,hexacoHistory}` + internal fields (`toolRegistries`, `agentTrajectories`, `directorEvents`, `forgeAttempts`, `outcomeClassifications`, raw `turnArtifacts`) stash under `scenarioExtensions.paracosmInternal` for internal callers who need them
-- SSE event types renamed:
-  - `dept_start` → `specialist_start`
-  - `dept_done` → `specialist_done`
-  - `commander_deciding` → `decision_pending`
-  - `commander_decided` → `decision_made`
-  - `drift` → `personality_drift`
-- `writeRunOutput` signature widened to accept `RunArtifact` (internal; affects only library consumers that called it directly)
-
 ### Features
 
-- new subpath export `paracosm/schema` with 11 Zod v4 primitives + `RunArtifactSchema` + `StreamEventSchema` (17-variant discriminated union) + inferred TypeScript types
-- mode discriminator `metadata.mode: 'turn-loop' | 'batch-trajectory' | 'batch-point'` so consumers pattern-match cleanly
-- `scenarioExtensions?: Record<string, unknown>` escape hatch on every primitive for domain-specific payloads
-- `npm run export:json-schema` emits `schema/run-artifact.schema.json` + `schema/stream-event.schema.json` for non-TS consumers via Zod v4's native `toJSONSchema()`
-- external digital-twin shape-compat: renaming `timepoints` → `trajectory.timepoints`, `leverage_points` → `leveragePoints`, `risk_flags` → `riskFlags`, `specialist_notes` → `specialistNotes`, `health_score: int` → `score: { value, min: 0, max: 100, label }`, `body_description` → `narrative` produces a valid `batch-trajectory` artifact
-- runtime validator `emitStreamEvent()` parses SSE events against `StreamEventSchema` in dev (`NODE_ENV !== 'production'`) so malformed payloads throw at the emit site instead of surfacing as dashboard reducer crashes
-- dashboard SSE ingress aliases new event type names back to legacy names so internal reducers + viz components keep working without the full rename
-- `SubjectConfig` + `InterventionConfig` input primitives under `paracosm/schema` (additive; no breaking change). `SubjectConfig` carries id + name + optional profile / signals / markers / personality / conditions; `InterventionConfig` carries id + name + description + optional category / mechanism / targetBehaviors / duration / adherenceProfile. Threaded through `RunOptions` → `buildRunArtifact` → `RunArtifact.subject` / `RunArtifact.intervention` (both optional). Turn-loop mode stashes them verbatim without semantic consumption; batch-trajectory / batch-point modes (external executors) populate them from their own pipelines.
+- runtime: SSE envelope validator + legacy event-type rename map ([b486659](https://github.com/framersai/paracosm/commit/b486659ae47ca06f99f478b957a32d1990f733bc))
+- runtime: buildRunArtifact maps internal state to universal RunArtifact ([d49f3f7](https://github.com/framersai/paracosm/commit/d49f3f71cb317453e624695e6a499412fb656c36))
+- schema: add paracosm/schema subpath with universal Zod primitives ([214565e](https://github.com/framersai/paracosm/commit/214565eed78cb94685e9ff1f58e27091a2f372b0))
+- dashboard: F15 event-log filter bar (search + types + leader + turn range) ([ae4ac62](https://github.com/framersai/paracosm/commit/ae4ac62a91a6c44f9c27da4a3195cb941ab45fba))
+- dashboard: F14 local history ring (auto-cache + RunMenu history section) ([df96199](https://github.com/framersai/paracosm/commit/df9619969a896ff78a1408d61521339164ab9bac))
+- dashboard: F13 URL-param load (?load=<url>) ([a9ad8eb](https://github.com/framersai/paracosm/commit/a9ad8ebabcc949173524e865888529763d6a3825))
+- dashboard: F12 scenario-mismatch detection with preview warning row ([621650c](https://github.com/framersai/paracosm/commit/621650c53885f94c99fa87ec99dc152092aefcbc))
+- dashboard: F11 schema-version gate on load (migration chain + too-new toast) ([55dd9b4](https://github.com/framersai/paracosm/commit/55dd9b4fb1254dfa0a26681f9b49ca01ddb462f5))
+- dashboard: F10 drag-and-drop file load with overlay + validator ([0dee1da](https://github.com/framersai/paracosm/commit/0dee1da50a7eb2aac1a16ff9f21731aaac592a72))
+- dashboard: F9 JSON-load preview modal with metadata + overwrite warning ([0cfc406](https://github.com/framersai/paracosm/commit/0cfc406e99f5658f1b325037936851f9f34af70b))
+- scripts: npm run changelog + initial auto-generated CHANGELOG ([52bcdb7](https://github.com/framersai/paracosm/commit/52bcdb7fd9c2556bf3e8cbcb38179bb4da6ea7f0))
+- scripts: renderEntry + main() for end-to-end changelog generation ([e7cb115](https://github.com/framersai/paracosm/commit/e7cb115f860984a8084408e62920cc295a06d288))
+- scripts: detectBoundaries + sliceCommits for changelog git seam ([acef442](https://github.com/framersai/paracosm/commit/acef442ff1e8c5bdf45be54ca33d8721e34f0118))
+- scripts: extractNarratives for CHANGELOG round-trip preservation ([666a7ad](https://github.com/framersai/paracosm/commit/666a7ad7c6c5a946eb70bdab52d8984f58b732ad))
+- scripts: parseCommit + classifyCommit for changelog generator ([3f46492](https://github.com/framersai/paracosm/commit/3f46492ce73a71297be688f0d7225ea7522bf2e8))
+- dashboard: migrate legacy pre-0.5 event shapes on load ([57d2d41](https://github.com/framersai/paracosm/commit/57d2d411c160be2a6d883c92fe8ef9e671d4ac9e))
 
-### Migration
+### Bug Fixes
 
-External TypeScript consumers:
+- dashboard: F4 batch 3 coderabbit a11y - LeaderConfig label/input association via useId ([e758023](https://github.com/framersai/paracosm/commit/e758023284af9676e4454b2034d4573236b7afe8))
+- dashboard: F4 batch 2 coderabbit - StatsBar.deltaClass inverts sign for lossIsRed tone ([2dc04ff](https://github.com/framersai/paracosm/commit/2dc04ff6a4d9c5c90b381bc597ea4950f6252c6d))
+- dashboard: F4 batch 2 coderabbit - RerunPanel surface non-2xx non-429 errors ([0026f2a](https://github.com/framersai/paracosm/commit/0026f2a663f534150b525c548ef8de9fc3f3ddf2))
+- dashboard: F15 coderabbit pass - normalize inverted turn range + strip hash on toolHash clear ([86091cc](https://github.com/framersai/paracosm/commit/86091cc75b06751dcc1974aebad2ef8064c67f4f))
+- dashboard: F14 coderabbit review - dedup scenarioShortName in history card line2 ([64b7139](https://github.com/framersai/paracosm/commit/64b71399617fa4bdf5cc0f0cdb0aa78d1cf35f60))
+- dashboard: coderabbit review pass 1 (pickFile cancel hang, turnCount coalescing, autoFocus a11y, doc + spec drift cleanup) ([726013e](https://github.com/framersai/paracosm/commit/726013ef50151a14f154e3468063fb84aaf4ddb7))
+- runtime: cast memoryProvider to satisfy AgentMemoryProvider contract ([d4b24c8](https://github.com/framersai/paracosm/commit/d4b24c8fb2198c09a2293dea8f85250bad0a3fae))
+- runtime+cli: catch stray colony refs in server-app + session-title ([b0459c8](https://github.com/framersai/paracosm/commit/b0459c8ba75a5c3abbe60d4251c96d532d8a8f8d))
 
-```ts
-// Before:
-const result = await runSimulation(leader, [], options);
-console.log(result.finalState.systems.population);
-console.log(result.totalCitations, result.totalToolsForged);
-console.log(result.turnArtifacts[0].departmentReports[0].summary);
+<details>
+<summary>Other</summary>
 
-// After:
-import type { RunArtifact } from 'paracosm/schema';
-const artifact: RunArtifact = await runSimulation(leader, [], options);
-console.log(artifact.finalState?.metrics.population);
-console.log(artifact.citations?.length ?? 0, artifact.forgedTools?.length ?? 0);
-console.log(artifact.specialistNotes?.[0]?.summary);
-// Internal fields still accessible for paracosm-internal tooling:
-const internal = artifact.scenarioExtensions?.paracosmInternal as any;
-console.log(internal?.turnArtifacts[0].departmentReports[0].summary);
-```
+- release: 0.6.0 breaking - universal schema ([85aab74](https://github.com/framersai/paracosm/commit/85aab748ea01d6a5b395cbf10716d123371d1a64))
+- README + ARCHITECTURE reflect paracosm/schema universal contract ([38cf2d0](https://github.com/framersai/paracosm/commit/38cf2d0377c647c4d497761815bfea614ddb6cbd))
+- runtime: SSE event type renames for 0.6.0 wire format ([3c37ad1](https://github.com/framersai/paracosm/commit/3c37ad1ba65aa738d9a7878bc2a366eb054e7b34))
+- runtime: runSimulation returns Promise<RunArtifact> ([b4ebcc0](https://github.com/framersai/paracosm/commit/b4ebcc070d341a2a44d706c7d8cdad35869b1012))
+- plan: universal-schema integration plan for 0.6.0 bundled release ([c12ea75](https://github.com/framersai/paracosm/commit/c12ea755bbf9bc36fd6c6aded0e644ab0a7a7294))
+- spec: universal JSON schema design (paracosm/schema subpath, 0.6.0) ([5fe9a08](https://github.com/framersai/paracosm/commit/5fe9a080758dcad739224da80e199d73f2739041))
+- F6 viz audit + full-day session handoff ([904b10d](https://github.com/framersai/paracosm/commit/904b10d34e8e7809cf57efd49c69755a845ffb3c))
+- plan: F23 phased checklist for 0.6.0 time-units rename execution ([ac16d87](https://github.com/framersai/paracosm/commit/ac16d87c97183e833805cd8b21a4829bc8ecc76a))
+- dashboard: F4 batch 3 migrate LeaderConfig + RunMenu legacy inline styles to SCSS modules ([f9827a0](https://github.com/framersai/paracosm/commit/f9827a0d4f6a3d945d40e08b9d6e72d51da17b4b))
+- spec: F23 addendum - birthYear rename + 3-commit phasing + timeUnitNoun threading ([ecda91d](https://github.com/framersai/paracosm/commit/ecda91d1b65005bd9b37a6efc7b9b997dc46a9f6))
+- spec: F23 generic time-units rename design (0.6.0 breaking change) ([42c3404](https://github.com/framersai/paracosm/commit/42c3404ff7a4b1456c24056dbbb071538215d6af))
+- dashboard: F4 batch 2 migrate StatsBar + LeaderBar inline styles to SCSS modules ([8ef301b](https://github.com/framersai/paracosm/commit/8ef301b6132407d2bd92d5c4ed309f1959872bb2))
+- dashboard: F4 batch 2 migrate SimView + extract RerunPanel + useLastLaunchConfig helpers ([9a886d6](https://github.com/framersai/paracosm/commit/9a886d69e4a6d3843d3f96317e1e2ddf775cc68c))
+- spec: F4 batch 2 SCSS migration (SimView + RerunPanel + StatsBar + LeaderBar) ([5c2719f](https://github.com/framersai/paracosm/commit/5c2719fe65a0bf4c27d327719fdf00b8fa3f7f1d))
+- spec: F15 event-log filter bar design ([046aebc](https://github.com/framersai/paracosm/commit/046aebce4a58ae968c38b50c23970f2a556f0741))
+- spec: F14 coderabbit review - align spec with native-confirm restore pattern ([d8ef882](https://github.com/framersai/paracosm/commit/d8ef882386185534f530a5ceac411283bbe79a58))
+- spec: F14 client-side local history ring design ([6d7486b](https://github.com/framersai/paracosm/commit/6d7486bae6d12a1f94f72f3b2991ef8c7b36124a))
+- spec: F13 URL-param load design ([6fc8dd0](https://github.com/framersai/paracosm/commit/6fc8dd0812dedd8eb56fbca45c38332c68b3989b))
+- dashboard: self-review fixes (shared schema version constant, confirm try/finally, orphan jsdoc) ([1a63912](https://github.com/framersai/paracosm/commit/1a63912598bca7f63d309159caba5ee79a0435f0))
+- handoff: 2026-04-22 late session wrap - F9-F12 JSON-load UX bundle ([31f1d94](https://github.com/framersai/paracosm/commit/31f1d94298a0544d8f66698fb8a534534dd49bf3))
+- spec: F9 + F12 self-review fixes (align with useReplaySessionId + /scenario/switch semantics) ([91b9d55](https://github.com/framersai/paracosm/commit/91b9d550ee3dec419419abbb2b3e09940bc7b552))
+- spec: F12 scenario-mismatch detection on load design ([f2db4f4](https://github.com/framersai/paracosm/commit/f2db4f4c1020bb365bc1c449b02394a2255c5a05))
+- spec: F11 schema-version gate on load design ([c7a82a4](https://github.com/framersai/paracosm/commit/c7a82a46743abf5e9fecec619fcf0de260433b23))
+- spec: F10 drag-and-drop file load design ([e13c5e2](https://github.com/framersai/paracosm/commit/e13c5e223381fad7773480a00cb4864ba1875e15))
+- spec: F9 JSON-load preview modal design ([c6f9167](https://github.com/framersai/paracosm/commit/c6f91670c8c3737947a1e52967d11da763e2c2b8))
+- expand forge-observability chain + fix F1/P1 drift in ARCHITECTURE + trajectory card ([5ae67ff](https://github.com/framersai/paracosm/commit/5ae67ff617605d6f5beaf465d8670cb8dfa1f6c2))
+- deps: bump @framers/agentos to ^0.2.1 ([2b70d2b](https://github.com/framersai/paracosm/commit/2b70d2b22dc17559ff1aa5514db7c59a8fe5ad52))
+- handoff: 2026-04-22 session wrap — P1.5 + F1 + F5 + F4 batch 1 ([f11e76d](https://github.com/framersai/paracosm/commit/f11e76d08d24eaab93c304ce2cf8125e4840cdc1))
+- dashboard: F4 migrate App.tsx shell + ErrorBoundary to SCSS module ([9b689ef](https://github.com/framersai/paracosm/commit/9b689ef27993c80fe65fe39360e028c34d0ab3f0))
+- dashboard: F4 migrate LoadMenu inline styles to SCSS module ([e4dae46](https://github.com/framersai/paracosm/commit/e4dae4686544c8932ec0158c32a5d268dd5fc444))
+- dashboard: F4 migrate VerdictBanner + ReplayBanner + EventLogPanel to SCSS modules ([7a684de](https://github.com/framersai/paracosm/commit/7a684dec20a4e6a83dde083084b9fc19e94c2055))
+- dashboard: F4 migrate VerdictModal inline styles to SCSS module ([fd57294](https://github.com/framersai/paracosm/commit/fd57294c14115fb1999760b8815e639f7f963c2a))
+- deps: bump @framers/agentos to 0.2.0 ([94e0c99](https://github.com/framersai/paracosm/commit/94e0c99c174691ba15c432be6df8a36a4510c7ed))
+- dashboard: F5 extract VerdictBanner + VerdictModal + ReplayBanner + EventLogPanel + useLaunchState ([fc1c897](https://github.com/framersai/paracosm/commit/fc1c89727d2a570723b3e773caab339961be3bbb))
+- dashboard: F5 extract toast hooks (useForgeToasts, useTerminalToast, useSimSavedToast) ([e94f9dc](https://github.com/framersai/paracosm/commit/e94f9dc90ec8d06caec0401d24f534960e9c0e43))
+- dashboard: F1 complete - arena-ready state shape + crisis→event rename ([36e6e2d](https://github.com/framersai/paracosm/commit/36e6e2d453f7303bb81164e691558a1f71920bfd))
+- dashboard: F1 WIP - layout + sim + reports + shared migrated (SwarmViz remaining) ([e326615](https://github.com/framersai/paracosm/commit/e326615f0f087aa9f89a1fce4b7e8311629988d8))
+- audit: add F23 generic time units (surfaced during F1) ([731d0c8](https://github.com/framersai/paracosm/commit/731d0c8b829173bf6a0d9f095ba07e5b4f08b9ef))
+- dashboard: F1 WIP - consumer hooks + layout + divergence rail migrated ([cff9c97](https://github.com/framersai/paracosm/commit/cff9c972a9a0bf7b8d99787842910a42ced0c674))
+- dashboard: generalize useGameState for N leaders (core hook) ([7d563e5](https://github.com/framersai/paracosm/commit/7d563e56c5f1af537ebe8307d4f5ff9a93478aa8))
+- plan: F1 arena-ready state shape implementation — 10 tasks, 22 files ([1b82ac6](https://github.com/framersai/paracosm/commit/1b82ac60aa79f5e1f95bf18e510b1e39566c4544))
+- spec: F1 arena-ready dashboard state shape (internal refactor) ([e82919a](https://github.com/framersai/paracosm/commit/e82919ae5cba9654cc15ea04b6b11114a37fef32))
+- audit: dashboard UI/UX audit — 22 findings across 4 severity tiers ([a8f8e6f](https://github.com/framersai/paracosm/commit/a8f8e6fa453c4d110d852972a88cedd7712a0496))
+- deploy: generate + commit CHANGELOG, use release-notes.md in gh release ([7dea5f1](https://github.com/framersai/paracosm/commit/7dea5f1d452b0475c59a282a1eb33a7fd1bc078b))
+- gitignore release-notes.md + fix README finalState example ([554e874](https://github.com/framersai/paracosm/commit/554e87479d08d8d8709610983c50c9b767f42412))
+- seed CHANGELOG with 0.5.0 + 0.4.0 entries (locked 0.4.0) ([9b0e355](https://github.com/framersai/paracosm/commit/9b0e355808bf839b1437e93a68609516c6ae0c69))
+- plan: P1.5 CHANGELOG implementation — 9 tasks, 44 steps ([6091ba2](https://github.com/framersai/paracosm/commit/6091ba2409bd2f2207839c000683bac62b8d8f04))
+- spec: P1.5 automated CHANGELOG + release notes ([7f3ce31](https://github.com/framersai/paracosm/commit/7f3ce319baa789dc442539b8af09db45e5418be4))
+- README + landing examples use leader.unit / systemDeltas ([aaee324](https://github.com/framersai/paracosm/commit/aaee3243c9c41c5e95bcc78fd8de0aa424fda059))
+- compiler: regression guard for COMPILE_SCHEMA_VERSION bump ([174dc13](https://github.com/framersai/paracosm/commit/174dc131f6a405a6f4759b5d37115317051ee478))
+- rename colony→unit/systems across all test suites ([441e4ea](https://github.com/framersai/paracosm/commit/441e4eae70b8d59d19a69eadc1cac57435a3fbb5))
 
-SSE event handlers: the five legacy type names still fire if the server is pre-0.6.0, but new consumers should switch on the new names. Runtime 0.6.0+ emits only the new names.
+</details>
 
-Pre-0.6.0 dashboard save files (`schemaVersion: 2`) load unchanged — the dashboard's save format is built from SSE events via reducer state, which preserves legacy field names internally via the ingress alias. A follow-up commit can flip the dashboard to consume `RunArtifact` natively and drop the alias.
+---
 
 ## 0.5.0 (2026-04-21)
 
@@ -126,12 +142,12 @@ Domain-agnostic schema rename. `LeaderConfig.colony` renamed to `.unit`, `Simula
 
 ### Breaking Changes
 
-- rename colony→unit/systems across public API (0.5.0) ([9d00630](https://github.com/framersai/paracosm/commit/9d00630935691c8ba6b8b4fca578bbefdc2caabb))
+- rename colony→unit/systems across public API (0.5.0) ([b6527d3](https://github.com/framersai/paracosm/commit/b6527d322037414e845431fca692ec41a76dd6bc))
 
 ### Features
 
-- runtime: createParacosmClient factory + PARACOSM_* env-var config ([bd509dc](https://github.com/framersai/paracosm/commit/bd509dc87364457d4be20997cc30864c87f81c90))
-- runtime: costPreset option for cheap iteration + honest cost table ([bd22f60](https://github.com/framersai/paracosm/commit/bd22f6038d64c87e9c86af300d2273d66514faf3))
+- runtime: createParacosmClient factory + PARACOSM_* env-var config ([c0cbbc1](https://github.com/framersai/paracosm/commit/c0cbbc160873c8f797119d8923287a007cb84964))
+- runtime: costPreset option for cheap iteration + honest cost table ([72e7de0](https://github.com/framersai/paracosm/commit/72e7de05a542d459f805b0acd1fd46536ee45d0b))
 - runtime: universal summary field on every SimEvent for robust logging ([36a1da9](https://github.com/framersai/paracosm/commit/36a1da9d9373f8c5cef4a20a76cf3a393ac09f7c))
 - RUN guard + focus ring + GoL cache + mobile min-height ([b0dcdcd](https://github.com/framersai/paracosm/commit/b0dcdcd9e9ecca7a953855c86643aac17bb0e40a))
 - dashboard: known-rough-edges sweep — replay 404 + sessions offline + tour CTA + search icon + chronicle→reports jump + terminal-toast gate ([69b4cca](https://github.com/framersai/paracosm/commit/69b4cca0319a196561aa2620bd25ec032c6c8554))
@@ -364,11 +380,11 @@ Domain-agnostic schema rename. `LeaderConfig.colony` renamed to `.unit`, `Simula
 <details>
 <summary>Other</summary>
 
-- fixtures: capture pre-0.5 run + cache-v2 shapes for migration tests ([1452acd](https://github.com/framersai/paracosm/commit/1452acd123a601c7eb5a4b1fe434687b32c20438))
-- plan: P1 implementation plan — 7 tasks, 35 steps ([28d2f2e](https://github.com/framersai/paracosm/commit/28d2f2e85bd70b4d4b61b52a7392af12f524bc0d))
-- spec: P1 domain-agnostic schema rename + cache-bust ([4c6d670](https://github.com/framersai/paracosm/commit/4c6d670ec7ea14a336211857f5de2077d1f98ffe))
-- cli: load .env from cwd, not package root, with audit log ([eaaca6b](https://github.com/framersai/paracosm/commit/eaaca6b88e64f96fe664d1ac64fc305b0bfc5ec9))
-- Update README.md ([8710fe6](https://github.com/framersai/paracosm/commit/8710fe6cff3a9f519630e79e46c58d81e042df4f))
+- fixtures: capture pre-0.5 run + cache-v2 shapes for migration tests ([18a8689](https://github.com/framersai/paracosm/commit/18a8689a92bd2bd8383f1422098052781854e1e9))
+- plan: P1 implementation plan — 7 tasks, 35 steps ([6ef58bb](https://github.com/framersai/paracosm/commit/6ef58bb9388d497a74802c3c880bb2902d9f22bd))
+- spec: P1 domain-agnostic schema rename + cache-bust ([bddc06c](https://github.com/framersai/paracosm/commit/bddc06c5171254dfd3769c2f94457d8cf7ee445b))
+- cli: load .env from cwd, not package root, with audit log ([675fc71](https://github.com/framersai/paracosm/commit/675fc71e9dbf8df5e99363ab0ec82ab60c32fe89))
+- Update README.md ([0996d4e](https://github.com/framersai/paracosm/commit/0996d4e5cba2fe4c3059c1709d775689c3849eb4))
 - runtime: sync @param name in buildMemoryContext JSDoc ([c442e51](https://github.com/framersai/paracosm/commit/c442e51f04a5bd94255a5c833a50ab5017d26a8a))
 - update Discord invite to permanent link ([030b3da](https://github.com/framersai/paracosm/commit/030b3daa40987ea7fb61f159eb900aa5733b2401))
 - dashboard: tighten SimEvent type union + rot-proof about ecosystem copy ([d41478c](https://github.com/framersai/paracosm/commit/d41478c5878ac6eb1459330bf035a5dabcd28aeb))
