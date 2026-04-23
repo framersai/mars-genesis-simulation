@@ -1,0 +1,360 @@
+// SimView styles — F4 batch 2 migration from inline style objects.
+// Dynamic per-leader colors flow in via the `--leader-color` CSS
+// custom property set on the relevant element.
+
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.leadersRow {
+  display: flex;
+  gap: 1px;
+  background: var(--border);
+}
+
+// One leader's event column. Uses `--leader-color` for the spinner
+// accent below.
+.leaderColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg-deep);
+  overflow: hidden;
+}
+
+.leaderColumnScroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.leaderColumnGeneratingBlock {
+  color: var(--text-3);
+  font-size: 12px;
+  padding: 16px 12px;
+}
+
+.leaderColumnGeneratingHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.leaderColumnGeneratingSpinner {
+  // `spinner` class lives in globals; this rule sets the accent color.
+  // Exported here so the class can be composed via className + style
+  // custom property (set on the parent).
+  border-top-color: var(--leader-color);
+}
+
+.leaderColumnGeneratingLabel {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.leaderColumnGeneratingCopy {
+  font-size: 12px;
+  color: var(--text-3);
+  line-height: 1.6;
+}
+
+.deptsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding: 2px 0;
+}
+
+// -- IntroBar ------------------------------------------------------------
+
+.introBar {
+  padding: 6px 16px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 11px;
+  background: linear-gradient(
+    90deg,
+    rgba(232, 180, 74, 0.08),
+    rgba(76, 168, 168, 0.08)
+  );
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.introBody {
+  flex: 1;
+  color: var(--text-2);
+  line-height: 1.5;
+  min-width: 200px;
+}
+
+.introHeading {
+  color: var(--text-1);
+}
+
+.introExpandButton {
+  background: none;
+  border: none;
+  color: var(--amber);
+  cursor: pointer;
+  padding: 0;
+  font-size: 11px;
+  font-family: inherit;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+
+.introDismissButton {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-3);
+  padding: 2px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: var(--sans);
+  flex-shrink: 0;
+
+  &:hover {
+    color: var(--text-1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent, var(--amber));
+    outline-offset: 1px;
+  }
+}
+
+// -- Progress bar --------------------------------------------------------
+
+.progressBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background: var(--bg-deep);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.progressLabel {
+  color: var(--text-3);
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.progressTrack {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--vis), var(--eng));
+  transition: width 400ms ease-out;
+}
+
+.progressPercent {
+  color: var(--text-3);
+}
+
+// -- Empty / loading / connecting / launching states --------------------
+
+.centerState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+  background: var(--bg-deep);
+}
+
+.centerStateHeading {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-1);
+  margin-bottom: 8px;
+}
+
+.centerStateHeadingLarger {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-1);
+  margin-bottom: 12px;
+}
+
+.centerStateHeadingAmber {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--amber);
+  margin-bottom: 8px;
+}
+
+.centerStateCopy {
+  font-size: 13px;
+  color: var(--text-3);
+  max-width: 400px;
+  line-height: 1.7;
+}
+
+.centerStateCopyWide {
+  @extend .centerStateCopy;
+  max-width: 420px;
+  margin-bottom: 20px;
+}
+
+.centerStateSpinnerSmall {
+  width: 28px;
+  height: 28px;
+  border-width: 3px;
+  margin-bottom: 16px;
+}
+
+.centerStateSpinnerLarge {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+  margin-bottom: 16px;
+}
+
+.emptyStateActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.buttonRun {
+  background: linear-gradient(135deg, var(--rust), #c44a1e);
+  color: #fff;
+  border: none;
+  padding: 10px 28px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(224, 101, 48, 0.25);
+
+  &:disabled {
+    background: var(--bg-card);
+    color: var(--text-3);
+    border: 1px solid var(--border);
+    box-shadow: none;
+    cursor: wait;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent, var(--amber));
+    outline-offset: 2px;
+  }
+}
+
+.buttonLoad {
+  background: linear-gradient(135deg, var(--amber), #c8952e);
+  color: var(--bg-deep);
+  border: none;
+  padding: 10px 28px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(232, 180, 74, 0.25);
+
+  &:focus-visible {
+    outline: 2px solid var(--accent, var(--amber));
+    outline-offset: 2px;
+  }
+}
+
+.buttonSettings {
+  background: var(--bg-card);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+  padding: 10px 28px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--accent, var(--amber));
+    outline-offset: 2px;
+  }
+}
+
+.tourHint {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.tourLink {
+  background: none;
+  border: none;
+  color: var(--amber);
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tourAside {
+  margin-left: 6px;
+  color: var(--text-4);
+}
+
+.replayCtaWrap {
+  width: 100%;
+  max-width: 720px;
+  margin-top: 28px;
+  text-align: left;
+}
+
+// -- Sim columns + flash helper ------------------------------------------
+
+.simColumns {
+  display: flex;
+  flex: 1;
+  gap: 1px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.simColumnsHidden {
+  display: none;
+}
+
+// Scroll + flash helper used by the Load-Prior-Run button for the
+// LoadPriorRunsCTA card when the user clicks the empty-state button.
+// `transition` runs via React's setTimeout; this class holds the final
+// box-shadow that the JS toggles on.
+.flashCard {
+  transition: box-shadow 300ms ease-out;
+
+  &.flashOn {
+    box-shadow: 0 0 0 2px var(--amber, #e8b44a);
+  }
+}
