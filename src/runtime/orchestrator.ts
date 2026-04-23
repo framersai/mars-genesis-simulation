@@ -1,6 +1,10 @@
 import { writeRunOutput } from './output-writer.js';
 import { buildRunArtifact } from './build-artifact.js';
-import type { RunArtifact } from '../engine/schema/index.js';
+import type {
+  InterventionConfig,
+  RunArtifact,
+  SubjectConfig,
+} from '../engine/schema/index.js';
 import type { ITool } from '@framers/agentos';
 import {
   webSearchTool,
@@ -381,6 +385,18 @@ export interface RunOptions {
    * the partial results they already accumulated in the event buffer.
    */
   signal?: AbortSignal;
+  /**
+   * Subject being simulated (digital-twin digital twin, game
+   * character, etc.). Passed through verbatim to `RunArtifact.subject`.
+   * Turn-loop mode does not consume this semantically; future
+   * batch-trajectory executor will.
+   */
+  subject?: SubjectConfig;
+  /**
+   * Intervention being tested on the subject. Passed through verbatim to
+   * `RunArtifact.intervention`. Turn-loop ignores; batch modes consume.
+   */
+  intervention?: InterventionConfig;
 }
 
 export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPersonnel[], opts: RunOptions = {}): Promise<RunArtifact> {
@@ -1871,6 +1887,8 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
         }
       : null,
     aborted: externallyAborted,
+    subject: opts.subject,
+    intervention: opts.intervention,
     scenarioExtensionsExtra: {
       paracosmInternal: {
         simulation: `${sc.id}-v3`,
