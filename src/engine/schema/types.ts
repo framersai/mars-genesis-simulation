@@ -19,6 +19,7 @@ import type {
   DecisionOutcomeSchema,
   DecisionSchema,
   HighlightMetricSchema,
+  InterventionConfigSchema,
   ProviderErrorSchema,
   RiskFlagSchema,
   RunMetadataSchema,
@@ -27,6 +28,9 @@ import type {
   SimulationModeSchema,
   SpecialistDetailSchema,
   SpecialistNoteSchema,
+  SubjectConfigSchema,
+  SubjectMarkerSchema,
+  SubjectSignalSchema,
   TimepointSchema,
   TrajectoryPointSchema,
   TrajectorySchema,
@@ -55,6 +59,12 @@ export type DecisionOutcome = z.infer<typeof DecisionOutcomeSchema>;
 export type Decision = z.infer<typeof DecisionSchema>;
 export type Cost = z.infer<typeof CostSchema>;
 export type ProviderError = z.infer<typeof ProviderErrorSchema>;
+
+// Subject + Intervention input primitives
+export type SubjectSignal = z.infer<typeof SubjectSignalSchema>;
+export type SubjectMarker = z.infer<typeof SubjectMarkerSchema>;
+export type SubjectConfig = z.infer<typeof SubjectConfigSchema>;
+export type InterventionConfig = z.infer<typeof InterventionConfigSchema>;
 
 // ---------------------------------------------------------------------------
 // Artifact

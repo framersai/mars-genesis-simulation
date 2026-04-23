@@ -78,4 +78,8 @@ export type {
   ForgedToolSummary,
   RunArtifact,
   StreamEvent,
+  SubjectSignal,
+  SubjectMarker,
+  SubjectConfig,
+  InterventionConfig,
 } from './types.js';
