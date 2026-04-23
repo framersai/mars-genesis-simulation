@@ -37,8 +37,16 @@ const DEFAULT_CACHE_DIR = '.paracosm/cache';
  *   agent core swaps `birthYear`/`deathYear` for `birthTime`/
  *   `deathTime`. Every cached hook references the old names and must
  *   regenerate (one-time ~$0.10 per previously-compiled scenario).
+ * - v5 (2026-04-23): Compiler prompt hardening. Every generator's
+ *   system prompt now declares the flat state shape with exact
+ *   scenario-declared key lists; smokeTest fixtures derived from the
+ *   scenario's own world.* bags instead of hardcoded Mars defaults.
+ *   Pre-v5 cached hooks were generated under looser prompts and may
+ *   reference nested state paths (e.g. state.systems.hull.integrity)
+ *   that throw at runtime. Regenerate to pick up the tightened
+ *   contract (one-time ~$0.10 per previously-compiled scenario).
  */
-export const COMPILE_SCHEMA_VERSION = 4;
+export const COMPILE_SCHEMA_VERSION = 5;
 
 /** SHA-256 hash of the scenario JSON, used for cache invalidation. */
 export function hashScenario(scenarioJson: Record<string, unknown>): string {

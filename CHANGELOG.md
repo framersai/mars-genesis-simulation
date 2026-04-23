@@ -2,6 +2,30 @@
 
 All notable changes to paracosm are documented here. Format follows the spirit of [Keep a Changelog](https://keepachangelog.com/), grouped by major.minor version. Each `0.M.<run_number>` npm publish rolls into the matching major.minor entry. Per-publish detail lives in each [GitHub Release](https://github.com/framersai/paracosm/releases).
 
+## 0.7.1 (2026-04-23) — compiler prompt hardening
+
+Internal-only improvement. The scenario compiler's LLM generators now declare the flat state-shape contract explicitly in every system prompt and validate hooks against fixtures derived from the scenario's own `world.*` declarations. No public API surface changes.
+
+### What changed
+
+- New `src/engine/compiler/scenario-fixture.ts`: `buildScenarioFixture(scenarioJson)` builds a `SimulationState`-shaped object populated from the scenario's declared metrics/capacities/statuses/politics/environment bags. Used by `generate-prompts.ts` + `generate-fingerprint.ts` smokeTests.
+- New `src/engine/compiler/state-shape-block.ts`: shared "AVAILABLE STATE SHAPE" block rendered into every state-accessing generator's system prompt. Lists exact keys per bag, asserts the flat `Record<string, T>` contract, tells the LLM not to hallucinate nested paths.
+- `generate-politics.ts` / `generate-reactions.ts` / `generate-milestones.ts` prompts gain the scenario's `timeUnitNoun` vocabulary so generated strings no longer hardcode "year"/"years" for non-year scenarios.
+- `generate-reactions.ts` fixes the pre-F23 "START YEAR" prompt label (drops the 2035 fallback) to "START TIME".
+- Retry-feedback behavior in `generateValidatedCode` is unchanged (already in place via `buildRetryPrompt`). New tests in `tests/engine/compiler/retry-feedback.test.ts` lock the behavior in.
+
+### Why
+
+A consumer hit `TypeError: undefined is not an object (evaluating 'ctx.state.systems.hull.integrity')` at runtime because a generated department prompt hook assumed nested structure on `state.systems`. The hardening makes that specific failure class structurally impossible: every prompt lists the exact flat keys, and every state-accessing generator's smokeTest uses a fixture populated from those same declarations, so a hook that references a nonexistent or nested path fails validation at compile time and either retries (with the failure message appended to the retry prompt) or falls back to a safe no-op.
+
+### Cache invalidation
+
+`COMPILE_SCHEMA_VERSION` bumps 4 → 5. Cached compiled-scenario hooks from 0.6.x / 0.7.0 regenerate on next `compileScenario()` call (one-time ~$0.10 per previously-compiled scenario per user).
+
+### Rollback
+
+`git revert` the 5 commits (spec, plan, helper+tests, wire-into-generators, retry-tests, cache bump). Cached hooks on user disks regenerate harmlessly on next compile.
+
 ## 0.7.0 (2026-04-23)
 
 F23 generic time-units rename. Retires the last Mars-ism from the public type system. `year` becomes `time` across scenario setup, simulation metadata, event payloads, hook contexts, and agent cores. Scenarios whose natural cadence is not yearly (hour-granular habitats, quarterly corporate strategy, real-time arena benchmarks) no longer have to pretend. Mars and Lunar continue to display year-unit copy through the new additive `labels.timeUnitNoun` field.
