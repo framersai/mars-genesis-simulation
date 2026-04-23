@@ -94,26 +94,29 @@ bounded collective under a leader's decisions.
 }
 ```
 
-> **Terminology — `labels.populationNoun` + `settlementNoun`**
+> **Terminology — `labels.populationNoun` + `settlementNoun` + `timeUnitNoun`**
 >
-> The engine defaults to **`colonists` / `colony`** (Mars-flavoured) when a scenario omits these
-> fields, but every scenario can — and should — override them. The dashboard uses the overridden
+> The engine defaults to **`colonists` / `colony` / `tick`** when a scenario omits these
+> fields, but every scenario can and should override them. The dashboard uses the overridden
 > nouns throughout: help legends, roster headers, empty states, screen-reader text, the viz tab,
 > report summaries. A handful of examples:
 >
-> | Scenario       | `settlementNoun` | `populationNoun` |
-> |----------------|------------------|------------------|
-> | Mars Genesis   | `colony`         | `colonists`      |
-> | Submarine      | `habitat`        | `crew`           |
-> | Medieval       | `kingdom`        | `subjects`       |
-> | Corporate      | `company`        | `employees`      |
-> | Space Station  | `station`        | `operators`      |
-> | Generation Ship| `vessel`         | `passengers`     |
+> | Scenario          | `settlementNoun` | `populationNoun` | `timeUnitNoun` |
+> |-------------------|------------------|------------------|----------------|
+> | Mars Genesis      | `colony`         | `colonists`      | `year`         |
+> | Submarine (daily) | `habitat`        | `crew`           | `day`          |
+> | Medieval          | `kingdom`        | `subjects`       | `year`         |
+> | Corporate         | `company`        | `employees`      | `quarter`      |
+> | Space Station     | `station`        | `operators`      | `year`         |
+> | Generation Ship   | `vessel`         | `passengers`     | `year`         |
+> | Benchmark Arena   | `session`        | `agents`         | `tick`         |
 >
 > `populationNoun` is the **plural** form; the dashboard derives the singular (`colonists` →
 > `colonist`) and capitalised variants automatically. `settlementNoun` is **singular** (`colony`,
-> not `colonies`). Paracosm the engine is an "AI agent swarm" at the meta layer; what it simulates
-> inside each run is scenario-flavoured via these fields.
+> not `colonies`). `timeUnitNoun` is **singular** and pairs with `timeUnitNounPlural` for
+> grammatical display; both are optional and fall back to `tick` / `ticks`. Paracosm the engine
+> is an "AI agent swarm" at the meta layer; what it simulates inside each run is scenario-
+> flavoured via these fields.
 
 ### 2. Compile and run
 
@@ -192,7 +195,7 @@ Each call to `runSimulation` takes one leader. Run one, two, or twenty. The dash
 
 ### The universal result contract
 
-Every simulation returns a `RunArtifact` — one universal Zod-validated shape exported from `paracosm/schema`. The same shape covers civilization sims (turn-loop), digital-twin digital-twin simulations (batch-trajectory), and one-shot forecasts (batch-point).
+Every simulation returns a `RunArtifact` — one universal Zod-validated shape exported from `paracosm/schema`. The same shape covers civilization sims (turn-loop), digital-twin simulations (batch-trajectory), and one-shot forecasts (batch-point).
 
 ```typescript
 import { RunArtifactSchema, type RunArtifact } from 'paracosm/schema';
@@ -248,7 +251,7 @@ const artifact = await runSimulation(leader, [], { scenario, maxTurns: 6, subjec
 // artifact.subject + artifact.intervention carry through to any consumer
 ```
 
-Turn-loop mode stashes both verbatim without semantic consumption; external batch-trajectory executors (digital-twin LangGraph pipelines) populate them from their own flow. Full adoption worked example at [docs/adoption/digital-twin.md](docs/adoption/digital-twin.md).
+Turn-loop mode stashes both verbatim without semantic consumption; external batch-trajectory executors (LangGraph-style pipelines) populate them from their own flow.
 
 ### 3. Or use the dashboard
 
@@ -567,6 +570,68 @@ The Event Director also receives the bundle's `topics` and `categories`, so its 
 
 Both are included as `paracosm/mars` and `paracosm/lunar` exports. Use them as references for building your own scenarios.
 
+### Any domain, any time unit
+
+The engine is time-unit agnostic. `setup.defaultStartTime` and `setup.defaultTimePerTurn` are plain numbers; whether they mean years, quarters, hours, or ticks is decided by your `labels.timeUnitNoun` pair. The kernel, hooks, and dashboard labels pick that up consistently. Four worked shapes:
+
+```jsonc
+// A) Corporate strategy — quarterly cadence over 3 years
+{
+  "id": "corp-strategy",
+  "labels": {
+    "name": "Q-Scope Corp",
+    "populationNoun": "employees",
+    "settlementNoun": "company",
+    "timeUnitNoun": "quarter",
+    "timeUnitNounPlural": "quarters"
+  },
+  "setup": { "defaultTurns": 12, "defaultStartTime": 1, "defaultTimePerTurn": 1, "defaultPopulation": 40 }
+}
+
+// B) Submarine patrol — daily cadence over six months
+{
+  "id": "submarine-daily",
+  "labels": {
+    "name": "USS Longwatch",
+    "populationNoun": "crew",
+    "settlementNoun": "submarine",
+    "timeUnitNoun": "day",
+    "timeUnitNounPlural": "days"
+  },
+  "setup": { "defaultTurns": 24, "defaultStartTime": 1, "defaultTimePerTurn": 7, "defaultPopulation": 60 }
+}
+
+// C) Benchmark arena — abstract tick cadence
+{
+  "id": "arena-session",
+  "labels": {
+    "name": "Latency Arena",
+    "populationNoun": "agents",
+    "settlementNoun": "session",
+    "timeUnitNoun": "tick",
+    "timeUnitNounPlural": "ticks"
+  },
+  "setup": { "defaultTurns": 50, "defaultStartTime": 0, "defaultTimePerTurn": 1, "defaultPopulation": 8 }
+}
+
+// D) Mars Genesis — year cadence (the built-in reference)
+{
+  "id": "mars-genesis",
+  "labels": {
+    "name": "Mars Genesis",
+    "populationNoun": "colonists",
+    "settlementNoun": "colony",
+    "timeUnitNoun": "year",
+    "timeUnitNounPlural": "years"
+  },
+  "setup": { "defaultTurns": 6, "defaultSeed": 950, "defaultStartTime": 2035, "defaultTimePerTurn": 8 }
+}
+```
+
+All four run through the same `compileScenario()` + `runSimulation()` pipeline. The progression hook receives `ctx.time` and `ctx.timeDelta` in whatever unit the scenario declared. The dashboard's turn header reads `"Quarter 5"`, `"Day 22"`, `"Tick 30"`, or `"Year 2043"` straight from `labels.timeUnitNoun`.
+
+If you omit `timeUnitNoun`, paracosm falls back to `tick` / `ticks`. The built-in `paracosm/mars` and `paracosm/lunar` exports set theirs to `year` / `years` explicitly so Mars narrative reads naturally.
+
 ## How a Simulation Works
 
 ### Turn 0: Promotions
@@ -577,7 +642,7 @@ This matters because promoted agents become the department analysis LLM agents f
 
 ### Turns 1-N: The Turn Loop
 
-Each turn represents a configurable time period (default ~4 years). Every turn follows this pipeline:
+Each turn represents a configurable time period. Mars and Lunar tick in years (Mars at 8 per turn, Lunar at 4). A quarterly corporate scenario ticks in quarters. A daily submarine scenario ticks in days. The cadence is whatever `setup.defaultTimePerTurn` plus `labels.timeUnitNoun` declare. Every turn follows this pipeline:
 
 ```
 1. EVENT DIRECTOR    Reads world state, prior decisions, tool intelligence.

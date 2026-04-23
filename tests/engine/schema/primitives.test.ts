@@ -250,7 +250,7 @@ test('SpecialistNoteSchema accepts thick paracosm-style note (with detail)', () 
 // RiskFlag
 // ---------------------------------------------------------------------------
 
-test('RiskFlagSchema accepts digital-twin-compatible shape', () => {
+test('RiskFlagSchema accepts digital-twin shape', () => {
   const flag = { label: 'Stimulant load', severity: 'medium', detail: 'COMT slow metabolizer.' };
   assert.equal(RiskFlagSchema.safeParse(flag).success, true);
 });

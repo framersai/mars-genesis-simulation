@@ -387,8 +387,8 @@ export interface RunOptions {
    */
   signal?: AbortSignal;
   /**
-   * Subject being simulated (digital-twin digital twin, game
-   * character, etc.). Passed through verbatim to `RunArtifact.subject`.
+   * Subject being simulated (digital-twin person, game character,
+   * etc.). Passed through verbatim to `RunArtifact.subject`.
    * Turn-loop mode does not consume this semantically; future
    * batch-trajectory executor will.
    */
