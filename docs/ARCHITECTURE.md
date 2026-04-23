@@ -353,7 +353,7 @@ import { RunArtifactSchema, StreamEventSchema, type RunArtifact } from 'paracosm
 **Mode discriminator on `metadata.mode`:**
 
 - `turn-loop` — paracosm civ-sims. Populates `trajectory.timepoints[]`, `decisions[]`, per-turn specialist notes.
-- `batch-trajectory` — digital-twin digital twins. Populates `trajectory.timepoints[]` as a forecast + specialist notes + risk flags.
+- `batch-trajectory` — digital-twin simulations. Populates `trajectory.timepoints[]` as a forecast + specialist notes + risk flags.
 - `batch-point` — one-shot forecast. Overview + risk flags, no trajectory.
 
 **`StreamEvent`** is a 17-variant discriminated union over every SSE event type the runtime emits (`turn_start`, `event_start`, `specialist_start`, `specialist_done`, `forge_attempt`, `decision_pending`, `decision_made`, `outcome`, `personality_drift`, `agent_reactions`, `bulletin`, `turn_done`, `promotion`, `systems_snapshot`, `provider_error`, `validation_fallback`, `sim_aborted`).

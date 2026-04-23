@@ -15,7 +15,7 @@
  *     digital-twin `genome_signals`, game `inventoryState`). Typed `unknown`
  *     so consumers narrow explicitly.
  *  3. Explicit bounds metadata on numerics (see {@link ScoreSchema}).
- *     Rejects digital-twin's hardcoded 0-100 health_score.
+ *     Rejects hardcoded 0-100 score assumptions from other vocabularies.
  *  4. Thin required core + optional thick detail. See
  *     {@link SpecialistNoteSchema} for the core/detail split.
  *  5. Visual hints (`color`, `icon`) are optional — data contract, not
@@ -31,9 +31,9 @@ import { z } from 'zod';
 
 /**
  * Escape-hatch bag for scenario-specific fields that don't belong on a
- * universal primitive (e.g., Mars radiation dose, digital-twin genome markers,
- * game inventory state). Universal consumers ignore it; scenario-aware
- * consumers narrow the `unknown` values explicitly.
+ * universal primitive (e.g., Mars radiation dose, digital-twin genome
+ * markers, game inventory state). Universal consumers ignore it;
+ * scenario-aware consumers narrow the `unknown` values explicitly.
  */
 export const ScenarioExtensionsSchema = z.record(z.string(), z.unknown()).optional();
 
@@ -47,7 +47,7 @@ export const ScenarioExtensionsSchema = z.record(z.string(), z.unknown()).option
  * - `turn-loop`: iterative, turn-by-turn, state carries forward. Paracosm's
  *   civ-sim shape. Always populates `trajectory.timepoints` + `decisions`.
  * - `batch-trajectory`: one-shot LLM synthesis emitting labeled timepoints
- *   in a single call. Digital-twin-style digital-twin shape. Populates
+ *   in a single call. Digital-twin shape. Populates
  *   `trajectory.timepoints` + `specialistNotes` + `riskFlags`.
  * - `batch-point`: one-shot summary without trajectory. Pure forecast or
  *   overview-only output. Populates `specialistNotes` + `riskFlags` only.
@@ -63,7 +63,7 @@ export const RunMetadataSchema = z.object({
     /** Scenario version; not artifact version. Optional. */
     version: z.string().optional(),
   }),
-  /** Absent for non-deterministic runs (digital-twin LLM-only synthesis). */
+  /** Absent for non-deterministic runs (LLM-only synthesis without a seeded kernel). */
   seed: z.number().int().optional(),
   mode: SimulationModeSchema,
   startedAt: z.string().datetime(),
@@ -99,7 +99,7 @@ export const WorldSnapshotSchema = z.object({
 // ---------------------------------------------------------------------------
 
 /**
- * Score with explicit bounds. Digital-twin's hardcoded `health_score: [0, 100]`
+ * Score with explicit bounds. A digital-twin "health score" on [0, 100]
  * becomes `{ value: 72, min: 0, max: 100, label: 'Health Score' }`. A
  * kingdom-prosperity sim uses `{ value: -3, min: -10, max: 10, label: 'Realm Stability' }`.
  */
@@ -133,19 +133,18 @@ export const HighlightMetricSchema = z.object({
 // ---------------------------------------------------------------------------
 
 /**
- * Labeled snapshot with prose + score + highlight metrics. Works for
- * digital-twin's 5-timepoint forecast AND paracosm's per-turn snapshots.
+ * Labeled snapshot with prose + score + highlight metrics. Works for a
+ * short digital-twin forecast AND paracosm's per-turn snapshots.
  *
- * No hardcoded count of timepoints (digital-twin's `.length(5)` is dropped);
- * no hardcoded count of highlight metrics (digital-twin's `.length(3)` dropped);
- * no hardcoded score bounds.
+ * No hardcoded count of timepoints, no hardcoded count of highlight
+ * metrics, no hardcoded score bounds. Scenario declares shape.
  */
 export const TimepointSchema = z.object({
   /** Scenario time-units. Post-F23 generic (not "year"). */
   time: z.number(),
   /** Display label: `"Now"`, `"2 Weeks"`, `"Turn 3"`, `"Year 2043"`. */
   label: z.string().min(1),
-  /** Prose description. Replaces digital-twin's `body_description`. */
+  /** Prose description for the snapshot. */
   narrative: z.string().optional(),
   score: ScoreSchema.optional(),
   highlightMetrics: z.array(HighlightMetricSchema).optional(),
@@ -211,8 +210,8 @@ export const CitationSchema = z.object({
 /**
  * Optional thick detail for paracosm department-style rich reports. When
  * a scenario populates `SpecialistNote.detail`, consumers get the full
- * risks + opportunities + actions + citations drill-down. Digital-twin-style
- * thin specialist notes leave it undefined.
+ * risks + opportunities + actions + citations drill-down. Thin specialist
+ * notes (single-turn digital-twin forecasts, etc.) leave it undefined.
  */
 export const SpecialistDetailSchema = z.object({
   risks: z.array(z.object({
@@ -243,7 +242,8 @@ export const SpecialistNoteSchema = z.object({
 // ---------------------------------------------------------------------------
 
 /**
- * Field-for-field compat with digital-twin's `SimulationRiskFlag`.
+ * Risk callout with severity. Matches the typical digital-twin
+ * `{ label, severity, detail }` shape.
  */
 export const RiskFlagSchema = z.object({
   label: z.string().min(1),
@@ -311,8 +311,8 @@ export const SubjectMarkerSchema = z.object({
 
 /**
  * Identity + context for the subject of a simulation. Domain-agnostic:
- * digital-twin = person (profile + genome + biometrics); game = character
- * (traits + inventory); ecology = organism; fleet ops = vessel.
+ * digital-twin = person (profile + genome + biometrics); game =
+ * character (traits + inventory); ecology = organism; fleet ops = vessel.
  *
  * `profile` is a free-form `Record<string, unknown>` — consumers narrow
  * to a scenario-specific sub-schema when they need stronger typing.

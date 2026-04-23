@@ -72,7 +72,7 @@ export const ForgedToolSummarySchema = z.object({
  * }
  * ```
  *
- * @example batch-trajectory (digital-twin digital-twin)
+ * @example batch-trajectory (digital-twin)
  * ```ts
  * {
  *   metadata: { runId, scenario, mode: 'batch-trajectory', startedAt, completedAt },
@@ -109,7 +109,7 @@ export const RunArtifactSchema = z.object({
   // -----------------------------------------------------------------------
 
   /**
-   * Short headline summary. Digital-twin's `overview`, paracosm verdict's
+   * Short headline summary. Digital-twin `overview`, paracosm verdict's
    * `summary`, a game's end-of-run narrator line.
    */
   overview: z.string().optional(),
@@ -117,7 +117,7 @@ export const RunArtifactSchema = z.object({
   assumptions: z.array(z.string()).optional(),
   /** Actionable leverage points for consumers of the artifact. */
   leveragePoints: z.array(z.string()).optional(),
-  /** Scenario-supplied disclaimer (digital-twin uses this for medical caveats). */
+  /** Scenario-supplied disclaimer (digital-twin simulations use this for medical / professional caveats). */
   disclaimer: z.string().optional(),
 
   // -----------------------------------------------------------------------
@@ -147,7 +147,7 @@ export const RunArtifactSchema = z.object({
 
   /** Specialist analyses across domains. Flat list; multiple entries per domain/turn OK. */
   specialistNotes: z.array(SpecialistNoteSchema).optional(),
-  /** Risk callouts. Matches digital-twin's `risk_flags`. */
+  /** Risk callouts. Maps to digital-twin `risk_flags` after camelCase rename. */
   riskFlags: z.array(RiskFlagSchema).optional(),
   /** Every decision made during the run — one per commander choice in turn-loop. */
   decisions: z.array(DecisionSchema).optional(),

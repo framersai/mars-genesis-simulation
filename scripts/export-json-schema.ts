@@ -5,8 +5,8 @@
  *   - schema/run-artifact.schema.json
  *   - schema/stream-event.schema.json
  *
- * Consumed by digital-twin (Python + `datamodel-codegen`) and any other
- * language ecosystem that generates types from JSON Schema.
+ * Consumed by any language ecosystem that generates types from JSON
+ * Schema (Python via `datamodel-codegen`, Go via `quicktype`, etc.).
  *
  * Uses Zod v4's native `z.toJSONSchema()` — no third-party converter dep.
  *

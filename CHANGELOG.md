@@ -63,7 +63,7 @@ console.log(result.metadata.currentTime, result.metadata.startTime);
 
 ## 0.6.0 (2026-04-22)
 
-Universal JSON result schema. `runSimulation()` now returns `Promise<RunArtifact>` — one Zod-validated shape covering civilization sims (turn-loop), digital-twin simulations (batch-trajectory), and one-shot forecasts (batch-point). Public primitives + schemas live under the new `paracosm/schema` subpath export. Digital-twin's `SimulationResponse` maps 1:1 via field rename. Five SSE event types renamed for consistency with the primitive vocabulary.
+Universal JSON result schema. `runSimulation()` now returns `Promise<RunArtifact>` — one Zod-validated shape covering civilization sims (turn-loop), digital-twin simulations (batch-trajectory), and one-shot forecasts (batch-point). Public primitives + schemas live under the new `paracosm/schema` subpath export. Five SSE event types renamed for consistency with the primitive vocabulary.
 
 ### Breaking Changes
 
@@ -89,10 +89,10 @@ Universal JSON result schema. `runSimulation()` now returns `Promise<RunArtifact
 - mode discriminator `metadata.mode: 'turn-loop' | 'batch-trajectory' | 'batch-point'` so consumers pattern-match cleanly
 - `scenarioExtensions?: Record<string, unknown>` escape hatch on every primitive for domain-specific payloads
 - `npm run export:json-schema` emits `schema/run-artifact.schema.json` + `schema/stream-event.schema.json` for non-TS consumers via Zod v4's native `toJSONSchema()`
-- digital-twin `SimulationResponse` shape-compat: renaming `timepoints` → `trajectory.timepoints`, `leverage_points` → `leveragePoints`, `risk_flags` → `riskFlags`, `specialist_notes` → `specialistNotes`, `health_score: int` → `score: { value, min: 0, max: 100, label }`, `body_description` → `narrative` produces a valid `batch-trajectory` artifact
+- external digital-twin shape-compat: renaming `timepoints` → `trajectory.timepoints`, `leverage_points` → `leveragePoints`, `risk_flags` → `riskFlags`, `specialist_notes` → `specialistNotes`, `health_score: int` → `score: { value, min: 0, max: 100, label }`, `body_description` → `narrative` produces a valid `batch-trajectory` artifact
 - runtime validator `emitStreamEvent()` parses SSE events against `StreamEventSchema` in dev (`NODE_ENV !== 'production'`) so malformed payloads throw at the emit site instead of surfacing as dashboard reducer crashes
 - dashboard SSE ingress aliases new event type names back to legacy names so internal reducers + viz components keep working without the full rename
-- `SubjectConfig` + `InterventionConfig` input primitives under `paracosm/schema` (additive; no breaking change). `SubjectConfig` carries id + name + optional profile / signals / markers / personality / conditions; `InterventionConfig` carries id + name + description + optional category / mechanism / targetBehaviors / duration / adherenceProfile. Threaded through `RunOptions` → `buildRunArtifact` → `RunArtifact.subject` / `RunArtifact.intervention` (both optional). Turn-loop mode stashes them verbatim without semantic consumption; batch-trajectory / batch-point modes (external executors) populate them from their own pipelines. See [docs/adoption/digital-twin.md](docs/adoption/digital-twin.md) for the digital-twin worked example.
+- `SubjectConfig` + `InterventionConfig` input primitives under `paracosm/schema` (additive; no breaking change). `SubjectConfig` carries id + name + optional profile / signals / markers / personality / conditions; `InterventionConfig` carries id + name + description + optional category / mechanism / targetBehaviors / duration / adherenceProfile. Threaded through `RunOptions` → `buildRunArtifact` → `RunArtifact.subject` / `RunArtifact.intervention` (both optional). Turn-loop mode stashes them verbatim without semantic consumption; batch-trajectory / batch-point modes (external executors) populate them from their own pipelines.
 
 ### Migration
 
