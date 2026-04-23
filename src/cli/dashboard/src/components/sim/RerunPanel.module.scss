@@ -1,0 +1,53 @@
+// RerunPanel styles. Renders as a single-row epilogue at the bottom of
+// SimView when a sim has completed, offering a one-click rerun with
+// seed+1.
+
+.panel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.label {
+  color: var(--text-3);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.copy {
+  color: var(--text-2);
+}
+
+.button {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, var(--rust), #c44a1e);
+  color: white;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    filter: brightness(1.08);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent, var(--amber));
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: none;
+  }
+}

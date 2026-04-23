@@ -11,7 +11,9 @@ import { EventCard } from './EventCard';
 import { DivergenceRail } from './DivergenceRail';
 import { Timeline } from './Timeline';
 import { SimFooterBar } from './SimFooterBar';
+import { RerunPanel } from './RerunPanel';
 import { LoadPriorRunsCTA } from '../settings/LoadPriorRunsCTA';
+import styles from './SimView.module.scss';
 
 interface SimViewProps {
   state: GameState;
@@ -49,19 +51,20 @@ function LeaderColumn({ leaderIndex, sideState, state }: { leaderIndex: number; 
 
   return (
     <section
-      style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: 'var(--bg-deep)', overflow: 'hidden' }}
+      className={styles.leaderColumn}
+      style={{ ['--leader-color' as string]: sideColor }}
       aria-label={`${sideState.leader?.name || sideLabel} events`}
     >
       <TurnEventHeader leaderIndex={leaderIndex} event={sideState.event} />
 
-      <div ref={scrollRef} onScroll={onScroll} style={{ flex: 1, overflowY: 'auto', padding: '4px 8px', display: 'flex', flexDirection: 'column', gap: '1px' }}>
+      <div ref={scrollRef} onScroll={onScroll} className={styles.leaderColumnScroll}>
         {!isWaiting && sideState.events.length === 0 && state.isRunning && (
-          <div style={{ color: 'var(--text-3)', fontSize: '12px', padding: '16px 12px' }} role="status">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <span className="spinner" style={{ borderTopColor: sideColor }} />
-              <span style={{ fontFamily: 'var(--mono)', fontSize: '12px', fontWeight: 600, color: 'var(--text-2)' }}>Generating event...</span>
+          <div className={styles.leaderColumnGeneratingBlock} role="status">
+            <div className={styles.leaderColumnGeneratingHead}>
+              <span className={`spinner ${styles.leaderColumnGeneratingSpinner}`} />
+              <span className={styles.leaderColumnGeneratingLabel}>Generating event...</span>
             </div>
-            <div style={{ fontSize: '12px', color: 'var(--text-3)', lineHeight: 1.6 }}>
+            <div className={styles.leaderColumnGeneratingCopy}>
               The Event Director is reading simulation state to generate an event targeting current weaknesses.
             </div>
           </div>
@@ -83,7 +86,7 @@ function LeaderColumn({ leaderIndex, sideState, state }: { leaderIndex: number; 
               renderedDeptTurns.add(event.turn);
               const group = deptsByTurn.get(event.turn) || [event];
               return (
-                <div key={`depts-${event.turn}`} style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', padding: '2px 0' }}>
+                <div key={`depts-${event.turn}`} className={styles.deptsRow}>
                   {group.map(e => <EventCard key={e.id} event={e} leaderIndex={leaderIndex} />)}
                 </div>
               );
@@ -108,15 +111,10 @@ function IntroBar({ onDismiss }: { onDismiss: () => void }) {
     <div
       role="region"
       aria-label="How to read the simulation"
-      style={{
-        padding: '6px 16px', display: 'flex', alignItems: 'baseline', gap: '12px', fontSize: '11px',
-        background: 'linear-gradient(90deg, rgba(232,180,74,.08), rgba(76,168,168,.08))',
-        borderBottom: '1px solid var(--border)',
-        flexWrap: 'wrap',
-      }}
+      className={styles.introBar}
     >
-      <div style={{ flex: 1, color: 'var(--text-2)', lineHeight: 1.5, minWidth: 200 }}>
-        <b style={{ color: 'var(--text-1)' }}>How to read this:</b>{' '}
+      <div className={styles.introBody}>
+        <b className={styles.introHeading}>How to read this:</b>{' '}
         {expanded ? (
           <>
             Two commanders with opposing HEXACO profiles run the same seed. Left is Leader A (amber), right is Leader B (teal). Each turn, departments analyze in parallel and may forge a new computational tool in a V8 sandbox or reuse an existing one. Commanders decide. The settlement diverges. Click any tile in Viz to drill into a colonist; click any forge card to inspect the generated code.
@@ -126,11 +124,7 @@ function IntroBar({ onDismiss }: { onDismiss: () => void }) {
             two commanders, one seed, divergent histories. HEXACO shapes every LLM call.{' '}
             <button
               onClick={() => setExpanded(true)}
-              style={{
-                background: 'none', border: 'none', color: 'var(--amber)',
-                cursor: 'pointer', padding: 0, fontSize: '11px', fontFamily: 'inherit',
-                textDecoration: 'underline', textDecorationStyle: 'dotted',
-              }}
+              className={styles.introExpandButton}
             >
               more
             </button>
@@ -139,11 +133,7 @@ function IntroBar({ onDismiss }: { onDismiss: () => void }) {
       </div>
       <button
         onClick={onDismiss}
-        style={{
-          background: 'none', border: '1px solid var(--border)', color: 'var(--text-3)',
-          padding: '2px 10px', borderRadius: '3px', cursor: 'pointer',
-          fontSize: '10px', fontFamily: 'var(--sans)', flexShrink: 0,
-        }}
+        className={styles.introDismissButton}
         aria-label="Dismiss introduction"
       >
         Got it
@@ -204,29 +194,69 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
     ? `T${eventA.turn} \u2014 ${eventA.year}: ${eventA.title}`
     : '';
 
+  const verdictPlacementFor = useMemo(() => {
+    const w = verdict && typeof verdict === 'object' ? (verdict as Record<string, unknown>).winner : null;
+    return (side: 'A' | 'B'): 'winner' | 'second' | 'tie' | null => {
+      if (w === 'tie') return 'tie';
+      if (w === side) return 'winner';
+      if (w === 'A' || w === 'B') return 'second';
+      return null;
+    };
+  }, [verdict]);
+
+  const progressPercent = state.maxTurns > 0
+    ? Math.min(100, Math.max(0, (state.turn / state.maxTurns) * 100))
+    : 0;
+
+  const handleScrollToReplayCta = useCallback(() => {
+    // Prior UX tried to programmatically click the TopBar LOAD
+    // dropdown. That dropdown opens at the top of the screen while
+    // the user is looking at the empty state in the middle, so the
+    // click registered as "nothing happened" from the user's POV.
+    //
+    // Instead, scroll to the WATCH A PRIOR RUN card directly below.
+    const cta = document.querySelector<HTMLElement>(
+      '[data-paracosm-replay-cta="true"]',
+    );
+    if (!cta) return;
+    cta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Flash the card border so the user's eye catches the landing
+    // spot (scroll alone is easy to miss on a long empty state).
+    cta.classList.add(styles.flashOn);
+    window.setTimeout(() => cta.classList.remove(styles.flashOn), 1200);
+  }, []);
+
+  const handleGoToSettings = useCallback(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', 'settings');
+    window.history.replaceState({}, '', url.toString());
+    window.location.reload();
+  }, []);
+
+  const columnsVisible = state.isRunning || state.isComplete || hasEvents || sseStatus === 'connected';
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div className={styles.root}>
       {/* Shared leaders row. Winner/tie/second chip on each card
           surfaces the verdict even before the user scrolls down to
-          the banner card. Only rendered when the verdict LLM has
-          produced a final winner call. */}
-      {(() => {
-        const w = verdict && typeof verdict === 'object' ? (verdict as Record<string, unknown>).winner : null;
-        const placementA: 'winner' | 'second' | 'tie' | null =
-          w === 'A' ? 'winner' : w === 'B' ? 'second' : w === 'tie' ? 'tie' : null;
-        const placementB: 'winner' | 'second' | 'tie' | null =
-          w === 'B' ? 'winner' : w === 'A' ? 'second' : w === 'tie' ? 'tie' : null;
-        return (
-          <div className="leaders-row" style={{ display: 'flex', gap: '1px', background: 'var(--border)' }}>
-            <LeaderBar leaderIndex={0} leader={sideA?.leader || presetLeaderA} popHistory={sideA?.popHistory || []} moraleHistory={sideA?.moraleHistory || []} verdictPlacement={placementA} />
-            <LeaderBar leaderIndex={1} leader={sideB?.leader || presetLeaderB} popHistory={sideB?.popHistory || []} moraleHistory={sideB?.moraleHistory || []} verdictPlacement={placementB} />
-          </div>
-        );
-      })()}
+          the banner card. */}
+      <div className={`leaders-row ${styles.leadersRow}`}>
+        <LeaderBar
+          leaderIndex={0}
+          leader={sideA?.leader || presetLeaderA}
+          popHistory={sideA?.popHistory || []}
+          moraleHistory={sideA?.moraleHistory || []}
+          verdictPlacement={verdictPlacementFor('A')}
+        />
+        <LeaderBar
+          leaderIndex={1}
+          leader={sideB?.leader || presetLeaderB}
+          popHistory={sideB?.popHistory || []}
+          moraleHistory={sideB?.moraleHistory || []}
+          verdictPlacement={verdictPlacementFor('B')}
+        />
+      </div>
 
-      {/* Shared stats row. Cost + leader-name props were dropped from
-          StatsBar when the cost breakdown moved to its own modal; the
-          component ignored them even at runtime, so stop passing them. */}
       <StatsBar
         leaders={state.leaderIds.slice(0, 2).map(id => ({ id, state: state.leaders[id] }))}
         crisisText={crisisText}
@@ -234,33 +264,17 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
       />
 
       {/* Slim sim-progress bar. Visible while the run is active and
-          hides on completion. Percentage derives from state.turn vs
-          state.maxTurns, which the SSE sim_start event populates. Text
-          shows turn / max so users can gauge how much is left without
-          counting cards. */}
+          hides on completion. */}
       {state.isRunning && !state.isComplete && state.maxTurns > 0 && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '4px 12px', background: 'var(--bg-deep)',
-          borderBottom: '1px solid var(--border)',
-          fontFamily: 'var(--mono)', fontSize: 10,
-        }}>
-          <span style={{ color: 'var(--text-3)', letterSpacing: '0.5px', fontWeight: 700, textTransform: 'uppercase' }}>
+        <div className={styles.progressBar}>
+          <span className={styles.progressLabel}>
             Turn {Math.max(1, state.turn)} / {state.maxTurns}
           </span>
-          <div style={{
-            flex: 1, height: 4, borderRadius: 2,
-            background: 'var(--border)', overflow: 'hidden',
-          }}>
-            <div style={{
-              width: `${Math.min(100, Math.max(0, (state.turn / state.maxTurns) * 100))}%`,
-              height: '100%',
-              background: 'linear-gradient(90deg, var(--vis), var(--eng))',
-              transition: 'width 400ms ease-out',
-            }} />
+          <div className={styles.progressTrack}>
+            <div className={styles.progressFill} style={{ width: `${progressPercent}%` }} />
           </div>
-          <span style={{ color: 'var(--text-3)' }}>
-            {Math.round((state.turn / state.maxTurns) * 100)}%
+          <span className={styles.progressPercent}>
+            {Math.round(progressPercent)}%
           </span>
         </div>
       )}
@@ -271,15 +285,10 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
 
       {/* Loading state: connected but no events after 2s grace period */}
       {showLoading && !hasEvents && !state.isComplete && state.turn === 0 && (
-        <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: '40px 24px', textAlign: 'center', background: 'var(--bg-deep)',
-        }}>
-          <span className="spinner" style={{ width: '28px', height: '28px', borderWidth: '3px', marginBottom: '16px' }} />
-          <div style={{ fontFamily: 'var(--mono)', fontSize: '14px', fontWeight: 700, color: 'var(--text-1)', marginBottom: '8px' }}>
-            Simulation starting...
-          </div>
-          <div style={{ fontSize: '13px', color: 'var(--text-3)', maxWidth: '400px', lineHeight: 1.7 }}>
+        <div className={styles.centerState}>
+          <span className={`spinner ${styles.centerStateSpinnerSmall}`} />
+          <div className={styles.centerStateHeading}>Simulation starting...</div>
+          <div className={styles.centerStateCopy}>
             The Event Director is reading simulation state and generating the first event. Departments will analyze and forge tools once it arrives.
           </div>
         </div>
@@ -287,15 +296,10 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
 
       {/* Launching state: user clicked Run, waiting for first events */}
       {launching && !hasEvents && !state.isRunning && (
-        <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: '40px 24px', textAlign: 'center', background: 'var(--bg-deep)',
-        }}>
-          <span className="spinner" style={{ width: '32px', height: '32px', borderWidth: '3px', marginBottom: '16px' }} />
-          <div style={{ fontFamily: 'var(--mono)', fontSize: '16px', fontWeight: 700, color: 'var(--amber)', marginBottom: '8px' }}>
-            Launching Simulation...
-          </div>
-          <div style={{ fontSize: '13px', color: 'var(--text-3)', maxWidth: '400px', lineHeight: 1.7 }}>
+        <div className={styles.centerState}>
+          <span className={`spinner ${styles.centerStateSpinnerLarge}`} />
+          <div className={styles.centerStateHeadingAmber}>Launching Simulation...</div>
+          <div className={styles.centerStateCopy}>
             Initializing the Event Director, departments, and agent personalities. First events will appear shortly.
           </div>
         </div>
@@ -303,15 +307,10 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
 
       {/* Connecting state: SSE not yet connected, no events, show spinner */}
       {!hasEvents && !state.isComplete && !launching && sseStatus === 'connecting' && (
-        <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: '40px 24px', textAlign: 'center', background: 'var(--bg-deep)',
-        }}>
-          <span className="spinner" style={{ width: '28px', height: '28px', borderWidth: '3px', marginBottom: '16px' }} />
-          <div style={{ fontFamily: 'var(--mono)', fontSize: '14px', fontWeight: 700, color: 'var(--text-1)', marginBottom: '8px' }}>
-            Connecting...
-          </div>
-          <div style={{ fontSize: '13px', color: 'var(--text-3)', maxWidth: '400px', lineHeight: 1.7 }}>
+        <div className={styles.centerState}>
+          <span className={`spinner ${styles.centerStateSpinnerSmall}`} />
+          <div className={styles.centerStateHeading}>Connecting...</div>
+          <div className={styles.centerStateCopy}>
             Loading simulation state from the server. If a simulation is running, events will appear shortly.
           </div>
         </div>
@@ -319,127 +318,43 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
 
       {/* Empty state: connected but no events and no sim running */}
       {!state.isRunning && !state.isComplete && !hasEvents && sseStatus === 'connected' && !launching && (
-        <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: '40px 24px', textAlign: 'center', background: 'var(--bg-deep)',
-        }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: '16px', fontWeight: 700, color: 'var(--text-1)', marginBottom: '12px' }}>
-            No simulation running
-          </div>
-          <div style={{ fontSize: '13px', color: 'var(--text-3)', maxWidth: '420px', lineHeight: 1.7, marginBottom: '20px' }}>
+        <div className={styles.centerState}>
+          <div className={styles.centerStateHeadingLarger}>No simulation running</div>
+          <div className={styles.centerStateCopyWide}>
             Configure two commanders with different HEXACO personality profiles, choose a scenario, and launch from the Settings tab. Or load a previously saved simulation.
           </div>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div className={styles.emptyStateActions}>
             {onRun && (
               <button
                 onClick={handleRun}
                 disabled={launching}
-                style={{
-                  background: launching
-                    ? 'var(--bg-card)'
-                    : 'linear-gradient(135deg, var(--rust), #c44a1e)',
-                  color: launching ? 'var(--text-3)' : '#fff',
-                  border: launching ? '1px solid var(--border)' : 'none',
-                  padding: '10px 28px',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  cursor: launching ? 'wait' : 'pointer',
-                  boxShadow: launching ? 'none' : '0 4px 16px rgba(224,101,48,.25)',
-                }}
+                className={styles.buttonRun}
               >
                 {launching ? 'Launching…' : 'Run Simulation'}
               </button>
             )}
-            <button
-              onClick={() => {
-                // Prior UX tried to programmatically click the TopBar LOAD
-                // dropdown. That dropdown opens at the top of the screen
-                // while the user is looking at the empty state in the
-                // middle, so the click registered as "nothing happened"
-                // from the user's POV.
-                //
-                // Instead, scroll to the WATCH A PRIOR RUN card directly
-                // below — it already renders the cached-run list with
-                // one-click REPLAY buttons and explanatory empty-state
-                // copy when there are none. If the card isn't on-page
-                // (shouldn't happen, but defensive), fall back to the
-                // file picker so the button never dead-ends.
-                const cta = document.querySelector<HTMLElement>(
-                  '[data-paracosm-replay-cta="true"]',
-                );
-                if (!cta) return;
-                cta.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // Flash the card border so the user's eye catches the
-                // landing spot (scroll alone is easy to miss on a long
-                // empty state).
-                cta.style.transition = 'box-shadow 300ms ease-out';
-                cta.style.boxShadow = '0 0 0 2px var(--amber, #e8b44a)';
-                setTimeout(() => { cta.style.boxShadow = ''; }, 1200);
-              }}
-              style={{
-                background: 'linear-gradient(135deg, var(--amber), #c8952e)', color: 'var(--bg-deep)',
-                border: 'none', padding: '10px 28px', borderRadius: '6px',
-                fontSize: '14px', fontWeight: 700, cursor: 'pointer',
-                boxShadow: '0 4px 16px rgba(232,180,74,.25)',
-              }}
-            >
+            <button onClick={handleScrollToReplayCta} className={styles.buttonLoad}>
               Load Prior Run
             </button>
-            <button
-              onClick={() => {
-                const url = new URL(window.location.href);
-                url.searchParams.set('tab', 'settings');
-                window.history.replaceState({}, '', url.toString());
-                window.location.reload();
-              }}
-              style={{
-                background: 'var(--bg-card)', color: 'var(--text-2)',
-                border: '1px solid var(--border)', padding: '10px 28px', borderRadius: '6px',
-                fontSize: '14px', fontWeight: 600, cursor: 'pointer',
-              }}
-            >
+            <button onClick={handleGoToSettings} className={styles.buttonSettings}>
               Settings
             </button>
           </div>
           {onTour && (
-            <div style={{ marginTop: 16, fontSize: 12, color: 'var(--text-3)' }}>
+            <div className={styles.tourHint}>
               First time here?{' '}
-              <button
-                type="button"
-                onClick={onTour}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--amber)',
-                  fontFamily: 'var(--mono)',
-                  fontWeight: 700,
-                  fontSize: 12,
-                  cursor: 'pointer',
-                  padding: 0,
-                  textDecoration: 'underline',
-                  textUnderlineOffset: 3,
-                }}
-              >
+              <button type="button" onClick={onTour} className={styles.tourLink}>
                 Take the guided tour →
               </button>
-              <span style={{ marginLeft: 6, color: 'var(--text-4)' }}>
-                (canned demo, no LLM cost)
-              </span>
+              <span className={styles.tourAside}>(canned demo, no LLM cost)</span>
             </div>
           )}
           {/* Surface saved-run replays right in the empty state so users
               who land on SIM without a running simulation can start
-              watching a prior run with one click. Renders explanatory
-              empty state when no saved runs exist yet. */}
+              watching a prior run with one click. */}
           <div
             data-paracosm-replay-cta="true"
-            style={{
-              width: '100%',
-              maxWidth: 720,
-              marginTop: 28,
-              textAlign: 'left',
-            }}
+            className={`${styles.replayCtaWrap} ${styles.flashCard}`}
           >
             <LoadPriorRunsCTA />
           </div>
@@ -447,103 +362,25 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
       )}
 
       {/* Two columns (only show when there are events or sim is running) */}
-      <div className="sim-columns" style={{ display: (state.isRunning || state.isComplete || hasEvents || sseStatus === 'connected') ? 'flex' : 'none', flex: 1, gap: '1px', background: 'var(--border)', overflow: 'hidden' }}>
+      <div className={`sim-columns ${styles.simColumns} ${columnsVisible ? '' : styles.simColumnsHidden}`}>
         {sideA && <LeaderColumn leaderIndex={0} sideState={sideA} state={state} />}
         {sideB && <LeaderColumn leaderIndex={1} sideState={sideB} state={state} />}
       </div>
 
       {/* Verdict surfaces as a global top banner (App.tsx) and inline
-          on the Reports tab. Removing the per-column rendering here
-          keeps the Sim layout focused on event streams after a run
-          completes. */}
+          on the Reports tab. */}
 
       {/* Timeline at bottom — gets the full vertical room now that
           References / Toolbox have moved out of the inline column flow. */}
       <Timeline state={state} />
 
       {/* End-of-sim evidence bar: small pills that open References and
-          Forged Toolbox in modals so the timeline + columns above stay
-          fully visible. The user explicitly asked for this CTA pattern. */}
+          Forged Toolbox in modals. */}
       <SimFooterBar citationRegistry={citationRegistry} toolRegistry={toolRegistry} />
 
-      {/* Re-run-with-seed+1: moved to the very bottom of the Sim view
-          so it reads as an epilogue action rather than interrupting
-          the flow between the sim columns and the timeline. Single-
-          click rerun of the last-launched config, bumped by one
-          deterministic tick so the outcome shifts without forcing
-          the user back to Settings. Reads last config from
-          localStorage (written by SettingsPanel.launch). Forwards
-          any BYO keys the same way ChatPanel does. */}
-      {state.isComplete && !state.isRunning && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '8px 16px', background: 'var(--bg-panel)',
-          borderTop: '1px solid var(--border)',
-          fontFamily: 'var(--mono)', fontSize: 11,
-        }}>
-          <span style={{ color: 'var(--text-3)', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-            Re-run
-          </span>
-          <span style={{ color: 'var(--text-2)' }}>
-            Spin up a new run with the same leaders + scenario, seed bumped by one.
-          </span>
-          <button
-            type="button"
-            onClick={async () => {
-              try {
-                const raw = localStorage.getItem('paracosm:lastLaunchConfig');
-                if (!raw) {
-                  alert('No previous launch config found. Run once from Settings first.');
-                  return;
-                }
-                const prev = JSON.parse(raw) as Record<string, unknown>;
-                const storedKeys = (() => {
-                  try { return JSON.parse(localStorage.getItem('paracosm:keyOverrides') || '{}') as Record<string, string>; }
-                  catch { return {}; }
-                })();
-                const next: Record<string, unknown> = {
-                  ...prev,
-                  seed: (typeof prev.seed === 'number' ? prev.seed : 950) + 1,
-                  ...(storedKeys.openai ? { apiKey: storedKeys.openai } : {}),
-                  ...(storedKeys.anthropic ? { anthropicKey: storedKeys.anthropic } : {}),
-                  ...(storedKeys.serper ? { serperKey: storedKeys.serper } : {}),
-                  ...(storedKeys.firecrawl ? { firecrawlKey: storedKeys.firecrawl } : {}),
-                  ...(storedKeys.tavily ? { tavilyKey: storedKeys.tavily } : {}),
-                  ...(storedKeys.cohere ? { cohereKey: storedKeys.cohere } : {}),
-                };
-                const res = await fetch('/setup', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(next),
-                });
-                const data = await res.json();
-                if (res.status === 429) {
-                  alert(data.error || 'Rate limit hit. Add an API key in Settings to bypass.');
-                  return;
-                }
-                if (data.redirect) {
-                  // Persist the new seed so the next "Re-run" button bumps
-                  // from this run's seed, not the original one.
-                  try {
-                    localStorage.setItem('paracosm:lastLaunchConfig', JSON.stringify(next));
-                  } catch { /* silent */ }
-                  window.location.href = data.redirect;
-                }
-              } catch (err) {
-                alert(`Re-run failed: ${err}`);
-              }
-            }}
-            style={{
-              marginLeft: 'auto', fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 700,
-              padding: '4px 12px', borderRadius: 4,
-              background: 'linear-gradient(135deg, var(--rust), #c44a1e)',
-              color: 'white', border: 'none', cursor: 'pointer',
-            }}
-          >
-            Run again with seed+1 ›
-          </button>
-        </div>
-      )}
+      {/* Re-run-with-seed+1 epilogue. Extracted to its own file in F4
+          batch 2 to satisfy audit finding F8 (modular concerns). */}
+      <RerunPanel enabled={state.isComplete && !state.isRunning} />
     </div>
   );
 }
