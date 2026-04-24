@@ -3,6 +3,7 @@ import type { LeaderSideState } from '../../hooks/useGameState';
 import { getLeaderColorVar } from '../../hooks/useGameState';
 import type { ToolRegistry } from '../../hooks/useToolRegistry';
 import { useScenarioContext } from '../../App';
+import { formatBagTooltip } from './StatsBar.helpers';
 import styles from './StatsBar.module.scss';
 
 export interface StatsBarLeader {
@@ -113,6 +114,18 @@ export function StatsBar({ leaders, crisisText, toolRegistry }: StatsBarProps) {
   const citationsB = bState?.citations ?? 0;
   const aLeaderName = aLeader?.id ?? '';
   const bLeaderName = bLeader?.id ?? '';
+
+  // Scenario-declared statuses + environment bags, threaded through
+  // from the orchestrator's `turn_done` event via useGameState. When a
+  // scenario declares no bags (Mars heritage), these stay undefined
+  // and the pill group below renders nothing. When it declares them
+  // (corporate, submarine, medieval, game-world), we surface one
+  // compact pill per bag with a tooltip that lists the key/value
+  // pairs so the dense bar stays scannable but no information hides.
+  const statusesA = aState?.statuses;
+  const statusesB = bState?.statuses;
+  const environmentA = aState?.environment;
+  const environmentB = bState?.environment;
 
   // Per-leader reuse counts derived from the forged-tool ledger. A
   // reuse is any tool-use event after the first forge, counted per
@@ -266,6 +279,36 @@ export function StatsBar({ leaders, crisisText, toolRegistry }: StatsBarProps) {
         <span className={styles.valueB}>{citationsB}</span>
         {deltaCitesB && <span className={deltaClass(deltaCitesB, 'neutral')}>{deltaCitesB}</span>}
       </span>
+
+      {(statusesA || statusesB) && (
+        <span
+          className={styles.pill}
+          title={`Categorical scenario-declared statuses (world.statuses).\n\nLeader A:\n${formatBagTooltip(statusesA) || '(none)'}\n\nLeader B:\n${formatBagTooltip(statusesB) || '(none)'}`}
+        >
+          <span className={styles.label}>
+            <span className="pill-label-full">STATUSES</span>
+            <span className="pill-label-short">§</span>
+          </span>
+          <span className={styles.valueA}>{statusesA ? Object.keys(statusesA).length : 0}</span>
+          <span className={styles.sep}>/</span>
+          <span className={styles.valueB}>{statusesB ? Object.keys(statusesB).length : 0}</span>
+        </span>
+      )}
+
+      {(environmentA || environmentB) && (
+        <span
+          className={styles.pill}
+          title={`Environment bag (world.environment), external conditions.\n\nLeader A:\n${formatBagTooltip(environmentA) || '(none)'}\n\nLeader B:\n${formatBagTooltip(environmentB) || '(none)'}`}
+        >
+          <span className={styles.label}>
+            <span className="pill-label-full">ENV</span>
+            <span className="pill-label-short">E</span>
+          </span>
+          <span className={styles.valueA}>{environmentA ? Object.keys(environmentA).length : 0}</span>
+          <span className={styles.sep}>/</span>
+          <span className={styles.valueB}>{environmentB ? Object.keys(environmentB).length : 0}</span>
+        </span>
+      )}
     </div>
   );
 }

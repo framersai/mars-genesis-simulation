@@ -135,6 +135,20 @@ const BulletinDataSchema = z.object({
 const TurnDoneDataSchema = z.object({
   summary: z.string().optional(),
   systems: z.record(z.string(), z.number()),
+  /**
+   * Categorical statuses bag (world.statuses declarations). Emitted
+   * when the scenario declared any; omitted for Mars-shape scenarios
+   * that only have numeric metrics. Added in the 0.7.x worldSnapshot
+   * widening so dashboards can surface scenario-declared governance
+   * state, funding round, alignment, etc.
+   */
+  statuses: z.record(z.string(), z.union([z.string(), z.boolean()])).optional(),
+  /**
+   * Environment bag (world.environment declarations): external
+   * conditions like market growth pct, radiation level, depth.
+   * Same emit rule as statuses.
+   */
+  environment: z.record(z.string(), z.union([z.number(), z.string(), z.boolean()])).optional(),
   toolsForged: z.number().int().min(0),
   totalEvents: z.number().int().optional(),
   deathCauses: z.record(z.string(), z.number()).optional(),

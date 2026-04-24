@@ -68,6 +68,18 @@ export interface LeaderSideState {
   leader: LeaderInfo | null;
   systems: SystemsState | null;
   prevSystems: SystemsState | null;
+  /**
+   * Categorical statuses bag (world.statuses declarations), as of the
+   * most recent `turn_done` event. Undefined for Mars-shape scenarios
+   * that only declare numeric metrics. Added in the 0.7.x
+   * worldSnapshot widening (Phase C).
+   */
+  statuses?: Record<string, string | boolean>;
+  /**
+   * Environment bag (world.environment declarations), as of the most
+   * recent `turn_done` event. Same emit rule as statuses.
+   */
+  environment?: Record<string, number | string | boolean>;
   event: TurnEventInfo | null;
   events: ProcessedEvent[];
   popHistory: number[];
@@ -461,6 +473,12 @@ export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): Ga
         if (dd.systems) {
           s.prevSystems = s.systems ? { ...s.systems } : null;
           s.systems = dd.systems as SystemsState;
+        }
+        if (dd.statuses && typeof dd.statuses === 'object') {
+          s.statuses = { ...dd.statuses as Record<string, string | boolean> };
+        }
+        if (dd.environment && typeof dd.environment === 'object') {
+          s.environment = { ...dd.environment as Record<string, number | string | boolean> };
         }
         if (dd.deathCauses && typeof dd.deathCauses === 'object') {
           for (const [cause, n] of Object.entries(dd.deathCauses as Record<string, number>)) {

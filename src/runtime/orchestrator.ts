@@ -947,15 +947,20 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
       // inside the object literal below (closure-assigned lets lose their
       // narrow through control-flow re-analysis).
       const pe = providerErrorState as ClassifiedProviderError | null;
-      emit('turn_done', {
-        turn, time,
-        systems: kernel.getState().systems,
-        toolsForged: Object.values(toolRegs).flat().length,
-        aborted: true,
-        providerError: pe
-          ? { kind: pe.kind, provider: pe.provider, message: pe.message }
-          : undefined,
-      });
+      {
+        const st = kernel.getState();
+        emit('turn_done', {
+          turn, time,
+          systems: st.systems,
+          statuses: Object.keys(st.statuses).length > 0 ? { ...st.statuses } : undefined,
+          environment: Object.keys(st.environment).length > 0 ? { ...st.environment } : undefined,
+          toolsForged: Object.values(toolRegs).flat().length,
+          aborted: true,
+          providerError: pe
+            ? { kind: pe.kind, provider: pe.provider, message: pe.message }
+            : undefined,
+        });
+      }
       continue;
     }
 
@@ -1732,6 +1737,8 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
     emit('turn_done', {
       turn, time,
       systems: after.systems,
+      statuses: Object.keys(after.statuses).length > 0 ? { ...after.statuses } : undefined,
+      environment: Object.keys(after.environment).length > 0 ? { ...after.environment } : undefined,
       toolsForged: Object.values(toolRegs).flat().length,
       totalEvents: turnEvents.length,
       deathCauses: Object.keys(deathCauses).length > 0 ? deathCauses : undefined,
@@ -1815,7 +1822,17 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
         foodReserve: kernel.getState().systems.foodMonthsReserve,
         births: 0, deaths: 0,
       });
-      emit('turn_done', { turn, time, systems: kernel.getState().systems, toolsForged: Object.values(toolRegs).flat().length, error: String(err) });
+      {
+        const st = kernel.getState();
+        emit('turn_done', {
+          turn, time,
+          systems: st.systems,
+          statuses: Object.keys(st.statuses).length > 0 ? { ...st.statuses } : undefined,
+          environment: Object.keys(st.environment).length > 0 ? { ...st.environment } : undefined,
+          toolsForged: Object.values(toolRegs).flat().length,
+          error: String(err),
+        });
+      }
     }
   }
 
