@@ -10,6 +10,7 @@ import type { CompilerTelemetry } from './telemetry.js';
 import { generateValidatedCode } from './llm-invocations/generateValidatedCode.js';
 import { buildScenarioFixture } from './scenario-fixture.js';
 import { buildStateShapeBlock } from './state-shape-block.js';
+import { runArrowSync } from './sandbox-runner.js';
 
 type DepartmentPromptFn = (ctx: any) => string[];
 
@@ -47,12 +48,8 @@ export function parseResponse(text: string): DepartmentPromptFn | null {
   let cleaned = text.trim();
   cleaned = cleaned.replace(/^```(?:typescript|ts|javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
   if (cleaned.endsWith(';')) cleaned = cleaned.slice(0, -1).trim();
-  try {
-    const fn = new Function('return ' + cleaned)();
-    return typeof fn === 'function' ? fn : null;
-  } catch {
-    return null;
-  }
+  if (!cleaned) return null;
+  return (ctx: unknown) => runArrowSync<[unknown], string[]>(cleaned, [ctx]);
 }
 
 function buildSmokeTest(scenarioJson: Record<string, any>): (fn: DepartmentPromptFn) => void {

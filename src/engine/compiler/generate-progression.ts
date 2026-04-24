@@ -9,6 +9,7 @@ import type { ProgressionHookContext } from '../types.js';
 import type { GenerateTextFn } from './types.js';
 import type { CompilerTelemetry } from './telemetry.js';
 import { generateValidatedCode } from './llm-invocations/generateValidatedCode.js';
+import { runProgressionSync } from './sandbox-runner.js';
 
 type ProgressionFn = (ctx: ProgressionHookContext) => void;
 
@@ -43,23 +44,24 @@ Rules:
 const userPrompt = `Return ONLY the complete arrow function. No markdown fences. Example:
 (ctx) => { for (const c of ctx.agents) { if (!c.health.alive) continue; /* effects */ } }`;
 
-/** Parse the LLM response into an executable function. */
+/**
+ * Parse the LLM response into a sandboxed callable. The returned function
+ * delegates each invocation to {@link runProgressionSync}, which executes
+ * the code in a hardened node:vm context (`codeGeneration: { strings: false }`,
+ * dangerous globals undefined, wall-clock timeout) and merges any
+ * mutations to `ctx.agents` back onto the host references.
+ *
+ * No host-side `new Function()` evaluation: the only host-realm parse
+ * happens lazily inside the sandbox runner on the first invocation.
+ */
 export function parseResponse(text: string): ProgressionFn | null {
   let cleaned = text.trim();
   cleaned = cleaned.replace(/^```(?:typescript|ts|javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
   if (cleaned.endsWith(';')) cleaned = cleaned.slice(0, -1).trim();
-  try {
-    const fn = new Function('return ' + cleaned)();
-    if (typeof fn === 'function') return fn;
-    return null;
-  } catch {
-    try {
-      const fn = new Function('ctx', cleaned);
-      return (ctx: ProgressionHookContext) => fn(ctx);
-    } catch {
-      return null;
-    }
-  }
+  if (!cleaned) return null;
+  return (ctx: ProgressionHookContext) => {
+    runProgressionSync(cleaned, ctx as unknown as { agents: Array<Record<string, unknown>> });
+  };
 }
 
 function smokeTest(fn: ProgressionFn): void {

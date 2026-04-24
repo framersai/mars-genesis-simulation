@@ -10,6 +10,7 @@ import type { CompilerTelemetry } from './telemetry.js';
 import { generateValidatedCode } from './llm-invocations/generateValidatedCode.js';
 import { buildScenarioFixture } from './scenario-fixture.js';
 import { buildStateShapeBlock } from './state-shape-block.js';
+import { runArrowSync } from './sandbox-runner.js';
 
 type FingerprintFn = (finalState: any, outcomeLog: any[], leader: any, toolRegs: Record<string, string[]>, maxTurns: number) => Record<string, string>;
 
@@ -48,12 +49,12 @@ export function parseResponse(text: string): FingerprintFn | null {
   let cleaned = text.trim();
   cleaned = cleaned.replace(/^```(?:typescript|ts|javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
   if (cleaned.endsWith(';')) cleaned = cleaned.slice(0, -1).trim();
-  try {
-    const fn = new Function('return ' + cleaned)();
-    return typeof fn === 'function' ? fn : null;
-  } catch {
-    return null;
-  }
+  if (!cleaned) return null;
+  return (finalState, outcomeLog, leader, toolRegs, maxTurns) =>
+    runArrowSync<[unknown, unknown[], unknown, Record<string, string[]>, number], Record<string, string>>(
+      cleaned,
+      [finalState, outcomeLog, leader, toolRegs, maxTurns],
+    );
 }
 
 function buildSmokeTest(scenarioJson: Record<string, any>): (fn: FingerprintFn) => void {

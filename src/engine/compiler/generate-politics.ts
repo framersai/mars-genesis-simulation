@@ -8,6 +8,7 @@
 import type { GenerateTextFn } from './types.js';
 import type { CompilerTelemetry } from './telemetry.js';
 import { generateValidatedCode } from './llm-invocations/generateValidatedCode.js';
+import { runArrowSync } from './sandbox-runner.js';
 
 type PoliticsFn = (category: string, outcome: string) => Record<string, number> | null;
 
@@ -47,12 +48,9 @@ export function parseResponse(text: string): PoliticsFn | null {
   let cleaned = text.trim();
   cleaned = cleaned.replace(/^```(?:typescript|ts|javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
   if (cleaned.endsWith(';')) cleaned = cleaned.slice(0, -1).trim();
-  try {
-    const fn = new Function('return ' + cleaned)();
-    return typeof fn === 'function' ? fn : null;
-  } catch {
-    return null;
-  }
+  if (!cleaned) return null;
+  return (category, outcome) =>
+    runArrowSync<[string, string], Record<string, number> | null>(cleaned, [category, outcome]);
 }
 
 function smokeTest(fn: PoliticsFn): void {
