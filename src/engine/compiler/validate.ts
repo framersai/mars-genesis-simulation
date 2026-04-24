@@ -90,6 +90,8 @@ export function validateFingerprint(fn: ScenarioHooks['fingerprintHook']): { ok:
       agents: [makeTestColonist()],
       systems: { morale: 0.6, population: 80, foodMonthsReserve: 6, powerKw: 300, infrastructureModules: 10, scienceOutput: 5, lifeSupportCapacity: 100, pressurizedVolumeM3: 2000, waterLitersPerDay: 500 },
       politics: { earthDependencyPct: 50, governanceStatus: 'earth-governed' as const, independencePressure: 0.3 },
+      statuses: {},
+      environment: {},
       metadata: { simulationId: 'test', leaderId: 'test', seed: 100, startTime: 2035, currentTime: 2070, currentTurn: 8 },
       eventLog: [],
     };

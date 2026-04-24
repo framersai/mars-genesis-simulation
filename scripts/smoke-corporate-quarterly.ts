@@ -107,22 +107,20 @@ async function main(): Promise<void> {
   log(`[compile] done in ${((Date.now() - compileStart) / 1000).toFixed(1)}s`);
 
   // 4. Run both leaders in parallel for 2 turns on economy preset.
-  //    Pass startTime + timePerTurn explicitly so the kernel uses the
-  //    scenario's declared cadence (otherwise opts.startTime falls back
-  //    to 2035, a Mars-era hardcode that predates F23's generic units).
+  //    No explicit startTime/timePerTurn — runSimulation falls back to
+  //    scenario.setup.defaultStartTime / defaultTimePerTurn when omitted,
+  //    so the scenario's declared cadence flows through automatically.
   const MAX_TURNS = 2;
   const SEED = 42;
-  const START_TIME = setup.defaultStartTime as number;
-  const TIME_PER_TURN = setup.defaultTimePerTurn as number;
-  log(`\n[run] launching ${leaders.length} leaders in parallel for ${MAX_TURNS} turns (seed=${SEED}, startTime=${START_TIME}, timePerTurn=${TIME_PER_TURN})`);
+  const expectedStart = setup.defaultStartTime as number;
+  const expectedStep = setup.defaultTimePerTurn as number;
+  log(`\n[run] launching ${leaders.length} leaders in parallel for ${MAX_TURNS} turns (seed=${SEED}, scenario defaults startTime=${expectedStart}, timePerTurn=${expectedStep})`);
   const runStart = Date.now();
   const artifacts: RunArtifact[] = await Promise.all(
     leaders.map(leader => runSimulation(leader, [], {
       scenario,
       maxTurns: MAX_TURNS,
       seed: SEED,
-      startTime: START_TIME,
-      timePerTurn: TIME_PER_TURN,
       costPreset: 'economy',
       provider: 'openai',
       onEvent: (e) => {
@@ -174,7 +172,7 @@ async function main(): Promise<void> {
     assert(timepoints.length === MAX_TURNS,
       `${leaderName}: expected ${MAX_TURNS} timepoints, got ${timepoints.length}`);
     for (let j = 0; j < timepoints.length; j++) {
-      const expected = START_TIME + j * TIME_PER_TURN;
+      const expected = expectedStart + j * expectedStep;
       assert(timepoints[j].time === expected,
         `${leaderName}: timepoint[${j}].time expected ${expected}, got ${timepoints[j].time}`);
     }
