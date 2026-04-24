@@ -23,35 +23,27 @@
 
 ---
 
-## Tier 1 — close the 0.7.x loop (next session)
+## Tier 1: close the 0.7.x loop (SHIPPED 2026-04-24)
 
-Plan: [`2026-04-23-close-0.7.x-loop-tier1.md`](2026-04-23-close-0.7.x-loop-tier1.md)
+All three phases landed this session. See the Shipped section at the bottom of this file for commit hashes. Residual work from the original plan: a ReportView sub-sections surface for statuses + environment (Tier 5 as [T5.7] below). The StatsBar pill + tooltip cover the "is it there" visibility need; Reports tab drill-down is a separate surface.
 
-Three phases, each independently shippable:
-
-| Phase | What | Files | Payoff | Effort |
-|---|---|---|---|---|
-| A | F23.1 time-unit display threading | `useScenarioLabels` hook + 4 dashboard components + 4 runtime files | corporate-quarterly users see "Quarter 5" instead of "Year 5" | 1.5 hr |
-| B | Per-timepoint worldSnapshot widening | `contracts.ts` + `orchestrator.ts` + `build-artifact.ts` + 1 new test | consumers get all four runtime bags per timepoint, not just metrics | 1 hr |
-| C | Dashboard statuses + environment surface | `StatsBar.tsx` + `ReportsTab.tsx` + 1 render test | non-Mars scenarios finally surface their scenario-declared state | 1 hr |
-
-**Why first:** closes visible seams in already-shipped work. Low blast radius. Unblocks the "paracosm works for any domain" claim being true on-screen, not just in the artifact.
+Historical plan file (kept for audit / bisect context): [`2026-04-23-close-0.7.x-loop-tier1.md`](2026-04-23-close-0.7.x-loop-tier1.md).
 
 ---
 
-## Tier 2 — `WorldModel.fork(atTurn)` (session after Tier 1)
+## Tier 2: `WorldModel.fork(atTurn)` (session after Tier 1)
 
 **Detailed plan:** to be written after Tier 1 ships. Sketch below.
 
 **What:** add `WorldModel.fork(artifactOrState, atTurn, leaderOverride?)` that returns a new `WorldModel` positioned to resume from the given turn with a different leader. Add `WorldModel.snapshot()` that returns a serializable state. Add a dashboard UX for "fork this run" that runs the new branch alongside the original and renders the divergence.
 
-**Why:** paracosm's single most differentiated capability is counterfactual analysis (same seed, different variable). Today the API forces you to re-run from turn 0, which costs the full run budget. Forking mid-run cuts cost roughly in half for counterfactual-centric workflows and proves the CWSM positioning with code, not copy. The Enterprise Roadmap explicitly mentions "Alternate Timelines" — this is the first brick.
+**Why:** paracosm's single most differentiated capability is counterfactual analysis (same seed, different variable). Today the API forces you to re-run from turn 0, which costs the full run budget. Forking mid-run cuts cost roughly in half for counterfactual-centric workflows and proves the CWSM positioning with code, not copy. The Enterprise Roadmap explicitly mentions "Alternate Timelines": this is the first brick.
 
 **Feasibility (verified):**
 - `SimulationKernel` already exports state via `structuredClone(this.state)` at [kernel.ts:160](../../src/engine/core/kernel.ts#L160) and [kernel.ts:362](../../src/engine/core/kernel.ts#L362) (`getState()` and `export()`).
 - `SeededRng.state` is a single 32-bit integer (plain `number`), serializable by any JSON codec. RNG resume is trivial.
 - `SimulationState` has 7 top-level fields: `metadata`, `systems`, `agents`, `politics`, `statuses`, `environment`, `eventLog`. All currently round-trip through `structuredClone`; no Dates, no Maps, no Sets.
-- `TurnArtifact.stateSnapshotAfter` is the per-turn input we'd fork from. Tier 1 Phase B widens this to carry all 5 state bags — so Tier 2 depends on Tier 1 B.
+- `TurnArtifact.stateSnapshotAfter` is the per-turn input we'd fork from. Tier 1 Phase B widens this to carry all 5 state bags: so Tier 2 depends on Tier 1 B.
 
 **API shape (draft):**
 
@@ -97,7 +89,7 @@ interface ForkOptions {
 
 ---
 
-## Tier 3 — Python bindings + JSON schema publishing (session 3)
+## Tier 3: Python bindings + JSON schema publishing (session 3)
 
 **Detailed plan:** to be written after Tier 2 ships. Sketch below.
 
@@ -110,7 +102,7 @@ interface ForkOptions {
 **Why:** paracosm's biggest audience outside TypeScript is Python (digital-twin tooling, clinical simulation, policy research, social-science simulation). Today those users can't consume paracosm at all. Publishing the JSON schemas + a consumption guide costs one day and unlocks a much larger market. Pulling item 4 forward depends on Tier 4 `/simulate`.
 
 **Feasibility (verified):**
-- `scripts/export-json-schema.ts` already exists and uses `z.toJSONSchema()` natively — no third-party converter dep ([scripts/export-json-schema.ts:1-30](../../scripts/export-json-schema.ts)).
+- `scripts/export-json-schema.ts` already exists and uses `z.toJSONSchema()` natively: no third-party converter dep ([scripts/export-json-schema.ts:1-30](../../scripts/export-json-schema.ts)).
 - `RunArtifactSchema` + `StreamEventSchema` use `z.unknown()` and `z.record(z.string(), z.unknown())` for scenarioExtensions. `datamodel-codegen` maps these to `Any` / `Dict[str, Any]` in Python, which is well-tolerated.
 - `StreamEventSchema` is a `z.discriminatedUnion('type', [...])`. Pydantic v2 supports discriminated unions via `Field(discriminator='type')`.
 
@@ -120,7 +112,7 @@ interface ForkOptions {
 
 ---
 
-## Tier 4 — infrastructure and durability
+## Tier 4: infrastructure and durability
 
 | # | Item | Origin | Effort | Notes |
 |---|---|---|---|---|
@@ -133,7 +125,7 @@ interface ForkOptions {
 
 ---
 
-## Tier 5 — features and UX
+## Tier 5: features and UX
 
 | # | Item | Origin | Effort | Notes |
 |---|---|---|---|---|
@@ -146,7 +138,7 @@ interface ForkOptions {
 
 ---
 
-## Tier 6 — tests and benchmarks
+## Tier 6: tests and benchmarks
 
 | # | Item | Origin | Effort | Notes |
 |---|---|---|---|---|
@@ -160,7 +152,7 @@ interface ForkOptions {
 
 ---
 
-## Tier 7 — integrations
+## Tier 7: integrations
 
 | # | Item | Origin | Effort | Notes |
 |---|---|---|---|---|
@@ -172,7 +164,7 @@ interface ForkOptions {
 
 ---
 
-## Tier 8 — docs and marketing
+## Tier 8: docs and marketing
 
 | # | Item | Origin | Effort | Notes |
 |---|---|---|---|---|
@@ -186,7 +178,7 @@ interface ForkOptions {
 
 ---
 
-## Tier 9 — deferred / probably never
+## Tier 9: deferred / probably never
 
 | # | Item | Origin | Reason for defer |
 |---|---|---|---|
@@ -198,14 +190,25 @@ interface ForkOptions {
 
 ---
 
-## Shipped this session (2026-04-23)
+## Shipped
 
-- **[12219ab5 paracosm](#) — Reposition as structured world model for AI agents.** 11 files, +1615/-96. Spec + positioning map + README + ARCHITECTURE + landing + dashboard HTML + package.json + WorldModel façade + 5 tests + this roadmap's older-sibling plan.
-- **[c938b9a agentos.sh](#) — Structured-world-model blog post + editor's notes on 3 existing paracosm posts.** 4 files, +144.
-- **[aec39a3c packages/agentos](#) — PARACOSM.md source rewrite (pull-docs.mjs will sync into live-docs on next build).** 1 file, +21/-15.
-- **[63746647f monorepo](#) — Submodule pointer bumps.** 3 pointers.
+### 2026-04-24 session (Tier 1 closed)
 
-All 4 commits local-only. Push order when approved: paracosm → agentos.sh → packages/agentos → monorepo. paracosm push triggers `paracosm@0.7.406` CI publish.
+- **[c86e6dda paracosm](#): Phase A, F23.1 time-unit display threading.** 14 files, +312/-82. `useScenarioLabels` + `deriveLabels` extraction with 10 unit tests; `labels.Time` / `labels.Times` threaded through TurnEventHeader, App report, SettingsPanel, HudLayer (via `timeUnitShort` prop); runtime console logs + chat memories + agent reactions + agent memory now read `scenario.labels.timeUnitNoun` instead of the hardcoded "Year".
+- **[ed10e3a8 paracosm](#): Phase B, per-timepoint worldSnapshot carries all four runtime bags.** 4 files, +135/-15. `TurnArtifact.stateSnapshotAfter` widened from Mars-flat to five-bag structural (metrics required; capacities/statuses/politics/environment optional). Orchestrator emits all bags with conditional spread. `buildRunArtifact` mirrors to per-timepoint `worldSnapshot`. 2 new regression tests.
+- **[b1ff8e0c paracosm](#): Phase C, StatsBar surfaces statuses + environment.** 6 files, +187/-10. Orchestrator `turn_done` emits now carry statuses + environment; StreamEvent schema extends `TurnDoneDataSchema` additively (no version bump). `LeaderSideState` gains the two fields; `useGameState` reducer routes them. Two new compact pills (STATUSES §, ENV E) appear only when non-empty; tooltip spells out every key/value. 7 new `formatBagTooltip` unit tests.
+
+Tier 1 totals: 24 files, +634/-107. Test baseline 572 → 592 (20 new tests). Zero tsc regressions, only pre-existing Zod-v4 warnings.
+
+### 2026-04-23 session (structured-world-model positioning + roadmap)
+
+- **[12219ab5 paracosm](#): Reposition as structured world model for AI agents.** 11 files, +1615/-96. Spec + positioning map + README + ARCHITECTURE + landing + dashboard HTML + package.json + WorldModel façade + 5 tests + Tier 1 plan file.
+- **[10a5f07a paracosm](#): Roadmap and work queue (this file, initial draft).** 1 file, +220.
+- **[c938b9a agentos.sh](#): Structured-world-model blog post + editor's notes on 3 existing paracosm posts.** 4 files, +144.
+- **[aec39a3c packages/agentos](#): PARACOSM.md source rewrite (pull-docs.mjs will sync into live-docs on next build).** 1 file, +21/-15.
+- **[63746647f / ba84302d0 monorepo](#): Submodule pointer bumps for positioning + roadmap.**
+
+All commits local-only across both sessions. Push order when approved: paracosm → agentos.sh → packages/agentos → monorepo. Paracosm push triggers a single `paracosm@0.7.<next>` CI publish that covers every commit since origin/master.
 
 ---
 
