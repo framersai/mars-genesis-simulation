@@ -34,26 +34,31 @@ Six layers, each with a single responsibility.
 
 ### 3.1 Server: extend `/setup` with fork config
 
-Two new optional fields on the setup POST body. No new endpoint; no change to existing fields.
+Two new optional fields on the setup POST body. No new endpoint; no change to existing fields. **Client-authority model:** the dashboard sends the full parent artifact in the request body rather than having the server look it up. Rationale in the audit note at the end of this section.
 
 ```typescript
 interface SetupConfig {
   // existing fields: leaders, turns, seed, models, economics, etc.
 
   /**
-   * Optional fork parent. When set, the run resumes from the named
-   * parent at `atTurn` rather than starting fresh. The server looks
-   * up the parent artifact from its run-history store, calls
-   * `WorldModel.forkFromArtifact`, and runs the forked simulation
-   * starting at `atTurn + 1`. Parent must have been run with
-   * `captureSnapshots: true` or the fork fails fast.
+   * Optional fork parent. When set, the run resumes from the supplied
+   * parent artifact at `atTurn` rather than starting fresh. The server
+   * calls `WorldModel.forkFromArtifact(parentArtifact, atTurn)` and
+   * runs the forked simulation starting at `atTurn + 1`. The parent
+   * artifact must include `scenarioExtensions.kernelSnapshotsPerTurn`
+   * (i.e. was run with `captureSnapshots: true`) or the fork fails
+   * fast.
    *
    * When set, `leaders` must contain EXACTLY ONE leader (the
-   * override for the forked branch). The parent's other leader
-   * stays put in the parent's own artifact. Mixing fork + multi-
-   * leader setup in one request is rejected with 400.
+   * override for the forked branch). Mixing fork + multi-leader
+   * setup in one request is rejected with 400.
+   *
+   * The body is large (a 6-turn 100-agent parent artifact with
+   * snapshots runs ~500 KB). Fine for developer-local dashboards;
+   * hosted-demo deployments already rate-limit the endpoint and can
+   * additionally gate fork requests by body size.
    */
-  forkFrom?: { runId: string; atTurn: number };
+  forkFrom?: { parentArtifact: RunArtifact; atTurn: number };
 
   /**
    * Opt-in kernel snapshot capture. Dashboard defaults to `true` for
@@ -68,27 +73,19 @@ interface SetupConfig {
 Server-side flow when `forkFrom` is present:
 
 1. Reject with 400 if `config.leaders.length !== 1`. Forks are single-leader by design.
-2. Look up the parent: `const parent = await runHistoryStore.getArtifactByRunId(forkFrom.runId)`.
-3. Reject with 404 if no parent found.
-4. Reject with 400 if `parent.scenarioExtensions.kernelSnapshotsPerTurn` is missing or empty (the parent wasn't run with captureSnapshots). Error body includes the `captureSnapshots: true` pointer.
-5. Reject with 400 if `parent.metadata.scenario.id !== activeScenario.id`. Cross-scenario forks forbidden.
-6. Construct the WorldModel: `const wm = WorldModel.fromScenario(activeScenario)`.
-7. Fork: `const forkedWm = await wm.forkFromArtifact(parent, forkFrom.atTurn)`.
-8. Simulate: `await forkedWm.simulate(leader, { maxTurns: config.turns, seed: config.seed, captureSnapshots: true, onEvent: (ev) => emit(ev), ... })`.
-9. SSE stream emits turn events as normal starting from `atTurn + 1`. Clients that don't understand forks see a normal event stream; clients that do read `metadata.forkedFrom` from the final artifact.
+2. Reject with 400 if `forkFrom.parentArtifact.metadata.scenario.id !== activeScenario.id`. Cross-scenario forks forbidden.
+3. Reject with 400 if `forkFrom.parentArtifact.scenarioExtensions?.kernelSnapshotsPerTurn` is missing or empty. Error body includes the `captureSnapshots: true` pointer.
+4. Reject with 409 if `simRunning && activeSimAbortController` (per existing active-run guard at [server-app.ts:1550](../../src/cli/server-app.ts#L1550)). Parent must settle before fork.
+5. Construct the WorldModel: `const wm = WorldModel.fromScenario(activeScenario)`.
+6. Fork: `const forkedWm = await wm.forkFromArtifact(forkFrom.parentArtifact, forkFrom.atTurn)`.
+7. Simulate: `await forkedWm.simulate(leader, { maxTurns, seed, captureSnapshots: true, onEvent: (ev) => emit(ev), ... })`.
+8. SSE stream emits turn events as normal starting from `atTurn + 1`. Clients that don't understand forks see a normal event stream; clients that do read `metadata.forkedFrom` from the final artifact.
 
-### 3.2 Server: fork-history endpoint
+**Audit note on client-authority.** The original spec draft assumed `runHistoryStore.getArtifactByRunId(runId)` would look up the parent server-side. A source audit showed `RunHistoryStore` today stores only `RunRecord` metadata (runId, scenarioId, leaderConfigHash, economicsProfile, sourceMode, createdBy) via `insertRun / listRuns / getRun`, not the full artifact ([run-history-store.ts](../../src/cli/server/run-history-store.ts)). Storing full artifacts server-side would require a persistence-layer rewrite (filesystem blobs, SQLite, or an in-memory cache), which is out of scope for 2B (T4.3 covers it). Client-authority is simpler, narrower, and matches the existing "dashboard holds state; server processes requests" pattern. The dashboard always has the parent artifact in memory when the user clicks Fork (it just finished the run), so the request body is free.
 
-One new endpoint for the Branches tab's data fetch:
+### 3.2 No fork-history endpoint
 
-```
-GET /runs/forks?parentRunId=<id>
-→ 200 { branches: RunArtifact[] }
-```
-
-Reads from `runHistoryStore`, filters for artifacts where `metadata.forkedFrom?.parentRunId === parentRunId`. Returns them sorted by `metadata.completedAt` descending.
-
-Rationale for a dedicated endpoint: the Branches tab needs cheap repeated polling as new branches run to completion. Scanning the whole history on the client for every render is wasteful; the server already has the data and the filter is trivial.
+Originally spec'd `GET /runs/forks?parentRunId=`. Dropped: since the client holds authority over parent + branch artifacts (it created all of them in-session), the Branches tab reads from dashboard-side state, not server state. Reload-across-sessions for branch history is out of scope; the existing Load menu + client-side persistence already cover single-artifact reload, and multi-branch session persistence can land in a T4.3 follow-up when SQLite persistence lands.
 
 ### 3.3 Dashboard: "Fork at turn N" button
 
@@ -135,9 +132,10 @@ No trajectory line charts in 2B. That's T5.1 (dashboard viz kit) territory; this
 
 ### 3.6 State wiring
 
-- New context: `BranchesContext` in `App.tsx`. Holds `{ branches: RunArtifact[], parentRunId: string | undefined }`.
-- Populated by a `useBranches(parentRunId)` hook that polls `/runs/forks?parentRunId=...` every 3 seconds while the BranchesTab is active, idle otherwise.
-- Active branch runs (streaming SSE) are inserted optimistically when the user hits "Confirm" in the fork modal, then replaced by the authoritative server artifact on completion.
+- New context: `BranchesContext` in `App.tsx`. Holds `{ parent?: RunArtifact, branches: RunArtifact[] }`.
+- `parent` is the current session's completed run (captured once it reaches terminal state). `branches` is the list of forked runs produced in the same session.
+- When the user confirms the fork modal, an optimistic branch entry is inserted immediately (status: `Running`, 0 turns). SSE events from the fork run update it; when the run's final `sim_done` / equivalent terminal event arrives, the entry flips to the authoritative `RunArtifact` that the dashboard assembled from the event stream (existing pattern from `useSSE` + `useGameState`).
+- No server polling. All state is client-side.
 - Branches tab reads from `BranchesContext`; button + modal use `useDashboardNavigation` to navigate to it on confirm.
 
 ### 3.7 Client-side delta computation
@@ -187,12 +185,12 @@ Implementation iterates `parent.finalState.metrics` / `statuses` / `environment`
 ## 6. Tests
 
 1. **Server fork route unit** (`tests/cli/server-app-fork.test.ts`):
-   - `/setup` with valid `forkFrom` + 1 leader + parent in history → calls `WorldModel.forkFromArtifact` with right args.
+   - `/setup` with valid `forkFrom` + 1 leader + parent artifact in body → calls `WorldModel.forkFromArtifact` with right args.
    - `/setup` with `forkFrom` + 2 leaders → 400.
-   - `/setup` with `forkFrom` where parent has no `kernelSnapshotsPerTurn` → 400 with captureSnapshots pointer.
-   - `/setup` with `forkFrom` where parent runId not found → 404.
-   - `/setup` with `forkFrom` on wrong-scenario parent → 400.
-   - `GET /runs/forks?parentRunId=X` → returns filtered array.
+   - `/setup` with `forkFrom` where parent artifact has no `kernelSnapshotsPerTurn` → 400 with captureSnapshots pointer.
+   - `/setup` with `forkFrom` on wrong-scenario parent artifact → 400.
+   - `/setup` with `forkFrom` while a run is already active → 409.
+   - Active-run conflict error body carries the current run's runId so the client can surface it.
 2. **Modal render helpers** (`tests/cli/dashboard/components/reports/ForkModal.helpers.test.ts`):
    - Cost estimate computes correctly for economy + quality presets.
    - Custom events parser handles valid + invalid lines.
@@ -217,12 +215,12 @@ No new standalone doc. The feature is small enough that JSDoc + README update is
 
 | Risk | Mitigation |
 |---|---|
-| Dashboard polling every 3s is wasteful when no branches exist | Poll only when Branches tab is active AND parent run is complete AND there's at least one optimistic or server-confirmed branch to watch. Stop polling entirely when all branches have terminal status. |
 | User triggers fork while parent is still running | UI disables fork button until parent completes. Backend enforces: `/setup` with `forkFrom` rejects with 409 if a run is currently active. |
 | Fork modal's "build a new leader" can produce invalid HEXACO | Reuse the existing `SettingsPanel` leader builder's validation. No new validation code; share a helper. |
-| Server memory grows unbounded with many branches per parent | Branches are just `RunArtifact`s in `runHistoryStore`; existing store has whatever retention policy paracosm already uses. No new memory story in 2B; defer to T4.3 (SQLite persistence adapter) for long-term. |
+| Request body is large (500 KB for full parent artifact with snapshots) | Acceptable for developer-local dashboard (loopback); hosted-demo deployments already rate-limit `/setup` per-IP and can add a request-size cap. If compression is ever needed, it's server-layer config, not a protocol change. |
+| Client loses branch state on reload | Out of scope for 2B. Existing Load menu persists individual artifacts; multi-artifact branch history persistence is T4.3 (SQLite persistence adapter) territory. |
 | Branch cards compute deltas on render; expensive for 20+ branches | `computeBranchDeltas` is O(n) in bag-key count and memoized via `useMemo` keyed on artifact pair. Stays under 1ms per card. |
-| Optimistic branch entries orphaned if the forked run crashes before first turn | `useBranches` poll reconciles: any optimistic entry without a server-confirmed artifact after 30s flips to `Error` state with a "retry" action. |
+| Optimistic branch entry orphaned if the forked run crashes before first turn | SSE stream emits `sim_aborted` + `provider_error` events; branch entry flips to `Error` status when either arrives. A watchdog timeout (30s without any SSE event) also flips to `Error` with a retry action, matching the existing orchestrator abort-on-disconnect pattern. |
 
 ## 9. Success criteria
 
@@ -238,24 +236,23 @@ No new standalone doc. The feature is small enough that JSDoc + README update is
 Single-commit ship at the end (user's commit-batching preference; CI auto-publishes once per push):
 
 1. Server: extend `/setup` config schema with `forkFrom` + `captureSnapshots`.
-2. Server: implement fork path in `/setup` handler (parent lookup, validation, `WorldModel.forkFromArtifact`, simulate).
-3. Server: add `GET /runs/forks?parentRunId=` endpoint.
-4. Server tests: 6 fork-route unit tests.
-5. Dashboard: add `'branches'` to `DASHBOARD_TABS`. Tab-routing + nav wiring.
-6. Dashboard: `useBranches` hook + `BranchesContext`.
-7. Dashboard: `BranchesTab.helpers.ts` with `computeBranchDeltas` + unit tests.
-8. Dashboard: `BranchesTab.tsx` component reading from context.
-9. Dashboard: `ForkModal.helpers.ts` (cost estimate, custom events parser, leader preset resolver) + unit tests.
-10. Dashboard: `ForkModal.tsx` component.
-11. Dashboard: `↳ Fork at N` button in Reports tab turn rows.
-12. Dashboard: enablement rule (button visible only when `kernelSnapshotsPerTurn` present + parent complete + turn ≤ latest).
-13. Dashboard: `captureSnapshots: true` default on all UI-initiated runs (flip in Settings → simulate wrapper or wherever the POST body is assembled).
-14. README section update.
-15. Roadmap move to Shipped.
-16. Full verification sweep: `npm test`, `tsc --noEmit`, `npm run build`.
-17. Em-dash sweep on authored files.
-18. Atomic commit.
-19. Monorepo submodule pointer bump.
+2. Server: implement fork path in `/setup` handler (parent-artifact validation, `WorldModel.forkFromArtifact`, simulate). Reuses existing `simRunning` guard.
+3. Server tests: 5 fork-route unit tests.
+4. Dashboard: add `'branches'` to `DASHBOARD_TABS`. Tab-routing + nav wiring.
+5. Dashboard: `BranchesContext` + reducer actions for optimistic insert / SSE update / terminal.
+6. Dashboard: `BranchesTab.helpers.ts` with `computeBranchDeltas` + unit tests.
+7. Dashboard: `BranchesTab.tsx` component reading from context.
+8. Dashboard: `ForkModal.helpers.ts` (cost estimate, custom events parser, leader preset resolver) + unit tests.
+9. Dashboard: `ForkModal.tsx` component.
+10. Dashboard: `↳ Fork at N` button in Reports tab turn rows.
+11. Dashboard: enablement rule (button visible only when `kernelSnapshotsPerTurn` present + parent complete + turn ≤ latest).
+12. Dashboard: `captureSnapshots: true` default on all UI-initiated runs (flip wherever the POST body to `/setup` is assembled; Settings panel and TopBar are likely entry points).
+13. README section update.
+14. Roadmap move to Shipped.
+15. Full verification sweep: `npm test`, `tsc --noEmit`, `npm run build`.
+16. Em-dash sweep on authored files.
+17. Atomic commit.
+18. Monorepo submodule pointer bump.
 
 ## 11. References
 
