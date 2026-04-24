@@ -12,7 +12,7 @@
 
 Paracosm's positioning (structured world model + counterfactual world simulation model, see [positioning spec](2026-04-23-structured-world-model-positioning-design.md)) promises reproducible counterfactuals: same seed, different one variable, measurable divergence. The existing API forces users to re-run from turn 0 every time they want to explore a counterfactual. For a 6-turn run on OpenAI quality that costs ~$2-3 per exploration, and the first N turns get re-computed identically across every branch.
 
-What the CWSM framing actually requires: fork any past turn, swap one variable (typically the leader's HEXACO profile or a custom event), and continue from there. Costs half. Matches the research lineage ([Kirfel et al, Stanford 2025](https://cicl.stanford.edu/papers/kirfel2025when.pdf)). Closes the roadmap's Enterprise-tier line "Alternate Timelines: fork a simulation mid-run to explore 'what if' branches."
+What the CWSM framing actually requires: fork any past turn, swap one variable (typically the leader's HEXACO profile or a custom event), and continue from there. Costs half. Matches the research lineage ([Kirfel et al, 2025](https://link.springer.com/article/10.1007/s43681-025-00718-4)). Closes the roadmap's Enterprise-tier line "Alternate Timelines: fork a simulation mid-run to explore 'what if' branches."
 
 This spec delivers the programmatic API for that capability. The dashboard UX that sits on top ships in Spec 2B.
 
@@ -331,7 +331,7 @@ Maps to the implementation plan we'll write next:
 - Roadmap Tier 2 sketch: [`2026-04-23-paracosm-roadmap.md`](../plans/2026-04-23-paracosm-roadmap.md#tier-2-worldmodelforkatturn-session-after-tier-1)
 - Positioning spec: [`2026-04-23-structured-world-model-positioning-design.md`](2026-04-23-structured-world-model-positioning-design.md)
 - Positioning map (CWSM section): [`../positioning/world-model-mapping.md`](../../positioning/world-model-mapping.md)
-- Kirfel et al, Stanford 2025, "When simulations get real: ethical implications of counterfactual world simulation models" ([PDF](https://cicl.stanford.edu/papers/kirfel2025when.pdf))
+- Kirfel et al, 2025, "When AI meets counterfactuals: the ethical implications of counterfactual world simulation models" ([PDF](https://link.springer.com/article/10.1007/s43681-025-00718-4))
 - Related LLM-counterfactual research: [AXIS, arXiv 2505.17801](https://arxiv.org/html/2505.17801v1); [Counterfactual Effect Decomposition in Multi-Agent Sequential Decision Making, ICML 2025](https://icml.cc/virtual/2025/poster/44311)
 - Existing kernel export: [kernel.ts:160](../../src/engine/core/kernel.ts#L160)
 - Existing `WorldModel` facade: [src/runtime/world-model/index.ts](../../src/runtime/world-model/index.ts)

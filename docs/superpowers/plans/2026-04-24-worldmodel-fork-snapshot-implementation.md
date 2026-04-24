@@ -1365,7 +1365,7 @@ git commit -m "$(cat <<'EOF'
 feat(world-model): fork + snapshot API for mid-run counterfactuals
 
 Ships Spec 2A of the Tier 2 arc. Paracosm's CWSM positioning
-(Kirfel et al, Stanford 2025; Xing 2025; ACM CSUR 2025) promises
+(Kirfel et al, 2025; Xing 2025; ACM CSUR 2025) promises
 reproducible counterfactual branching; this commit delivers the
 backend API that operationalizes it. Spec 2B (dashboard
 alternate-timeline UX) ships in a follow-up session.

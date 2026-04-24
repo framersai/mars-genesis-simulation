@@ -33,7 +33,7 @@ A JSON file describes a world. A leader with a HEXACO personality profile runs i
 
 Two runs against an identical seed, starting from the same JSON, produce measurably divergent trajectories when you swap one variable: the leader's personality. The kernel's side is reproducible. The divergence comes from the LLM stages reading HEXACO profiles and deciding differently. That structural contrast is the product.
 
-Paracosm is a **structured world model** in the sense of [Xing 2025](https://arxiv.org/abs/2507.05169) and the [ACM CSUR 2025 world-model survey](https://dl.acm.org/doi/full/10.1145/3746449): a simulator for *actionable possibilities*, not a video generator. It is also a **counterfactual world simulation model** ([Kirfel et al, Stanford 2025](https://cicl.stanford.edu/papers/kirfel2025when.pdf)): a substrate for replaying an event with one variable changed and surfacing the effect. Full taxonomy mapping in [`docs/positioning/world-model-mapping.md`](docs/positioning/world-model-mapping.md).
+Paracosm is a **structured world model** in the sense of [Xing 2025](https://arxiv.org/abs/2507.05169) and the [ACM CSUR 2025 world-model survey](https://dl.acm.org/doi/full/10.1145/3746449): a simulator for *actionable possibilities*, not a video generator. It is also a **counterfactual world simulation model** ([Kirfel et al, 2025](https://link.springer.com/article/10.1007/s43681-025-00718-4)): a substrate for replaying an event with one variable changed and surfacing the effect. Full taxonomy mapping in [`docs/positioning/world-model-mapping.md`](docs/positioning/world-model-mapping.md).
 
 ### Not these things
 

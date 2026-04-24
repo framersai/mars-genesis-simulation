@@ -259,7 +259,7 @@ Single-commit ship at the end (user's commit-batching preference; CI auto-publis
 - Spec 2A design: [`2026-04-24-worldmodel-fork-snapshot-api-design.md`](2026-04-24-worldmodel-fork-snapshot-api-design.md)
 - Spec 2A implementation plan: [`2026-04-24-worldmodel-fork-snapshot-implementation.md`](../plans/2026-04-24-worldmodel-fork-snapshot-implementation.md)
 - Positioning map CWSM section: [`../positioning/world-model-mapping.md`](../../positioning/world-model-mapping.md)
-- Kirfel et al, Stanford 2025, "Ethical implications of counterfactual world simulation models": [PDF](https://cicl.stanford.edu/papers/kirfel2025when.pdf)
+- Kirfel et al, 2025, "When AI meets counterfactuals: the ethical implications of counterfactual world simulation models": [PDF](https://link.springer.com/article/10.1007/s43681-025-00718-4)
 - Related academic work on counterfactual LLM simulation: [AXIS, arXiv 2505.17801](https://arxiv.org/html/2505.17801v1), [Counterfactual Effect Decomposition ICML 2025](https://icml.cc/virtual/2025/poster/44311)
 - Existing `/setup` endpoint: [server-app.ts:1448](../../src/cli/server-app.ts#L1448)
 - Existing tab routing: [tab-routing.ts:1](../../src/cli/dashboard/src/tab-routing.ts#L1)

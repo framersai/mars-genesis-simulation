@@ -36,7 +36,7 @@ Working from [Themesis "Five Competing Approaches"](https://themesis.com/2026/01
 
 ## Counterfactual World Simulation Models (CWSMs)
 
-Inside the "structured / LLM-based" branch, paracosm's specific research lineage is **counterfactual world simulation models**: simulators designed to replay an event with one variable changed and surface the divergence. Kirfel et al, Stanford 2025, ["When simulations get real: ethical implications of counterfactual world simulation models"](https://cicl.stanford.edu/papers/kirfel2025when.pdf) introduces the term CWSM and its use in legal and policy settings.
+Inside the "structured / LLM-based" branch, paracosm's specific research lineage is **counterfactual world simulation models**: simulators designed to replay an event with one variable changed and surface the divergence. Kirfel et al, 2025, ["When AI meets counterfactuals: the ethical implications of counterfactual world simulation models"](https://link.springer.com/article/10.1007/s43681-025-00718-4) introduces the term CWSM and its use in legal and policy settings.
 
 Paracosm operationalizes CWSMs:
 
@@ -87,7 +87,7 @@ LangGraph, AutoGen / AG2, CrewAI, OpenAI Agents SDK, Google ADK, Mastra: these b
 
 ### Not a classical agent-based modeling framework
 
-Mesa, NetLogo, MASON, AnyLogic, ABIDES: longstanding ABM tooling, generally rule-based or statistical, generally non-LLM. Paracosm's closest ancestors in that family are [the Nature HSSC 2024 survey on LLM-empowered ABM](https://www.nature.com/articles/s41599-024-03611-3) and [MIT Media Lab's "On the limits of agency in agent-based models"](https://www.media.mit.edu/publications/on-the-limits-of-agency-in-agent-based-models/). Read those papers for the theoretical backdrop, not for a paracosm competitor.
+Mesa, NetLogo, MASON, AnyLogic, ABIDES: longstanding ABM tooling, generally rule-based or statistical, generally non-LLM. Paracosm's closest ancestors in that family are [the Nature HSSC 2024 survey on LLM-empowered ABM](https://www.nature.com/articles/s41599-024-03611-3) and [MIT Media Lab's "On the limits of agency in agent-based models"](https://arxiv.org/abs/2409.10568). Read those papers for the theoretical backdrop, not for a paracosm competitor.
 
 ## The seven claim pillars
 
@@ -131,11 +131,11 @@ JSON Schema export via `npm run export:json-schema` for non-TypeScript consumers
 
 - [Critiques of World Models: Xing, arXiv 2507.05169](https://arxiv.org/abs/2507.05169): the structured-vs-generative split.
 - [Understanding World or Predicting Future? A Comprehensive Survey of World Models: ACM CSUR 2025](https://dl.acm.org/doi/full/10.1145/3746449): the two-branch taxonomy.
-- [Ethical implications of counterfactual world simulation models: Kirfel et al, Stanford 2025 (PDF)](https://cicl.stanford.edu/papers/kirfel2025when.pdf): the CWSM term and use cases.
+- [When AI meets counterfactuals: the ethical implications of counterfactual world simulation models: Kirfel et al, 2025 (PDF)](https://link.springer.com/article/10.1007/s43681-025-00718-4): the CWSM term and use cases.
 - [Large Language Model Based Multi-agents: A Survey of Progress and Challenges: IJCAI 2024](https://www.ijcai.org/proceedings/2024/890): LLM-MA as world simulation.
 - [LLM-Based World Models Can Make Decisions Solely: arXiv 2411.08794](https://arxiv.org/html/2411.08794v2)
 - [Large language models empowered agent-based modeling and simulation: Nature HSSC 2024](https://www.nature.com/articles/s41599-024-03611-3)
-- [On the limits of agency in agent-based models: MIT Media Lab](https://www.media.mit.edu/publications/on-the-limits-of-agency-in-agent-based-models/)
+- [On the limits of agency in agent-based models: MIT Media Lab](https://arxiv.org/abs/2409.10568)
 - [World Models: Five Competing Approaches: Themesis 2026-01-07](https://themesis.com/2026/01/07/world-models-five-competing-approaches/)
 - [Generative Agents: Interactive Simulacra of Human Behavior: Park et al, 2023, arXiv 2304.03442](https://arxiv.org/abs/2304.03442)
 - [Concordia: Google DeepMind](https://deepmind.google/research/publications/64717/)

@@ -11,7 +11,7 @@
 
 The phrase "AI agent swarm simulation engine" no longer uniquely identifies paracosm in April 2026. Two things broke it:
 
-1. **MiroFish / OASIS own the phrase.** MiroFish (github.com/666ghj/MiroFish) is "A Simple and Universal Swarm Intelligence Engine, Predicting Anything," built on CAMEL-AI's OASIS framework ("Open Agent Social Interaction Simulations with One Million Agents," openreview.net/forum?id=JBzTculaVV). MiroFish has four-digit GitHub stars, a hosted UI at mirofish.us, and raised $4M in 24 hours on its launch cycle. Its secondary marketing already uses the phrase "living world model."
+1. **MiroFish / OASIS own the phrase.** MiroFish (github.com/666ghj/MiroFish) is "A Simple and Universal Swarm Intelligence Engine, Predicting Anything," built on CAMEL-AI's OASIS framework ("Open Agent Social Interaction Simulations with One Million Agents," openreview.net/forum?id=JBzTculaVV). MiroFish has five-figure GitHub stars (~57k), a hosted UI at mirofish.us, and raised $4M in 24 hours on its launch cycle. Its secondary marketing already uses the phrase "living world model."
 2. **"World model" discourse is the load-bearing category of 2026.** LeCun's AMI Labs closed $1.03B on March 10 2026 (techcrunch.com). Eric Xing's arXiv paper "Critiques of World Models" (arXiv:2507.05169) argues the primary goal of a world model is "simulating all actionable possibilities," which is paracosm's product verbatim. The ACM CSUR 2025 survey "Understanding World or Predicting Future?" (dl.acm.org/doi/full/10.1145/3746449) formally separates world models into two branches: "understanding world" (paracosm-shaped) and "predicting future" (Sora/Genie-shaped): and treats both as legitimate.
 
 Paracosm sits in the academically-well-defined **structured / LLM-based / counterfactual world model** branch and has no incumbent competitor in that exact slot. The current tagline leaves that positioning on the table.
@@ -29,7 +29,7 @@ Paracosm is NOT any of these and should be named as not-any-of-these in public c
 | Swarm intelligence / social simulation | MiroFish, OASIS (CAMEL-AI), AI Town | 1,000s–1,000,000 agents interacting socially, outputs aggregate prediction reports | MiroFish / OASIS are **emergent-crowd predictive**. Paracosm is **top-down counterfactual**. |
 | Classical ABM (non-LLM) | Mesa, NetLogo, MASON, AnyLogic, ABIDES | Rule-based or statistical agent-based modeling; longstanding | No LLM; no scenario compilation from JSON; no runtime tool forging. |
 | LLM-native digital-twin tooling | "When Digital Twins Meet LLMs" (arXiv 2507.00319), NVIDIA GTC-26 digital-twin sessions | Model a specific subject (vehicle, patient, factory) under counterfactual intervention | Paracosm's `SubjectConfig` + `InterventionConfig` primitives on `paracosm/schema` plug into this category directly, but paracosm itself is the broader engine. |
-| Counterfactual World Simulation Models (CWSM) | Kirfel et al, Stanford 2025 ("Ethical implications of counterfactual world simulation models") | Replay an event with one counterfactual variable changed | **This is paracosm's core research lineage.** Same seed, same deterministic kernel, swap one variable (leader personality / intervention), measure the divergence. |
+| Counterfactual World Simulation Models (CWSM) | Kirfel et al, 2025 ("When AI meets counterfactuals: the ethical implications of counterfactual world simulation models") | Replay an event with one counterfactual variable changed | **This is paracosm's core research lineage.** Same seed, same deterministic kernel, swap one variable (leader personality / intervention), measure the divergence. |
 
 ## 3. Decision
 
@@ -43,7 +43,7 @@ Paracosm is NOT any of these and should be named as not-any-of-these in public c
 
 **Category claim (verbatim for README, landing page, features/paracosm.md, npm description):**
 
-> Paracosm is a **structured world model** (Xing 2025; ACM CSUR 2025) and a **counterfactual world simulation model** (Kirfel et al, Stanford 2025). It is NOT a generative visual / spatial world model (Sora, Genie 3, World Labs Marble), NOT a JEPA-style predictive-representation model (LeCun / AMI Labs), NOT a multi-agent task orchestration framework (LangGraph, AutoGen, CrewAI, OpenAI Agents SDK), NOT a bottom-up swarm intelligence simulator (MiroFish, OASIS), and NOT a generative agent-based modeling library (Concordia, Stanford Generative Agents). It IS a JSON-defined state space + deterministic seeded kernel + LLM-driven events and specialist analyses + HEXACO-personality leaders + universal Zod-validated run artifact spanning turn-loop civilization simulations, batch-trajectory digital twins, and batch-point forecasts.
+> Paracosm is a **structured world model** (Xing 2025; ACM CSUR 2025) and a **counterfactual world simulation model** (Kirfel et al, 2025). It is NOT a generative visual / spatial world model (Sora, Genie 3, World Labs Marble), NOT a JEPA-style predictive-representation model (LeCun / AMI Labs), NOT a multi-agent task orchestration framework (LangGraph, AutoGen, CrewAI, OpenAI Agents SDK), NOT a bottom-up swarm intelligence simulator (MiroFish, OASIS), and NOT a generative agent-based modeling library (Concordia, Stanford Generative Agents). It IS a JSON-defined state space + deterministic seeded kernel + LLM-driven events and specialist analyses + HEXACO-personality leaders + universal Zod-validated run artifact spanning turn-loop civilization simulations, batch-trajectory digital twins, and batch-point forecasts.
 
 **Why this specific phrasing:**
 
@@ -187,7 +187,7 @@ Steps 2–9 are commits in `apps/paracosm` and `apps/agentos.sh` (the latter is 
 
 - [Critiques of World Models: Eric Xing, arXiv:2507.05169](https://arxiv.org/abs/2507.05169)
 - [Understanding World or Predicting Future? A Comprehensive Survey of World Models: ACM CSUR 2025](https://dl.acm.org/doi/full/10.1145/3746449)
-- [Ethical implications of counterfactual world simulation models: Kirfel et al, Stanford 2025 (PDF)](https://cicl.stanford.edu/papers/kirfel2025when.pdf)
+- [When AI meets counterfactuals: the ethical implications of counterfactual world simulation models: Kirfel et al, 2025 (PDF)](https://link.springer.com/article/10.1007/s43681-025-00718-4)
 - [Large Language Model Based Multi-agents: A Survey of Progress and Challenges: IJCAI 2024](https://www.ijcai.org/proceedings/2024/890)
 - [LLM-Based World Models Can Make Decisions Solely: arXiv:2411.08794](https://arxiv.org/html/2411.08794v2)
 - [Large language models empowered agent-based modeling and simulation: Nature HSSC 2024](https://www.nature.com/articles/s41599-024-03611-3)
