@@ -1,6 +1,8 @@
 /**
  * Paracosm WorldModel façade: a one-object surface over the
- * `compileScenario + runSimulation + runBatch` trio.
+ * `compileScenario + runSimulation + runBatch` trio, plus the
+ * snapshot + fork API that operationalizes paracosm's CWSM
+ * (counterfactual world simulation model) positioning.
  *
  * Why it exists: paracosm positions itself as a structured world model
  * for AI agents (see `docs/positioning/world-model-mapping.md`). The
@@ -34,6 +36,7 @@ import type { CompileOptions } from '../../engine/compiler/types.js';
 import type { KeyPersonnel } from '../../engine/core/agent-generator.js';
 import type { ScenarioPackage } from '../../engine/types.js';
 import type { RunArtifact } from '../../engine/schema/index.js';
+import type { KernelSnapshot } from '../../engine/core/snapshot.js';
 
 /**
  * Options accepted by {@link WorldModel.simulate}. Identical to
@@ -48,6 +51,49 @@ export type WorldModelSimulateOptions = Omit<RunOptions, 'scenario'>;
  * Pass `leaders`, `turns`, `seed`, and any other `BatchConfig` fields.
  */
 export type WorldModelBatchOptions = Omit<BatchConfig, 'scenarios'>;
+
+/**
+ * Serializable bundle that captures everything needed to reconstruct
+ * an equivalent {@link WorldModel} at a specific turn. Round-trips
+ * through `JSON.stringify` + `JSON.parse` without data loss.
+ *
+ * Produced by {@link WorldModel.snapshot} (live run) or implicitly
+ * via {@link WorldModel.forkFromArtifact} (disk-persisted run that
+ * was created with `captureSnapshots: true`).
+ */
+export interface WorldModelSnapshot {
+  /** Format discriminator; bumped when the shape changes. */
+  snapshotVersion: 1;
+  /** Kernel state at capture time. */
+  kernel: KernelSnapshot;
+  /** Run-id the snapshot was captured from, when available. Threaded
+   *  into `RunArtifact.metadata.forkedFrom.parentRunId` on the child
+   *  run so fork chains reconstruct from stored artifacts. */
+  parentRunId?: string;
+}
+
+/**
+ * Options accepted by {@link WorldModel.fork} and
+ * {@link WorldModel.forkFromArtifact}. Everything is optional;
+ * callers typically pass a `leader` override and let the RNG resume
+ * from the snapshot's captured state.
+ */
+export interface ForkOptions {
+  /** Override the leader for the forked branch. When omitted, the
+   *  caller supplies the leader at the subsequent `.simulate()` call,
+   *  exactly as with a fresh {@link WorldModel}. */
+  leader?: LeaderConfig;
+  /** Override the scenario-level seed. When unset (the default), the
+   *  forked kernel resumes from `snapshot.kernel.rngState` and the
+   *  kernel-deterministic stages produce the same sequence the parent
+   *  run did from the fork point forward. Setting a new seed
+   *  re-randomizes kernel decisions from the fork point. */
+  seed?: number;
+  /** Events to inject at specific turns of the forked branch. Passed
+   *  through verbatim to runSimulation's existing `customEvents` at
+   *  the subsequent `.simulate()` call. */
+  customEvents?: Array<{ turn: number; title: string; description: string }>;
+}
 
 /**
  * A compiled, runnable world. Wraps a {@link ScenarioPackage} with
@@ -71,14 +117,16 @@ export type WorldModelBatchOptions = Omit<BatchConfig, 'scenarios'>;
  * const artifact = await wm.simulate(leader, { maxTurns: 6, seed: 42 });
  * ```
  *
- * @example Counterfactual comparison (the core paracosm use case)
+ * @example Counterfactual branch via fork
  * ```ts
  * const wm = await WorldModel.fromJson(worldJson);
- * const [pragmatist, innovator] = await Promise.all([
- *   wm.simulate(pragmatistLeader, { maxTurns: 6, seed: 42 }),
- *   wm.simulate(innovatorLeader,  { maxTurns: 6, seed: 42 }),
- * ]);
- * // pragmatist.fingerprint vs innovator.fingerprint: same seed, different world.
+ * const trunk = await wm.simulate(visionary, {
+ *   maxTurns: 6, seed: 42, captureSnapshots: true,
+ * });
+ * const branch = await (await wm.forkFromArtifact(trunk, 3)).simulate(
+ *   pragmatist, { maxTurns: 3, seed: 42 },
+ * );
+ * // branch.metadata.forkedFrom === { parentRunId: trunk.metadata.runId, atTurn: 3 }
  * ```
  *
  * @example Pre-compiled scenario
@@ -97,6 +145,39 @@ export class WorldModel {
    * the façade does not surface.
    */
   public readonly scenario: ScenarioPackage;
+
+  /**
+   * Snapshot of the kernel at the end of the most recent successful
+   * `simulate()` call. Populated when that simulate() was invoked with
+   * `captureSnapshots: true`. Used by {@link WorldModel.snapshot} to
+   * emit a {@link WorldModelSnapshot} without requiring callers to
+   * plumb the kernel themselves. Undefined otherwise.
+   */
+  private _lastKernelSnapshot?: KernelSnapshot;
+
+  /**
+   * Run id of the most recent successful `simulate()` call. Used by
+   * {@link WorldModel.snapshot} to populate
+   * {@link WorldModelSnapshot.parentRunId} so child runs record
+   * `forkedFrom.parentRunId`.
+   */
+  private _lastRunId?: string;
+
+  /**
+   * When this WorldModel was produced by {@link WorldModel.fork} or
+   * {@link WorldModel.forkFromArtifact}, this holds the `forkedFrom`
+   * link that the next {@link WorldModel.simulate} call threads into
+   * the child RunArtifact's `metadata.forkedFrom`. Cleared after
+   * simulate() consumes it.
+   */
+  private _pendingForkedFrom?: { parentRunId: string; atTurn: number };
+
+  /**
+   * When this WorldModel was produced by {@link WorldModel.fork}, this
+   * holds the kernel snapshot that {@link WorldModel.simulate} must
+   * restore before running. Cleared after simulate() consumes it.
+   */
+  private _pendingResumeFrom?: KernelSnapshot;
 
   private constructor(scenario: ScenarioPackage) {
     this.scenario = scenario;
@@ -136,16 +217,48 @@ export class WorldModel {
    * `keyPersonnel` is optional for parity with the underlying API; most
    * callers pass `[]` or omit it. The returned {@link RunArtifact} is
    * the universal Zod-validated contract exported from `paracosm/schema`.
+   *
+   * When this WorldModel was produced by {@link WorldModel.fork} or
+   * {@link WorldModel.forkFromArtifact}, the pending
+   * `_resumeFrom` + `_forkedFrom` context is threaded into the
+   * underlying runSimulation via the internal `_resumeFrom` /
+   * `_forkedFrom` fields on {@link RunOptions}. Both are cleared after
+   * simulate() consumes them so a second simulate() on the same
+   * WorldModel does not double-apply.
    */
   async simulate(
     leader: LeaderConfig,
     options: WorldModelSimulateOptions = {},
     keyPersonnel: KeyPersonnel[] = [],
   ): Promise<RunArtifact> {
-    return runSimulation(leader, keyPersonnel, {
+    const mergedOpts: RunOptions & {
+      _forkedFrom?: { parentRunId: string; atTurn: number };
+      _resumeFrom?: KernelSnapshot;
+    } = {
       ...options,
       scenario: this.scenario,
-    });
+      _forkedFrom: this._pendingForkedFrom,
+      _resumeFrom: this._pendingResumeFrom,
+    };
+    // Drop the pending context so subsequent simulate calls on the
+    // same WorldModel don't double-apply.
+    this._pendingForkedFrom = undefined;
+    this._pendingResumeFrom = undefined;
+
+    const artifact = await runSimulation(leader, keyPersonnel, mergedOpts as RunOptions);
+    this._lastRunId = artifact.metadata.runId;
+
+    // Pull the terminal kernel snapshot from the artifact's embedded
+    // per-turn snapshots (populated when captureSnapshots: true was
+    // on). When captureSnapshots was off, snapshot() is degraded /
+    // unavailable; snapshot() throws with a pointer to the flag.
+    const perTurn = (artifact.scenarioExtensions as { kernelSnapshotsPerTurn?: KernelSnapshot[] } | undefined)?.kernelSnapshotsPerTurn;
+    if (perTurn && perTurn.length > 0) {
+      this._lastKernelSnapshot = perTurn[perTurn.length - 1];
+    } else {
+      this._lastKernelSnapshot = undefined;
+    }
+    return artifact;
   }
 
   /**
@@ -161,5 +274,109 @@ export class WorldModel {
       ...options,
       scenarios: [this.scenario],
     });
+  }
+
+  /**
+   * Capture a {@link WorldModelSnapshot} of the state at the end of
+   * this WorldModel's most recent `simulate()` call. Requires
+   * `simulate(..., { captureSnapshots: true })` on that prior call;
+   * throws with a clear pointer otherwise.
+   *
+   * The returned snapshot is plain JSON-safe; serialize to disk with
+   * `JSON.stringify` and reload with `JSON.parse` + `fork()`.
+   *
+   * @throws Error when this WorldModel has never run simulate(), or
+   *   when the last simulate() did not set `captureSnapshots: true`.
+   */
+  snapshot(): WorldModelSnapshot {
+    if (!this._lastKernelSnapshot) {
+      throw new Error(
+        'WorldModel.snapshot() requires a prior `simulate(..., { captureSnapshots: true })` ' +
+        'call on this WorldModel. Either enable snapshot capture on your simulation run or ' +
+        'use `forkFromArtifact(artifact, atTurn)` to fork from a stored RunArtifact.',
+      );
+    }
+    return {
+      snapshotVersion: 1,
+      kernel: this._lastKernelSnapshot,
+      parentRunId: this._lastRunId,
+    };
+  }
+
+  /**
+   * Construct a new WorldModel positioned at the snapshot's turn. The
+   * new WorldModel has no prior run of its own; calling `.simulate()`
+   * on it resumes from the snapshot's kernel state, optionally with a
+   * different leader, seed, or custom events.
+   *
+   * `metadata.forkedFrom` on the subsequent `.simulate()` call's
+   * returned RunArtifact is set to
+   * `{ parentRunId: snapshot.parentRunId, atTurn: snapshot.kernel.turn }`.
+   *
+   * The `opts` argument is accepted for API symmetry but not consumed
+   * at fork time; the caller passes `opts.leader` / `opts.seed` /
+   * `opts.customEvents` through to the subsequent `.simulate()` call
+   * directly. A future spec may fold this into a single-call API.
+   *
+   * @throws Error when `snapshot.kernel.scenarioId !== this.scenario.id`.
+   */
+  async fork(snapshot: WorldModelSnapshot, opts: ForkOptions = {}): Promise<WorldModel> {
+    if (snapshot.kernel.scenarioId !== this.scenario.id) {
+      throw new Error(
+        `WorldModel.fork: scenario id mismatch. Snapshot was taken against ` +
+        `'${snapshot.kernel.scenarioId}' but this WorldModel wraps ` +
+        `'${this.scenario.id}'. Cross-scenario forks are not supported.`,
+      );
+    }
+    const child = new WorldModel(this.scenario);
+    child._pendingResumeFrom = snapshot.kernel;
+    if (snapshot.parentRunId) {
+      child._pendingForkedFrom = {
+        parentRunId: snapshot.parentRunId,
+        atTurn: snapshot.kernel.turn,
+      };
+    }
+    // `opts` (leader / seed / customEvents) are documented at the
+    // interface boundary and intended for the subsequent simulate()
+    // call; fork() itself only needs the snapshot. Silence
+    // unused-parameter warnings explicitly.
+    void opts;
+    return child;
+  }
+
+  /**
+   * Convenience: pulls the kernel snapshot at `atTurn` from
+   * `artifact.scenarioExtensions.kernelSnapshotsPerTurn` (populated
+   * when the parent run was created with `captureSnapshots: true`)
+   * and calls {@link WorldModel.fork} with it.
+   *
+   * @throws Error when the artifact has no embedded per-turn
+   *   snapshots (parent wasn't run with `captureSnapshots: true`) or
+   *   when `atTurn` is out of range of the available snapshots.
+   */
+  async forkFromArtifact(artifact: RunArtifact, atTurn: number, opts: ForkOptions = {}): Promise<WorldModel> {
+    const perTurn = (artifact.scenarioExtensions as { kernelSnapshotsPerTurn?: KernelSnapshot[] } | undefined)?.kernelSnapshotsPerTurn;
+    if (!perTurn || perTurn.length === 0) {
+      throw new Error(
+        `WorldModel.forkFromArtifact: artifact has no embedded kernel snapshots. ` +
+        `Re-run the parent simulation with \`captureSnapshots: true\` on its RunOptions ` +
+        `to enable forking from the stored artifact.`,
+      );
+    }
+    const snap = perTurn.find(s => s.turn === atTurn);
+    if (!snap) {
+      throw new Error(
+        `WorldModel.forkFromArtifact: no snapshot at turn ${atTurn}. ` +
+        `Available turns: [${perTurn.map(s => s.turn).join(', ')}].`,
+      );
+    }
+    return this.fork(
+      {
+        snapshotVersion: 1,
+        kernel: snap,
+        parentRunId: artifact.metadata.runId,
+      },
+      opts,
+    );
   }
 }

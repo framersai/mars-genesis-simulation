@@ -68,6 +68,19 @@ export const RunMetadataSchema = z.object({
   mode: SimulationModeSchema,
   startedAt: z.string().datetime(),
   completedAt: z.string().datetime().optional(),
+  /**
+   * When this run was produced by forking a prior run, records the
+   * parent run-id + the turn at which the fork happened. Consumers
+   * walking a fork chain follow this link transitively through
+   * stored artifacts. Omitted for fresh (non-forked) runs.
+   *
+   * Added in 0.7.x with the WorldModel.fork() API. Additive +
+   * optional; no COMPILE_SCHEMA_VERSION bump required.
+   */
+  forkedFrom: z.object({
+    parentRunId: z.string().min(1),
+    atTurn: z.number().int().min(0),
+  }).optional(),
   scenarioExtensions: ScenarioExtensionsSchema,
 });
 

@@ -43,6 +43,7 @@ Paracosm operationalizes CWSMs:
 - **The constant:** scenario JSON + seeded PRNG + kernel lifecycle. Same inputs → identical agent rosters, lifecycles, promotions.
 - **The counterfactual:** leader HEXACO personality profile. Swap one leader for another and every LLM-driven stage diverges.
 - **The measurement:** `fingerprint` + per-turn `stateSnapshotAfter` + `specialistNotes[]` + `decisions[]` + final `worldSnapshot` across all five state bags.
+- **The API:** `WorldModel.fork()` (shipped in 0.7.x) lets callers branch a run at any past turn. Parent runs created with `captureSnapshots: true` carry per-turn kernel snapshots in `scenarioExtensions.kernelSnapshotsPerTurn`; `WorldModel.forkFromArtifact(artifact, atTurn, { leader: newLeader })` reads one, restores the kernel verbatim, and returns a fresh `WorldModel` positioned at `atTurn + 1`. `metadata.forkedFrom` on the child artifact links back to the parent for chain reconstruction.
 
 Related academic work on LLM-counterfactual simulation:
 

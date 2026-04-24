@@ -352,6 +352,28 @@ export interface RunOptions {
   customEvents?: Array<{ turn: number; title: string; description: string }>;
   models?: Partial<SimulationModelConfig>;
   /**
+   * When true, the orchestrator captures a {@link KernelSnapshot} at
+   * the end of every turn and stashes the resulting array under
+   * `artifact.scenarioExtensions.kernelSnapshotsPerTurn`. Enables
+   * `WorldModel.forkFromArtifact()` on the returned artifact. Default
+   * false so normal runs stay lean; snapshots add ~100 KB per turn
+   * for 100-agent Mars-shape runs.
+   */
+  captureSnapshots?: boolean;
+  /**
+   * Internal-only: `WorldModel.fork()` sets this to thread the
+   * `{ parentRunId, atTurn }` link onto the child run's
+   * `metadata.forkedFrom`. Not part of the public API; callers should
+   * use `WorldModel.fork()` rather than setting this directly.
+   */
+  _forkedFrom?: { parentRunId: string; atTurn: number };
+  /**
+   * Internal-only: `WorldModel.fork()` sets this to a
+   * {@link KernelSnapshot} that the orchestrator restores before
+   * running the first turn. Not part of the public API.
+   */
+  _resumeFrom?: import('../engine/core/snapshot.js').KernelSnapshot;
+  /**
    * Cost-vs-quality switch for model routing. Defaults to `'quality'`
    * which keeps department agents on the flagship tier (gpt-5.4 /
    * claude-sonnet-4-6) for reliable tool forging — ~$1-3 per 6-turn run
@@ -546,19 +568,30 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
   await initResearchMemory(sc.knowledge);
 
   const seed = opts.seed ?? 950;
-  const kernel = new SimulationKernel(seed, leader.name, keyPersonnel, {
-    startTime,
-    initialPopulation: opts.initialPopulation,
-    scenario: opts.scenario,
-    // StartingResources / StartingPolitics are subsets of the kernel's
-    // Partial<WorldSystems / WorldPolitics> shape. The kernel's types
-    // carry index signatures for scenario-defined fields; the starter
-    // configs only declare the universal fields, so the cast is safe.
-    startingResources: opts.startingResources as Partial<import('../engine/core/state.js').WorldSystems> | undefined,
-    startingPolitics: opts.startingPolitics as Partial<import('../engine/core/state.js').WorldPolitics> | undefined,
-    startingStatuses: opts.startingStatuses,
-    startingEnvironment: opts.startingEnvironment,
-  });
+  // WorldModel.fork() path: resume from a prior KernelSnapshot instead
+  // of constructing a fresh kernel. fromSnapshot validates
+  // scenarioVersion + scenarioId; the restored kernel is
+  // byte-equivalent to the one that produced the snapshot.
+  const kernel = opts._resumeFrom
+    ? SimulationKernel.fromSnapshot(opts._resumeFrom, sc.id)
+    : new SimulationKernel(seed, leader.name, keyPersonnel, {
+        startTime,
+        initialPopulation: opts.initialPopulation,
+        scenario: opts.scenario,
+        // StartingResources / StartingPolitics are subsets of the kernel's
+        // Partial<WorldSystems / WorldPolitics> shape. The kernel's types
+        // carry index signatures for scenario-defined fields; the starter
+        // configs only declare the universal fields, so the cast is safe.
+        startingResources: opts.startingResources as Partial<import('../engine/core/state.js').WorldSystems> | undefined,
+        startingPolitics: opts.startingPolitics as Partial<import('../engine/core/state.js').WorldPolitics> | undefined,
+        startingStatuses: opts.startingStatuses,
+        startingEnvironment: opts.startingEnvironment,
+      });
+  // When forking, start the turn loop after the snapshot's turn.
+  const firstTurn = opts._resumeFrom ? opts._resumeFrom.turn + 1 : 1;
+  // Per-turn kernel snapshots captured when opts.captureSnapshots is on.
+  // Populates RunArtifact.scenarioExtensions.kernelSnapshotsPerTurn.
+  const kernelSnapshotsPerTurn: import('../engine/core/snapshot.js').KernelSnapshot[] = [];
 
   const toolMap = new Map<string, ITool>();
   toolMap.set('web_search', webSearchTool);
@@ -912,7 +945,7 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
   // period" — not a failure of the sim, just an intentional cancel.
   let externallyAborted = false;
 
-  for (let turn = 1; turn <= maxTurns; turn++) {
+  for (let turn = firstTurn; turn <= maxTurns; turn++) {
     const time = timeSchedule[turn - 1] ?? (timeSchedule[timeSchedule.length - 1] + (turn - timeSchedule.length) * 5);
 
     // ── External-abort gate ─────────────────────────────────────────
@@ -1719,6 +1752,12 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
         ...(Object.keys(after.environment).length > 0 ? { environment: { ...after.environment } } : {}),
       },
     });
+    // Per-turn kernel snapshot for WorldModel.forkFromArtifact. Opt-in
+    // via opts.captureSnapshots; adds ~100 KB per turn for 100-agent
+    // Mars-shape runs, so it's off by default.
+    if (opts.captureSnapshots) {
+      kernelSnapshotsPerTurn.push(kernel.toSnapshot(sc.id));
+    }
     console.log(`  State: Pop ${after.systems.population} | Morale ${Math.round(after.systems.morale * 100)}% | Food ${after.systems.foodMonthsReserve.toFixed(1)}mo`);
     // Death cause breakdown for this turn: maps attributed causes from
     // the kernel (natural causes, radiation cancer, starvation, despair,
@@ -1963,7 +2002,15 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
         totalCitations: citationCatalog.length,
         totalToolsForged: forgedToolbox.length,
       },
+      // Opt-in per-turn kernel snapshots for WorldModel.forkFromArtifact.
+      // Only emitted when opts.captureSnapshots was on AND at least one
+      // turn actually ran; otherwise left off so normal artifacts stay
+      // lean.
+      ...(kernelSnapshotsPerTurn.length > 0
+        ? { kernelSnapshotsPerTurn }
+        : {}),
     },
+    forkedFrom: opts._forkedFrom,
   });
 
   writeRunOutput(output, {

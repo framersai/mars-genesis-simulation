@@ -141,6 +141,13 @@ export interface BuildArtifactInputs {
    * polluting the universal top-level shape.
    */
   scenarioExtensionsExtra?: Record<string, unknown>;
+  /**
+   * When this run was produced by a `WorldModel.fork()` call, this is
+   * the parent-run linkage that gets stamped onto
+   * `RunArtifact.metadata.forkedFrom`. Undefined for fresh (non-
+   * forked) runs.
+   */
+  forkedFrom?: { parentRunId: string; atTurn: number };
 }
 
 export function buildRunArtifact(inputs: BuildArtifactInputs): RunArtifact {
@@ -228,6 +235,7 @@ export function buildRunArtifact(inputs: BuildArtifactInputs): RunArtifact {
       mode: inputs.mode,
       startedAt: inputs.startedAt,
       completedAt: inputs.completedAt,
+      ...(inputs.forkedFrom ? { forkedFrom: inputs.forkedFrom } : {}),
     },
     overview: inputs.overview,
     assumptions: inputs.assumptions,

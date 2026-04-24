@@ -31,61 +31,13 @@ Historical plan file (kept for audit / bisect context): [`2026-04-23-close-0.7.x
 
 ---
 
-## Tier 2: `WorldModel.fork(atTurn)` (session after Tier 1)
+## Tier 2: `WorldModel.fork(atTurn)` (Spec 2A SHIPPED 2026-04-24; Spec 2B pending)
 
-**Detailed plan:** to be written after Tier 1 ships. Sketch below.
+**Spec 2A (backend fork API):** SHIPPED. `WorldModel.snapshot()`, `fork()`, `forkFromArtifact()`, `SimulationKernel.toSnapshot() / fromSnapshot()`, opt-in `captureSnapshots`, and `RunMetadata.forkedFrom` all live in master. Design doc: [`2026-04-24-worldmodel-fork-snapshot-api-design.md`](../specs/2026-04-24-worldmodel-fork-snapshot-api-design.md). Implementation plan: [`2026-04-24-worldmodel-fork-snapshot-implementation.md`](2026-04-24-worldmodel-fork-snapshot-implementation.md).
 
-**What:** add `WorldModel.fork(artifactOrState, atTurn, leaderOverride?)` that returns a new `WorldModel` positioned to resume from the given turn with a different leader. Add `WorldModel.snapshot()` that returns a serializable state. Add a dashboard UX for "fork this run" that runs the new branch alongside the original and renders the divergence.
+**Spec 2B (dashboard alternate-timeline UX):** PENDING. "Fork at turn N" button in Reports tab or Timeline, leader-override modal, branch-comparison view rendering both trajectories side by side. Depends on Spec 2A (now shipped). Effort estimate: 1 to 2 days. No detailed plan written yet; start with a new brainstorming session when ready.
 
-**Why:** paracosm's single most differentiated capability is counterfactual analysis (same seed, different variable). Today the API forces you to re-run from turn 0, which costs the full run budget. Forking mid-run cuts cost roughly in half for counterfactual-centric workflows and proves the CWSM positioning with code, not copy. The Enterprise Roadmap explicitly mentions "Alternate Timelines": this is the first brick.
-
-**Feasibility (verified):**
-- `SimulationKernel` already exports state via `structuredClone(this.state)` at [kernel.ts:160](../../src/engine/core/kernel.ts#L160) and [kernel.ts:362](../../src/engine/core/kernel.ts#L362) (`getState()` and `export()`).
-- `SeededRng.state` is a single 32-bit integer (plain `number`), serializable by any JSON codec. RNG resume is trivial.
-- `SimulationState` has 7 top-level fields: `metadata`, `systems`, `agents`, `politics`, `statuses`, `environment`, `eventLog`. All currently round-trip through `structuredClone`; no Dates, no Maps, no Sets.
-- `TurnArtifact.stateSnapshotAfter` is the per-turn input we'd fork from. Tier 1 Phase B widens this to carry all 5 state bags: so Tier 2 depends on Tier 1 B.
-
-**API shape (draft):**
-
-```typescript
-// WorldModel additions
-class WorldModel {
-  /** Serialize a live simulation back to a snapshot that fork() can consume. */
-  snapshot(): WorldSnapshot;
-
-  /**
-   * Fork a prior run at a specific turn. Returns a WorldModel positioned
-   * to resume with potentially different leader / options. Seeded state +
-   * agent roster + HEXACO histories carry over; from the fork point
-   * forward, divergence accumulates normally.
-   *
-   * Source can be a stored RunArtifact (common case, for audit replays)
-   * or a live WorldSnapshot from .snapshot().
-   */
-  fork(source: RunArtifact | WorldSnapshot, atTurn: number, opts?: ForkOptions): Promise<WorldModel>;
-}
-
-interface ForkOptions {
-  leader?: LeaderConfig;      // default: same leader
-  rngReseed?: number;         // default: resume from saved state
-  customEvents?: ...;         // inject counterfactual events at fork point
-}
-```
-
-**Kernel additions required:**
-
-- `SimulationKernel.fromSnapshot(state: SimulationState, rngState: number, turn: number): SimulationKernel`
-- Round-trip test: snapshot a run at turn 3 → fromSnapshot → advance 3 more turns → compare to original run at turn 6. Byte-equal (deterministic side) for the same seed.
-
-**Dashboard additions:**
-
-- "Fork at turn N" button in Reports tab or Timeline.
-- Branch comparison view: original trajectory + forked trajectory, per-bag divergence highlighted.
-- Persist forks as their own `RunArtifact`s with a `metadata.forkedFrom` reference.
-
-**Effort:** 1 to 2 days. Kernel surface + façade + dashboard UX.
-
-**Unlocks:** mid-run counterfactuals, lower-cost exploration, the "Alternate Timelines" Enterprise roadmap item, intellectually honest CWSM story.
+**Shipped commit:** see the Shipped section at the bottom of this file.
 
 ---
 
@@ -191,6 +143,10 @@ interface ForkOptions {
 ---
 
 ## Shipped
+
+### 2026-04-24 session (Tier 2 Spec 2A shipped)
+
+- **[<TO-FILL> paracosm](#): Tier 2 Spec 2A, WorldModel.fork + snapshot API.** 11 files touched (7 new, 4 modified), +1090/-15 lines. Kernel `toSnapshot` / `fromSnapshot` with snapshotVersion v1 and scenarioId guard; SeededRng state exposure via `getState` / `fromState`; WorldModel `snapshot` / `fork` / `forkFromArtifact` methods with pending-resume state fields; orchestrator opt-in `captureSnapshots` flag and internal `_forkedFrom` / `_resumeFrom` threading; additive `RunMetadata.forkedFrom` optional field on the universal schema. 14 new unit tests covering kernel round-trip, determinism invariant (snapshot + restore + advance byte-equals continuous advance), and facade shape + error-path coverage. Zero schema version bump. No real-LLM tests in 2A (deferred to Spec 2B dashboard coverage). Spec: [2026-04-24-worldmodel-fork-snapshot-api-design.md](../specs/2026-04-24-worldmodel-fork-snapshot-api-design.md). Plan: [2026-04-24-worldmodel-fork-snapshot-implementation.md](2026-04-24-worldmodel-fork-snapshot-implementation.md).
 
 ### 2026-04-24 session (Tier 1 closed)
 

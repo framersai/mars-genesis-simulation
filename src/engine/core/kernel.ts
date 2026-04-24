@@ -4,6 +4,8 @@ import type { ScenarioPackage } from '../types.js';
 import { SeededRng } from './rng.js';
 import { generateInitialPopulation, type KeyPersonnel } from './agent-generator.js';
 import { progressBetweenTurns, applyPersonalityDrift, ROLE_ACTIVATIONS } from './progression.js';
+import type { KernelSnapshot } from './snapshot.js';
+import { CURRENT_SNAPSHOT_VERSION } from './snapshot.js';
 
 interface DeclaredMetric {
   id?: string;
@@ -158,6 +160,73 @@ export class SimulationKernel {
   }
 
   getState(): SimulationState { return structuredClone(this.state); }
+
+  /**
+   * Capture a {@link KernelSnapshot} bundle. The returned object is
+   * plain JSON-safe data: `JSON.stringify(snap)` + `JSON.parse` +
+   * `SimulationKernel.fromSnapshot(parsed, scenarioId)` round-trips
+   * to a new kernel in the same state. Used by
+   * `WorldModel.snapshot()` + `fork()` for mid-run counterfactuals.
+   *
+   * @param scenarioId - Scenario id the snapshot is being taken
+   *   against. Stamped into the snapshot so `fromSnapshot` can
+   *   verify the target WorldModel's scenario matches.
+   */
+  toSnapshot(scenarioId: string): KernelSnapshot {
+    return {
+      snapshotVersion: CURRENT_SNAPSHOT_VERSION,
+      scenarioId,
+      turn: this.state.metadata.currentTurn,
+      time: this.state.metadata.currentTime,
+      state: structuredClone(this.state),
+      rngState: this.rng.getState(),
+      startTime: this.state.metadata.startTime,
+      seed: this.state.metadata.seed,
+    };
+  }
+
+  /**
+   * Reverse of {@link SimulationKernel.toSnapshot}. Constructs a
+   * fresh kernel positioned at the snapshot's turn, with simulation
+   * state + PRNG state + metadata fully restored. The returned
+   * kernel is indistinguishable from the one that produced the
+   * snapshot as far as subsequent `advanceTurn` calls are concerned.
+   *
+   * @param snap - The captured snapshot.
+   * @param expectedScenarioId - Scenario id the caller expects the
+   *   snapshot to match. Throws when they differ; this is the gate
+   *   against accidental cross-scenario forks.
+   * @throws Error when `snap.snapshotVersion !== 1` or when
+   *   `snap.scenarioId !== expectedScenarioId`.
+   */
+  static fromSnapshot(snap: KernelSnapshot, expectedScenarioId: string): SimulationKernel {
+    if (snap.snapshotVersion !== 1) {
+      throw new Error(
+        `KernelSnapshot.snapshotVersion=${snap.snapshotVersion} is not supported; ` +
+        `this paracosm build only restores version 1.`,
+      );
+    }
+    if (snap.scenarioId !== expectedScenarioId) {
+      throw new Error(
+        `KernelSnapshot scenarioId mismatch: snapshot was taken against ` +
+        `'${snap.scenarioId}' but the caller expects '${expectedScenarioId}'. ` +
+        `Cross-scenario forks are not supported.`,
+      );
+    }
+    // Build a minimal kernel shell via the existing constructor, then
+    // overwrite its state + rng with the snapshot. The constructor
+    // allocates a fresh SimulationState (including a generated agent
+    // roster); we throw that away and graft on the snapshot's
+    // deep-cloned one. This costs one allocation that we discard but
+    // keeps the kernel's invariants (rng seeded, metadata populated)
+    // intact for the same-shape grafting.
+    const kernel = new SimulationKernel(snap.seed, snap.state.metadata.leaderId, [], {
+      startTime: snap.startTime,
+    });
+    kernel.state = structuredClone(snap.state);
+    kernel.rng = SeededRng.fromState(snap.rngState);
+    return kernel;
+  }
 
 
 

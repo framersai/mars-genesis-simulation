@@ -45,6 +45,35 @@ Paracosm is a **structured world model** in the sense of [Xing 2025](https://arx
 
 Leaders can be colony commanders, CEOs, generals, ship captains, department heads, AI systems, governing councils, or any entity that receives information, evaluates options, and makes choices that shape the world. The simulation does not care what they represent. It cares how they decide.
 
+### Counterfactual simulations with `WorldModel.fork()`
+
+The CWSM positioning is operationalized through `WorldModel.fork()`: run a simulation with snapshots enabled, then branch at any past turn with a different leader or seed, and compare.
+
+```typescript
+import { WorldModel } from 'paracosm/world-model';
+import worldJson from './my-world.json' with { type: 'json' };
+
+const wm = await WorldModel.fromJson(worldJson);
+
+// Run the trunk with per-turn snapshots captured.
+const trunk = await wm.simulate(visionaryLeader, {
+  maxTurns: 6, seed: 42, captureSnapshots: true,
+});
+
+// Branch at turn 3 with a different leader. No re-compute of turns 1-3;
+// the forked kernel resumes from the captured state.
+const branch = await (await wm.forkFromArtifact(trunk, 3)).simulate(
+  pragmatistLeader,
+  { maxTurns: 3, seed: 42 },
+);
+
+console.log(trunk.metadata.runId);        // parent run-id
+console.log(branch.metadata.forkedFrom);  // { parentRunId, atTurn: 3 }
+console.log(trunk.fingerprint, branch.fingerprint); // divergent futures from the same turn-3 state
+```
+
+The kernel round-trips through `JSON.stringify`, so snapshots persist to disk cleanly for later replay or audit. `captureSnapshots` defaults to `false` to keep normal artifacts lean; set it when you want fork capability.
+
 ## Quickstart
 
 ```bash
