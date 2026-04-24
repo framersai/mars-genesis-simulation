@@ -23,16 +23,32 @@ test('buildScenarioFixture: mars scenario produces systems with every declared m
   }
 });
 
-test('buildScenarioFixture: runtime shape has only systems/politics/agents/metadata (no capacities/statuses/environment at root)', () => {
+test('buildScenarioFixture: runtime shape has systems/politics/statuses/environment/agents/metadata', () => {
   const fixture = buildScenarioFixture(marsScenario as unknown as Record<string, unknown>);
   assert.equal(typeof fixture.systems, 'object');
   assert.equal(typeof fixture.politics, 'object');
+  assert.equal(typeof fixture.statuses, 'object');
+  assert.equal(typeof fixture.environment, 'object');
   assert.ok(Array.isArray(fixture.agents));
   assert.equal(typeof fixture.metadata, 'object');
-  // Explicit negative assertions — these bags are declaration vocabulary only.
-  assert.equal((fixture as unknown as { capacities?: unknown }).capacities, undefined);
-  assert.equal((fixture as unknown as { statuses?: unknown }).statuses, undefined);
-  assert.equal((fixture as unknown as { environment?: unknown }).environment, undefined);
+});
+
+test('buildScenarioFixture: world.statuses + world.environment flow into fixture bags', () => {
+  const scenario = {
+    id: 'test',
+    labels: { name: 'Test' },
+    setup: { defaultStartTime: 0 },
+    world: {
+      metrics: { foo: { id: 'foo', type: 'number' as const, initial: 1 } },
+      capacities: {},
+      statuses: { fundingRound: { id: 'fundingRound', type: 'string' as const, initial: 'seed' } },
+      politics: {},
+      environment: { market: { id: 'market', type: 'number' as const, initial: 10 } },
+    },
+  };
+  const fixture = buildScenarioFixture(scenario);
+  assert.equal(fixture.statuses.fundingRound, 'seed');
+  assert.equal(fixture.environment.market, 10);
 });
 
 test('buildScenarioFixture: world.capacities keys flatten into state.systems', () => {

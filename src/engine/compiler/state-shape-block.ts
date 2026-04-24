@@ -1,18 +1,14 @@
 /**
  * Build the "AVAILABLE STATE SHAPE" block that every state-accessing
  * generator's system prompt includes. Declares the exact flat key list
- * on each state bag so the LLM cannot silently hallucinate nested
- * access patterns like `state.systems.hull.integrity` or access bags
- * that don't exist at runtime.
+ * on each runtime state bag so the LLM cannot silently hallucinate
+ * nested access patterns.
  *
- * Important: paracosm's runtime `SimulationState` has ONLY `systems`,
- * `politics`, `agents`, and `metadata` at the top level — not
- * `capacities`, `statuses`, or `environment`. The latter three are
- * scenario-declaration vocabulary only; they do not produce runtime
- * state bags. Keys declared under `world.metrics` AND `world.capacities`
- * are both expected to land under `state.systems` when the kernel is
- * extended via `startingResources`; `world.statuses` / `world.environment`
- * are purely documentation today and have no runtime projection.
+ * Paracosm's runtime `SimulationState` carries `systems`, `politics`,
+ * `statuses`, `environment`, `agents`, `metadata` at the top level.
+ * Scenario-declared keys under `world.metrics` + `world.capacities`
+ * both flatten into `state.systems`. `world.politics` / `world.statuses`
+ * / `world.environment` each have their own runtime bag.
  *
  * @module paracosm/engine/compiler/state-shape-block
  */
@@ -33,11 +29,11 @@ export function buildStateShapeBlock(scenarioJson: Record<string, unknown>): str
   const timeUnit = labels.timeUnitNoun ?? 'tick';
   const timeUnitPlural = labels.timeUnitNounPlural ?? 'ticks';
 
-  // Both world.metrics and world.capacities flatten into state.systems at
-  // runtime. Union them in the declared-key list so the LLM knows every
-  // number it can read under state.systems.
+  // world.metrics and world.capacities both flatten into state.systems at runtime.
   const systemsKeys = Array.from(new Set([...keys(world.metrics), ...keys(world.capacities)]));
   const politicsKeys = keys(world.politics);
+  const statusesKeys = keys(world.statuses);
+  const environmentKeys = keys(world.environment);
 
   return `AVAILABLE STATE SHAPE (read-only, flat):
 
@@ -46,12 +42,15 @@ state.systems = Record<string, number>
   (population + morale also present as Mars-heritage defaults; scenario may omit them.)
 state.politics = Record<string, number | string | boolean>
   declared keys: ${listOrNone(politicsKeys)}
+state.statuses = Record<string, string | boolean>
+  declared keys: ${listOrNone(statusesKeys)}
+state.environment = Record<string, number | string | boolean>
+  declared keys: ${listOrNone(environmentKeys)}
 state.agents = Array<{ core, health, career, social, narrative, hexaco, promotion?, hexacoHistory, memory }>
 state.metadata = { simulationId, leaderId, seed, startTime, currentTime, currentTurn }
 
 RULES:
 - Access pattern is state.<bag>.<key> — flat, never nested. state.systems.<key> is always a number.
-- state.capacities, state.statuses, state.environment DO NOT EXIST at runtime — they are scenario-declaration vocabulary only. Any access to state.capacities.anything throws.
 - Only reference keys in the declared lists above. Unknown keys are undefined and will throw on .toFixed() / nested property access. Defensive access like \`(state.systems.foo ?? 0)\` is safer than bare \`state.systems.foo\`.
 - Time is measured in ${timeUnit} units (plural: ${timeUnitPlural}). Use that vocabulary in any user-visible strings.`;
 }

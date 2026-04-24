@@ -5,11 +5,11 @@
  * will actually see at runtime — not a hardcoded Mars fixture that
  * produces false positives and false negatives for non-Mars scenarios.
  *
- * Important: paracosm's runtime `SimulationState` has ONLY `systems`,
- * `politics`, `agents`, `metadata` at the top level. `world.metrics`
+ * Runtime `SimulationState` has `systems`, `politics`, `statuses`,
+ * `environment`, `agents`, `metadata` at the top level. `world.metrics`
  * AND `world.capacities` both flatten into `state.systems`;
- * `world.statuses` and `world.environment` are scenario-declaration
- * vocabulary with no runtime projection. The fixture reflects that.
+ * `world.politics` / `world.statuses` / `world.environment` each map
+ * to their own runtime bag. The fixture mirrors that shape exactly.
  *
  * @module paracosm/engine/compiler/scenario-fixture
  */
@@ -27,6 +27,8 @@ interface MetricDefinition {
 export interface ScenarioFixture {
   systems: Record<string, number>;
   politics: Record<string, number | string | boolean>;
+  statuses: Record<string, string | boolean>;
+  environment: Record<string, number | string | boolean>;
   metadata: {
     simulationId: string;
     leaderId: string;
@@ -72,6 +74,29 @@ function mergeBagsNumeric(
 }
 
 function buildPoliticsBag(
+  bag: Record<string, MetricDefinition> | undefined,
+): Record<string, number | string | boolean> {
+  const out: Record<string, number | string | boolean> = {};
+  if (!bag) return out;
+  for (const [key, def] of Object.entries(bag)) {
+    out[key] = coerceAny(def);
+  }
+  return out;
+}
+
+function buildStatusesBag(
+  bag: Record<string, MetricDefinition> | undefined,
+): Record<string, string | boolean> {
+  const out: Record<string, string | boolean> = {};
+  if (!bag) return out;
+  for (const [key, def] of Object.entries(bag)) {
+    const v = coerceInitial(def);
+    out[key] = typeof v === 'boolean' ? v : String(v);
+  }
+  return out;
+}
+
+function buildEnvironmentBag(
   bag: Record<string, MetricDefinition> | undefined,
 ): Record<string, number | string | boolean> {
   const out: Record<string, number | string | boolean> = {};
@@ -169,6 +194,8 @@ export function buildScenarioFixture(scenarioJson: Record<string, unknown>): Sce
   return {
     systems,
     politics: buildPoliticsBag(world.politics),
+    statuses: buildStatusesBag(world.statuses),
+    environment: buildEnvironmentBag(world.environment),
     metadata: {
       simulationId: `fixture-${scenarioId}`,
       leaderId: 'fixture-leader',

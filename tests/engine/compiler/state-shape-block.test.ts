@@ -32,14 +32,21 @@ test('buildStateShapeBlock merges world.capacities keys into state.systems', () 
   assert.ok(block.includes('capB'));
 });
 
-test('buildStateShapeBlock explicitly denies capacities/statuses/environment at runtime', () => {
+test('buildStateShapeBlock lists state.statuses + state.environment as runtime bags', () => {
   const block = buildStateShapeBlock({
-    world: { metrics: {}, capacities: {}, statuses: {}, politics: {}, environment: {} },
+    world: {
+      metrics: {},
+      capacities: {},
+      statuses: { fundingRound: { id: 'fundingRound' } },
+      politics: {},
+      environment: { marketGrowthPct: { id: 'marketGrowthPct' } },
+    },
   });
-  assert.ok(
-    block.includes('DO NOT EXIST at runtime'),
-    'prompt must tell the LLM that state.capacities/statuses/environment are declaration-only',
-  );
+  assert.ok(block.includes('state.statuses'), 'block must list state.statuses');
+  assert.ok(block.includes('fundingRound'));
+  assert.ok(block.includes('state.environment'));
+  assert.ok(block.includes('marketGrowthPct'));
+  assert.ok(!block.includes('DO NOT EXIST'), 'denial language must be removed now that bags are real');
 });
 
 test('buildStateShapeBlock falls back to tick when timeUnit not set', () => {
