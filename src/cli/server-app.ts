@@ -8,6 +8,8 @@ import {
   handleFetchSeed, handleCompileFromSeed, handleGenerateLeaders,
   type QuickstartDeps,
 } from './quickstart-routes.js';
+import { handleSimulate, type SimulateDeps } from './simulate-route.js';
+import { compileScenario as compileScenarioReal } from '../engine/compiler/index.js';
 import { marsScenario } from '../engine/mars/index.js';
 import { lunarScenario } from '../engine/lunar/index.js';
 import type { ScenarioPackage } from '../engine/types.js';
@@ -908,6 +910,48 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         }
         res.writeHead(404, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: `Unknown quickstart route: ${req.url}` }));
+      } catch (err) {
+        writeJsonError(res, err);
+      }
+      return;
+    }
+
+    // Tier 4 T4.2: POST /simulate one-shot HTTP endpoint. Gated behind
+    // `PARACOSM_ENABLE_SIMULATE_ENDPOINT=true` so the hosted demo's
+    // SSE path stays the default; self-hosted deployments flip the
+    // flag on to expose the sync request-response surface.
+    if (
+      req.url === '/simulate' &&
+      req.method === 'POST' &&
+      (env.PARACOSM_ENABLE_SIMULATE_ENDPOINT || '').toLowerCase() === 'true'
+    ) {
+      if (rateLimiter) {
+        const clientIp = IpRateLimiter.getIp(req);
+        const decision = rateLimiter.check(clientIp);
+        if (!decision.allowed) {
+          res.writeHead(429, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Rate limit exceeded for this IP', resetAt: decision.resetAt }));
+          return;
+        }
+      }
+      try {
+        const body = JSON.parse(await readBody(req, maxRequestBodyBytes));
+        const userApiKey = typeof req.headers['x-api-key'] === 'string' ? req.headers['x-api-key'] : undefined;
+        const userAnthropicKey = typeof req.headers['x-anthropic-key'] === 'string' ? req.headers['x-anthropic-key'] : undefined;
+        const deps: SimulateDeps = {
+          compileScenario: (raw, opts) => {
+            const userCompile = options.compileScenario;
+            if (userCompile) return userCompile(raw, opts as Record<string, unknown>);
+            return compileScenarioReal(raw, opts);
+          },
+          runSimulation: async (leader, keyPersonnel, runOpts) => {
+            const { runSimulation } = await import('../runtime/orchestrator.js');
+            return runSimulation(leader, keyPersonnel, runOpts);
+          },
+          userApiKey,
+          userAnthropicKey,
+        };
+        await handleSimulate(req, res, body, deps);
       } catch (err) {
         writeJsonError(res, err);
       }

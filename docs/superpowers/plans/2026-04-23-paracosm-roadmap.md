@@ -69,7 +69,7 @@ Historical plan file (kept for audit / bisect context): [`2026-04-23-close-0.7.x
 | # | Item | Origin | Effort | Notes |
 |---|---|---|---|---|
 | T4.1 | **V8 sandbox hardening + escape audit** | handoff T2.4 | half-day | Security-critical before any hosted tier. Wrap each compiled-hook invocation in a fresh isolate, enforce mem + wall-time limits, verify no host-side state leaks. Reuse AgentOS `EmergentCapabilityEngine` sandbox infra. |
-| T4.2 | **HTTP `/simulate` one-shot endpoint** | handoff T2.5 | half-day | `POST /simulate` takes `{ scenario, leader, options }`, returns `RunArtifact`. Exposes paracosm to non-SSE consumers. Gate behind `PARACOSM_ENABLE_SIMULATE_ENDPOINT=true` for the demo host. |
+| T4.2 | **HTTP `/simulate` one-shot endpoint** SHIPPED 2026-04-24 | handoff T2.5 | n/a | `POST /simulate` accepts `{ scenario, leader, options }` and returns `RunArtifact`. Auto-compiles raw drafts server-side. Gated behind `PARACOSM_ENABLE_SIMULATE_ENDPOINT=true`. |
 | T4.3 | **SQLite persistence adapter + indexed run storage** | handoff T2.8 | 1 day | `GET /runs?mode=&scenario=&leader=` query endpoint. Keep JSON output for portability; SQLite is indexed primary. Paracosm uses SQLite (not Postgres). |
 | T4.4 | **Zod-v4 migration finish** | audit track | half-day | Kills the pre-existing `tsc --noEmit` warnings in `src/runtime/llm-invocations/generateValidatedObject.ts`, `sendAndValidate.ts`, `src/engine/compiler/llm-invocations/generateValidatedObject.ts`. Baseline hygiene. |
 | T4.5 | **Rename runtime `state.systems` → `state.metrics`** | handoff T2.7 | 3-4 hours | Aligns runtime vocabulary with universal schema (`WorldSnapshot.metrics`). Wide blast: every compiler generator, every scenario fixture, every test that spells `state.systems`. Breaking for anyone holding runtime type imports. |
@@ -145,6 +145,10 @@ Historical plan file (kept for audit / bisect context): [`2026-04-23-close-0.7.x
 ---
 
 ## Shipped
+
+### 2026-04-24 session (Tier 4 T4.2 simulate endpoint shipped)
+
+- **[`<TO-FILL>` paracosm](#): Tier 4 T4.2 HTTP `POST /simulate` one-shot endpoint.** Sync request-response for non-SSE consumers. Accepts pre-compiled `ScenarioPackage` or raw scenario JSON (auto-compiled server-side via `compileScenario` with optional `seedText` / `seedUrl` grounding). Returns `{ artifact, scenario, durationMs }`. Env-gated behind `PARACOSM_ENABLE_SIMULATE_ENDPOINT=true`; rate-limited against the same IP bucket as `/setup`; body size capped via existing `readBody` guard. Route extracted to `src/cli/simulate-route.ts` with injectable deps so the 10 unit tests run without booting the HTTP server or hitting real LLMs. Spec: [2026-04-24-simulate-endpoint-design.md](../specs/2026-04-24-simulate-endpoint-design.md).
 
 ### 2026-04-24 session (Tier 5 Quickstart onboarding shipped)
 

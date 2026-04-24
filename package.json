@@ -96,6 +96,7 @@
     "llm-readable-world-model",
     "prompt-to-world-model",
     "prompt-to-simulation",
+    "http-api",
     "counterfactual-simulation",
     "cwsm",
     "digital-twin",

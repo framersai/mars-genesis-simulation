@@ -424,6 +424,26 @@ The orchestrator's `runSimulation()` returns a `cost` field with token counts, L
 
 Every LLM call site on both providers routes its stable system prefix through a `cacheBreakpoint: true` block (director instructions, department prompts, reaction batches, compile-time hook generators). On Anthropic, turn 2+ of every run serves the shared prefix from the provider's prompt cache at 0.1× input cost. On OpenAI, any prompt ≥ 1024 tokens auto-caches. The `cost.caches` field reports read / creation tokens and USD saved per run, and `/retry-stats` rolls the numbers up across the last 100 runs so you can verify the cache is actually hitting. No configuration required. The `system: Array<{ text; cacheBreakpoint }>` shape is built into the validated-call wrappers in `src/engine/compiler/llm-invocations/` and `src/runtime/llm-invocations/`.
 
+## One-shot HTTP API: `POST /simulate`
+
+Non-SSE consumers (curl, Python integrations, third-party dashboards) can run a simulation through a plain request-response endpoint. Gated behind `PARACOSM_ENABLE_SIMULATE_ENDPOINT=true` so the hosted demo's SSE-first path stays the default; self-hosted deployments flip the flag on.
+
+```bash
+export PARACOSM_ENABLE_SIMULATE_ENDPOINT=true
+npx paracosm serve   # or bring up your own server via createMarsServer
+
+curl -s -X POST http://localhost:5188/simulate \
+  -H 'Content-Type: application/json' \
+  -H 'X-Anthropic-Key: sk-ant-...' \
+  -d '{
+    "scenario": { "id": "submarine-habitat", "labels": { "name": "Deep Ocean Habitat", "populationNoun": "crew", "settlementNoun": "habitat", "timeUnitNoun": "day" }, "setup": { "defaultTurns": 4, "defaultPopulation": 25, "defaultStartTime": 2040 }, "departments": [...], "metrics": [...] },
+    "leader": { "name": "Captain Reyes", "archetype": "The Pragmatist", "unit": "Deep Ocean Habitat", "hexaco": { "openness": 0.4, "conscientiousness": 0.9, "extraversion": 0.3, "agreeableness": 0.6, "emotionality": 0.5, "honestyHumility": 0.8 }, "instructions": "" },
+    "options": { "maxTurns": 4, "seed": 42, "captureSnapshots": true, "provider": "anthropic" }
+  }' | jq '.artifact.fingerprint'
+```
+
+The request body accepts either a pre-compiled `ScenarioPackage` (has `.hooks`) or a raw scenario draft the compiler accepts; raw drafts are auto-compiled server-side with optional `options.seedText` / `options.seedUrl` grounding. The response body is `{ artifact: RunArtifact, scenario: ScenarioPackage, durationMs: number }`. Rate limiting shares the same IP bucket as `/setup`; request-body size uses the same 5 MiB cap.
+
 ## Programmatic API
 
 Everything the dashboard does is also available as library calls. The exports fall into five buckets:
