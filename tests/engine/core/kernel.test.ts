@@ -55,3 +55,156 @@ test('SimulationKernel: initial state always has statuses and environment as emp
   assert.deepEqual(state.statuses, {});
   assert.deepEqual(state.environment, {});
 });
+
+test('SimulationKernel: constructor seeds state.systems from scenario.world.metrics initials', () => {
+  const scenario = {
+    id: 'test-scenario',
+    labels: { name: 'Test', populationNoun: 'people', settlementNoun: 'camp' },
+    setup: { defaultTurns: 4, defaultSeed: 1, defaultStartTime: 0, defaultPopulation: 50 },
+    world: {
+      metrics: {
+        hullIntegrity: { id: 'hullIntegrity', type: 'number' as const, initial: 85 },
+        revenueArr: { id: 'revenueArr', type: 'number' as const, initial: 6000000 },
+      },
+      capacities: {},
+      statuses: {},
+      politics: {},
+      environment: {},
+    },
+    departments: [],
+  };
+  const kernel = new SimulationKernel(42, 'test-leader', [], { scenario: scenario as unknown as never });
+  const state = kernel.getState();
+  assert.equal(state.systems.hullIntegrity, 85);
+  assert.equal(state.systems.revenueArr, 6_000_000);
+});
+
+test('SimulationKernel: capacities declarations also populate state.systems', () => {
+  const scenario = {
+    id: 'test-capacities',
+    labels: { name: 'Test' },
+    setup: { defaultTurns: 4, defaultSeed: 1, defaultStartTime: 0, defaultPopulation: 10 },
+    world: {
+      metrics: { foo: { id: 'foo', type: 'number' as const, initial: 1 } },
+      capacities: { deliveryCapacity: { id: 'deliveryCapacity', type: 'number' as const, initial: 12 } },
+      statuses: {},
+      politics: {},
+      environment: {},
+    },
+    departments: [],
+  };
+  const kernel = new SimulationKernel(42, 'test-leader', [], { scenario: scenario as unknown as never });
+  const state = kernel.getState();
+  assert.equal(state.systems.deliveryCapacity, 12);
+  assert.equal(state.systems.foo, 1);
+});
+
+test('SimulationKernel: constructor populates state.politics from scenario.world.politics initials', () => {
+  const scenario = {
+    id: 'test-politics',
+    labels: { name: 'Test' },
+    setup: { defaultTurns: 4, defaultSeed: 1, defaultStartTime: 0, defaultPopulation: 10 },
+    world: {
+      metrics: { foo: { id: 'foo', type: 'number' as const, initial: 1 } },
+      capacities: {},
+      statuses: {},
+      politics: {
+        boardConfidence: { id: 'boardConfidence', type: 'number' as const, initial: 72 },
+      },
+      environment: {},
+    },
+    departments: [],
+  };
+  const kernel = new SimulationKernel(42, 'test-leader', [], { scenario: scenario as unknown as never });
+  const state = kernel.getState();
+  assert.equal(state.politics.boardConfidence, 72);
+});
+
+test('SimulationKernel: constructor populates state.statuses from scenario.world.statuses initials', () => {
+  const scenario = {
+    id: 'test-statuses',
+    labels: { name: 'Test' },
+    setup: { defaultTurns: 4, defaultSeed: 1, defaultStartTime: 0, defaultPopulation: 10 },
+    world: {
+      metrics: { foo: { id: 'foo', type: 'number' as const, initial: 1 } },
+      capacities: {},
+      statuses: {
+        fundingRound: { id: 'fundingRound', type: 'string' as const, initial: 'series-b' },
+        ratified: { id: 'ratified', type: 'boolean' as const, initial: true },
+      },
+      politics: {},
+      environment: {},
+    },
+    departments: [],
+  };
+  const kernel = new SimulationKernel(42, 'test-leader', [], { scenario: scenario as unknown as never });
+  const state = kernel.getState();
+  assert.equal(state.statuses.fundingRound, 'series-b');
+  assert.equal(state.statuses.ratified, true);
+});
+
+test('SimulationKernel: constructor populates state.environment from scenario.world.environment initials', () => {
+  const scenario = {
+    id: 'test-env',
+    labels: { name: 'Test' },
+    setup: { defaultTurns: 4, defaultSeed: 1, defaultStartTime: 0, defaultPopulation: 10 },
+    world: {
+      metrics: { foo: { id: 'foo', type: 'number' as const, initial: 1 } },
+      capacities: {},
+      statuses: {},
+      politics: {},
+      environment: {
+        marketGrowthPct: { id: 'marketGrowthPct', type: 'number' as const, initial: 25 },
+        region: { id: 'region', type: 'string' as const, initial: 'na' },
+      },
+    },
+    departments: [],
+  };
+  const kernel = new SimulationKernel(42, 'test-leader', [], { scenario: scenario as unknown as never });
+  const state = kernel.getState();
+  assert.equal(state.environment.marketGrowthPct, 25);
+  assert.equal(state.environment.region, 'na');
+});
+
+test('SimulationKernel: explicit startingResources overlay wins over scenario declarations', () => {
+  const scenario = {
+    id: 'test-overlay',
+    labels: { name: 'Test' },
+    setup: { defaultTurns: 4, defaultSeed: 1, defaultStartTime: 0, defaultPopulation: 10 },
+    world: {
+      metrics: { revenueArr: { id: 'revenueArr', type: 'number' as const, initial: 1_000_000 } },
+      capacities: {},
+      statuses: {},
+      politics: {},
+      environment: {},
+    },
+    departments: [],
+  };
+  const kernel = new SimulationKernel(42, 'test-leader', [], {
+    scenario: scenario as unknown as never,
+    startingResources: { revenueArr: 9_999_999 } as never,
+  });
+  const state = kernel.getState();
+  assert.equal(state.systems.revenueArr, 9_999_999, 'caller overlay must override scenario declaration');
+});
+
+test('SimulationKernel: type-appropriate zeros when initial is absent', () => {
+  const scenario = {
+    id: 'test-defaults',
+    labels: { name: 'Test' },
+    setup: { defaultTurns: 4, defaultSeed: 1, defaultStartTime: 0, defaultPopulation: 10 },
+    world: {
+      metrics: { noInitial: { id: 'noInitial', type: 'number' as const } },
+      capacities: {},
+      statuses: { someFlag: { id: 'someFlag', type: 'boolean' as const } },
+      politics: {},
+      environment: { someText: { id: 'someText', type: 'string' as const } },
+    },
+    departments: [],
+  };
+  const kernel = new SimulationKernel(42, 'test-leader', [], { scenario: scenario as unknown as never });
+  const state = kernel.getState();
+  assert.equal(state.systems.noInitial, 0);
+  assert.equal(state.statuses.someFlag, false);
+  assert.equal(state.environment.someText, '');
+});

@@ -1,8 +1,60 @@
 import type { SimulationState, Agent, TurnEvent, HexacoProfile, TurnOutcome, Department } from './state.js';
 import type { WorldSystems, WorldPolitics } from './state.js';
+import type { ScenarioPackage } from '../types.js';
 import { SeededRng } from './rng.js';
 import { generateInitialPopulation, type KeyPersonnel } from './agent-generator.js';
 import { progressBetweenTurns, applyPersonalityDrift, ROLE_ACTIVATIONS } from './progression.js';
+
+interface DeclaredMetric {
+  id?: string;
+  type?: 'number' | 'string' | 'boolean';
+  initial?: number | string | boolean;
+}
+
+/** Pick the declared initial value; fall back to a type-appropriate zero. */
+function declaredInitial(def: DeclaredMetric): number | string | boolean {
+  if (def.initial !== undefined) return def.initial;
+  switch (def.type) {
+    case 'string': return '';
+    case 'boolean': return false;
+    case 'number':
+    default: return 0;
+  }
+}
+
+/** Project a scenario bag declaration to a runtime record, coerced per type. */
+function seedNumericBag(bag: Record<string, DeclaredMetric> | undefined): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!bag) return out;
+  for (const [key, def] of Object.entries(bag)) {
+    const v = declaredInitial(def);
+    if (typeof v === 'number') out[key] = v;
+  }
+  return out;
+}
+
+function seedStringOrBooleanBag(
+  bag: Record<string, DeclaredMetric> | undefined,
+): Record<string, string | boolean> {
+  const out: Record<string, string | boolean> = {};
+  if (!bag) return out;
+  for (const [key, def] of Object.entries(bag)) {
+    const v = declaredInitial(def);
+    if (typeof v === 'string' || typeof v === 'boolean') out[key] = v;
+  }
+  return out;
+}
+
+function seedAnyBag(
+  bag: Record<string, DeclaredMetric> | undefined,
+): Record<string, number | string | boolean> {
+  const out: Record<string, number | string | boolean> = {};
+  if (!bag) return out;
+  for (const [key, def] of Object.entries(bag)) {
+    out[key] = declaredInitial(def);
+  }
+  return out;
+}
 
 export interface SystemsPatch {
   systems?: Partial<WorldSystems>;
@@ -23,8 +75,17 @@ export interface PolicyEffect {
 export interface SimulationInitOverrides {
   startTime?: number;
   initialPopulation?: number;
+  /**
+   * Source for scenario-declared world bag initials. When present, the
+   * kernel seeds each runtime bag from `scenario.world.*` before
+   * applying the explicit overlay fields below. Absent → Mars-heritage
+   * hardcoded defaults only.
+   */
+  scenario?: ScenarioPackage;
   startingResources?: Partial<WorldSystems>;
   startingPolitics?: Partial<WorldPolitics>;
+  startingStatuses?: Record<string, string | boolean>;
+  startingEnvironment?: Record<string, number | string | boolean>;
 }
 
 export class SimulationKernel {
@@ -36,6 +97,24 @@ export class SimulationKernel {
     const startTime = init.startTime ?? 2035;
     const agents = generateInitialPopulation(seed, startTime, keyPersonnel, init.initialPopulation ?? 100);
 
+    // Layer sources: Mars-heritage defaults → scenario declarations →
+    // caller overlays (last writer wins). Scenario declarations flow
+    // through `init.scenario?.world.*`; absent → bag is empty.
+    const scenarioWorld = (init.scenario?.world ?? {}) as {
+      metrics?: Record<string, DeclaredMetric>;
+      capacities?: Record<string, DeclaredMetric>;
+      statuses?: Record<string, DeclaredMetric>;
+      politics?: Record<string, DeclaredMetric>;
+      environment?: Record<string, DeclaredMetric>;
+    };
+    const scenarioSystems = {
+      ...seedNumericBag(scenarioWorld.metrics),
+      ...seedNumericBag(scenarioWorld.capacities),
+    };
+    const scenarioPolitics = seedAnyBag(scenarioWorld.politics);
+    const scenarioStatuses = seedStringOrBooleanBag(scenarioWorld.statuses);
+    const scenarioEnvironment = seedAnyBag(scenarioWorld.environment);
+
     this.state = {
       metadata: {
         simulationId: `sim-${seed}-${leaderId.toLowerCase().replace(/\s+/g, '-')}`,
@@ -43,24 +122,37 @@ export class SimulationKernel {
         startTime, currentTime: startTime, currentTurn: 0,
       },
       systems: {
+        // Mars-heritage numerics
         population: agents.length,
-        powerKw: init.startingResources?.powerKw ?? 400,
-        foodMonthsReserve: init.startingResources?.foodMonthsReserve ?? 18,
-        waterLitersPerDay: init.startingResources?.waterLitersPerDay ?? 800,
-        pressurizedVolumeM3: init.startingResources?.pressurizedVolumeM3 ?? 3000,
-        lifeSupportCapacity: init.startingResources?.lifeSupportCapacity ?? 120,
-        infrastructureModules: init.startingResources?.infrastructureModules ?? 3,
-        scienceOutput: init.startingResources?.scienceOutput ?? 0,
-        morale: init.startingResources?.morale ?? 0.85,
+        powerKw: 400,
+        foodMonthsReserve: 18,
+        waterLitersPerDay: 800,
+        pressurizedVolumeM3: 3000,
+        lifeSupportCapacity: 120,
+        infrastructureModules: 3,
+        scienceOutput: 0,
+        morale: 0.85,
+        // Scenario declarations (metrics + capacities flattened)
+        ...scenarioSystems,
+        // Caller overlay wins
+        ...init.startingResources,
       },
       agents,
       politics: {
-        earthDependencyPct: init.startingPolitics?.earthDependencyPct ?? 95,
-        governanceStatus: init.startingPolitics?.governanceStatus ?? 'earth-governed',
-        independencePressure: init.startingPolitics?.independencePressure ?? 0.05,
+        earthDependencyPct: 95,
+        governanceStatus: 'earth-governed',
+        independencePressure: 0.05,
+        ...scenarioPolitics,
+        ...init.startingPolitics,
+      } as WorldPolitics,
+      statuses: {
+        ...scenarioStatuses,
+        ...init.startingStatuses,
       },
-      statuses: {},
-      environment: {},
+      environment: {
+        ...scenarioEnvironment,
+        ...init.startingEnvironment,
+      },
       eventLog: [],
     };
   }
