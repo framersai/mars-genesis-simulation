@@ -809,10 +809,82 @@ footer { padding: 28px 24px; border-top: 1px solid var(--border); background: va
 
 /* ── Reduced Motion ───────────────────────────────────────────────────────── */
 
+/* ── Library wireframe (Library tab section) ───────────────────────────────── */
+
+.library-wireframe-wrapper {
+  margin: 32px auto 0;
+  background: var(--bg2, #14110e);
+  border: 1px solid var(--border, rgba(48, 42, 34, .5));
+  border-radius: 8px;
+  padding: 16px;
+  overflow: hidden;
+  max-width: 900px;
+}
+
+.library-wireframe {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ── Use cases grid (Use cases section) ───────────────────────────────────── */
+
+.use-cases-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.use-case {
+  background: var(--bg3, #1c1915);
+  border: 1px solid var(--border, rgba(48, 42, 34, .5));
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 200ms ease;
+}
+
+.use-case:hover {
+  border-color: var(--amber, #e8b44a);
+}
+
+.use-case h3 {
+  font-size: 16px;
+  margin: 0;
+  color: var(--t1, #f5f0e4);
+  font-family: var(--sans, 'Inter', system-ui, sans-serif);
+  font-weight: 600;
+}
+
+.use-case p {
+  font-size: 14px;
+  color: var(--t2, #d8ccb0);
+  margin: 0;
+  line-height: 1.55;
+  font-family: var(--sans, 'Inter', system-ui, sans-serif);
+}
+
+.use-case code {
+  background: var(--bg, #0a0806);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-family: var(--mono, 'JetBrains Mono', monospace);
+  font-size: 12px;
+  color: var(--amber, #e8b44a);
+}
+
+/* ── Reduced Motion ───────────────────────────────────────────────────────── */
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;
     transition-duration: .01ms !important;
   }
   .rv { opacity: 1; transform: none; }
+  .use-case { transition: none; }
 }
