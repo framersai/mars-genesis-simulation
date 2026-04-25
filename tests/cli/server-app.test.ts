@@ -173,8 +173,26 @@ test('POST /setup normalizes config and hands it to the simulation runner', asyn
   };
 
   const server = createMarsServer({
-    runPairSimulations: async config => {
+    runPairSimulations: async (config, _broadcast, _signal, _scenario, onArtifact) => {
       captured = config;
+      // Per-artifact insert is now wired via onArtifact rather than a
+      // fire-at-/setup hook. Simulate one completed leader so the test
+      // asserts the new persistence shape.
+      if (onArtifact) {
+        const fakeArtifact = {
+          metadata: {
+            runId: 'run_fake_test',
+            scenario: { id: 'mars-genesis', name: 'Mars' },
+            mode: 'turn-loop',
+            startedAt: '2026-04-25T00:00:00.000Z',
+            completedAt: '2026-04-25T00:00:30.000Z',
+          },
+          leader: { name: leaderA.name, archetype: leaderA.archetype },
+          cost: { totalUSD: 0.05 },
+          scenarioExtensions: { outputPath: '/tmp/run_fake_test.json' },
+        } as never;
+        await onArtifact(fakeArtifact, leaderA as never);
+      }
     },
     runHistoryStore,
   });

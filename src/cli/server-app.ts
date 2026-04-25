@@ -34,6 +34,7 @@ import { openSessionStore, type SessionStore, type TimestampedEvent } from './se
 import { generateSessionTitle } from './session-title.js';
 import { resolveServerMode } from './server/server-mode.js';
 import { createRunRecord, hashLeaderConfig } from './server/run-record.js';
+import { enrichRunRecordFromArtifact } from './server/enrich-run-record.js';
 import { createNoopRunHistoryStore, type RunHistoryStore } from './server/run-history-store.js';
 import { createSqliteRunHistoryStore } from './server/sqlite-run-history-store.js';
 import { handlePublicDemoRoute } from './server/routes/public-demo.js';
@@ -165,8 +166,26 @@ export interface CreateMarsServerOptions {
   maxRequestBodyBytes?: number;
 }
 
+/**
+ * Optional hooks the /setup handler can pass to startWithConfig so that
+ * per-artifact post-flight work (Library-tab record persistence, future
+ * webhook notifications, etc.) can run with /setup-handler scope (which
+ * is where hasUserKeys, the runRecord base, and the active scenario
+ * already live).
+ */
+export interface StartConfigHooks {
+  /**
+   * Fired once per completed leader artifact. Failures inside the hook
+   * are caught and logged by the runner; they do not abort the run.
+   */
+  onArtifact?: (
+    artifact: import('../engine/schema/index.js').RunArtifact,
+    leader: import('../runtime/orchestrator.js').LeaderConfig,
+  ) => void | Promise<void>;
+}
+
 export interface MarsServer extends Server {
-  startWithConfig: (config: NormalizedSimulationConfig) => Promise<void>;
+  startWithConfig: (config: NormalizedSimulationConfig, hooks?: StartConfigHooks) => Promise<void>;
 }
 
 /**
@@ -1734,6 +1753,13 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
           );
         }
 
+        // Build a base RunRecord for the /setup response (line ~1830). The
+        // record is NOT inserted at run-start; instead, server-app inserts
+        // one enriched record per completed artifact via the onArtifact
+        // callback wired into the runner functions below. That callback
+        // captures artifact-derived fields (artifactPath, costUSD,
+        // durationMs, mode, leaderName, leaderArchetype) which the Library
+        // tab needs to render gallery cards and to load full artifacts.
         const runRecord = createRunRecord({
           scenarioId: activeScenario.id,
           scenarioVersion: activeScenario.version,
@@ -1746,11 +1772,34 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
           sourceMode: serverMode,
           createdBy: hasUserKeys ? 'user' : 'anonymous',
         });
-        try {
-          await runHistoryStore.insertRun(runRecord);
-        } catch (error) {
-          console.warn('[run-history] insert failed:', error);
-        }
+        // Insert a per-artifact RunRecord at run-end: the runner fires
+        // `onArtifact` for each completed leader, we enrich the base
+        // record with artifact fields and use the artifact's own runId
+        // so the Library tab links each card to a specific artifact.
+        // Capture the resolved simConfig values now so the closure does
+        // not depend on the (nullable) closure-level `simConfig` later.
+        const persistTurns = simConfig.turns;
+        const persistSeed = simConfig.seed;
+        const onArtifactPersist = async (
+          artifact: import('../engine/schema/index.js').RunArtifact,
+          leader: import('../runtime/orchestrator.js').LeaderConfig,
+        ) => {
+          try {
+            const perArtifactBase = {
+              ...runRecord,
+              runId: artifact.metadata.runId,
+              leaderConfigHash: hashLeaderConfig({
+                leader,
+                turns: persistTurns,
+                seed: persistSeed,
+              }),
+            };
+            const enriched = enrichRunRecordFromArtifact(perArtifactBase, artifact);
+            await runHistoryStore.insertRun(enriched);
+          } catch (error) {
+            console.warn('[run-history] per-artifact insert failed:', error);
+          }
+        };
 
         // Key-scope safety: snapshot the env values we're about to mutate
         // so we can restore them when THIS sim ends. Without this, user A's
@@ -1815,7 +1864,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         // Start the sim and restore env when it finishes — prevents the
         // caller's keys from leaking into any subsequent /setup from a
         // different user that doesn't pass their own keys.
-        marsServer.startWithConfig(simConfig).finally(restoreEnv);
+        marsServer.startWithConfig(simConfig, { onArtifact: onArtifactPersist }).finally(restoreEnv);
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
@@ -2115,7 +2164,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
   (server as Server).on('close', () => { if (rateLimiter) rateLimiter.destroy(); });
 
   const marsServer = Object.assign(server, {
-    async startWithConfig(config: NormalizedSimulationConfig) {
+    async startWithConfig(config: NormalizedSimulationConfig, hooks?: StartConfigHooks) {
       // Clear previous run data
       clearEventBuffer();
       simConfig = config;
@@ -2136,13 +2185,13 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         // runForkSimulation instead of the pair runner when the
         // config carries a forkFrom reference.
         if (config.forkFrom) {
-          await runForkSimulation(config, broadcast, controller.signal, activeScenario);
+          await runForkSimulation(config, broadcast, controller.signal, activeScenario, hooks?.onArtifact);
         } else if (config.leaders.length >= 3) {
           // Tier 5 Quickstart dispatches N >= 3 leaders to the batch
           // runner (same SSE contract per leader, no verdict).
-          await runBatchSimulations(config, broadcast, controller.signal, activeScenario);
+          await runBatchSimulations(config, broadcast, controller.signal, activeScenario, hooks?.onArtifact);
         } else {
-          await startSimulations(config, broadcast, controller.signal, activeScenario);
+          await startSimulations(config, broadcast, controller.signal, activeScenario, hooks?.onArtifact);
         }
       } finally {
         disarmDisconnectWatchdog();

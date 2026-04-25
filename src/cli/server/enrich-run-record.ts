@@ -1,0 +1,45 @@
+/**
+ * Pure helper that enriches a base RunRecord with artifact-derived fields.
+ *
+ * server-app creates a sparse RunRecord at run-start (with the runId,
+ * scenarioId, and leader hash already known). When the simulation
+ * completes and the artifact is available, this helper populates the
+ * Library-tab fields (artifactPath, costUSD, durationMs, mode,
+ * leaderName, leaderArchetype) so the dashboard can render gallery
+ * cards and load full artifacts via /api/v1/runs/:runId.
+ *
+ * artifactPath comes from `artifact.scenarioExtensions.outputPath`,
+ * which the orchestrator stashes after writeRunOutput returns the
+ * absolute path of the on-disk JSON. If outputPath is missing (legacy
+ * artifacts or test fixtures), the field is left undefined and the
+ * Library-tab "Open" action returns 410 Gone for that record.
+ *
+ * @module paracosm/cli/server/enrich-run-record
+ */
+import type { RunRecord } from './run-record.js';
+import type { RunArtifact } from '../../engine/schema/index.js';
+
+export function enrichRunRecordFromArtifact(base: RunRecord, artifact: RunArtifact): RunRecord {
+  const ext = artifact.scenarioExtensions as { outputPath?: string } | undefined;
+  const meta = artifact.metadata;
+  const leader = (artifact as { leader?: { name?: string; archetype?: string } }).leader;
+  const cost = (artifact as { cost?: { totalUSD?: number } }).cost;
+
+  const startedAt = meta?.startedAt;
+  const completedAt = (meta as { completedAt?: string } | undefined)?.completedAt;
+  const durationMs = startedAt && completedAt
+    ? Date.parse(completedAt) - Date.parse(startedAt)
+    : undefined;
+
+  const enriched: RunRecord = { ...base };
+  if (ext?.outputPath) enriched.artifactPath = ext.outputPath;
+  if (typeof cost?.totalUSD === 'number') enriched.costUSD = cost.totalUSD;
+  if (durationMs !== undefined && Number.isFinite(durationMs)) enriched.durationMs = durationMs;
+  if (meta?.mode === 'turn-loop' || meta?.mode === 'batch-trajectory' || meta?.mode === 'batch-point') {
+    enriched.mode = meta.mode;
+  }
+  if (leader?.name) enriched.leaderName = leader.name;
+  if (leader?.archetype) enriched.leaderArchetype = leader.archetype;
+
+  return enriched;
+}

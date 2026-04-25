@@ -51,6 +51,13 @@ export async function runPairSimulations(
    * falling back to Mars while the page title shows the custom name.
    */
   scenario: ScenarioPackage = marsScenario,
+  /**
+   * Optional callback fired after each leader's artifact completes.
+   * server-app uses this to insert a RunRecord per artifact into
+   * the SQLite run-history store. Failures inside the callback are
+   * caught and logged so a failing handler does not break the run.
+   */
+  onArtifact?: (artifact: import('../engine/schema/index.js').RunArtifact, leader: import('../runtime/orchestrator.js').LeaderConfig) => void | Promise<void>,
 ): Promise<void> {
   const { leaders, turns, seed, startTime, liveSearch, customEvents } = simConfig;
   broadcast('status', { phase: 'starting', maxTurns: turns, customEvents });
@@ -90,7 +97,7 @@ export async function runPairSimulations(
       scenario,
       signal,
       captureSnapshots: simConfig.captureSnapshots ?? false,
-    }).then(result => {
+    }).then(async result => {
       broadcast('result', {
         leader: tag,
         summary: {
@@ -107,6 +114,11 @@ export async function runPairSimulations(
         // hosted-demo runs that don't need fork capability.
         artifact: simConfig.captureSnapshots ? result : undefined,
       });
+      if (onArtifact) {
+        try { await onArtifact(result, leader); } catch (err) {
+          console.warn('[pair-runner] onArtifact handler failed:', err);
+        }
+      }
       return { tag, leader, result };
     }, error => {
       broadcast('sim_error', { leader: tag, error: String(error) });
@@ -268,6 +280,8 @@ export async function runForkSimulation(
   broadcast: BroadcastFn,
   signal?: AbortSignal,
   scenario: ScenarioPackage = marsScenario,
+  /** Optional callback fired after the forked artifact completes. */
+  onArtifact?: (artifact: import('../engine/schema/index.js').RunArtifact, leader: import('../runtime/orchestrator.js').LeaderConfig) => void | Promise<void>,
 ): Promise<void> {
   if (!simConfig.forkFrom) {
     throw new Error('runForkSimulation called without simConfig.forkFrom set');
@@ -345,6 +359,11 @@ export async function runForkSimulation(
       // reconstruction the spec originally assumed.
       artifact: result,
     });
+    if (onArtifact) {
+      try { await onArtifact(result, leader); } catch (err) {
+        console.warn('[fork-runner] onArtifact handler failed:', err);
+      }
+    }
   } catch (err) {
     broadcast('sim_error', { leader: leader.archetype, error: String(err) });
     throw err;
@@ -369,6 +388,8 @@ export async function runBatchSimulations(
   broadcast: BroadcastFn,
   signal?: AbortSignal,
   scenario: ScenarioPackage = marsScenario,
+  /** Optional callback fired after each leader's artifact completes. */
+  onArtifact?: (artifact: import('../engine/schema/index.js').RunArtifact, leader: import('../runtime/orchestrator.js').LeaderConfig) => void | Promise<void>,
 ): Promise<void> {
   const { leaders, turns, seed, startTime, liveSearch, customEvents } = simConfig;
   broadcast('status', { phase: 'starting', maxTurns: turns, customEvents, batch: true, leaderCount: leaders.length });
@@ -418,7 +439,7 @@ export async function runBatchSimulations(
       scenario,
       signal,
       captureSnapshots: simConfig.captureSnapshots ?? false,
-    }).then(result => {
+    }).then(async result => {
       broadcast('result', {
         leader: tag,
         leaderIndex: index,
@@ -431,6 +452,11 @@ export async function runBatchSimulations(
         fingerprint: result.fingerprint ?? null,
         artifact: simConfig.captureSnapshots ? result : undefined,
       });
+      if (onArtifact) {
+        try { await onArtifact(result, leader); } catch (err) {
+          console.warn('[batch-runner] onArtifact handler failed:', err);
+        }
+      }
       return result;
     }, error => {
       broadcast('sim_error', { leader: tag, leaderIndex: index, error: String(error) });

@@ -2017,12 +2017,18 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
     forkedFrom: opts._forkedFrom,
   });
 
-  writeRunOutput(output, {
+  const writtenPath = writeRunOutput(output, {
     leaderName: leader.name,
     leaderArchetype: leader.archetype,
     turns: artifacts.length,
     toolRegs,
   });
+  // Stash the on-disk path on scenarioExtensions so server-app can
+  // enrich the SQLite RunRecord at run-end. /api/v1/runs/:runId reads
+  // record.artifactPath to load the full artifact via the Library tab.
+  const extObj = (output.scenarioExtensions ?? {}) as Record<string, unknown>;
+  extObj.outputPath = writtenPath;
+  output.scenarioExtensions = extObj as RunArtifact['scenarioExtensions'];
 
   engine.cleanupSession(sid);
   await closeResearchMemory();
