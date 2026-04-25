@@ -35,6 +35,7 @@ import { generateSessionTitle } from './session-title.js';
 import { resolveServerMode } from './server/server-mode.js';
 import { createRunRecord, hashLeaderConfig } from './server/run-record.js';
 import { createNoopRunHistoryStore, type RunHistoryStore } from './server/run-history-store.js';
+import { createSqliteRunHistoryStore } from './server/sqlite-run-history-store.js';
 import { handlePublicDemoRoute } from './server/routes/public-demo.js';
 import { handlePlatformApiRoute } from './server/routes/platform-api.js';
 import { validateForkSetupPreconditions } from './fork-preconditions.js';
@@ -165,6 +166,21 @@ export interface CreateMarsServerOptions {
 
 export interface MarsServer extends Server {
   startWithConfig: (config: NormalizedSimulationConfig) => Promise<void>;
+}
+
+/**
+ * Resolve the production run-history store. SQLite by default at
+ * `${APP_DIR}/data/runs.db`; env override `PARACOSM_RUN_HISTORY_DB_PATH`.
+ * Set `PARACOSM_DISABLE_RUN_HISTORY=1` to fall back to the noop store
+ * (useful for ephemeral test environments and CLI smoke tests).
+ */
+function resolveRunHistoryStore(env: NodeJS.ProcessEnv): RunHistoryStore {
+  if (env.PARACOSM_DISABLE_RUN_HISTORY === '1') {
+    return createNoopRunHistoryStore();
+  }
+  const dbPath = env.PARACOSM_RUN_HISTORY_DB_PATH
+    ?? resolve(env.APP_DIR || '.', 'data', 'runs.db');
+  return createSqliteRunHistoryStore({ dbPath });
 }
 
 export function createMarsServer(options: CreateMarsServerOptions = {}): MarsServer {
@@ -299,7 +315,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
     // routes just return 503.
     console.log(`  [sessions] Failed to open session store: ${err}`);
   }
-  const runHistoryStore = options.runHistoryStore ?? createNoopRunHistoryStore();
+  const runHistoryStore = options.runHistoryStore ?? resolveRunHistoryStore(env);
 
   // Coalesce disk writes so a burst of broadcasts (e.g. 50 forge_attempt
   // events during a turn) only triggers one persist call. 500ms debounce

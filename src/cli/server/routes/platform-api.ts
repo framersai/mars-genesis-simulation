@@ -1,6 +1,23 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { RunHistoryStore } from '../run-history-store.js';
+import type { ListRunsFilters, RunHistoryStore } from '../run-history-store.js';
 import type { ParacosmServerMode } from '../server-mode.js';
+
+const DEFAULT_LIMIT = 50;
+const MAX_LIMIT = 500;
+
+function clampLimit(raw: string | null): number {
+  if (raw === null) return DEFAULT_LIMIT;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) return DEFAULT_LIMIT;
+  return Math.min(MAX_LIMIT, Math.floor(n));
+}
+
+function clampOffset(raw: string | null): number {
+  if (raw === null) return 0;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.floor(n);
+}
 
 export async function handlePlatformApiRoute(
   mode: ParacosmServerMode,
@@ -26,12 +43,28 @@ export async function handlePlatformApiRoute(
 
   try {
     if (url.pathname === '/api/v1/runs' && req.method === 'GET') {
-      const runs = await options.runHistoryStore.listRuns();
+      const filters: ListRunsFilters = {
+        mode: (url.searchParams.get('mode') as ParacosmServerMode | null) ?? undefined,
+        scenarioId: url.searchParams.get('scenario') ?? undefined,
+        leaderConfigHash: url.searchParams.get('leader') ?? undefined,
+        limit: clampLimit(url.searchParams.get('limit')),
+        offset: clampOffset(url.searchParams.get('offset')),
+      };
+      const runs = await options.runHistoryStore.listRuns(filters);
+      const countFilters = {
+        mode: filters.mode,
+        scenarioId: filters.scenarioId,
+        leaderConfigHash: filters.leaderConfigHash,
+      };
+      const total = options.runHistoryStore.countRuns
+        ? await options.runHistoryStore.countRuns(countFilters)
+        : runs.length;
+      const hasMore = (filters.offset ?? 0) + runs.length < total;
       res.writeHead(200, {
         'Content-Type': 'application/json',
         ...options.corsHeaders,
       });
-      res.end(JSON.stringify({ runs }));
+      res.end(JSON.stringify({ runs, total, hasMore }));
       return true;
     }
   } catch (error) {
