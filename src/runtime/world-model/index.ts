@@ -32,8 +32,9 @@
  * @module paracosm/world-model
  */
 
-import { runSimulation, type RunOptions, type LeaderConfig } from '../orchestrator.js';
+import { runSimulation, replaySimulation, WorldModelReplayError, type RunOptions, type LeaderConfig } from '../orchestrator.js';
 import { runBatch, type BatchConfig, type BatchManifest } from '../batch.js';
+import { canonicalJson } from '../canonical-json.js';
 import { compileScenario } from '../../engine/compiler/index.js';
 import { compileFromSeed, type CompileFromSeedInput, type CompileFromSeedOptions } from '../../engine/compiler/compile-from-seed.js';
 import type { CompileOptions } from '../../engine/compiler/types.js';
@@ -119,6 +120,24 @@ export interface WorldModelSnapshot {
  * only the snapshot at fork time; pass leader, seed, and custom events
  * to the subsequent {@link WorldModel.simulate} call.
  */
+/**
+ * Shape returned by {@link WorldModel.replay}. `matches=true` iff the
+ * fresh kernel snapshots produced by re-execution byte-equal the input
+ * artifact's snapshots under canonical JSON. When false, `divergence`
+ * carries a JSON-pointer-style first-mismatch path suitable for
+ * forensic inspection.
+ *
+ * The fresh `artifact` has the same shape as the input but with a
+ * regenerated `metadata.runId` and freshly-computed
+ * `scenarioExtensions.kernelSnapshotsPerTurn`. Other fields copy from
+ * the input verbatim.
+ */
+export interface WorldModelReplayResult {
+  artifact: RunArtifact;
+  matches: boolean;
+  divergence: string;
+}
+
 export interface ForkOptions {
   /** Reserved for a future single-call fork API. Pass the leader to
    *  the subsequent `.simulate()` call today. */
@@ -497,7 +516,88 @@ export class WorldModel {
       opts,
     );
   }
+
+  /**
+   * Re-execute the kernel transitions captured in `artifact` and report
+   * whether today's kernel produces the same snapshots. The audit
+   * use case named in the 2026-04-23 positioning spec is now a single
+   * API call; pillar 2 (Reproducible) is verifiable in code rather
+   * than promised in copy.
+   *
+   * Implementation re-runs the deterministic between-turn progression
+   * hook from each recorded snapshot to the next, captures fresh
+   * snapshots, and compares the fresh `kernelSnapshotsPerTurn` array
+   * to the input artifact's via canonical JSON. `matches=true` proves
+   * the kernel is byte-equal-deterministic for this artifact's transitions.
+   *
+   * Required preconditions on `artifact`:
+   *   - `scenarioExtensions.kernelSnapshotsPerTurn` populated.
+   *   - `decisions[]` populated.
+   *   - `metadata.scenario.id` matches this WorldModel's scenario.
+   *
+   * @param artifact The stored RunArtifact to replay.
+   * @returns Replay result: `{ artifact, matches, divergence }`.
+   * @throws WorldModelReplayError when preconditions fail.
+   */
+  async replay(artifact: RunArtifact): Promise<WorldModelReplayResult> {
+    const fresh = await replaySimulation(this.scenario, artifact);
+    const inputSnaps = (artifact.scenarioExtensions as { kernelSnapshotsPerTurn?: KernelSnapshot[] } | undefined)?.kernelSnapshotsPerTurn ?? [];
+    const freshSnaps = (fresh.scenarioExtensions as { kernelSnapshotsPerTurn?: KernelSnapshot[] } | undefined)?.kernelSnapshotsPerTurn ?? [];
+    if (canonicalJson(inputSnaps) === canonicalJson(freshSnaps)) {
+      return { artifact: fresh, matches: true, divergence: '' };
+    }
+    return {
+      artifact: fresh,
+      matches: false,
+      divergence: firstDivergence(inputSnaps, freshSnaps),
+    };
+  }
 }
+
+/**
+ * Compute a first-mismatch JSON-pointer description between two values.
+ * Walks both objects in parallel; returns the first path where the
+ * canonical-stringified values differ. Returns empty string when values
+ * are equal under canonical JSON.
+ */
+function firstDivergence(a: unknown, b: unknown, path = ''): string {
+  if (canonicalJson(a) === canonicalJson(b)) return '';
+  if (typeof a !== typeof b || (a === null) !== (b === null) || Array.isArray(a) !== Array.isArray(b)) {
+    return `${path || '/'} (structural: ${describeKind(a)} vs ${describeKind(b)})`;
+  }
+  if (a === null || typeof a !== 'object') {
+    return `${path || '/'} (${JSON.stringify(a)} vs ${JSON.stringify(b)})`;
+  }
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return `${path}/length (${a.length} vs ${b.length})`;
+    for (let i = 0; i < a.length; i++) {
+      const sub = firstDivergence(a[i], b[i], `${path}/${i}`);
+      if (sub) return sub;
+    }
+    return path;
+  }
+  const aKeys = Object.keys(a as Record<string, unknown>).sort();
+  const bKeys = Object.keys(b as Record<string, unknown>).sort();
+  for (const k of aKeys) {
+    if (!bKeys.includes(k)) return `${path}/${k} (missing in fresh)`;
+    const sub = firstDivergence((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k], `${path}/${k}`);
+    if (sub) return sub;
+  }
+  for (const k of bKeys) {
+    if (!aKeys.includes(k)) return `${path}/${k} (extra in fresh)`;
+  }
+  return path;
+}
+
+function describeKind(v: unknown): string {
+  if (v === null) return 'null';
+  if (Array.isArray(v)) return 'array';
+  return typeof v;
+}
+
+// Re-export the replay error for consumer ergonomics: callers can catch
+// it from this module without learning the orchestrator import path.
+export { WorldModelReplayError } from '../orchestrator.js';
 
 const QuickstartLeaderSchema = z.object({
   name: z.string().min(2).max(64),
