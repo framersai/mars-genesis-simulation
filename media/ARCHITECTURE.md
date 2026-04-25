@@ -1,6 +1,6 @@
 # Paracosm Architecture
 
-Paracosm is a structured world model for AI agents. It runs parallel simulations with AI leaders that have different HEXACO personality profiles, and produces measurably different outcomes from identical starting conditions. Fits the structured / LLM-based / counterfactual branch of the 2026 world-model taxonomy; see [`docs/positioning/world-model-mapping.md`](positioning/world-model-mapping.md) for the placement against adjacent categories.
+Paracosm is a prompt/document/URL-grounded structured world model for AI agents. It compiles source material into a typed `ScenarioPackage`, runs parallel simulations with AI leaders that have different HEXACO personality profiles, and produces measurably different outcomes from identical starting conditions. Fits the structured / LLM-based / counterfactual branch of the 2026 world-model taxonomy; see [`docs/positioning/world-model-mapping.md`](positioning/world-model-mapping.md) for the placement against adjacent categories.
 
 This document covers the full system: how scenarios become simulations, how agents make decisions, how tools get forged at runtime, how the chat system maintains character consistency, and how the API enables arbitrary scenario types.
 
@@ -8,14 +8,14 @@ This document covers the full system: how scenarios become simulations, how agen
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                         Scenario JSON                        │
-│  Defines: departments, metrics, events, labels, setup        │
+│                   World Source Material                       │
+│  Prompt / brief / URL / scenario JSON draft                  │
 └─────────────────┬───────────────────────────────────────────┘
                   │
                   ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                      Scenario Compiler                       │
-│  JSON → LLM-generated hooks (progression, prompts, politics) │
+│  Validated ScenarioPackage + LLM-generated runtime hooks      │
 │  Cost: ~$0.10. Cached to disk after first compile.           │
 └─────────────────┬───────────────────────────────────────────┘
                   │
@@ -44,7 +44,7 @@ This document covers the full system: how scenarios become simulations, how agen
 
 ### Scenario Definition
 
-A scenario is a JSON file that describes the simulation domain. It does not contain any code. The engine handles crisis generation, state transitions, tool forging, and personality drift. The scenario handles domain vocabulary and structure.
+A scenario JSON file is the runtime contract that describes the simulation domain. It does not contain any code. Prompt text, briefs, and URLs can ground the contract through the compiler, but the kernel only runs the validated `ScenarioPackage`. The engine handles crisis generation, state transitions, tool forging, and personality drift. The scenario handles domain vocabulary and structure.
 
 ```json
 {
@@ -62,7 +62,7 @@ A scenario is a JSON file that describes the simulation domain. It does not cont
 }
 ```
 
-**Any domain works.** Mars colonies, submarine habitats, space stations, medieval kingdoms. The engine is domain-agnostic. The scenario JSON defines what gets simulated.
+**Any domain works.** Mars colonies, submarine habitats, space stations, medieval kingdoms. The engine is domain-agnostic. The compiled scenario contract defines what gets simulated.
 
 **Terminology.** The `labels.populationNoun` (plural, e.g. `colonists` → `crew` → `subjects`) and `labels.settlementNoun` (singular, e.g. `colony` → `habitat` → `kingdom`) fields flavour every user-facing string in the dashboard: help legends, roster headers, empty states, ARIA labels, report copy. The engine defaults to `colonists` / `colony` when omitted (Mars heritage), but non-Mars scenarios should override both. Singular/capitalized variants are derived automatically by the dashboard's `useScenarioLabels()` hook.
 
@@ -101,7 +101,7 @@ The Event Director also receives the knowledge bundle's `topics` and `categories
 
 ### Scenario Compiler
 
-The compiler turns JSON into a runnable `ScenarioPackage` by generating TypeScript hook functions via LLM calls:
+The compiler turns a scenario JSON draft plus optional prompt/document/URL grounding into a runnable `ScenarioPackage` by generating TypeScript hook functions via LLM calls:
 
 | Hook | What it generates | Called when |
 |------|-------------------|------------|
@@ -112,7 +112,7 @@ The compiler turns JSON into a runnable `ScenarioPackage` by generating TypeScri
 | `getMilestoneEvent` | Fixed narrative events (Turn 1 founding, final assessment) | Turn 1 and final turn |
 | `reactionsHook` | Colonist personality-aware reactions | After each commander decision |
 
-Compilation costs ~$0.10 and is cached to disk. The compiler accepts `--seed-text` and `--seed-url` for domain research, and `--no-web-search` to skip web enrichment.
+Compilation costs ~$0.10 and is cached to disk. The compiler accepts `--seed-text` and `--seed-url` for domain research, and `--no-web-search` to skip web enrichment. A future prompt-only wrapper should first generate this same JSON contract, then validate and compile it.
 
 ### Deterministic Kernel
 
@@ -200,11 +200,13 @@ Department agents forge computational tools at runtime using AgentOS's `Emergent
 
 1. The department agent calls `forge_tool` with a name, description, input/output schema, implementation code, and test cases.
 2. A pre-judge validator (`validateForgeShape`) checks the request is well-formed. When the LLM emits concrete test cases but forgets to declare `inputSchema.properties` / `outputSchema.properties`, a companion helper `inferSchemaFromTestCases` synthesizes the missing properties from the test data so the forge doesn't get rejected on a formality the test cases already witnessed.
-3. The `SandboxedToolForge` executes the code in an isolated V8 context with hard resource limits:
-   - Memory: 128 MB
-   - Timeout: 10 seconds
-   - Blocked APIs: `eval`, `require`, `process`, `fs.write*`
-   - Allowed APIs (opt-in): `fetch` (domain-restricted), `fs.readFile` (path-restricted), `crypto` (hashing only)
+3. The `SandboxedToolForge` delegates to AgentOS's hardened `CodeSandbox` node:vm context with these guarantees:
+   - **Wall-clock timeout** enforced via `vm.runInContext` (default 10 seconds; configurable via `sandboxTimeoutMs`).
+   - **Memory observed** via `process.memoryUsage().heapUsed` delta after each invocation. The default `sandboxMemoryMB: 128` is a soft monitoring target, not a hard cap; the sandbox does not preempt on overrun.
+   - **`codeGeneration: { strings: false, wasm: false }`** at context construction blocks runtime `eval` and `Function()` reflection.
+   - **Frozen `console`** plus explicit-undefined for `process`, `globalThis`, `require`, `setTimeout`, `setInterval`, `fetch`.
+   - **Realm intrinsics blocked** at context construction: `Reflect`, `Proxy`, `WebAssembly`, `SharedArrayBuffer`, `Atomics`. These otherwise resolve via the V8 default realm even with `codeGeneration.strings: false`.
+   - **Allowed extras** (opt-in via `extraGlobals`): `fetch` (domain-restricted), `fs.readFile` (path-restricted), `crypto` (hashing only). Each opt-in is a CodeSandbox config field, not an automatic exposure.
 4. The `EmergentJudge` (LLM-as-judge) reviews the tool for safety, correctness, determinism, and schema compliance.
 5. If approved, the tool is registered at session scope and available for future turns via the `call_forged_tool` meta-tool (no re-forge required).
 
@@ -372,7 +374,7 @@ import { RunArtifactSchema, StreamEventSchema, type RunArtifact } from 'paracosm
 | `POST` | `/chat` | Chat with a colonist agent |
 | `GET` | `/results` | Full simulation results including verdict |
 | `GET` | `/rate-limit` | Check rate limit status |
-| `POST` | `/compile` | Compile a custom scenario from JSON |
+| `POST` | `/compile` | Compile a custom scenario draft with optional `seedText` / `seedUrl` grounding |
 | `GET` | `/retry-stats` | Cross-run reliability rollup (schemas + forges + caches + providerErrors) over the last N completed runs. Query param: `?limit=N` |
 
 ### Reliability telemetry (`/retry-stats`)
@@ -478,6 +480,57 @@ console.log(result.finalState?.metrics.population);
 console.log(result.forgedTools?.length ?? 0);
 ```
 
+### Replay (T5.5)
+
+```typescript
+import { WorldModel } from 'paracosm/world-model';
+
+const wm = WorldModel.fromScenario(myScenario);
+const trunk = await wm.simulate(leader, { maxTurns: 6, captureSnapshots: true });
+
+// Audit: did the kernel change since this run was produced?
+const replay = await wm.replay(trunk);
+console.log(replay.matches);     // true when nothing in the kernel diverged
+console.log(replay.divergence);  // empty when matches=true; JSON pointer otherwise
+```
+
+`replay()` re-executes the kernel's between-turn progression hook from each recorded snapshot, captures fresh snapshots, and compares them to the input via canonical JSON. Cost: zero LLM. Wall-clock: dominated by JSON parse plus per-turn kernel state advancement. `matches=true` proves the kernel's progression is byte-equal-deterministic for this artifact's transitions, which is the audit guarantee.
+
+Required preconditions on the input artifact:
+
+- `scenarioExtensions.kernelSnapshotsPerTurn` populated (parent created with `captureSnapshots: true`).
+- `decisions[]` populated.
+
+Throws `WorldModelReplayError` when either is missing or when the artifact's scenario id does not match the WorldModel's scenario.
+
+Scope note: v1 replay re-runs `advanceTurn` only. Re-applying recorded decisions via `kernel.applyPolicy` is a follow-up once the public RunArtifact preserves enough department-report context for `decisionToPolicy` to reconstruct PolicyEffects faithfully.
+
+### Digital-twin subpath (T5.4)
+
+```typescript
+import { DigitalTwin, type SubjectConfig, type InterventionConfig } from 'paracosm/digital-twin';
+
+const twin = await DigitalTwin.fromJson(scenarioJson);
+const subject: SubjectConfig = { id: 'company', kind: 'organization', attributes: { headcount: 100 } };
+const intervention: InterventionConfig = { id: 'rif', kind: 'policy', description: '25% RIF', parameters: { percent: 25 } };
+
+const artifact = await twin.simulateIntervention(subject, intervention, leader, { maxTurns: 4 });
+console.log(artifact.subject, artifact.intervention);
+```
+
+`paracosm/digital-twin` is a curated re-export of `WorldModel` aliased as `DigitalTwin` plus the `SubjectConfig` and `InterventionConfig` types. The class is identical to `WorldModel`; the alias names the use case in the import path. `simulateIntervention(subject, intervention, leader, options)` is sugar over `simulate(leader, { ...options, subject, intervention })` that returns a `RunArtifact` with both fields populated for traceability.
+
+### Schema breaking-change gate (T6.2)
+
+`tests/engine/schema/breaking-change-gate.test.ts` fails any PR that diverges `RunArtifactSchema.shape` without bumping `COMPILE_SCHEMA_VERSION`. The committed snapshot fixture at `tests/engine/schema/run-artifact-schema-snapshot.json` is the canonical source of truth.
+
+Updating the schema:
+
+1. Edit the schema in `src/engine/schema/`.
+2. Bump `COMPILE_SCHEMA_VERSION` in `src/engine/compiler/cache.ts`.
+3. Run `npm run snapshot:schema` to regenerate the fixture.
+4. Commit the schema change, the version bump, and the fixture together.
+
 ## Built on AgentOS
 
 Paracosm uses AgentOS for all agent orchestration, LLM calls, tool forging, and memory:
@@ -490,7 +543,7 @@ Paracosm uses AgentOS for all agent orchestration, LLM calls, tool forging, and 
 | `ObjectGenerationError` | Typed error surfaced on exhausted retries; wrappers fall back to empty skeleton + emit `validation_fallback` SSE |
 | `extractJson` | Multi-strategy JSON extraction (code fence, thinking-tag strip, greedy brace match) used by `sendAndValidate` |
 | `SystemContentBlock` w/ `cacheBreakpoint` | Stable system prefixes cached at 0.1× cost across turns (director instructions, dept system prompt, reaction batch system) |
-| `EmergentCapabilityEngine` | Runtime tool forging in sandboxed V8 |
+| `EmergentCapabilityEngine` | Runtime tool forging in a hardened node:vm sandbox |
 | `EmergentJudge` | LLM-as-judge safety review of forged tools |
 | `AgentMemory.sqlite()` | Colonist chat memory with episodic storage and RAG |
 | HEXACO personality | Trait-modulated decision making, memory retrieval, mood adaptation |
