@@ -31,38 +31,49 @@ export function renderPackageJson(input: PackageJsonInput): string {
 
 export type SimulationMode = 'turn-loop' | 'batch-trajectory' | 'batch-point';
 
-export interface RunMjsInput {
-  mode: SimulationMode;
-}
-
-export function renderRunMjs(input: RunMjsInput): string {
+/**
+ * Render the entry script for a paracosm-init scaffolded project.
+ *
+ * The script imports `runSimulation` from `paracosm/runtime` and runs the
+ * leader at index 0 against a turn-loop simulation. Mode is intentionally
+ * NOT a runtime input: it is a property of the produced
+ * `RunArtifact.metadata`, surfaced after the run completes. Batch-trajectory
+ * and batch-point modes are produced by `runBatch` (different entry point,
+ * different config shape); a future spec adds a separate `renderRunMjsBatch`
+ * for those modes.
+ */
+export function renderRunMjs(): string {
   return `#!/usr/bin/env node
 /**
  * Entry script for a paracosm-init scaffolded project.
  *
  * Reads scenario.json + leaders.json from this directory, runs the
- * configured leader at index 0, and prints turn-by-turn output. Edit
- * the leader index, mode, or turn count below to explore.
+ * configured leader at index 0, and prints the resulting RunArtifact JSON.
+ * Edit the leader index, maxTurns, or seed below to explore.
+ *
+ * The "mode" of the resulting run lives on artifact.metadata.mode and is
+ * always "turn-loop" for runs produced by runSimulation. For
+ * batch-trajectory or batch-point modes, use runBatch directly.
  */
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { runSimulation } from 'paracosm';
+import { runSimulation } from 'paracosm/runtime';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const scenario = JSON.parse(readFileSync(resolve(here, 'scenario.json'), 'utf-8'));
 const leaders = JSON.parse(readFileSync(resolve(here, 'leaders.json'), 'utf-8'));
 
 if (!Array.isArray(leaders) || leaders.length === 0) {
-  console.error('leaders.json is empty. Re-run \`paracosm init\` to regenerate.');
+  console.error('leaders.json is empty. Re-run \\\`paracosm init\\\` to regenerate.');
   process.exit(1);
 }
 
-const result = await runSimulation({
+const leader = leaders[0];
+
+const result = await runSimulation(leader, [], {
   scenario,
-  leader: leaders[0],
-  mode: ${JSON.stringify(input.mode)},
-  turns: 6,
+  maxTurns: 6,
   seed: 42,
 });
 

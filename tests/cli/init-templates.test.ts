@@ -18,11 +18,12 @@ test('renderPackageJson produces parseable JSON with caret dep', () => {
   assert.equal(parsed.scripts.start, 'node run.mjs');
 });
 
-test('renderRunMjs embeds the chosen mode literal', () => {
-  const out = renderRunMjs({ mode: 'batch-trajectory' });
-  assert.ok(out.includes(`mode: "batch-trajectory"`), 'mode literal must appear');
-  assert.ok(out.includes(`from 'paracosm'`), 'must import from paracosm');
-  assert.ok(out.includes(`readFileSync`), 'must read scenario.json + leaders.json');
+test('renderRunMjs imports runSimulation from paracosm/runtime with positional args', () => {
+  const out = renderRunMjs();
+  assert.ok(out.includes(`from 'paracosm/runtime'`), 'must import from paracosm/runtime');
+  assert.match(out, /runSimulation\(\s*leader\s*,\s*\[\s*\]\s*,/, 'must use positional signature');
+  assert.ok(out.includes('maxTurns:'), 'must use maxTurns');
+  assert.ok(out.includes('readFileSync'), 'must read scenario.json + leaders.json');
 });
 
 test('renderReadme contains the user-supplied name + truncated domain + mode', () => {
