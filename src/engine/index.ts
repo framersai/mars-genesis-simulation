@@ -45,7 +45,7 @@ export { progressBetweenTurns, applyPersonalityDrift, classifyOutcome, classifyO
 // Core types + generic aliases
 export type {
   Agent, AgentCore, AgentHealth, AgentCareer, AgentSocial, AgentNarrative, AgentMemory, AgentMemoryEntry,
-  WorldSystems, WorldPolitics, SimulationState, SimulationMetadata,
+  WorldMetrics, WorldPolitics, SimulationState, SimulationMetadata,
   HexacoProfile, TurnEvent, TurnOutcome, Department, PromotionRecord,
 } from './core/state.js';
 

@@ -7,7 +7,7 @@
  *
  * Runtime `SimulationState` has `systems`, `politics`, `statuses`,
  * `environment`, `agents`, `metadata` at the top level. `world.metrics`
- * AND `world.capacities` both flatten into `state.systems`;
+ * AND `world.capacities` both flatten into `state.metrics`;
  * `world.politics` / `world.statuses` / `world.environment` each map
  * to their own runtime bag. The fixture mirrors that shape exactly.
  *
@@ -25,7 +25,7 @@ interface MetricDefinition {
 }
 
 export interface ScenarioFixture {
-  systems: Record<string, number>;
+  metrics: Record<string, number>;
   politics: Record<string, number | string | boolean>;
   statuses: Record<string, string | boolean>;
   environment: Record<string, number | string | boolean>;
@@ -153,9 +153,9 @@ function buildSyntheticAgent(startTime: number): Agent {
 
 /**
  * Build a runtime-accurate `SimulationState`-shaped fixture from a
- * scenario JSON. `state.systems` is a FLAT bag merged from the scenario's
+ * scenario JSON. `state.metrics` is a FLAT bag merged from the scenario's
  * `world.metrics` AND `world.capacities` declarations (both map to
- * runtime numbers under `state.systems`). `state.politics` carries
+ * runtime numbers under `state.metrics`). `state.politics` carries
  * `world.politics`. Mars-heritage defaults (population, morale) are
  * overlaid so hooks that reference those still validate.
  *
@@ -189,10 +189,10 @@ export function buildScenarioFixture(scenarioJson: Record<string, unknown>): Sce
     population: 100,
     morale: 0.75,
   };
-  const systems = { ...marsHeritageSystems, ...mergeBagsNumeric(world.metrics, world.capacities) };
+  const metrics = { ...marsHeritageSystems, ...mergeBagsNumeric(world.metrics, world.capacities) };
 
   return {
-    systems,
+    metrics,
     politics: buildPoliticsBag(world.politics),
     statuses: buildStatusesBag(world.statuses),
     environment: buildEnvironmentBag(world.environment),

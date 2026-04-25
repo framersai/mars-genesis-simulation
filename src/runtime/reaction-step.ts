@@ -109,8 +109,8 @@ export async function runReactionStep(args: RunReactionStepArgs): Promise<Reacti
     outcome: lastOutcome,
     decision: turnEventTitles.join('. '),
     time, turn,
-    colonyMorale: kernel.getState().systems.morale,
-    colonyPopulation: kernel.getState().systems.population,
+    colonyMorale: kernel.getState().metrics.morale,
+    colonyPopulation: kernel.getState().metrics.population,
     timeUnitNoun: scenario.labels?.timeUnitNoun,
   };
 

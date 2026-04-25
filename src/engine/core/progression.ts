@@ -1,4 +1,4 @@
-import type { Agent, WorldSystems, TurnEvent, SimulationState, HexacoProfile, TurnOutcome } from './state.js';
+import type { Agent, WorldMetrics, TurnEvent, SimulationState, HexacoProfile, TurnOutcome } from './state.js';
 import { HEXACO_TRAITS } from './state.js';
 import { SeededRng } from './rng.js';
 
@@ -153,15 +153,15 @@ export function classifyOutcome(
   decisionText: string,
   riskyOption: string,
   riskSuccessProbability: number,
-  systems: WorldSystems,
+  metrics: WorldMetrics,
   rng: SeededRng,
 ): TurnOutcome {
   const isRisky = decisionText.toLowerCase().includes(riskyOption.toLowerCase());
 
   let prob = riskSuccessProbability;
-  if (systems.morale > 0.7) prob += 0.1;
-  if (systems.foodMonthsReserve > 12) prob += 0.05;
-  if (systems.population > 150) prob -= 0.05;
+  if (metrics.morale > 0.7) prob += 0.1;
+  if (metrics.foodMonthsReserve > 12) prob += 0.05;
+  if (metrics.population > 150) prob -= 0.05;
   prob = Math.max(0.1, Math.min(0.9, prob));
 
   const success = rng.chance(prob);
@@ -180,16 +180,16 @@ export function classifyOutcomeById(
   selectedOptionId: string,
   options: Array<{ id: string; isRisky: boolean }>,
   riskSuccessProbability: number,
-  systems: WorldSystems,
+  metrics: WorldMetrics,
   rng: SeededRng,
 ): TurnOutcome {
   const selected = options.find(o => o.id === selectedOptionId);
   const isRisky = selected?.isRisky ?? false;
 
   let prob = riskSuccessProbability;
-  if (systems.morale > 0.7) prob += 0.1;
-  if (systems.foodMonthsReserve > 12) prob += 0.05;
-  if (systems.population > 150) prob -= 0.05;
+  if (metrics.morale > 0.7) prob += 0.1;
+  if (metrics.foodMonthsReserve > 12) prob += 0.05;
+  if (metrics.population > 150) prob -= 0.05;
   prob = Math.max(0.1, Math.min(0.9, prob));
 
   const success = rng.chance(prob);
@@ -214,7 +214,7 @@ export function progressBetweenTurns(
   const time = state.metadata.currentTime;
   const turn = state.metadata.currentTurn;
   let colonists = state.agents.map(c => structuredClone(c));
-  let systems = structuredClone(state.systems);
+  let metrics = structuredClone(state.metrics);
 
   // 1. Age all colonists (generic: experience, earth contacts)
   for (const c of colonists) {
@@ -284,11 +284,11 @@ export function progressBetweenTurns(
     // 2c. Starvation — settlement-wide food reserve below a month triggers
     // per-colonist starvation risk. Every colonist is equally at risk;
     // it is settlement-scale, not individual.
-    if (systems.foodMonthsReserve < 1.0) {
-      const starveProb = (1.0 - systems.foodMonthsReserve) * 0.15 * timeDelta;
+    if (metrics.foodMonthsReserve < 1.0) {
+      const starveProb = (1.0 - metrics.foodMonthsReserve) * 0.15 * timeDelta;
       if (turnRng.chance(Math.min(starveProb, 0.3))) {
         killColonist(c, 'starvation',
-          `died at age ${age} of starvation (settlement food reserve ${systems.foodMonthsReserve.toFixed(1)} months)`);
+          `died at age ${age} of starvation (settlement food reserve ${metrics.foodMonthsReserve.toFixed(1)} months)`);
         continue;
       }
     }
@@ -353,7 +353,7 @@ export function progressBetweenTurns(
     && (time - c.core.birthTime) >= 20
     && (time - c.core.birthTime) <= 60
     && !c.social.partnerId);
-  const partnerProb = systems.morale > 0.35 ? 0.10 * timeDelta : 0.03 * timeDelta;
+  const partnerProb = metrics.morale > 0.35 ? 0.10 * timeDelta : 0.03 * timeDelta;
   for (let i = 0; i < unpartneredAdults.length; i++) {
     const a = unpartneredAdults[i];
     if (a.social.partnerId) continue;
@@ -411,7 +411,7 @@ export function progressBetweenTurns(
     seenPairs.add(b.core.id);
     partneredCouples.push([a, b]);
   }
-  const baseBirthProb = systems.morale > 0.4 && systems.foodMonthsReserve > 6 ? 0.08 * timeDelta : 0.02 * timeDelta;
+  const baseBirthProb = metrics.morale > 0.4 && metrics.foodMonthsReserve > 6 ? 0.08 * timeDelta : 0.02 * timeDelta;
   // Partnered couples: 3x the base rate (stable relationships, higher
   // intentional birth decisions). Unpartnered pairs: 0.3x the base rate.
   const partneredBirthProb = Math.min(0.6, baseBirthProb * 3);
@@ -557,20 +557,20 @@ export function progressBetweenTurns(
   const aliveColonists = colonists.filter(c => c.health.alive);
   const avgPsych = aliveColonists.length ? aliveColonists.reduce((s, c) => s + c.health.psychScore, 0) / aliveColonists.length : 0.5;
   const psychPressure = avgPsych < 0.4 ? -0.06 : avgPsych > 0.7 ? 0.03 : 0;
-  const foodPressure = systems.foodMonthsReserve < 6 ? -0.05 : 0;
-  const popPressure = aliveColonists.length > systems.lifeSupportCapacity ? -0.08 : 0;
+  const foodPressure = metrics.foodMonthsReserve < 6 ? -0.05 : 0;
+  const popPressure = aliveColonists.length > metrics.lifeSupportCapacity ? -0.08 : 0;
   const deathShock = deadThisTurn.size > 2 ? -0.04 * deadThisTurn.size : 0;
-  systems.morale = Math.max(0, Math.min(1, systems.morale + (0.6 - systems.morale) * 0.1 + foodPressure + popPressure + psychPressure + deathShock));
+  metrics.morale = Math.max(0, Math.min(1, metrics.morale + (0.6 - metrics.morale) * 0.1 + foodPressure + popPressure + psychPressure + deathShock));
 
   // 7. Update population count
-  systems.population = aliveColonists.length;
+  metrics.population = aliveColonists.length;
 
   // 8. Resource production
-  systems.foodMonthsReserve = Math.max(0, systems.foodMonthsReserve - (timeDelta * 0.5) + (systems.infrastructureModules * 0.3 * timeDelta));
-  systems.scienceOutput += timeDelta;
+  metrics.foodMonthsReserve = Math.max(0, metrics.foodMonthsReserve - (timeDelta * 0.5) + (metrics.infrastructureModules * 0.3 * timeDelta));
+  metrics.scienceOutput += timeDelta;
 
   return {
-    state: { ...state, agents: colonists, systems, eventLog: [...state.eventLog, ...events] },
+    state: { ...state, agents: colonists, metrics, eventLog: [...state.eventLog, ...events] },
     events,
   };
 }

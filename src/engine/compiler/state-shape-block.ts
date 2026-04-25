@@ -7,7 +7,7 @@
  * Paracosm's runtime `SimulationState` carries `systems`, `politics`,
  * `statuses`, `environment`, `agents`, `metadata` at the top level.
  * Scenario-declared keys under `world.metrics` + `world.capacities`
- * both flatten into `state.systems`. `world.politics` / `world.statuses`
+ * both flatten into `state.metrics`. `world.politics` / `world.statuses`
  * / `world.environment` each have their own runtime bag.
  *
  * @module paracosm/engine/compiler/state-shape-block
@@ -29,7 +29,7 @@ export function buildStateShapeBlock(scenarioJson: Record<string, unknown>): str
   const timeUnit = labels.timeUnitNoun ?? 'tick';
   const timeUnitPlural = labels.timeUnitNounPlural ?? 'ticks';
 
-  // world.metrics and world.capacities both flatten into state.systems at runtime.
+  // world.metrics and world.capacities both flatten into state.metrics at runtime.
   const systemsKeys = Array.from(new Set([...keys(world.metrics), ...keys(world.capacities)]));
   const politicsKeys = keys(world.politics);
   const statusesKeys = keys(world.statuses);
@@ -37,7 +37,7 @@ export function buildStateShapeBlock(scenarioJson: Record<string, unknown>): str
 
   return `AVAILABLE STATE SHAPE (read-only, flat):
 
-state.systems = Record<string, number>
+state.metrics = Record<string, number>
   declared keys: ${listOrNone(systemsKeys)}
   (population + morale also present as Mars-heritage defaults; scenario may omit them.)
 state.politics = Record<string, number | string | boolean>
@@ -50,7 +50,7 @@ state.agents = Array<{ core, health, career, social, narrative, hexaco, promotio
 state.metadata = { simulationId, leaderId, seed, startTime, currentTime, currentTurn }
 
 RULES:
-- Access pattern is state.<bag>.<key> — flat, never nested. state.systems.<key> is always a number.
-- Only reference keys in the declared lists above. Unknown keys are undefined and will throw on .toFixed() / nested property access. Defensive access like \`(state.systems.foo ?? 0)\` is safer than bare \`state.systems.foo\`.
+- Access pattern is state.<bag>.<key> — flat, never nested. state.metrics.<key> is always a number.
+- Only reference keys in the declared lists above. Unknown keys are undefined and will throw on .toFixed() / nested property access. Defensive access like \`(state.metrics.foo ?? 0)\` is safer than bare \`state.metrics.foo\`.
 - Time is measured in ${timeUnit} units (plural: ${timeUnitPlural}). Use that vocabulary in any user-visible strings.`;
 }

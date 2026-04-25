@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildStateShapeBlock } from '../../../src/engine/compiler/state-shape-block.js';
 
-test('buildStateShapeBlock lists scenario-declared metric keys under state.systems', () => {
+test('buildStateShapeBlock lists scenario-declared metric keys under state.metrics', () => {
   const block = buildStateShapeBlock({
     labels: { timeUnitNoun: 'quarter', timeUnitNounPlural: 'quarters' },
     world: {
@@ -11,14 +11,14 @@ test('buildStateShapeBlock lists scenario-declared metric keys under state.syste
       politics: {},
     },
   });
-  assert.ok(block.includes('state.systems'));
+  assert.ok(block.includes('state.metrics'));
   assert.ok(block.includes('revenue'));
   assert.ok(block.includes('morale'));
   assert.ok(block.includes('quarter'));
   assert.ok(block.includes('quarters'));
 });
 
-test('buildStateShapeBlock merges world.capacities keys into state.systems', () => {
+test('buildStateShapeBlock merges world.capacities keys into state.metrics', () => {
   const block = buildStateShapeBlock({
     world: {
       metrics: { metricA: { id: 'metricA' } },
@@ -26,7 +26,7 @@ test('buildStateShapeBlock merges world.capacities keys into state.systems', () 
       politics: {},
     },
   });
-  // Both keys should appear in the state.systems key list because
+  // Both keys should appear in the state.metrics key list because
   // capacities flatten into systems at runtime.
   assert.ok(block.includes('metricA'));
   assert.ok(block.includes('capB'));

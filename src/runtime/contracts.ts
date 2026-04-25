@@ -106,7 +106,7 @@ export interface TurnArtifact {
    * `ta.stateSnapshotAfter.metrics.population` still work.
    */
   stateSnapshotAfter: {
-    /** Numeric gauges from kernel.state.systems (the primary bag). */
+    /** Numeric gauges from kernel.state.metrics (the primary bag). */
     metrics: Record<string, number>;
     /** Capacity constraints; optional, declared via world.capacities. */
     capacities?: Record<string, number>;

@@ -1,5 +1,5 @@
 import type { SimulationState, Agent, TurnEvent, HexacoProfile, TurnOutcome, Department } from './state.js';
-import type { WorldSystems, WorldPolitics } from './state.js';
+import type { WorldMetrics, WorldPolitics } from './state.js';
 import type { ScenarioPackage } from '../types.js';
 import { SeededRng } from './rng.js';
 import { generateInitialPopulation, type KeyPersonnel } from './agent-generator.js';
@@ -59,7 +59,7 @@ function seedAnyBag(
 }
 
 export interface SystemsPatch {
-  systems?: Partial<WorldSystems>;
+  metrics?: Partial<WorldMetrics>;
   politics?: Partial<WorldPolitics>;
   agentUpdates?: Array<{
     agentId: string;
@@ -84,7 +84,7 @@ export interface SimulationInitOverrides {
    * hardcoded defaults only.
    */
   scenario?: ScenarioPackage;
-  startingResources?: Partial<WorldSystems>;
+  startingResources?: Partial<WorldMetrics>;
   startingPolitics?: Partial<WorldPolitics>;
   startingStatuses?: Record<string, string | boolean>;
   startingEnvironment?: Record<string, number | string | boolean>;
@@ -123,7 +123,7 @@ export class SimulationKernel {
         leaderId, seed,
         startTime, currentTime: startTime, currentTurn: 0,
       },
-      systems: {
+      metrics: {
         // Mars-heritage numerics
         population: agents.length,
         powerKw: 400,
@@ -257,9 +257,9 @@ export class SimulationKernel {
   applyPolicy(effect: PolicyEffect): void {
     const { patches, events } = effect;
 
-    if (patches.systems) {
-      const c = this.state.systems;
-      for (const [k, v] of Object.entries(patches.systems)) {
+    if (patches.metrics) {
+      const c = this.state.metrics;
+      for (const [k, v] of Object.entries(patches.metrics)) {
         if (v !== undefined && k in c) (c as any)[k] = v;
       }
       c.population = Math.max(0, c.population);
@@ -301,7 +301,7 @@ export class SimulationKernel {
 
     const { state: progressed, events } = progressBetweenTurns(this.state, timeDelta, turnRng, progressionHook);
     this.state = progressed;
-    this.state.systems.population = this.getAliveCount();
+    this.state.metrics.population = this.getAliveCount();
     this.updateFeaturedAgents(events);
 
     return this.getState();
@@ -359,8 +359,8 @@ export class SimulationKernel {
   }
 
   /** Apply additive deltas to world systems (not absolute values). */
-  applySystemDeltas(deltas: Partial<WorldSystems>, events: TurnEvent[] = []): void {
-    const c = this.state.systems;
+  applySystemDeltas(deltas: Partial<WorldMetrics>, events: TurnEvent[] = []): void {
+    const c = this.state.metrics;
     for (const [k, v] of Object.entries(deltas)) {
       if (v !== undefined && typeof v === 'number' && k in c) {
         (c as any)[k] = (c as any)[k] + v;

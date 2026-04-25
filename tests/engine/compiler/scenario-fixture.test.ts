@@ -19,13 +19,13 @@ test('buildScenarioFixture: mars scenario produces systems with every declared m
   const fixture = buildScenarioFixture(marsScenario as unknown as Record<string, unknown>);
   const declaredKeys = Object.keys((marsScenario.world as { metrics: Record<string, unknown> }).metrics);
   for (const key of declaredKeys) {
-    assert.ok(key in fixture.systems, `mars fixture missing declared metric: ${key}`);
+    assert.ok(key in fixture.metrics, `mars fixture missing declared metric: ${key}`);
   }
 });
 
 test('buildScenarioFixture: runtime shape has systems/politics/statuses/environment/agents/metadata', () => {
   const fixture = buildScenarioFixture(marsScenario as unknown as Record<string, unknown>);
-  assert.equal(typeof fixture.systems, 'object');
+  assert.equal(typeof fixture.metrics, 'object');
   assert.equal(typeof fixture.politics, 'object');
   assert.equal(typeof fixture.statuses, 'object');
   assert.equal(typeof fixture.environment, 'object');
@@ -51,16 +51,16 @@ test('buildScenarioFixture: world.statuses + world.environment flow into fixture
   assert.equal(fixture.environment.market, 10);
 });
 
-test('buildScenarioFixture: world.capacities keys flatten into state.systems', () => {
+test('buildScenarioFixture: world.capacities keys flatten into state.metrics', () => {
   const corp = loadScenarioJson('scenarios/corporate-quarterly.json');
   const fixture = buildScenarioFixture(corp);
   // world.metrics keys
-  assert.ok('revenueArr' in fixture.systems, 'revenueArr declared under world.metrics must be in state.systems');
-  assert.ok('burnRate' in fixture.systems);
-  // world.capacities keys — also flattened into state.systems because both
+  assert.ok('revenueArr' in fixture.metrics, 'revenueArr declared under world.metrics must be in state.metrics');
+  assert.ok('burnRate' in fixture.metrics);
+  // world.capacities keys — also flattened into state.metrics because both
   // map to runtime numbers under the same bag.
-  assert.ok('deliveryCapacity' in fixture.systems, 'deliveryCapacity declared under world.capacities must be in state.systems');
-  assert.ok('hiringCapacity' in fixture.systems);
+  assert.ok('deliveryCapacity' in fixture.metrics, 'deliveryCapacity declared under world.capacities must be in state.metrics');
+  assert.ok('hiringCapacity' in fixture.metrics);
 });
 
 test('buildScenarioFixture: corporate-quarterly scenario produces quarterly metadata', () => {
@@ -74,13 +74,13 @@ test('buildScenarioFixture: corporate-quarterly scenario produces quarterly meta
 test('buildScenarioFixture: submarine scenario carries declared hull + oxygen metrics', () => {
   const sub = loadScenarioJson('scenarios/submarine.json');
   const fixture = buildScenarioFixture(sub);
-  assert.ok('hullIntegrity' in fixture.systems);
-  assert.ok('oxygenReserveHours' in fixture.systems);
+  assert.ok('hullIntegrity' in fixture.metrics);
+  assert.ok('oxygenReserveHours' in fixture.metrics);
 });
 
 test('buildScenarioFixture: Mars-heritage defaults (population, morale) always present', () => {
   // Scenario that declares only a scenario-specific metric — population
-  // and morale should still be in state.systems so hooks that read them
+  // and morale should still be in state.metrics so hooks that read them
   // do not trip the smokeTest.
   const scenario = {
     id: 'minimal',
@@ -93,9 +93,9 @@ test('buildScenarioFixture: Mars-heritage defaults (population, morale) always p
     },
   };
   const fixture = buildScenarioFixture(scenario);
-  assert.ok('population' in fixture.systems, 'Mars-heritage population must be present');
-  assert.ok('morale' in fixture.systems, 'Mars-heritage morale must be present');
-  assert.ok('onlyThing' in fixture.systems);
+  assert.ok('population' in fixture.metrics, 'Mars-heritage population must be present');
+  assert.ok('morale' in fixture.metrics, 'Mars-heritage morale must be present');
+  assert.ok('onlyThing' in fixture.metrics);
 });
 
 test('buildScenarioFixture: numeric metric without initial defaults to 0', () => {
@@ -112,7 +112,7 @@ test('buildScenarioFixture: numeric metric without initial defaults to 0', () =>
     },
   };
   const fixture = buildScenarioFixture(scenario);
-  assert.equal(fixture.systems.foo, 0);
+  assert.equal(fixture.metrics.foo, 0);
 });
 
 test('buildScenarioFixture: scenario missing world.metrics throws clear error', () => {

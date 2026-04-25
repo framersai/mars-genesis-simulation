@@ -28,7 +28,7 @@ const DEFAULT_CACHE_DIR = '.paracosm/cache';
  *   array shape to { founding, legacy } object shape for OpenAI
  *   response_format:json_object compatibility.
  * - v3 (2026-04-21): state access path renamed from ctx.state.colony
- *   to ctx.state.systems as part of the 0.5.0 domain-agnostic schema
+ *   to ctx.state.metrics as part of the 0.5.0 domain-agnostic schema
  *   rename. Every cached progression / reactions / politics hook from
  *   v2 references the old path and must regenerate.
  * - v4 (2026-04-23): F23 time-units rename. Progression/reactions/
@@ -42,7 +42,7 @@ const DEFAULT_CACHE_DIR = '.paracosm/cache';
  *   scenario-declared key lists; smokeTest fixtures derived from the
  *   scenario's own world.* bags instead of hardcoded Mars defaults.
  *   Pre-v5 cached hooks were generated under looser prompts and may
- *   reference nested state paths (e.g. state.systems.hull.integrity)
+ *   reference nested state paths (e.g. state.metrics.hull.integrity)
  *   that throw at runtime. Regenerate to pick up the tightened
  *   contract (one-time ~$0.10 per previously-compiled scenario).
  */

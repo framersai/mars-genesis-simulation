@@ -36,7 +36,7 @@ For each department, compute and return 2-4 lines of scenario-relevant stats fro
 
 Rules:
 1. Switch on ctx.department with a case per department ID listed above.
-2. Access ctx.state.agents (filter alive), ctx.state.systems, ctx.state.politics. These are the only state bags present at runtime.
+2. Access ctx.state.agents (filter alive), ctx.state.metrics, ctx.state.politics. These are the only state bags present at runtime.
 3. Reference only the keys listed in AVAILABLE STATE SHAPE. Bad key access throws at validation or runtime.
 4. Return string[]; empty array for unknown departments.
 5. NO external imports, NO async.`;

@@ -15,13 +15,13 @@ export function lunarDepartmentPromptLines(dept: string, state: SimulationState)
       break;
     }
     case 'engineering':
-      lines.push('INFRASTRUCTURE:', `Modules: ${state.systems.infrastructureModules} | Power: ${state.systems.powerKw}kW (solar + nuclear) | Life support: ${state.systems.lifeSupportCapacity}/${state.systems.population} | Volume: ${state.systems.pressurizedVolumeM3}m³`);
+      lines.push('INFRASTRUCTURE:', `Modules: ${state.metrics.infrastructureModules} | Power: ${state.metrics.powerKw}kW (solar + nuclear) | Life support: ${state.metrics.lifeSupportCapacity}/${state.metrics.population} | Volume: ${state.metrics.pressurizedVolumeM3}m³`);
       break;
     case 'mining':
       lines.push('MINING:', `Ice extraction active in permanently shadowed craters. Regolith processing for construction materials. ISRU capacity scales with power.`);
       break;
     case 'life-support':
-      lines.push('LIFE SUPPORT:', `Reserves: ${state.systems.foodMonthsReserve.toFixed(1)}mo | Water: ${state.systems.waterLitersPerDay}L/day | O2 from electrolysis. Crew to support: ${state.systems.population}`);
+      lines.push('LIFE SUPPORT:', `Reserves: ${state.metrics.foodMonthsReserve.toFixed(1)}mo | Water: ${state.metrics.waterLitersPerDay}L/day | O2 from electrolysis. Crew to support: ${state.metrics.population}`);
       break;
     case 'communications':
       lines.push('COMMS:', `Earth visible from crater rim during ~70% of lunar day. Direct line-of-sight link. 1.3s signal delay. Relay satellite for far-side coverage.`);

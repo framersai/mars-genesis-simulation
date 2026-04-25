@@ -47,7 +47,7 @@ test('computeGameState: first turn_start for Alice appends her to leaderIds', ()
   const state = computeGameState([mkTurnStart('Alice', 1)], false);
   assert.deepEqual(state.leaderIds, ['Alice']);
   assert.ok(state.leaders.Alice, 'Alice has a state entry');
-  assert.equal(state.leaders.Alice.systems?.population, 100);
+  assert.equal(state.leaders.Alice.metrics?.population, 100);
 });
 
 test('computeGameState: second leader appended in launch order', () => {
@@ -80,8 +80,8 @@ test('computeGameState: events for an existing leader update that leader only', 
     mkTurnStart('Bob', 1, { population: 80 }),
   ];
   const state = computeGameState(events, false);
-  assert.equal(state.leaders.Alice.systems?.population, 95, 'Alice updated');
-  assert.equal(state.leaders.Bob.systems?.population, 80, 'Bob independent');
+  assert.equal(state.leaders.Alice.metrics?.population, 95, 'Alice updated');
+  assert.equal(state.leaders.Bob.metrics?.population, 80, 'Bob independent');
 });
 
 test('computeGameState: isComplete flag propagates', () => {

@@ -63,7 +63,7 @@ test('determinism invariant: snapshot + restore + advance == continuous advance'
   // Kernel-deterministic fields must match byte-for-byte.
   const sContinuous = kContinuous.getState();
   const sResumed = kResumed.getState();
-  assert.deepEqual(sResumed.systems, sContinuous.systems);
+  assert.deepEqual(sResumed.metrics, sContinuous.metrics);
   assert.deepEqual(sResumed.politics, sContinuous.politics);
   assert.deepEqual(sResumed.statuses, sContinuous.statuses);
   assert.deepEqual(sResumed.environment, sContinuous.environment);

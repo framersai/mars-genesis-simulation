@@ -26,7 +26,7 @@ function fakeKernelSnapshot(overrides: Partial<KernelSnapshot> = {}): KernelSnap
     // kernel-level round-trip is covered by kernel-snapshot.test.ts.
     state: {
       metadata: { simulationId: 'r-1', leaderId: 'l-a', seed: 42, startTime: 2035, currentTime: 2038, currentTurn: 3 },
-      systems: {
+      metrics: {
         population: 100,
         morale: 0.7,
         foodMonthsReserve: 6,

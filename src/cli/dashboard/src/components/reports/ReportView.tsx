@@ -192,7 +192,7 @@ export function ReportView({ state, verdict, reportSections }: ReportViewProps) 
 
         if (evt.type === 'turn_start') {
           if (evt.data?.time != null) t.time = evt.data.time as number;
-          if (evt.data?.systems) t.systems = evt.data.systems as Record<string, unknown>;
+          if (evt.data?.metrics) t.metrics = evt.data.metrics as Record<string, unknown>;
           // Legacy single-event turn_start: also seed event 0
           if (evt.data?.title && evt.data?.title !== 'Director generating...' && !evt.data?.totalEvents) {
             const block = getEventBlock(t, 0, 1);
@@ -389,12 +389,12 @@ export function ReportView({ state, verdict, reportSections }: ReportViewProps) 
           const v = systems?.[key];
           return typeof v === 'number' ? v : 0;
         };
-        const finalPopA = pick(lastTurn?.[1]?.a?.systems, 'population');
-        const finalPopB = pick(lastTurn?.[1]?.b?.systems, 'population');
-        const finalMoraleA = pick(lastTurn?.[1]?.a?.systems, 'morale');
-        const finalMoraleB = pick(lastTurn?.[1]?.b?.systems, 'morale');
-        const initialPopA = pick(firstTurn?.[1]?.a?.systems, 'population') || finalPopA;
-        const initialPopB = pick(firstTurn?.[1]?.b?.systems, 'population') || finalPopB;
+        const finalPopA = pick(lastTurn?.[1]?.a?.metrics, 'population');
+        const finalPopB = pick(lastTurn?.[1]?.b?.metrics, 'population');
+        const finalMoraleA = pick(lastTurn?.[1]?.a?.metrics, 'morale');
+        const finalMoraleB = pick(lastTurn?.[1]?.b?.metrics, 'morale');
+        const initialPopA = pick(firstTurn?.[1]?.a?.metrics, 'population') || finalPopA;
+        const initialPopB = pick(firstTurn?.[1]?.b?.metrics, 'population') || finalPopB;
         const totalToolsA = sideA?.events.filter(e => e.type === 'forge_attempt' && e.data?.approved === true).length ?? 0;
         const totalToolsB = sideB?.events.filter(e => e.type === 'forge_attempt' && e.data?.approved === true).length ?? 0;
         const stats: Array<{ label: string; value: string; tone?: 'pos' | 'neg' | 'neutral' }> = [
@@ -882,7 +882,7 @@ function EventSide({ block, eventIndex, totalEvents, name, sideColor, sections }
 }
 
 function TurnSharedFooter({ data, name, sideColor, showQuotes }: { data: TurnData; name: string; sideColor: string; showQuotes: boolean }) {
-  const systems = data.systems as Record<string, number> | undefined;
+  const systems = data.metrics as Record<string, number> | undefined;
   if (!systems && (!showQuotes || data.reactions.length === 0)) return <div />;
 
   return (

@@ -132,8 +132,8 @@ export async function runPairSimulations(
   if (settled.length === 2) {
     try {
       const [a, b] = settled;
-      const colA = a.result.finalState?.systems;
-      const colB = b.result.finalState?.systems;
+      const colA = a.result.finalState?.metrics;
+      const colB = b.result.finalState?.metrics;
       const verdictModel = resolveVerdictModel(simConfig.provider || 'openai', simConfig.economics);
       if (!verdictModel) {
         broadcast('complete', {

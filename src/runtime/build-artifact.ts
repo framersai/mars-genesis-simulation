@@ -108,7 +108,7 @@ export interface BuildArtifactInputs {
   /** Per-turn agent reactions — stashed under scenarioExtensions.reactions. */
   agentReactions: unknown[];
   finalState?: {
-    systems: Record<string, number>;
+    metrics: Record<string, number>;
     capacities?: Record<string, number>;
     politics?: Record<string, number | string | boolean>;
     statuses?: Record<string, string | boolean>;
@@ -251,7 +251,7 @@ export function buildRunArtifact(inputs: BuildArtifactInputs): RunArtifact {
     intervention: inputs.intervention,
     finalState: inputs.finalState
       ? {
-          metrics: inputs.finalState.systems,
+          metrics: inputs.finalState.metrics,
           capacities: inputs.finalState.capacities,
           politics: inputs.finalState.politics,
           statuses: inputs.finalState.statuses,

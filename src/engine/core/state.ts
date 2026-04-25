@@ -129,7 +129,7 @@ export interface Agent {
  * Scenario-specific metrics (e.g., a submarine's hullPressureBars or a
  * corporation's quarterlyRevenue) live alongside via `[key: string]: number`.
  */
-export interface WorldSystems {
+export interface WorldMetrics {
   /** Alive headcount. */
   population: number;
   /** Aggregate morale, 0..1. */
@@ -209,13 +209,15 @@ export interface TurnEvent {
 export interface SimulationState {
   metadata: SimulationMetadata;
   /**
-   * Numerical world state. The `WorldSystems` fields below
+   * Numerical world state. The `WorldMetrics` fields below
    * (`population`, `morale`, `foodMonthsReserve`, `powerKw`, etc.) are
-   * Mars/space heritage conveniences — any scenario extends the bag
+   * Mars/space heritage conveniences. Any scenario extends the bag
    * via the `[key: string]: number` index signature without touching
-   * these defaults. Was `colony` pre-0.5.0.
+   * these defaults. Was `colony` pre-0.5.0, then `systems` 0.5.x-0.6.x,
+   * now `metrics` aligning with `WorldSnapshot.metrics` from the
+   * universal schema.
    */
-  systems: WorldSystems;
+  metrics: WorldMetrics;
   agents: Agent[];
   politics: WorldPolitics;
   /**

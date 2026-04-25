@@ -36,16 +36,16 @@ test('SimulationKernel respects initial population and starting resources', () =
   const state = kernel.getState();
   assert.equal(state.metadata.startTime, 2042);
   assert.equal(state.metadata.currentTime, 2042);
-  assert.equal(state.systems.population, 120);
+  assert.equal(state.metrics.population, 120);
   assert.equal(state.agents.length, 120);
-  assert.equal(state.systems.foodMonthsReserve, 24);
-  assert.equal(state.systems.waterLitersPerDay, 950);
-  assert.equal(state.systems.powerKw, 600);
-  assert.equal(state.systems.morale, 0.72);
-  assert.equal(state.systems.pressurizedVolumeM3, 4200);
-  assert.equal(state.systems.lifeSupportCapacity, 180);
-  assert.equal(state.systems.infrastructureModules, 6);
-  assert.equal(state.systems.scienceOutput, 10);
+  assert.equal(state.metrics.foodMonthsReserve, 24);
+  assert.equal(state.metrics.waterLitersPerDay, 950);
+  assert.equal(state.metrics.powerKw, 600);
+  assert.equal(state.metrics.morale, 0.72);
+  assert.equal(state.metrics.pressurizedVolumeM3, 4200);
+  assert.equal(state.metrics.lifeSupportCapacity, 180);
+  assert.equal(state.metrics.infrastructureModules, 6);
+  assert.equal(state.metrics.scienceOutput, 10);
   assert.equal(state.politics.earthDependencyPct, 70);
 });
 
@@ -56,7 +56,7 @@ test('SimulationKernel: initial state always has statuses and environment as emp
   assert.deepEqual(state.environment, {});
 });
 
-test('SimulationKernel: constructor seeds state.systems from scenario.world.metrics initials', () => {
+test('SimulationKernel: constructor seeds state.metrics from scenario.world.metrics initials', () => {
   const scenario = {
     id: 'test-scenario',
     labels: { name: 'Test', populationNoun: 'people', settlementNoun: 'camp' },
@@ -75,11 +75,11 @@ test('SimulationKernel: constructor seeds state.systems from scenario.world.metr
   };
   const kernel = new SimulationKernel(42, 'test-leader', [], { scenario: scenario as unknown as never });
   const state = kernel.getState();
-  assert.equal(state.systems.hullIntegrity, 85);
-  assert.equal(state.systems.revenueArr, 6_000_000);
+  assert.equal(state.metrics.hullIntegrity, 85);
+  assert.equal(state.metrics.revenueArr, 6_000_000);
 });
 
-test('SimulationKernel: capacities declarations also populate state.systems', () => {
+test('SimulationKernel: capacities declarations also populate state.metrics', () => {
   const scenario = {
     id: 'test-capacities',
     labels: { name: 'Test' },
@@ -95,8 +95,8 @@ test('SimulationKernel: capacities declarations also populate state.systems', ()
   };
   const kernel = new SimulationKernel(42, 'test-leader', [], { scenario: scenario as unknown as never });
   const state = kernel.getState();
-  assert.equal(state.systems.deliveryCapacity, 12);
-  assert.equal(state.systems.foo, 1);
+  assert.equal(state.metrics.deliveryCapacity, 12);
+  assert.equal(state.metrics.foo, 1);
 });
 
 test('SimulationKernel: constructor populates state.politics from scenario.world.politics initials', () => {
@@ -185,7 +185,7 @@ test('SimulationKernel: explicit startingResources overlay wins over scenario de
     startingResources: { revenueArr: 9_999_999 } as never,
   });
   const state = kernel.getState();
-  assert.equal(state.systems.revenueArr, 9_999_999, 'caller overlay must override scenario declaration');
+  assert.equal(state.metrics.revenueArr, 9_999_999, 'caller overlay must override scenario declaration');
 });
 
 test('SimulationKernel: type-appropriate zeros when initial is absent', () => {
@@ -204,7 +204,7 @@ test('SimulationKernel: type-appropriate zeros when initial is absent', () => {
   };
   const kernel = new SimulationKernel(42, 'test-leader', [], { scenario: scenario as unknown as never });
   const state = kernel.getState();
-  assert.equal(state.systems.noInitial, 0);
+  assert.equal(state.metrics.noInitial, 0);
   assert.equal(state.statuses.someFlag, false);
   assert.equal(state.environment.someText, '');
 });

@@ -12,18 +12,18 @@ export interface ProjectedSystemBags {
  * scenario declares the key under `world.capacities`.
  */
 export function projectSystemBags(
-  systems: Record<string, number>,
+  metrics: Record<string, number>,
   scenario: Pick<ScenarioPackage, 'world'>,
   extraMetrics: Record<string, number> = {},
 ): ProjectedSystemBags {
   const capacityKeys = new Set(Object.keys(scenario.world?.capacities ?? {}));
   const capacities: Record<string, number> = {};
-  for (const [key, value] of Object.entries(systems)) {
+  for (const [key, value] of Object.entries(metrics)) {
     if (capacityKeys.has(key)) capacities[key] = value;
   }
 
   return {
-    metrics: { ...systems, ...extraMetrics },
+    metrics: { ...metrics, ...extraMetrics },
     ...(Object.keys(capacities).length > 0 ? { capacities } : {}),
   };
 }

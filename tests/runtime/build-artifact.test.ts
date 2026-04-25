@@ -16,7 +16,7 @@ const baseInputs = {
   forgedToolbox: [],
   citationCatalog: [],
   agentReactions: [],
-  finalState: { systems: { population: 100, morale: 0.7 }, metadata: {} },
+  finalState: { metrics: { population: 100, morale: 0.7 }, metadata: {} },
   fingerprint: { resilience: 0.8 },
   cost: { totalUSD: 0.32, llmCalls: 85 },
   providerError: null,
@@ -221,7 +221,7 @@ test('buildRunArtifact: finalState carries all world snapshot bags', () => {
     ...baseInputs,
     mode: 'turn-loop',
     finalState: {
-      systems: { revenueArr: 6_500_000, morale: 0.82 },
+      metrics: { revenueArr: 6_500_000, morale: 0.82 },
       capacities: { runwayMonths: 18 },
       politics: { boardConfidence: 80 },
       statuses: { fundingRound: 'series-c' },
@@ -241,7 +241,7 @@ test('buildRunArtifact: finalState.politics/statuses/environment undefined when 
   const artifact = buildRunArtifact({
     ...baseInputs,
     mode: 'turn-loop',
-    finalState: { systems: { population: 100 }, metadata: {} },
+    finalState: { metrics: { population: 100 }, metadata: {} },
   });
   assert.ok(artifact.finalState);
   assert.equal(artifact.finalState!.capacities, undefined);

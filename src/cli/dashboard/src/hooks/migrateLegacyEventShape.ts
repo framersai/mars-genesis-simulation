@@ -6,7 +6,7 @@
  *
  * Migration rules:
  *   - event.type 'colony_snapshot'  rewrites to 'systems_snapshot'
- *   - event.data.colony             aliases to event.data.systems
+ *   - event.data.colony             aliases to event.data.metrics
  *   - event.data.colonyDeltas       aliases to event.data.systemDeltas
  *   - result.leader.colony          aliases to result.leader.unit
  *
@@ -53,8 +53,8 @@ export function migrateLegacyEventShape(
     const type = e.type === 'colony_snapshot' ? 'systems_snapshot' : e.type;
     if (!e.data) return { ...e, type };
     const data: Record<string, unknown> = { ...e.data };
-    if (data.colony !== undefined && data.systems === undefined) {
-      data.systems = data.colony;
+    if (data.colony !== undefined && data.metrics === undefined) {
+      data.metrics = data.colony;
     }
     if (data.colonyDeltas !== undefined && data.systemDeltas === undefined) {
       data.systemDeltas = data.colonyDeltas;

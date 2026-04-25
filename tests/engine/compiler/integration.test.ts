@@ -64,10 +64,10 @@ Return JSON: {"title","crisis","options":[{"id","label","description","isRisky"}
           lines.push('CREW HEALTH:', 'Avg psych: ' + (alive.length ? (alive.reduce((s, c) => s + (c.health?.psychScore || 0), 0) / alive.length).toFixed(2) : 'N/A'));
           break;
         case 'engineering':
-          lines.push('HULL:', 'Integrity: ' + (ctx.state.systems?.hullIntegrity || 'unknown') + '% | Power: ' + (ctx.state.systems?.powerKw || 0) + 'kW');
+          lines.push('HULL:', 'Integrity: ' + (ctx.state.metrics?.hullIntegrity || 'unknown') + '% | Power: ' + (ctx.state.metrics?.powerKw || 0) + 'kW');
           break;
         case 'life-support':
-          lines.push('LIFE SUPPORT:', 'O2: ' + (ctx.state.systems?.oxygenReserveHours || 0) + 'h | Food: ' + (ctx.state.systems?.foodMonthsReserve || 0) + 'mo');
+          lines.push('LIFE SUPPORT:', 'O2: ' + (ctx.state.metrics?.oxygenReserveHours || 0) + 'h | Food: ' + (ctx.state.metrics?.foodMonthsReserve || 0) + 'mo');
           break;
         default:
           lines.push('[' + ctx.department + '] Station systems nominal.');

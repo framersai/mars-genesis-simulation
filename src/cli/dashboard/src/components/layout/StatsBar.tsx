@@ -100,8 +100,8 @@ export function StatsBar({ leaders, crisisText, toolRegistry }: StatsBarProps) {
   const bLeader = leaders[1];
   const aState = aLeader?.state;
   const bState = bLeader?.state;
-  const systemsA = aState?.systems ?? null;
-  const systemsB = bState?.systems ?? null;
+  const systemsA = aState?.metrics ?? null;
+  const systemsB = bState?.metrics ?? null;
   const prevSystemsA = aState?.prevSystems ?? null;
   const prevSystemsB = bState?.prevSystems ?? null;
   const deathsA = aState?.deaths ?? 0;

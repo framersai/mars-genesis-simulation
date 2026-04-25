@@ -308,7 +308,7 @@ export function buildEventSummary(type: SimEventType, data: Record<string, unkno
       return `bulletin: ${n} post${n === 1 ? '' : 's'}`;
     }
     case 'turn_done': {
-      const systems = d.systems as { population?: number; morale?: number } | undefined;
+      const systems = d.metrics as { population?: number; morale?: number } | undefined;
       const pop = systems?.population;
       const mor = systems?.morale;
       if (pop != null && mor != null) {
@@ -582,10 +582,10 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
         initialPopulation: opts.initialPopulation,
         scenario: opts.scenario,
         // StartingResources / StartingPolitics are subsets of the kernel's
-        // Partial<WorldSystems / WorldPolitics> shape. The kernel's types
+        // Partial<WorldMetrics / WorldPolitics> shape. The kernel's types
         // carry index signatures for scenario-defined fields; the starter
         // configs only declare the universal fields, so the cast is safe.
-        startingResources: opts.startingResources as Partial<import('../engine/core/state.js').WorldSystems> | undefined,
+        startingResources: opts.startingResources as Partial<import('../engine/core/state.js').WorldMetrics> | undefined,
         startingPolitics: opts.startingPolitics as Partial<import('../engine/core/state.js').WorldPolitics> | undefined,
         startingStatuses: opts.startingStatuses,
         startingEnvironment: opts.startingEnvironment,
@@ -964,7 +964,7 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
         turn, time,
         reason: 'client_disconnected',
         completedTurns: turn - 1,
-        systems: kernel.getState().systems,
+        systems: kernel.getState().metrics,
         toolsForged: Object.values(toolRegs).flat().length,
       });
       break;
@@ -987,7 +987,7 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
         const st = kernel.getState();
         emit('turn_done', {
           turn, time,
-          systems: st.systems,
+          systems: st.metrics,
           statuses: Object.keys(st.statuses).length > 0 ? { ...st.statuses } : undefined,
           environment: Object.keys(st.environment).length > 0 ? { ...st.environment } : undefined,
           toolsForged: Object.values(toolRegs).flat().length,
@@ -1018,9 +1018,9 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
         turn, time,
         leaderName: leader.name, leaderArchetype: leader.archetype, leaderHexaco: commanderHexacoLive,
         leaderHexacoHistory: commanderHexacoHistory,
-        state: preState.systems as unknown as Record<string, number>,
+        state: preState.metrics as unknown as Record<string, number>,
         politics: preState.politics as unknown as Record<string, number | string | boolean>,
-        systems: preState.systems as unknown as Record<string, number>,
+        systems: preState.metrics as unknown as Record<string, number>,
         aliveCount: alive.length,
         nativeBornCount: alive.filter(c => c.core.marsborn).length,
         marsBornCount: alive.filter(c => c.core.marsborn).length,
@@ -1038,7 +1038,7 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
         knowledgeTopics: Object.keys(sc.knowledge?.topics ?? {}),
         knowledgeCategories: Object.keys(sc.knowledge?.categoryMapping ?? {}),
       };
-      emit('turn_start', { turn, time, title: 'Director generating...', crisis: '', births: 0, deaths: 0, systems: preState.systems });
+      emit('turn_start', { turn, time, title: 'Director generating...', crisis: '', births: 0, deaths: 0, systems: preState.metrics });
       // Abort gate: if the client already left during the gap between
       // the kernel advance and the director call, skip the director's
       // flagship LLM call. The inner event loop then has nothing to
@@ -1074,7 +1074,7 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
     const state = kernel.advanceTurn(turn, time, sc.hooks.progressionHook);
     const births = state.eventLog.filter(e => e.turn === turn && e.type === 'birth').length;
     const deaths = state.eventLog.filter(e => e.turn === turn && e.type === 'death').length;
-    console.log(`  Kernel: +${births} births, -${deaths} deaths → pop ${state.systems.population}`);
+    console.log(`  Kernel: +${births} births, -${deaths} deaths → pop ${state.metrics.population}`);
 
     console.log(`\n${'─'.repeat(50)}`);
     const timeNounRaw = sc.labels?.timeUnitNoun ?? 'tick';
@@ -1082,7 +1082,7 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
     console.log(`  Turn ${turn}/${maxTurns}. ${TimeNoun} ${time}: ${turnEvents.length} event(s) [${milestone ? 'MILESTONE' : 'EMERGENT'}]`);
     console.log(`${'─'.repeat(50)}`);
 
-    emit('turn_start', { turn, time, title: turnEvents[0]?.title || '', crisis: turnEvents[0]?.description?.slice(0, 200) || '', category: turnEvents[0]?.category || '', births, deaths, systems: state.systems, emergent: !milestone, turnSummary: turnEvents[0]?.turnSummary || '', totalEvents: turnEvents.length, pacing: batchPacing });
+    emit('turn_start', { turn, time, title: turnEvents[0]?.title || '', crisis: turnEvents[0]?.description?.slice(0, 200) || '', category: turnEvents[0]?.category || '', births, deaths, systems: state.metrics, emergent: !milestone, turnSummary: turnEvents[0]?.turnSummary || '', totalEvents: turnEvents.length, pacing: batchPacing });
 
     // ── Inner event loop ──────────────────────────────────────────────
     let reactions: import('./agent-reactions.js').AgentReaction[] = [];
@@ -1497,7 +1497,7 @@ ${trajectoryCue ? `\n${trajectoryCue}\n` : ''}
 DEPARTMENT REPORTS:
 ${summaries}
 ${commanderToolboxBlock}
-State: Pop ${kernel.getState().systems.population} | Morale ${Math.round(kernel.getState().systems.morale * 100)}% | Food ${kernel.getState().systems.foodMonthsReserve.toFixed(1)}mo${optionText}${effectsText}
+State: Pop ${kernel.getState().metrics.population} | Morale ${Math.round(kernel.getState().metrics.morale * 100)}% | Food ${kernel.getState().metrics.foodMonthsReserve.toFixed(1)}mo${optionText}${effectsText}
 
 REASONING — populate the "reasoning" field of your JSON response BEFORE committing to selectedOptionId. Numbered list, one point per line:
   (1) What does my personality profile push me toward on this call? Name the specific trait poles at play.
@@ -1556,8 +1556,8 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
       let resolvedOptionId = decision.selectedOptionId;
       if (!resolvedOptionId && event.options.length) { const decLower = (decision.decision || '').toLowerCase(); for (const opt of event.options) { if (decLower.includes(opt.id) || decLower.includes(opt.label.toLowerCase())) { resolvedOptionId = opt.id; break; } } }
       const outcome = resolvedOptionId
-        ? classifyOutcomeById(resolvedOptionId, event.options, event.riskSuccessProbability, kernel.getState().systems, outcomeRng)
-        : classifyOutcome(decision.decision, scenario.riskyOption, event.riskSuccessProbability, kernel.getState().systems, outcomeRng);
+        ? classifyOutcomeById(resolvedOptionId, event.options, event.riskSuccessProbability, kernel.getState().metrics, outcomeRng)
+        : classifyOutcome(decision.decision, scenario.riskyOption, event.riskSuccessProbability, kernel.getState().metrics, outcomeRng);
 
       const outcomeEffectRng = new SeededRng(seed).turnSeed(turn * 100 + ei + 50);
       // Personality bonus shapes outcome magnitude. Two extreme leaders
@@ -1746,7 +1746,7 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
         // infra, science, etc) plus births/deaths computed ad-hoc this
         // turn. Declared capacities remain in metrics for back-compat
         // and are also projected into `capacities` below.
-        ...projectSystemBags(after.systems, sc, { births, deaths }),
+        ...projectSystemBags(after.metrics, sc, { births, deaths }),
         // Optional bags: only emit when the scenario declared something.
         // Empty bags land as `undefined` via conditional spread so
         // consumers can check `if (ta.stateSnapshotAfter.statuses)` cheaply.
@@ -1761,7 +1761,7 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
     if (opts.captureSnapshots) {
       kernelSnapshotsPerTurn.push(kernel.toSnapshot(sc.id));
     }
-    console.log(`  State: Pop ${after.systems.population} | Morale ${Math.round(after.systems.morale * 100)}% | Food ${after.systems.foodMonthsReserve.toFixed(1)}mo`);
+    console.log(`  State: Pop ${after.metrics.population} | Morale ${Math.round(after.metrics.morale * 100)}% | Food ${after.metrics.foodMonthsReserve.toFixed(1)}mo`);
     // Death cause breakdown for this turn: maps attributed causes from
     // the kernel (natural causes, radiation cancer, starvation, despair,
     // fatal fracture, accident: X) to counts so the dashboard can
@@ -1778,7 +1778,7 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
     }
     emit('turn_done', {
       turn, time,
-      systems: after.systems,
+      systems: after.metrics,
       statuses: Object.keys(after.statuses).length > 0 ? { ...after.statuses } : undefined,
       environment: Object.keys(after.environment).length > 0 ? { ...after.environment } : undefined,
       toolsForged: Object.values(toolRegs).flat().length,
@@ -1835,9 +1835,9 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
     emit('systems_snapshot', {
       turn, time,
       agents: snapshotAgents,
-      population: after.systems.population,
-      morale: after.systems.morale,
-      foodReserve: after.systems.foodMonthsReserve,
+      population: after.metrics.population,
+      morale: after.metrics.morale,
+      foodReserve: after.metrics.foodMonthsReserve,
       births, deaths,
     });
     } catch (err) {
@@ -1859,16 +1859,16 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
       }));
       emit('systems_snapshot', {
         turn, time, agents: fallbackAgents,
-        population: kernel.getState().systems.population,
-        morale: kernel.getState().systems.morale,
-        foodReserve: kernel.getState().systems.foodMonthsReserve,
+        population: kernel.getState().metrics.population,
+        morale: kernel.getState().metrics.morale,
+        foodReserve: kernel.getState().metrics.foodMonthsReserve,
         births: 0, deaths: 0,
       });
       {
         const st = kernel.getState();
         emit('turn_done', {
           turn, time,
-          systems: st.systems,
+          systems: st.metrics,
           statuses: Object.keys(st.statuses).length > 0 ? { ...st.statuses } : undefined,
           environment: Object.keys(st.environment).length > 0 ? { ...st.environment } : undefined,
           toolsForged: Object.values(toolRegs).flat().length,
@@ -1958,8 +1958,8 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
     citationCatalog: citationCatalog as never,
     agentReactions: allAgentReactions,
     finalState: {
-      systems: final.systems as unknown as Record<string, number>,
-      capacities: projectSystemBags(final.systems as unknown as Record<string, number>, sc).capacities,
+      metrics: final.metrics as unknown as Record<string, number>,
+      capacities: projectSystemBags(final.metrics as unknown as Record<string, number>, sc).capacities,
       politics: final.politics as unknown as Record<string, number | string | boolean>,
       statuses: final.statuses,
       environment: final.environment,

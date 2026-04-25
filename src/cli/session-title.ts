@@ -99,7 +99,7 @@ export function summariseForTitle(events: TimestampedEvent[]): RunHighlights {
     if (innerType === 'turn_done') {
       const turn = typeof data.turn === 'number' ? data.turn : undefined;
       if (typeof turn === 'number' && turn > (out.turnCount ?? 0)) out.turnCount = turn;
-      const systems = (data.systems ?? null) as Record<string, unknown> | null;
+      const systems = (data.metrics ?? null) as Record<string, unknown> | null;
       const leader = typeof data.leader === 'string' ? data.leader : '';
       if (systems) {
         if (leader && leader === out.leaderA) lastSystemsA = systems;

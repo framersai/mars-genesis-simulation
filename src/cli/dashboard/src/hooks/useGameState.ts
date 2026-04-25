@@ -399,11 +399,11 @@ export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): Ga
             turnSummary: dd.turnSummary as string || '',
           };
         }
-        if (dd.systems) {
-          s.prevSystems = s.systems ? { ...s.systems } : null;
-          s.systems = dd.systems as SystemsState;
-          s.popHistory.push((dd.systems as SystemsState).population || 0);
-          s.moraleHistory.push(Math.round(((dd.systems as SystemsState).morale || 0) * 100));
+        if (dd.metrics) {
+          s.prevSystems = s.metrics ? { ...s.metrics } : null;
+          s.metrics = dd.metrics as SystemsState;
+          s.popHistory.push((dd.metrics as SystemsState).population || 0);
+          s.moraleHistory.push(Math.round(((dd.metrics as SystemsState).morale || 0) * 100));
         }
         if (dd.deaths) s.deaths += Number(dd.deaths) || 0;
         s.events.push(processed);
@@ -470,9 +470,9 @@ export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): Ga
         break;
 
       case 'turn_done':
-        if (dd.systems) {
-          s.prevSystems = s.systems ? { ...s.systems } : null;
-          s.systems = dd.systems as SystemsState;
+        if (dd.metrics) {
+          s.prevSystems = s.metrics ? { ...s.metrics } : null;
+          s.metrics = dd.metrics as SystemsState;
         }
         if (dd.statuses && typeof dd.statuses === 'object') {
           s.statuses = { ...dd.statuses as Record<string, string | boolean> };

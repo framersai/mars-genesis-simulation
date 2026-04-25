@@ -366,11 +366,11 @@ function AppContent() {
       `**Turns**: ${gameState.turn}/${gameState.maxTurns} | **Seed**: ${gameState.seed} | **${labels.Time}**: ${gameState.time}`,
       '',
       `### ${nameA}${archA ? ` (${archA})` : ''}`,
-      `Unit: ${unitA} | Pop: ${a?.systems?.population ?? '?'} | Morale: ${a?.systems ? Math.round(a.systems.morale * 100) : '?'}% | Deaths: ${a?.deaths ?? 0}`,
+      `Unit: ${unitA} | Pop: ${a?.metrics?.population ?? '?'} | Morale: ${a?.metrics ? Math.round(a.metrics.morale * 100) : '?'}% | Deaths: ${a?.deaths ?? 0}`,
       `Tools forged: ${a?.tools ?? 0} | Citations: ${a?.citations ?? 0} | Decisions: ${a?.decisions ?? 0}`,
       '',
       `### ${nameB}${archB ? ` (${archB})` : ''}`,
-      `Unit: ${unitB} | Pop: ${b?.systems?.population ?? '?'} | Morale: ${b?.systems ? Math.round(b.systems.morale * 100) : '?'}% | Deaths: ${b?.deaths ?? 0}`,
+      `Unit: ${unitB} | Pop: ${b?.metrics?.population ?? '?'} | Morale: ${b?.metrics ? Math.round(b.metrics.morale * 100) : '?'}% | Deaths: ${b?.deaths ?? 0}`,
       `Tools forged: ${b?.tools ?? 0} | Citations: ${b?.citations ?? 0} | Decisions: ${b?.decisions ?? 0}`,
     ];
 
