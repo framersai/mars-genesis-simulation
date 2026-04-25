@@ -91,7 +91,7 @@ const validFixtures: Record<string, unknown> = {
   turn_done: {
     ...baseEnvelope,
     type: 'turn_done',
-    data: { systems: { population: 130, morale: 0.65 }, toolsForged: 2 },
+    data: { metrics: { population: 130, morale: 0.65 }, toolsForged: 2 },
   },
   promotion: {
     ...baseEnvelope,
@@ -116,7 +116,7 @@ const validFixtures: Record<string, unknown> = {
   sim_aborted: {
     ...baseEnvelope,
     type: 'sim_aborted',
-    data: { reason: 'user cancelled', completedTurns: 3, systems: { population: 130 }, toolsForged: 2 },
+    data: { reason: 'user cancelled', completedTurns: 3, metrics: { population: 130 }, toolsForged: 2 },
   },
 };
 
@@ -151,7 +151,16 @@ test('StreamEventSchema rejects missing discriminator', () => {
 });
 
 test('StreamEventSchema rejects missing leader', () => {
-  const bad = { type: 'turn_done', turn: 0, data: { systems: {}, toolsForged: 0 } };
+  const bad = { type: 'turn_done', turn: 0, data: { metrics: {}, toolsForged: 0 } };
+  assert.equal(StreamEventSchema.safeParse(bad).success, false);
+});
+
+test('StreamEventSchema rejects legacy turn_done metrics-key payloads', () => {
+  const bad = {
+    ...baseEnvelope,
+    type: 'turn_done',
+    data: { ['sys' + 'tems']: {}, toolsForged: 0 },
+  };
   assert.equal(StreamEventSchema.safeParse(bad).success, false);
 });
 

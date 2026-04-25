@@ -71,7 +71,7 @@ test('lunarScenario director instructions mention lunar science', () => {
 
 test('lunarScenario fingerprint produces valid classification', () => {
   const fp = lunarScenario.hooks.fingerprintHook!(
-    { systems: { morale: 0.7, foodMonthsReserve: 15 }, agents: [] } as any,
+    { metrics: { morale: 0.7, foodMonthsReserve: 15 }, agents: [] } as any,
     [{ turn: 1, time: 2030, outcome: 'conservative_success' }],
     { hexaco: { conscientiousness: 0.9, openness: 0.3 } } as any,
     {}, 3,

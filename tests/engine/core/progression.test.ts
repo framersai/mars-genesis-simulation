@@ -9,7 +9,7 @@ const makeState = (overrides: any = {}) => ({
     simulationId: 'sim-1', leaderId: 'Commander', seed: 950,
     startTime: 2042, currentTime: 2043, currentTurn: 1,
   },
-  systems: {
+  metrics: {
     population: 1, powerKw: 400, foodMonthsReserve: 18,
     waterLitersPerDay: 800, pressurizedVolumeM3: 3000,
     lifeSupportCapacity: 120, infrastructureModules: 3,

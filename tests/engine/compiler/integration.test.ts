@@ -206,7 +206,7 @@ describe('Submarine scenario compilation', () => {
 
     // Fingerprint returns summary
     const fp = scenario.hooks.fingerprintHook!(
-      { agents: [], systems: {}, politics: {}, metadata: {} } as any,
+      { agents: [], metrics: {}, politics: {}, metadata: {} } as any,
       [{ turn: 1, time: 2038, outcome: 'risky_success' }],
       { name: 'Test', archetype: 'test', hexaco: { openness: 0.9 } } as any,
       { engineering: ['tool1'] },

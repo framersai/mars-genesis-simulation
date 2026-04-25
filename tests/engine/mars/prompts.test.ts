@@ -8,7 +8,7 @@ test('marsDepartmentPromptLines returns medical-specific lines for medical dept'
       { health: { alive: true, cumulativeRadiationMsv: 500, boneDensityPct: 85, psychScore: 0.7 }, core: { marsborn: true, name: 'Nova Chen', birthTime: 2040 }, narrative: { featured: true }, social: { partnerId: null, childrenIds: [], earthContacts: 0 } },
       { health: { alive: true, cumulativeRadiationMsv: 200, boneDensityPct: 90, psychScore: 0.8 }, core: { marsborn: false, birthTime: 2000, name: 'Test User' }, narrative: { featured: true }, social: { partnerId: null, childrenIds: [], earthContacts: 3 } },
     ],
-    systems: { population: 100, morale: 0.85, foodMonthsReserve: 18, waterLitersPerDay: 800, powerKw: 400, infrastructureModules: 3, lifeSupportCapacity: 120, pressurizedVolumeM3: 3000 },
+    metrics: { population: 100, morale: 0.85, foodMonthsReserve: 18, waterLitersPerDay: 800, powerKw: 400, infrastructureModules: 3, lifeSupportCapacity: 120, pressurizedVolumeM3: 3000 },
     politics: { earthDependencyPct: 95, governanceStatus: 'earth-governed', independencePressure: 0.05 },
     metadata: { currentTime: 2040 },
   };
@@ -23,7 +23,7 @@ test('marsDepartmentPromptLines returns medical-specific lines for medical dept'
 test('marsDepartmentPromptLines returns infrastructure lines for engineering dept', () => {
   const state = {
     agents: [],
-    systems: { population: 100, morale: 0.85, foodMonthsReserve: 18, waterLitersPerDay: 800, powerKw: 400, infrastructureModules: 3, lifeSupportCapacity: 120, pressurizedVolumeM3: 3000 },
+    metrics: { population: 100, morale: 0.85, foodMonthsReserve: 18, waterLitersPerDay: 800, powerKw: 400, infrastructureModules: 3, lifeSupportCapacity: 120, pressurizedVolumeM3: 3000 },
     politics: { earthDependencyPct: 95, governanceStatus: 'earth-governed', independencePressure: 0.05 },
     metadata: { currentTime: 2040 },
   };
@@ -38,7 +38,7 @@ test('marsDepartmentPromptLines returns infrastructure lines for engineering dep
 test('marsDepartmentPromptLines returns politics lines for governance dept', () => {
   const state = {
     agents: [{ health: { alive: true }, core: { marsborn: true }, narrative: { featured: false } }],
-    systems: { population: 50, morale: 0.7, foodMonthsReserve: 12, waterLitersPerDay: 600, powerKw: 300, infrastructureModules: 2, lifeSupportCapacity: 80, pressurizedVolumeM3: 2000 },
+    metrics: { population: 50, morale: 0.7, foodMonthsReserve: 12, waterLitersPerDay: 600, powerKw: 300, infrastructureModules: 2, lifeSupportCapacity: 80, pressurizedVolumeM3: 2000 },
     politics: { earthDependencyPct: 70, governanceStatus: 'commonwealth', independencePressure: 0.3 },
     metadata: { currentTime: 2050 },
   };
