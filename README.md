@@ -78,6 +78,27 @@ The kernel round-trips through `JSON.stringify`, so snapshots persist to disk cl
 
 The paracosm dashboard exposes the same mechanism end-to-end. Every UI-initiated run captures snapshots by default, so the Reports tab shows a `↳ Fork at {Time} N` button on each completed turn. Clicking it opens a fork modal (leader override, optional seed, optional custom events), POSTs to `/setup` with the full parent artifact, and routes the user to a new **Branches** tab where all forks launched from the current parent accumulate as cards with per-metric deltas rendered live as each branch streams to completion.
 
+### Replay any run for audit
+
+```typescript
+const replay = await wm.replay(storedArtifact);
+console.log(replay.matches);     // true when the kernel produces byte-equal output
+console.log(replay.divergence);  // first-mismatch JSON pointer when matches=false
+```
+
+The kernel's between-turn progression hook re-runs deterministically from each recorded snapshot; LLM stages are not invoked, so replay is free and fast. Use it for regression testing (replay golden artifacts in CI) or forensic comparison (find the first kernel-state divergence between two versions of paracosm). Pillar 2 (Reproducible) becomes verifiable in code rather than promised in copy.
+
+### Subpath for digital-twin use cases
+
+```typescript
+import { DigitalTwin, type SubjectConfig, type InterventionConfig } from 'paracosm/digital-twin';
+
+const twin = await DigitalTwin.fromJson(scenarioJson);
+const artifact = await twin.simulateIntervention(subject, intervention, leader);
+```
+
+`DigitalTwin` is an alias of `WorldModel`; the subpath names the use case in the import path. The new `simulateIntervention()` sugar populates `RunArtifact.subject` and `RunArtifact.intervention` for traceability.
+
 ### Quickstart: prompt or document to running simulation
 
 `WorldModel.fromPrompt` compiles a scenario from seed source material (paste, URL, or extracted PDF text), then `wm.quickstart` generates N contextual HEXACO leaders and runs them in parallel. Every prompt/document path validates against `DraftScenarioSchema` and routes into the existing `compileScenario` pipeline: the canonical `ScenarioPackage` contract is never bypassed.
@@ -737,7 +758,7 @@ Each turn represents a configurable time period. Mars and Lunar tick in years (M
 3. DEPARTMENT ANALYSIS   All active departments analyze the event in parallel.
                          Each department head (promoted at turn 0) uses their
                          personality and tools. Departments can forge new
-                         computational tools at runtime (sandboxed V8, LLM-judged).
+                         computational tools at runtime (hardened node:vm, LLM-judged).
 
 4. COMMANDER DECISION    Reads all department reports. Selects an option.
                          Personality shapes risk tolerance and priority weighting.
@@ -773,7 +794,7 @@ Department heads are LLM agents with domain-specific instructions, access to res
 
 - Analyze the event against their department's research knowledge
 - Cite relevant scientific literature (DOI-linked)
-- Forge computational tools (e.g., a radiation dose calculator) in a sandboxed V8 environment
+- Forge computational tools (e.g., a radiation dose calculator) in a hardened node:vm sandbox
 - An LLM judge reviews each tool for safety and correctness
 - Produce a structured report: summary, risks, recommended actions, proposed colony state changes
 
@@ -826,7 +847,7 @@ Paracosm uses [AgentOS](https://agentos.sh) for agent orchestration, LLM calls, 
 |------------|----------|
 | `agent()` | Commander, department, and Event Director agents |
 | `generateText()` | LLM calls for event generation and tool evaluation |
-| `EmergentCapabilityEngine` | Runtime tool forging in sandboxed V8 |
+| `EmergentCapabilityEngine` | Runtime tool forging in a hardened node:vm sandbox |
 | `EmergentJudge` | LLM-as-judge safety review of forged tools |
 
 ## Links

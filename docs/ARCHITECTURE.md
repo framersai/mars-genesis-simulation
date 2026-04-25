@@ -480,6 +480,57 @@ console.log(result.finalState?.metrics.population);
 console.log(result.forgedTools?.length ?? 0);
 ```
 
+### Replay (T5.5)
+
+```typescript
+import { WorldModel } from 'paracosm/world-model';
+
+const wm = WorldModel.fromScenario(myScenario);
+const trunk = await wm.simulate(leader, { maxTurns: 6, captureSnapshots: true });
+
+// Audit: did the kernel change since this run was produced?
+const replay = await wm.replay(trunk);
+console.log(replay.matches);     // true when nothing in the kernel diverged
+console.log(replay.divergence);  // empty when matches=true; JSON pointer otherwise
+```
+
+`replay()` re-executes the kernel's between-turn progression hook from each recorded snapshot, captures fresh snapshots, and compares them to the input via canonical JSON. Cost: zero LLM. Wall-clock: dominated by JSON parse plus per-turn kernel state advancement. `matches=true` proves the kernel's progression is byte-equal-deterministic for this artifact's transitions, which is the audit guarantee.
+
+Required preconditions on the input artifact:
+
+- `scenarioExtensions.kernelSnapshotsPerTurn` populated (parent created with `captureSnapshots: true`).
+- `decisions[]` populated.
+
+Throws `WorldModelReplayError` when either is missing or when the artifact's scenario id does not match the WorldModel's scenario.
+
+Scope note: v1 replay re-runs `advanceTurn` only. Re-applying recorded decisions via `kernel.applyPolicy` is a follow-up once the public RunArtifact preserves enough department-report context for `decisionToPolicy` to reconstruct PolicyEffects faithfully.
+
+### Digital-twin subpath (T5.4)
+
+```typescript
+import { DigitalTwin, type SubjectConfig, type InterventionConfig } from 'paracosm/digital-twin';
+
+const twin = await DigitalTwin.fromJson(scenarioJson);
+const subject: SubjectConfig = { id: 'company', kind: 'organization', attributes: { headcount: 100 } };
+const intervention: InterventionConfig = { id: 'rif', kind: 'policy', description: '25% RIF', parameters: { percent: 25 } };
+
+const artifact = await twin.simulateIntervention(subject, intervention, leader, { maxTurns: 4 });
+console.log(artifact.subject, artifact.intervention);
+```
+
+`paracosm/digital-twin` is a curated re-export of `WorldModel` aliased as `DigitalTwin` plus the `SubjectConfig` and `InterventionConfig` types. The class is identical to `WorldModel`; the alias names the use case in the import path. `simulateIntervention(subject, intervention, leader, options)` is sugar over `simulate(leader, { ...options, subject, intervention })` that returns a `RunArtifact` with both fields populated for traceability.
+
+### Schema breaking-change gate (T6.2)
+
+`tests/engine/schema/breaking-change-gate.test.ts` fails any PR that diverges `RunArtifactSchema.shape` without bumping `COMPILE_SCHEMA_VERSION`. The committed snapshot fixture at `tests/engine/schema/run-artifact-schema-snapshot.json` is the canonical source of truth.
+
+Updating the schema:
+
+1. Edit the schema in `src/engine/schema/`.
+2. Bump `COMPILE_SCHEMA_VERSION` in `src/engine/compiler/cache.ts`.
+3. Run `npm run snapshot:schema` to regenerate the fixture.
+4. Commit the schema change, the version bump, and the fixture together.
+
 ## Built on AgentOS
 
 Paracosm uses AgentOS for all agent orchestration, LLM calls, tool forging, and memory:
