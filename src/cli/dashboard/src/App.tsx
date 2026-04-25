@@ -318,18 +318,18 @@ function AppContent() {
     // step. The tour's getBoundingClientRect reads will otherwise
     // measure zero-height shells on cold mount.
     //
-    // Do not override an explicit URL-based tab choice. The first-visit
-    // tour assumes the user is on the default landing tab (quickstart);
-    // a user who deep-links to /sim?tab=library or /sim#branches has
-    // chosen a destination, and force-redirecting them to sim defeats
-    // the URL contract. Only auto-switch to sim when we are still on
-    // the default first-paint tab.
+    // Do not start the tour at all when the user deep-linked to a
+    // non-default tab. The tour's first step calls onTabChange('sim')
+    // which would clobber an explicit /sim?tab=library or
+    // /sim#branches choice. Quickstart is the default first-visit
+    // landing; only on that tab does the tour add value.
     const timer = setTimeout(() => {
-      setTourActive(true);
       const currentTab = getDashboardTabFromHref(window.location.href);
-      if (currentTab === 'quickstart') {
-        setActiveTab('sim');
+      if (currentTab !== 'quickstart') {
+        return;
       }
+      setTourActive(true);
+      setActiveTab('sim');
     }, 600);
     return () => clearTimeout(timer);
     // Run exactly once on mount.
