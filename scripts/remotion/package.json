@@ -9,16 +9,17 @@
     "build:all": "node build-all.mjs"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "remotion": "^4.0.355",
     "@remotion/bundler": "^4.0.355",
     "@remotion/cli": "^4.0.355",
-    "@remotion/renderer": "^4.0.355"
+    "@remotion/renderer": "^4.0.355",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.355"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "playwright": "^1.59.1",
     "typescript": "^5.7.0"
   }
 }
