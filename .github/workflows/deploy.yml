@@ -167,12 +167,23 @@ jobs:
           #                       per-run so the dashboard can rehydrate
           #                       after a restart. Regenerable.
           #   logs/             — runtime logs (pm2 stdout/stderr).
+          #   output/           — RunArtifact JSONs persisted per
+          #                       completed sim. data/runs.db points
+          #                       at these files via record.artifactPath;
+          #                       without this exclude, every deploy
+          #                       wiped output/*.json and Library tab
+          #                       drawers showed "Artifact file
+          #                       unreadable" 410 errors for every run
+          #                       that survived in runs.db across the
+          #                       deploy. The server's run-artifact
+          #                       writer owns the file lifecycle.
           rsync -azP --delete \
             --exclude='.env' \
             --exclude='node_modules' \
             --exclude='data/' \
             --exclude='.event-buffer.json' \
             --exclude='logs/' \
+            --exclude='output/' \
             -e "ssh -i ~/.ssh/deploy_key" \
             build/ root@${{ env.SERVER_IP }}:${{ env.APP_DIR }}/
 
