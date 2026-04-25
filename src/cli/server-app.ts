@@ -821,7 +821,12 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       runHistoryEnvFlag === 'true' ? true :
       runHistoryEnvFlag === 'false' ? false :
       runHistoryRoutesDefault;
-    if (await handlePlatformApiRoute(req, res, { runHistoryStore, corsHeaders, paracosmRoutesEnabled })) {
+    if (await handlePlatformApiRoute(req, res, {
+      runHistoryStore,
+      corsHeaders,
+      paracosmRoutesEnabled,
+      scenarioLookup: (id) => customScenarioCatalog.get(id)?.scenario,
+    })) {
       return;
     }
 

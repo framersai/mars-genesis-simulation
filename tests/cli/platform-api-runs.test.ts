@@ -55,7 +55,10 @@ function makeReq(url: string, method: string = 'GET', body?: string): IncomingMe
   return { url, method } as IncomingMessage;
 }
 
-const ENABLED = { paracosmRoutesEnabled: true };
+const ENABLED = {
+  paracosmRoutesEnabled: true,
+  scenarioLookup: () => undefined,
+};
 
 test('GET /api/v1/runs returns { runs, total, hasMore } envelope', async () => {
   const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
@@ -129,7 +132,7 @@ test('platform-api routes return 403 when paracosmRoutesEnabled is false', async
   const handled = await handlePlatformApiRoute(
     makeReq('/api/v1/runs'),
     makeRes(captured),
-    { runHistoryStore: store, corsHeaders: {}, paracosmRoutesEnabled: false },
+    { runHistoryStore: store, corsHeaders: {}, paracosmRoutesEnabled: false, scenarioLookup: () => undefined },
   );
   assert.equal(handled, true);
   assert.equal(captured.statusCode, 403);

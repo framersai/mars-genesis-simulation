@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { ListRunsFilters, RunHistoryStore } from '../run-history-store.js';
 import type { ParacosmServerMode } from '../server-mode.js';
+import type { ScenarioPackage } from '../../../engine/types.js';
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 500;
@@ -36,6 +37,13 @@ export interface HandlePlatformApiOptions {
    * run-history without explicit opt-in).
    */
   paracosmRoutesEnabled: boolean;
+  /**
+   * Resolves a scenarioId to its compiled ScenarioPackage. The route
+   * handler uses this to construct a WorldModel for replay. Returns
+   * undefined when the id is not in the catalog (built-in or custom).
+   * Wired by server-app.ts as `(id) => customScenarioCatalog.get(id)?.scenario`.
+   */
+  scenarioLookup: (scenarioId: string) => ScenarioPackage | undefined;
 }
 
 export async function handlePlatformApiRoute(
