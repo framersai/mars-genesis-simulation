@@ -76,7 +76,7 @@ const EMPTY_REGISTRY: ToolRegistry = {
 };
 
 /**
- * Build the per-simulation tool ledger from SSE dept_done events. Tools
+ * Build the per-simulation tool ledger from SSE specialist_done events. Tools
  * dedupe by name; the entry remembers when it was first forged, every
  * department that used it, and how many times it was reused.
  *
@@ -94,7 +94,7 @@ export function useToolRegistry(state: GameState): ToolRegistry {
       const sideState = state.leaders[leaderName];
       if (!sideState) continue;
       for (const evt of sideState.events) {
-        if (evt.type !== 'dept_done') continue;
+        if (evt.type !== 'specialist_done') continue;
         const tools = (evt.data?._filteredTools as Array<Record<string, unknown>>) || [];
         const dept = String(evt.data?.department || '');
         for (const t of tools) {
@@ -165,9 +165,9 @@ export function useToolRegistry(state: GameState): ToolRegistry {
 
     // Failsafe pass: scan forge_attempt events directly and include any
     // tool name that ONLY ever appeared as rejected (never made it into
-    // a dept_done summary with an approved record). Covers the edge case
+    // a specialist_done summary with an approved record). Covers the edge case
     // where a forge fails and the dept bails on that tool entirely —
-    // those attempts wouldn't land in dept_done.forgedTools but ARE in
+    // those attempts wouldn't land in specialist_done.forgedTools but ARE in
     // the live forge_attempt stream, and users need to see terminal
     // failures in the toolbox to understand what was tried.
     for (const leaderName of state.leaderIds) {

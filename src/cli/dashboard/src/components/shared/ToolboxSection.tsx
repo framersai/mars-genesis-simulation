@@ -27,7 +27,7 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
 
   const jumpToLog = (toolName: string) => {
     // Drop a search-hash the Log tab can read, then navigate. The Log
-    // tab filters to forge_attempt / dept_done entries matching the
+    // tab filters to forge_attempt / specialist_done entries matching the
     // tool name so users land on the exact event that forged (or
     // reused) this tool instead of scrolling through the whole feed.
     try {
@@ -95,7 +95,7 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
                       <div>
                         Jumps to the Log tab and filters the event stream
                         to <code>{entry.name}</code> — showing every
-                        forge_attempt, dept_done, and reuse event this
+                        forge_attempt, specialist_done, and reuse event this
                         tool fired in. Useful for tracing the exact
                         moment a tool was created and every downstream
                         department that reused it.

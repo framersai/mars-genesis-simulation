@@ -30,7 +30,7 @@ function computeSide(events: Event[]): SideProgress {
   let sawInFlight = false;
   for (const e of events) {
     const t = Number(e.turn ?? e.data?.turn ?? 0);
-    if (e.type === 'dept_done' && t === inFlightTurn) {
+    if (e.type === 'specialist_done' && t === inFlightTurn) {
       const dept = typeof e.data?.department === 'string' ? e.data.department : '';
       if (dept) reported.add(dept);
       sawInFlight = true;

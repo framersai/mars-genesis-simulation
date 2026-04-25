@@ -92,7 +92,7 @@ export const TOUR_STEPS: TourStep[] = [
     target: '[role="log"]',
     tab: 'log',
     title: 'Event Log',
-    description: 'Raw SSE event stream. Every status, turn_start, dept_done, commander_decided, outcome, reaction, forge_attempt event as it arrived. The "↗ LOG" buttons elsewhere narrow this feed via a hash filter — clear it from the toolbar above the list to return to the full stream.',
+    description: 'Raw SSE event stream. Every status, turn_start, specialist_done, decision_made, outcome, reaction, forge_attempt event as it arrived. The "↗ LOG" buttons elsewhere narrow this feed via a hash filter — clear it from the toolbar above the list to return to the full stream.',
   },
   {
     target: '.topbar',

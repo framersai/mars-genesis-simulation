@@ -3,7 +3,7 @@ import type { SimEvent } from '../../hooks/useSSE';
 /**
  * Compact line chart of a commander's HEXACO trajectory across the run.
  *
- * Reads per-turn commander snapshots from `drift` SSE events (emitted by
+ * Reads per-turn commander snapshots from `personality_drift` SSE events (emitted by
  * the orchestrator after every turn's outcome). Renders each of the six
  * HEXACO axes as a thin SVG polyline in a small inline card. Six lines
  * overlap in a 0..1 y-axis bounded to [0.05, 0.95] (matching the kernel's
@@ -95,7 +95,7 @@ function extractCommanderTrajectory(
 ): Array<{ turn: number; hexaco: CommanderSnapshot }> {
   const out: Array<{ turn: number; hexaco: CommanderSnapshot }> = [];
   for (const e of events) {
-    if (e.type !== 'drift' || !e.data) continue;
+    if (e.type !== 'personality_drift' || !e.data) continue;
     // Accept events without a leader field (ProcessedEvent on a
     // per-leader bucket in state.leaders is already attributed to that
     // leader); filter only when present.

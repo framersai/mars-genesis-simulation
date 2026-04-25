@@ -757,7 +757,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
           }
           continue;
         }
-        if (evt.type !== 'dept_done') continue;
+        if (evt.type !== 'specialist_done') continue;
         const d = evt.data || {};
         const dept = String(d.department || '');
         const tools = Array.isArray(d.forgedTools) ? d.forgedTools : [];

@@ -28,7 +28,7 @@ const moodColors: Record<string, string> = {
 export function EventCard({ event, leaderIndex }: EventCardProps) {
   const scenario = useScenarioContext();
   const toolRegistry = useToolContext();
-  // Open detail modal for a forge_attempt or dept_done tool card. Tracks
+  // Open detail modal for a forge_attempt or specialist_done tool card. Tracks
   // the inspected tool's name so the modal can pull schema + sample
   // output + reuse stats from the registry.
   const [inspectingTool, setInspectingTool] = useState<string | null>(null);
@@ -86,10 +86,10 @@ export function EventCard({ event, leaderIndex }: EventCardProps) {
       );
     }
 
-    case 'dept_start':
+    case 'specialist_start':
       return null;
 
-    case 'commander_deciding':
+    case 'decision_pending':
       return null;
 
     case 'forge_attempt': {
@@ -202,7 +202,7 @@ export function EventCard({ event, leaderIndex }: EventCardProps) {
       );
     }
 
-    case 'dept_done': {
+    case 'specialist_done': {
       const dept = String(dd.department || '');
       // Dedupe: newly-forged tools this turn already appeared as live
       // `forge_attempt` cards above in the sim log — rendering them
@@ -411,7 +411,7 @@ export function EventCard({ event, leaderIndex }: EventCardProps) {
                       : 'FAIL'}
                   </span>
                   {/* Open the same ToolDetailModal that forge_attempt cards
-                      use, so dept_done summary tools are clickable too. */}
+                      use, so specialist_done summary tools are clickable too. */}
                   <button
                     type="button"
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); setInspectingTool(t.name || ''); }}
@@ -553,7 +553,7 @@ export function EventCard({ event, leaderIndex }: EventCardProps) {
       );
     }
 
-    case 'drift': {
+    case 'personality_drift': {
       const entries = Object.values(dd.agents as Record<string, any> || {});
       if (!entries.length) return null;
       return (
@@ -880,7 +880,7 @@ function ToolDetailModal({ entry, fallbackName, onClose }: {
             </>
           ) : (
             <div style={{ fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic' }}>
-              Tool entry not yet in the registry — the dept_done summary
+              Tool entry not yet in the registry — the specialist_done summary
               for this forge hasn't arrived yet. Try again in a moment.
             </div>
           )}

@@ -29,11 +29,11 @@ const EMPTY_REGISTRY: CitationRegistry = {
 
 /**
  * Build a deduplicated, numbered citation registry from the simulation
- * SSE events. Citations from dept_done payloads are keyed by URL (or by
+ * SSE events. Citations from specialist_done payloads are keyed by URL (or by
  * text if URL is missing). Earlier-seen citations get lower numbers.
  *
  * The same registry is consumed by:
- *   1. Inline citation pills inside EventCard / dept_done — render as `[N]`
+ *   1. Inline citation pills inside EventCard / specialist_done — render as `[N]`
  *   2. The References section at the bottom of SimView / ReportView
  *
  * This keeps inline density low while still giving readers a single place
@@ -49,7 +49,7 @@ export function useCitationRegistry(state: GameState): CitationRegistry {
       const sideState = state.leaders[leaderName];
       if (!sideState) continue;
       for (const evt of sideState.events) {
-        if (evt.type !== 'dept_done') continue;
+        if (evt.type !== 'specialist_done') continue;
         const dept = String(evt.data?.department || '');
         const cites = (evt.data?.citationList as Array<{ text?: string; url?: string; doi?: string }>) || [];
         for (const c of cites) {

@@ -73,15 +73,15 @@ function LeaderColumn({ leaderIndex, sideState, state }: { leaderIndex: number; 
           const deptsByTurn = new Map<number, typeof sideState.events>();
           const renderedDeptTurns = new Set<number>();
           for (const e of sideState.events) {
-            if (e.type === 'dept_done' && e.turn != null) {
+            if (e.type === 'specialist_done' && e.turn != null) {
               if (!deptsByTurn.has(e.turn)) deptsByTurn.set(e.turn, []);
               deptsByTurn.get(e.turn)!.push(e);
             }
           }
 
           return sideState.events.map(event => {
-            if (event.type === 'dept_start') return null;
-            if (event.type === 'dept_done' && event.turn != null) {
+            if (event.type === 'specialist_start') return null;
+            if (event.type === 'specialist_done' && event.turn != null) {
               if (renderedDeptTurns.has(event.turn)) return null;
               renderedDeptTurns.add(event.turn);
               const group = deptsByTurn.get(event.turn) || [event];

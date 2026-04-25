@@ -211,7 +211,7 @@ export function ReportView({ state, verdict, reportSections }: ReportViewProps) 
           block.description = (evt.data?.description as string) || (evt.data?.turnSummary as string) || '';
         }
 
-        if (evt.type === 'commander_decided') {
+        if (evt.type === 'decision_made') {
           pending.set(eventIndex, {
             decision: String(evt.data?.decision || ''),
             rationale: String(evt.data?.rationale || ''),
@@ -233,7 +233,7 @@ export function ReportView({ state, verdict, reportSections }: ReportViewProps) 
           }
         }
 
-        if (evt.type === 'dept_done') {
+        if (evt.type === 'specialist_done') {
           const block = getEventBlock(t, eventIndex, totalEvents);
           const dept = evt.data?.department as string;
           if (dept) {
@@ -275,7 +275,7 @@ export function ReportView({ state, verdict, reportSections }: ReportViewProps) 
   const sideB = secondId ? state.leaders[secondId] : null;
   const nameA = sideA?.leader?.name || 'Leader A';
   const nameB = sideB?.leader?.name || 'Leader B';
-  const hasTrajectories = (sideA?.events.some(e => e.type === 'drift') ?? false) || (sideB?.events.some(e => e.type === 'drift') ?? false);
+  const hasTrajectories = (sideA?.events.some(e => e.type === 'personality_drift') ?? false) || (sideB?.events.some(e => e.type === 'personality_drift') ?? false);
   const hasQuotes = turns.some(([, sides]) => sides.a.reactions.length > 0 || sides.b.reactions.length > 0);
   const hasCausality = turns.some(([, sides]) => (
     [...sides.a.events.values(), ...sides.b.events.values()].some(block => Boolean(block.rationale))

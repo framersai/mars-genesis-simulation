@@ -410,19 +410,19 @@ export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): Ga
         break;
 
       case 'promotion':
-      case 'dept_start':
+      case 'specialist_start':
       case 'forge_attempt':
         // forge_attempt: orchestrator streams these as tools get invented.
-        // Do NOT increment s.tools here; dept_done is the authoritative
+        // Do NOT increment s.tools here; specialist_done is the authoritative
         // dedup source for the unique-tool count.
-      case 'commander_deciding':
-      case 'drift':
+      case 'decision_pending':
+      case 'personality_drift':
       case 'agent_reactions':
       case 'bulletin':
         s.events.push(processed);
         break;
 
-      case 'dept_done': {
+      case 'specialist_done': {
         // Keep every named forge in _filteredTools (approved + rejected)
         // so the Toolbox can render "attempted but failed" cards, but
         // only count APPROVED tools toward the TOOLS stat.
@@ -440,7 +440,7 @@ export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): Ga
         break;
       }
 
-      case 'commander_decided':
+      case 'decision_made':
         s.pendingDecision = dd.decision as string || '';
         s.pendingRationale = dd.rationale as string || '';
         s.pendingReasoning = dd.reasoning as string || '';

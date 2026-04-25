@@ -3,32 +3,6 @@ import { migrateLegacyEventShape } from './migrateLegacyEventShape';
 import type { RunArtifact } from '../../../../engine/schema/index.js';
 
 /**
- * New-to-legacy event-type rename map.
- *
- * 0.6.0 renamed five SSE event types (dept_* -> specialist_*,
- * commander_decid* -> decision_*, drift -> personality_drift). The
- * dashboard's internal reducers + components still pattern-match the
- * legacy names in ~70 places; instead of renaming every reference,
- * this ingress step maps the new wire-format names back to legacy so
- * the dashboard's internal dispatch keeps working unchanged.
- *
- * A future cleanup pass can flip the dashboard to consume new names
- * natively and drop this alias.
- */
-const NEW_TO_LEGACY_EVENT_TYPE: Record<string, string> = {
-  specialist_start: 'dept_start',
-  specialist_done: 'dept_done',
-  decision_pending: 'commander_deciding',
-  decision_made: 'commander_decided',
-  personality_drift: 'drift',
-};
-
-function aliasNewToLegacyEventTypes(event: { type: string; data?: unknown }): typeof event {
-  const legacy = NEW_TO_LEGACY_EVENT_TYPE[event.type];
-  return legacy ? { ...event, type: legacy } : event;
-}
-
-/**
  * Event type strings the dashboard consumes.
  *
  * Superset of `SimEventType` from `paracosm/runtime` (the discriminated
@@ -52,8 +26,8 @@ function aliasNewToLegacyEventTypes(event: { type: string; data?: unknown }): ty
  */
 export type SimEventType =
   // Mirror of runtime SimEventType (src/runtime/orchestrator.ts):
-  | 'turn_start' | 'event_start' | 'dept_start' | 'dept_done' | 'forge_attempt'
-  | 'commander_deciding' | 'commander_decided' | 'outcome' | 'drift'
+  | 'turn_start' | 'event_start' | 'specialist_start' | 'specialist_done' | 'forge_attempt'
+  | 'decision_pending' | 'decision_made' | 'outcome' | 'personality_drift'
   | 'agent_reactions' | 'bulletin' | 'turn_done' | 'promotion'
   | 'systems_snapshot' | 'provider_error' | 'validation_fallback' | 'sim_aborted'
   // Server-synthetic (not emitted by the runtime itself):
@@ -335,7 +309,7 @@ function rollupValidationFallbacks(events: SimEvent[]): ValidationFallbackBucket
     // and relied on eventIndex/department/title as the real
     // discriminators. That silently ate every turn after turn 1 for
     // event types that have no other discriminator in their payload:
-    // systems_snapshot, turn_done, drift, bulletin, agent_reactions.
+    // systems_snapshot, turn_done, personality_drift, bulletin, agent_reactions.
     //
     // The user-visible symptom was the viz tab stuck showing T1 while
     // the sim tab correctly counted up to T3+ (because the only
@@ -442,13 +416,7 @@ function rollupValidationFallbacks(events: SimEvent[]): ValidationFallbackBucket
 
       es.addEventListener('sim', (e: MessageEvent) => {
         try {
-          const rawParsed = JSON.parse(e.data) as SimEvent;
-          // 0.6.0 wire format emits new event type names
-          // (specialist_*, decision_*, personality_drift). Alias back
-          // to legacy names so the dashboard's internal dispatch
-          // (reducers, viz components) keeps matching its existing
-          // switch cases without a 70-file rewrite.
-          const rawData = aliasNewToLegacyEventTypes(rawParsed) as SimEvent;
+          const rawData = JSON.parse(e.data) as SimEvent;
           // Pre-0.5.0 session replays emit events with legacy field
           // names (data.colony, colonyDeltas, 'colony_snapshot'). The
           // migration helper aliases them to the new shape on read so

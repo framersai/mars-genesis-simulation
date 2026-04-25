@@ -40,7 +40,7 @@ function summarize(side: LeaderSideState, turn: number): LeaderTurnSummary | nul
       eventCategory = String(evt.data?.category ?? eventCategory);
       time = Number(evt.data?.time ?? time);
     }
-    if (evt.type === 'commander_decided') {
+    if (evt.type === 'decision_made') {
       decision = String(evt.data?.decision ?? decision);
     }
     if (evt.type === 'outcome') {

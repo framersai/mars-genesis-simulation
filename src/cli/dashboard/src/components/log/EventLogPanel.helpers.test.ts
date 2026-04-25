@@ -27,10 +27,10 @@ const mk = (
 
 const sample: SimEvent[] = [
   mk('turn_start', { leader: 'Aria', data: { turn: 1, title: 'Turn 1 founding' } }),
-  mk('dept_done', { leader: 'Aria', data: { turn: 1, department: 'medical', summary: 'food shortage risk' } }),
-  mk('commander_decided', { leader: 'Aria', data: { turn: 1, title: 'Evacuate zone' } }),
+  mk('specialist_done', { leader: 'Aria', data: { turn: 1, department: 'medical', summary: 'food shortage risk' } }),
+  mk('decision_made', { leader: 'Aria', data: { turn: 1, title: 'Evacuate zone' } }),
   mk('turn_start', { leader: 'Vik', data: { turn: 1, title: 'Turn 1 founding' } }),
-  mk('dept_done', { leader: 'Vik', data: { turn: 1, department: 'engineering', summary: 'power grid stable' } }),
+  mk('specialist_done', { leader: 'Vik', data: { turn: 1, department: 'engineering', summary: 'power grid stable' } }),
   mk('turn_done', { leader: 'Aria', data: { turn: 3 } }),
   mk('turn_done', { leader: 'Vik', data: { turn: 6 } }),
   mk('outcome', { data: { turn: 2, name: 'radiation_dose_calculator', forgedTools: [{ name: 'food_buffer' }] } }),
@@ -49,7 +49,7 @@ test('applyLogFilters: query matches title substring', () => {
   const filters = { ...emptyFilters(), query: 'evacuate' };
   const out = applyLogFilters(sample, filters);
   assert.equal(out.length, 1);
-  assert.equal(out[0].type, 'commander_decided');
+  assert.equal(out[0].type, 'decision_made');
 });
 
 test('applyLogFilters: query matches summary substring (case-insensitive)', () => {
@@ -155,7 +155,7 @@ test('applyLogFilters: tool hash substring match on forgedTools entries', () => 
 test('applyLogFilters: combined filters AND together', () => {
   const filters = {
     ...emptyFilters(),
-    types: new Set(['dept_done']),
+    types: new Set(['specialist_done']),
     leader: 'Aria',
   };
   const out = applyLogFilters(sample, filters);
@@ -174,7 +174,7 @@ test('extractAvailableFacets: empty events -> empty facets + maxTurn 0', () => {
 
 test('extractAvailableFacets: collects unique types + leaders + max turn', () => {
   const f = extractAvailableFacets(sample);
-  assert.deepEqual(f.types.sort(), ['commander_decided', 'dept_done', 'outcome', 'turn_done', 'turn_start']);
+  assert.deepEqual(f.types.sort(), ['decision_made', 'outcome', 'specialist_done', 'turn_done', 'turn_start']);
   assert.deepEqual(f.leaders, ['Aria', 'Vik']);
   assert.equal(f.maxTurn, 6);
 });
@@ -188,11 +188,11 @@ test('parseFiltersFromUrl: empty search + hash -> empty filters', () => {
 
 test('parseFiltersFromUrl: populated params -> matching filters', () => {
   const f = parseFiltersFromUrl(
-    '?logQuery=food&logTypes=turn_start,dept_done&logLeader=Aria%20Chen&logTurnMin=2&logTurnMax=5',
+    '?logQuery=food&logTypes=turn_start,specialist_done&logLeader=Aria%20Chen&logTurnMin=2&logTurnMax=5',
     '',
   );
   assert.equal(f.query, 'food');
-  assert.deepEqual([...f.types].sort(), ['dept_done', 'turn_start']);
+  assert.deepEqual([...f.types].sort(), ['specialist_done', 'turn_start']);
   assert.equal(f.leader, 'Aria Chen');
   assert.deepEqual(f.turnRange, [2, 5]);
 });
@@ -209,7 +209,7 @@ test('serializeFiltersToUrl: empty filters -> empty string', () => {
 test('serializeFiltersToUrl: round-trips via parse', () => {
   const original: LogFilters = {
     query: 'food',
-    types: new Set(['turn_start', 'dept_done']),
+    types: new Set(['turn_start', 'specialist_done']),
     leader: 'Aria Chen',
     turnRange: [2, 5],
     toolHash: '',

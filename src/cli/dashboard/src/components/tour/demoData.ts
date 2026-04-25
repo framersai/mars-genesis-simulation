@@ -53,9 +53,9 @@ export const DEMO_EVENTS: SimEvent[] = [
       systems: { population: 100, morale: 0.85, foodMonthsReserve: 18, waterLitersPerDay: 800, powerKw: 400, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 0 },
     },
   },
-  { type: 'dept_start', leader: 'Commander Elena Vasquez', data: { turn: 1, department: 'engineering', title: 'Engineering Analysis' } },
+  { type: 'specialist_start', leader: 'Commander Elena Vasquez', data: { turn: 1, department: 'engineering', title: 'Engineering Analysis' } },
   {
-    type: 'dept_done', leader: 'Commander Elena Vasquez',
+    type: 'specialist_done', leader: 'Commander Elena Vasquez',
     data: {
       turn: 1, department: 'engineering',
       summary: 'Solar panel output will drop 40-60% during peak storm activity. Recommend deploying dust mitigation shields and switching to nuclear backup.',
@@ -63,18 +63,18 @@ export const DEMO_EVENTS: SimEvent[] = [
       citations: 2, citationList: [{ text: 'Mars dust storm optical depth models', url: 'https://doi.org/10.1029/2019JE006102' }],
     },
   },
-  { type: 'dept_start', leader: 'Commander Elena Vasquez', data: { turn: 1, department: 'medical', title: 'Medical Analysis' } },
+  { type: 'specialist_start', leader: 'Commander Elena Vasquez', data: { turn: 1, department: 'medical', title: 'Medical Analysis' } },
   {
-    type: 'dept_done', leader: 'Commander Elena Vasquez',
+    type: 'specialist_done', leader: 'Commander Elena Vasquez',
     data: {
       turn: 1, department: 'medical',
       summary: 'Dust infiltration poses respiratory risks. Recommend enhanced air filtration and limiting EVA exposure to 2 hours per rotation.',
       forgedTools: [], citations: 1,
     },
   },
-  { type: 'commander_deciding', leader: 'Commander Elena Vasquez', data: { turn: 1 } },
+  { type: 'decision_pending', leader: 'Commander Elena Vasquez', data: { turn: 1 } },
   {
-    type: 'commander_decided', leader: 'Commander Elena Vasquez',
+    type: 'decision_made', leader: 'Commander Elena Vasquez',
     data: {
       turn: 1,
       decision: 'Aggressive expansion despite the storm. Deploy experimental dust-repelling coatings on all solar arrays and authorize overtime shifts to complete the greenhouse dome before storm peak.',
@@ -133,9 +133,9 @@ export const DEMO_EVENTS: SimEvent[] = [
       systems: { population: 100, morale: 0.85, foodMonthsReserve: 18, waterLitersPerDay: 800, powerKw: 400, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 0 },
     },
   },
-  { type: 'dept_start', leader: 'Commander Hiroshi Tanaka', data: { turn: 1, department: 'engineering', title: 'Engineering Analysis' } },
+  { type: 'specialist_start', leader: 'Commander Hiroshi Tanaka', data: { turn: 1, department: 'engineering', title: 'Engineering Analysis' } },
   {
-    type: 'dept_done', leader: 'Commander Hiroshi Tanaka',
+    type: 'specialist_done', leader: 'Commander Hiroshi Tanaka',
     data: {
       turn: 1, department: 'engineering',
       summary: 'Recommend immediate power conservation protocols. Reroute non-essential systems to standby. Reinforce habitat seals against dust infiltration.',
@@ -143,18 +143,18 @@ export const DEMO_EVENTS: SimEvent[] = [
       citations: 3,
     },
   },
-  { type: 'dept_start', leader: 'Commander Hiroshi Tanaka', data: { turn: 1, department: 'agriculture', title: 'Agriculture Analysis' } },
+  { type: 'specialist_start', leader: 'Commander Hiroshi Tanaka', data: { turn: 1, department: 'agriculture', title: 'Agriculture Analysis' } },
   {
-    type: 'dept_done', leader: 'Commander Hiroshi Tanaka',
+    type: 'specialist_done', leader: 'Commander Hiroshi Tanaka',
     data: {
       turn: 1, department: 'agriculture',
       summary: 'Reduced solar means reduced grow light hours. Recommend switching to cold-tolerant crop rotation and prioritizing calorie-dense varieties.',
       forgedTools: [], citations: 1,
     },
   },
-  { type: 'commander_deciding', leader: 'Commander Hiroshi Tanaka', data: { turn: 1 } },
+  { type: 'decision_pending', leader: 'Commander Hiroshi Tanaka', data: { turn: 1 } },
   {
-    type: 'commander_decided', leader: 'Commander Hiroshi Tanaka',
+    type: 'decision_made', leader: 'Commander Hiroshi Tanaka',
     data: {
       turn: 1,
       decision: 'Full conservation mode. Reduce non-essential power by 40%, halt all outdoor construction, mandate indoor rest periods. Protect what we have.',
@@ -213,9 +213,9 @@ export const DEMO_EVENTS: SimEvent[] = [
       systems: { population: 100, morale: 0.78, foodMonthsReserve: 17, waterLitersPerDay: 650, powerKw: 360, infrastructureModules: 3, lifeSupportCapacity: 118, scienceOutput: 4 },
     },
   },
-  { type: 'dept_start', leader: 'Commander Elena Vasquez', data: { turn: 2, department: 'engineering', title: 'Engineering Analysis' } },
+  { type: 'specialist_start', leader: 'Commander Elena Vasquez', data: { turn: 2, department: 'engineering', title: 'Engineering Analysis' } },
   {
-    type: 'dept_done', leader: 'Commander Elena Vasquez',
+    type: 'specialist_done', leader: 'Commander Elena Vasquez',
     data: {
       turn: 2, department: 'engineering',
       summary: 'Primary recycler needs full teardown and decontamination (48 hours). Can run on secondary alone but strict rationing required.',
@@ -226,18 +226,18 @@ export const DEMO_EVENTS: SimEvent[] = [
       citations: 4,
     },
   },
-  { type: 'dept_start', leader: 'Commander Elena Vasquez', data: { turn: 2, department: 'medical', title: 'Medical Analysis' } },
+  { type: 'specialist_start', leader: 'Commander Elena Vasquez', data: { turn: 2, department: 'medical', title: 'Medical Analysis' } },
   {
-    type: 'dept_done', leader: 'Commander Elena Vasquez',
+    type: 'specialist_done', leader: 'Commander Elena Vasquez',
     data: {
       turn: 2, department: 'medical',
       summary: 'Perchlorate exposure at detected levels causes thyroid disruption over weeks. Recommend immediate blood panels and potassium iodide supplements.',
       forgedTools: [], citations: 2,
     },
   },
-  { type: 'commander_deciding', leader: 'Commander Elena Vasquez', data: { turn: 2 } },
+  { type: 'decision_pending', leader: 'Commander Elena Vasquez', data: { turn: 2 } },
   {
-    type: 'commander_decided', leader: 'Commander Elena Vasquez',
+    type: 'decision_made', leader: 'Commander Elena Vasquez',
     data: {
       turn: 2,
       decision: 'Dual-track: run decontamination AND begin drilling a new emergency well. Redirect science team to water prospecting. We solve this permanently.',
@@ -297,9 +297,9 @@ export const DEMO_EVENTS: SimEvent[] = [
       systems: { population: 100, morale: 0.87, foodMonthsReserve: 17.5, waterLitersPerDay: 650, powerKw: 390, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 0 },
     },
   },
-  { type: 'dept_start', leader: 'Commander Hiroshi Tanaka', data: { turn: 2, department: 'engineering', title: 'Engineering Analysis' } },
+  { type: 'specialist_start', leader: 'Commander Hiroshi Tanaka', data: { turn: 2, department: 'engineering', title: 'Engineering Analysis' } },
   {
-    type: 'dept_done', leader: 'Commander Hiroshi Tanaka',
+    type: 'specialist_done', leader: 'Commander Hiroshi Tanaka',
     data: {
       turn: 2, department: 'engineering',
       summary: 'Recommend isolating contaminated section, flushing the primary system, and installing redundant pre-filters before bringing it back online.',
@@ -307,9 +307,9 @@ export const DEMO_EVENTS: SimEvent[] = [
       citations: 2,
     },
   },
-  { type: 'commander_deciding', leader: 'Commander Hiroshi Tanaka', data: { turn: 2 } },
+  { type: 'decision_pending', leader: 'Commander Hiroshi Tanaka', data: { turn: 2 } },
   {
-    type: 'commander_decided', leader: 'Commander Hiroshi Tanaka',
+    type: 'decision_made', leader: 'Commander Hiroshi Tanaka',
     data: {
       turn: 2,
       decision: 'Methodical decontamination. Isolate affected pipes, flush system section by section, install triple-redundant filtration. Strict water rationing at 80% normal allocation. No shortcuts.',
@@ -368,9 +368,9 @@ export const DEMO_EVENTS: SimEvent[] = [
       systems: { population: 98, morale: 0.72, foodMonthsReserve: 15, waterLitersPerDay: 850, powerKw: 370, infrastructureModules: 4, lifeSupportCapacity: 116, scienceOutput: 12 },
     },
   },
-  { type: 'dept_start', leader: 'Commander Elena Vasquez', data: { turn: 3, department: 'medical', title: 'Medical Analysis' } },
+  { type: 'specialist_start', leader: 'Commander Elena Vasquez', data: { turn: 3, department: 'medical', title: 'Medical Analysis' } },
   {
-    type: 'dept_done', leader: 'Commander Elena Vasquez',
+    type: 'specialist_done', leader: 'Commander Elena Vasquez',
     data: {
       turn: 3, department: 'medical',
       summary: 'Martian gravity (0.38g) effects on fetal development are unknown. Recommend centrifuge-assisted birthing suite and continuous monitoring.',
@@ -378,18 +378,18 @@ export const DEMO_EVENTS: SimEvent[] = [
       citations: 5,
     },
   },
-  { type: 'dept_start', leader: 'Commander Elena Vasquez', data: { turn: 3, department: 'psychology', title: 'Psychology Analysis' } },
+  { type: 'specialist_start', leader: 'Commander Elena Vasquez', data: { turn: 3, department: 'psychology', title: 'Psychology Analysis' } },
   {
-    type: 'dept_done', leader: 'Commander Elena Vasquez',
+    type: 'specialist_done', leader: 'Commander Elena Vasquez',
     data: {
       turn: 3, department: 'psychology',
       summary: 'Colony morale surging. First births represent hope and permanence. Recommend public celebration and naming ceremony.',
       forgedTools: [], citations: 1,
     },
   },
-  { type: 'commander_deciding', leader: 'Commander Elena Vasquez', data: { turn: 3 } },
+  { type: 'decision_pending', leader: 'Commander Elena Vasquez', data: { turn: 3 } },
   {
-    type: 'commander_decided', leader: 'Commander Elena Vasquez',
+    type: 'decision_made', leader: 'Commander Elena Vasquez',
     data: {
       turn: 3,
       decision: 'Full commitment. Convert Module 4 into a dedicated pediatric and education wing. Authorize the centrifuge birthing suite. Declare "Founding Day" as a colony holiday.',
@@ -448,9 +448,9 @@ export const DEMO_EVENTS: SimEvent[] = [
       systems: { population: 100, morale: 0.89, foodMonthsReserve: 16.5, waterLitersPerDay: 820, powerKw: 385, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 2 },
     },
   },
-  { type: 'dept_start', leader: 'Commander Hiroshi Tanaka', data: { turn: 3, department: 'medical', title: 'Medical Analysis' } },
+  { type: 'specialist_start', leader: 'Commander Hiroshi Tanaka', data: { turn: 3, department: 'medical', title: 'Medical Analysis' } },
   {
-    type: 'dept_done', leader: 'Commander Hiroshi Tanaka',
+    type: 'specialist_done', leader: 'Commander Hiroshi Tanaka',
     data: {
       turn: 3, department: 'medical',
       summary: 'Insufficient data on low-gravity pregnancies. Recommend Earth-normal protocols adapted for Mars with extensive monitoring. No experimental interventions without peer review.',
@@ -458,9 +458,9 @@ export const DEMO_EVENTS: SimEvent[] = [
       citations: 6,
     },
   },
-  { type: 'commander_deciding', leader: 'Commander Hiroshi Tanaka', data: { turn: 3 } },
+  { type: 'decision_pending', leader: 'Commander Hiroshi Tanaka', data: { turn: 3 } },
   {
-    type: 'commander_decided', leader: 'Commander Hiroshi Tanaka',
+    type: 'decision_made', leader: 'Commander Hiroshi Tanaka',
     data: {
       turn: 3,
       decision: 'Measured approach. Dedicate existing medical bay expansion to maternal care. No experimental centrifuge. Follow Earth-standard protocols with enhanced monitoring.',

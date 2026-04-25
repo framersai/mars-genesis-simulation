@@ -15,7 +15,7 @@ interface ReferencesSectionProps {
 /**
  * Numbered references list rendered at the bottom of a report or shown
  * inside a modal. Each entry's number matches the inline `[N]` pill
- * rendered in dept_done citation rows. Departments that referenced each
+ * rendered in specialist_done citation rows. Departments that referenced each
  * source are listed for provenance.
  *
  * Two-column responsive grid mirrors the side-by-side leader columns.
