@@ -2,6 +2,8 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { ListRunsFilters, RunHistoryStore } from '../run-history-store.js';
 import type { ParacosmServerMode } from '../server-mode.js';
 import type { ScenarioPackage } from '../../../engine/types.js';
+import { WorldModel, WorldModelReplayError } from '../../../runtime/world-model/index.js';
+import type { RunArtifact } from '../../../engine/schema/index.js';
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 500;
@@ -137,6 +139,61 @@ export async function handlePlatformApiRoute(
       res.writeHead(204, options.corsHeaders);
       res.end();
       return true;
+    }
+
+    // POST /api/v1/runs/:runId/replay — re-execute kernel progression
+    // against the stored artifact and report match/divergence. The
+    // outcome is persisted to the run-history store so the
+    // /api/v1/runs/aggregate counters reflect every attempt.
+    const replayRunMatch = url.pathname.match(/^\/api\/v1\/runs\/([^/]+)\/replay$/);
+    if (replayRunMatch && req.method === 'POST') {
+      const runId = decodeURIComponent(replayRunMatch[1]);
+      const record = await options.runHistoryStore.getRun(runId);
+      if (!record) {
+        res.writeHead(404, { 'Content-Type': 'application/json', ...options.corsHeaders });
+        res.end(JSON.stringify({ error: 'not_found', runId }));
+        return true;
+      }
+      if (!record.artifactPath) {
+        res.writeHead(410, { 'Content-Type': 'application/json', ...options.corsHeaders });
+        res.end(JSON.stringify({ error: 'artifact_unavailable', runId }));
+        return true;
+      }
+
+      let artifact: RunArtifact;
+      try {
+        const fs = await import('node:fs/promises');
+        artifact = JSON.parse(await fs.readFile(record.artifactPath, 'utf-8')) as RunArtifact;
+      } catch {
+        console.warn('[run-history] artifact unreadable for replay:', runId);
+        res.writeHead(410, { 'Content-Type': 'application/json', ...options.corsHeaders });
+        res.end(JSON.stringify({ error: 'artifact_unreadable', runId, message: 'Artifact file unreadable' }));
+        return true;
+      }
+
+      const scenarioId = artifact.metadata.scenario.id;
+      const scenario = options.scenarioLookup(scenarioId);
+      if (!scenario) {
+        res.writeHead(410, { 'Content-Type': 'application/json', ...options.corsHeaders });
+        res.end(JSON.stringify({ error: 'scenario_unavailable', scenarioId }));
+        return true;
+      }
+
+      try {
+        const wm = WorldModel.fromScenario(scenario);
+        const result = await wm.replay(artifact);
+        await options.runHistoryStore.recordReplayResult?.(runId, result.matches);
+        res.writeHead(200, { 'Content-Type': 'application/json', ...options.corsHeaders });
+        res.end(JSON.stringify({ matches: result.matches, divergence: result.divergence }));
+        return true;
+      } catch (err) {
+        if (err instanceof WorldModelReplayError) {
+          res.writeHead(422, { 'Content-Type': 'application/json', ...options.corsHeaders });
+          res.end(JSON.stringify({ error: 'replay_preconditions_unmet', message: err.message }));
+          return true;
+        }
+        throw err;
+      }
     }
 
     // GET /api/v1/runs/:runId — load full RunArtifact via record.artifactPath

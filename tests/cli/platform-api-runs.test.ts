@@ -1,12 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { handlePlatformApiRoute } from '../../src/cli/server/routes/platform-api.js';
 import { createSqliteRunHistoryStore } from '../../src/cli/server/sqlite-run-history-store.js';
 import type { RunRecord } from '../../src/cli/server/run-record.js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { SimulationKernel } from '../../src/engine/core/kernel.js';
+import { marsScenario } from '../../src/engine/mars/index.js';
+import type { RunArtifact } from '../../src/engine/schema/index.js';
+import type { KernelSnapshot } from '../../src/engine/core/snapshot.js';
+import type { ScenarioPackage } from '../../src/engine/types.js';
 
 function makeRun(overrides: Partial<RunRecord> = {}): RunRecord {
   return {
@@ -271,4 +276,214 @@ test('POST /api/v1/runs/:runId/replay-result returns 400 when matches is not a b
     { runHistoryStore: store, corsHeaders: {}, ...ENABLED },
   );
   assert.equal(captured.statusCode, 400);
+});
+
+// ─────────────────────────────────────────────────────────────────────
+// POST /api/v1/runs/:runId/replay tests
+// Helpers copied from tests/runtime/world-model/replay.test.ts:19-52.
+// ─────────────────────────────────────────────────────────────────────
+
+function captureMarsSnapshots(turns: number, seed = 42): KernelSnapshot[] {
+  const kernel = new SimulationKernel(seed, 'leader-a', [], {
+    startTime: marsScenario.setup.defaultStartTime,
+    scenario: marsScenario,
+  });
+  const snapshots: KernelSnapshot[] = [kernel.toSnapshot(marsScenario.id)];
+  for (let t = 1; t <= turns; t++) {
+    kernel.advanceTurn(t, marsScenario.setup.defaultStartTime + t, marsScenario.hooks?.progressionHook);
+    snapshots.push(kernel.toSnapshot(marsScenario.id));
+  }
+  return snapshots;
+}
+
+function syntheticReplayArtifact(snaps: KernelSnapshot[], scenarioId = marsScenario.id): RunArtifact {
+  return {
+    metadata: {
+      runId: 'replay-test-run',
+      scenario: { id: scenarioId, name: marsScenario.labels.name },
+      mode: 'turn-loop',
+      startedAt: '2026-04-26T00:00:00.000Z',
+      seed: 42,
+    },
+    decisions: snaps.slice(0, -1).map((_, i) => ({
+      id: `dec-${i}`,
+      turn: i + 1,
+      label: `Test decision turn ${i + 1}`,
+      chosenOptionId: 'safe',
+      reasoning: 'test',
+    })),
+    scenarioExtensions: {
+      kernelSnapshotsPerTurn: snaps,
+    },
+  } as unknown as RunArtifact;
+}
+
+function writeArtifactToTemp(artifact: RunArtifact): string {
+  const dir = mkdtempSync(join(tmpdir(), 'paracosm-replay-test-'));
+  mkdirSync(dir, { recursive: true });
+  const path = resolve(dir, 'artifact.json');
+  writeFileSync(path, JSON.stringify(artifact, null, 2));
+  return path;
+}
+
+function lookupReturning(scenario: ScenarioPackage | undefined): (id: string) => ScenarioPackage | undefined {
+  return () => scenario;
+}
+
+test('POST /api/v1/runs/:runId/replay returns 200 + matches=true on equal-snapshot replay', async () => {
+  const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
+  const snaps = captureMarsSnapshots(3);
+  const artifact = syntheticReplayArtifact(snaps);
+  const artifactPath = writeArtifactToTemp(artifact);
+  await store.insertRun(makeRun({ runId: 'r-replay-match', scenarioId: marsScenario.id, artifactPath }));
+
+  const captured: CapturedResponse = { statusCode: 0, body: '', headers: {} };
+  const handled = await handlePlatformApiRoute(
+    makeReq('/api/v1/runs/r-replay-match/replay', 'POST'),
+    makeRes(captured),
+    { runHistoryStore: store, corsHeaders: {}, paracosmRoutesEnabled: true, scenarioLookup: lookupReturning(marsScenario) },
+  );
+  assert.equal(handled, true);
+  assert.equal(captured.statusCode, 200);
+  const body = JSON.parse(captured.body);
+  assert.equal(body.matches, true, `expected matches=true; divergence: ${body.divergence}`);
+  assert.equal(body.divergence, '');
+});
+
+test('POST /api/v1/runs/:runId/replay returns 200 + matches=false with divergence on tampered snapshots', async () => {
+  const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
+  const snaps = captureMarsSnapshots(3);
+  const tampered = JSON.parse(JSON.stringify(snaps)) as KernelSnapshot[];
+  (tampered[2].state as unknown as { metrics: Record<string, number> }).metrics.morale = 0.123456789;
+  const artifact = syntheticReplayArtifact(tampered);
+  const artifactPath = writeArtifactToTemp(artifact);
+  await store.insertRun(makeRun({ runId: 'r-replay-diverge', scenarioId: marsScenario.id, artifactPath }));
+
+  const captured: CapturedResponse = { statusCode: 0, body: '', headers: {} };
+  const handled = await handlePlatformApiRoute(
+    makeReq('/api/v1/runs/r-replay-diverge/replay', 'POST'),
+    makeRes(captured),
+    { runHistoryStore: store, corsHeaders: {}, paracosmRoutesEnabled: true, scenarioLookup: lookupReturning(marsScenario) },
+  );
+  assert.equal(handled, true);
+  assert.equal(captured.statusCode, 200);
+  const body = JSON.parse(captured.body);
+  assert.equal(body.matches, false);
+  assert.ok(body.divergence.length > 0 && body.divergence.startsWith('/'), `divergence must start with /, got: ${body.divergence}`);
+});
+
+test('POST /api/v1/runs/:runId/replay returns 404 for unknown runId', async () => {
+  const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
+  const captured: CapturedResponse = { statusCode: 0, body: '', headers: {} };
+  const handled = await handlePlatformApiRoute(
+    makeReq('/api/v1/runs/r-missing/replay', 'POST'),
+    makeRes(captured),
+    { runHistoryStore: store, corsHeaders: {}, paracosmRoutesEnabled: true, scenarioLookup: () => undefined },
+  );
+  assert.equal(handled, true);
+  assert.equal(captured.statusCode, 404);
+  const body = JSON.parse(captured.body);
+  assert.equal(body.error, 'not_found');
+  assert.equal(body.runId, 'r-missing');
+});
+
+test('POST /api/v1/runs/:runId/replay returns 410 artifact_unavailable when artifactPath missing', async () => {
+  const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
+  await store.insertRun(makeRun({ runId: 'r-no-path', scenarioId: marsScenario.id }));
+
+  const captured: CapturedResponse = { statusCode: 0, body: '', headers: {} };
+  const handled = await handlePlatformApiRoute(
+    makeReq('/api/v1/runs/r-no-path/replay', 'POST'),
+    makeRes(captured),
+    { runHistoryStore: store, corsHeaders: {}, paracosmRoutesEnabled: true, scenarioLookup: lookupReturning(marsScenario) },
+  );
+  assert.equal(handled, true);
+  assert.equal(captured.statusCode, 410);
+  const body = JSON.parse(captured.body);
+  assert.equal(body.error, 'artifact_unavailable');
+  assert.equal(body.runId, 'r-no-path');
+  assert.equal(body.record, undefined, 'must not leak full record');
+});
+
+test('POST /api/v1/runs/:runId/replay returns 410 scenario_unavailable when scenario not in catalog', async () => {
+  const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
+  const snaps = captureMarsSnapshots(2);
+  const artifact = syntheticReplayArtifact(snaps, 'unknown-scenario-xyz');
+  const artifactPath = writeArtifactToTemp(artifact);
+  await store.insertRun(makeRun({ runId: 'r-no-scenario', scenarioId: 'unknown-scenario-xyz', artifactPath }));
+
+  const captured: CapturedResponse = { statusCode: 0, body: '', headers: {} };
+  const handled = await handlePlatformApiRoute(
+    makeReq('/api/v1/runs/r-no-scenario/replay', 'POST'),
+    makeRes(captured),
+    { runHistoryStore: store, corsHeaders: {}, paracosmRoutesEnabled: true, scenarioLookup: () => undefined },
+  );
+  assert.equal(handled, true);
+  assert.equal(captured.statusCode, 410);
+  const body = JSON.parse(captured.body);
+  assert.equal(body.error, 'scenario_unavailable');
+  assert.equal(body.scenarioId, 'unknown-scenario-xyz');
+});
+
+test('POST /api/v1/runs/:runId/replay returns 422 when artifact missing kernelSnapshotsPerTurn', async () => {
+  const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
+  const artifactNoSnaps = {
+    metadata: {
+      runId: 'no-snaps',
+      scenario: { id: marsScenario.id, name: 'Mars' },
+      mode: 'turn-loop',
+      startedAt: '2026-04-26T00:00:00.000Z',
+    },
+    decisions: [{ id: 'd', turn: 1, label: 'x', chosenOptionId: 'a' }],
+  } as unknown as RunArtifact;
+  const artifactPath = writeArtifactToTemp(artifactNoSnaps);
+  await store.insertRun(makeRun({ runId: 'r-no-snaps', scenarioId: marsScenario.id, artifactPath }));
+
+  const captured: CapturedResponse = { statusCode: 0, body: '', headers: {} };
+  const handled = await handlePlatformApiRoute(
+    makeReq('/api/v1/runs/r-no-snaps/replay', 'POST'),
+    makeRes(captured),
+    { runHistoryStore: store, corsHeaders: {}, paracosmRoutesEnabled: true, scenarioLookup: lookupReturning(marsScenario) },
+  );
+  assert.equal(handled, true);
+  assert.equal(captured.statusCode, 422);
+  const body = JSON.parse(captured.body);
+  assert.equal(body.error, 'replay_preconditions_unmet');
+  assert.match(body.message, /per-turn kernel snapshots/);
+});
+
+test('POST /api/v1/runs/:runId/replay calls recordReplayResult with the right argument on each attempt', async () => {
+  const baseStore = createSqliteRunHistoryStore({ dbPath: ':memory:' });
+  const calls: Array<[string, boolean]> = [];
+  const wrapStore = {
+    ...baseStore,
+    recordReplayResult: async (runId: string, matches: boolean) => {
+      calls.push([runId, matches]);
+      await baseStore.recordReplayResult?.(runId, matches);
+    },
+  };
+
+  const snapsMatch = captureMarsSnapshots(2);
+  const matchArtifact = syntheticReplayArtifact(snapsMatch);
+  const matchPath = writeArtifactToTemp(matchArtifact);
+  await wrapStore.insertRun(makeRun({ runId: 'r-counter-match', scenarioId: marsScenario.id, artifactPath: matchPath }));
+
+  const snapsDiverge = JSON.parse(JSON.stringify(captureMarsSnapshots(2))) as KernelSnapshot[];
+  (snapsDiverge[1].state as unknown as { metrics: Record<string, number> }).metrics.morale = 0.987654321;
+  const divergeArtifact = syntheticReplayArtifact(snapsDiverge);
+  const divergePath = writeArtifactToTemp(divergeArtifact);
+  await wrapStore.insertRun(makeRun({ runId: 'r-counter-diverge', scenarioId: marsScenario.id, artifactPath: divergePath }));
+
+  for (const runId of ['r-counter-match', 'r-counter-diverge']) {
+    const captured: CapturedResponse = { statusCode: 0, body: '', headers: {} };
+    await handlePlatformApiRoute(
+      makeReq(`/api/v1/runs/${runId}/replay`, 'POST'),
+      makeRes(captured),
+      { runHistoryStore: wrapStore, corsHeaders: {}, paracosmRoutesEnabled: true, scenarioLookup: lookupReturning(marsScenario) },
+    );
+  }
+
+  assert.equal(calls.length, 2);
+  assert.deepEqual(calls[0], ['r-counter-match', true]);
+  assert.deepEqual(calls[1], ['r-counter-diverge', false]);
 });
