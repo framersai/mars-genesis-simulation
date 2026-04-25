@@ -131,7 +131,7 @@
 
   <h1>PARACOSM</h1>
   <div class="hero-tagline"><span>Structured</span><span>World</span><span>Model</span><span class="dot">&bull;</span><span>AI</span><span>Agents</span></div>
-  <p class="hero-sub">Start from a prompt, brief, URL, or scenario JSON draft. Paracosm compiles or grounds it into a typed ScenarioPackage, then runs it with leaders that have different HEXACO personalities. A deterministic seeded kernel guarantees identical starting conditions; LLM-driven events and decisions produce measurably divergent trajectories when you swap one variable.</p>
+  <p class="hero-sub">Start from a prompt, brief, URL, or scenario JSON draft. Paracosm compiles it into a typed ScenarioPackage, runs HEXACO-personality leaders against a deterministic seeded kernel, and produces measurably divergent trajectories when you swap one variable. Replay any stored run to verify kernel determinism, browse every artifact in the dashboard's Library tab, and import <code>DigitalTwin</code> from the <code>paracosm/digital-twin</code> subpath when modeling a specific subject under counterfactual interventions.</p>
   <p class="hero-mono">OPEN SOURCE &middot; APACHE-2.0 &middot; TYPESCRIPT &middot; BUILT ON AGENTOS</p>
 
   <div class="hero-ctas">
@@ -147,6 +147,7 @@
     <span class="chip">Mulberry32 Deterministic PRNG</span>
     <span class="chip">Multi-Agent Department Analysis</span>
     <span class="chip">Semantic Research with DOI Citations</span>
+    <span class="chip">Replay-Verified Determinism</span>
   </div>
 
   <div class="code-sec">
@@ -285,7 +286,7 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
       <div class="arch-row" style="border-left:3px solid var(--green)">
         <svg style="color:var(--green);width:24px;height:24px" viewBox="0 0 24 24"><path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <div class="arch-label" style="color:var(--green)">Paracosm is this</div>
-        <div class="arch-desc">Structured / LLM-based / counterfactual world simulator. Prompt/document/URL-grounded, JSON-contract-backed state space, seeded deterministic kernel, LLM-driven events and specialist analyses, HEXACO-personality leaders, runtime tool forging in sandboxed V8 isolates. One universal Zod-validated RunArtifact spans turn-loop civ sims, batch-trajectory digital twins, and batch-point forecasts.</div>
+        <div class="arch-desc">Structured / LLM-based / counterfactual world simulator. Prompt/document/URL-grounded, JSON-contract-backed state space, seeded deterministic kernel, LLM-driven events and specialist analyses, HEXACO-personality leaders, runtime tool forging in hardened node:vm sandboxes. One universal Zod-validated RunArtifact spans turn-loop civ sims, batch-trajectory digital twins, and batch-point forecasts.</div>
         <div class="arch-tech">Xing 2025 / ACM CSUR 2025 / Kirfel 2025</div>
       </div>
       <div class="arch-row" style="border-left:3px solid var(--t4)">
@@ -329,14 +330,14 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
   <div class="sec-inner">
     <div class="sec-label rv">Core Capabilities</div>
     <h2 class="sec-title rv">What Paracosm Does</h2>
-    <p class="sec-desc rv">Paracosm is a structured world model, not a chat interface. Specialist agents analyze data, write code, cite papers, and forge computational models inside sandboxed V8 isolates. The Event Director generates events from world state, not from a script. Two runs on the same seed diverge only because their leaders have different HEXACO personalities.</p>
+    <p class="sec-desc rv">Paracosm is a structured world model, not a chat interface. Specialist agents analyze data, write code, cite papers, and forge computational models inside hardened node:vm sandboxes. The Event Director generates events from world state, not from a script. Two runs on the same seed diverge only because their leaders have different HEXACO personalities.</p>
 
     <div class="feat-grid">
       <div class="feat rv rv-d1">
         <img class="feat-icon" src="/brand/feature-icons/forge.svg?v=1" width="48" height="48" alt="">
         <h3>Runtime Tool Forging</h3>
-        <p>A medical officer invents a radiation dose calculator. An engineer writes a structural load analyzer. These tools don't exist in the codebase. The agent writes them, they execute in an isolated V8 sandbox, and an LLM judge reviews output before it enters the decision pipeline.</p>
-        <div class="feat-ref">AgentOS ForgeToolMetaTool, 10s timeout, 128MB memory limit</div>
+        <p>A medical officer invents a radiation dose calculator. An engineer writes a structural load analyzer. These tools don't exist in the codebase. The agent writes them, they execute in a hardened node:vm sandbox, and an LLM judge reviews output before it enters the decision pipeline.</p>
+        <div class="feat-ref">AgentOS ForgeToolMetaTool, 10s timeout, observed heap usage</div>
       </div>
       <div class="feat rv rv-d2">
         <img class="feat-icon" src="/brand/feature-icons/hexaco.svg?v=1" width="48" height="48" alt="">
@@ -373,6 +374,12 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
         <h3>Seed Enrichment &amp; Citation Provenance</h3>
         <p>Pass a brief, paper, or URL into the compiler. An LLM extracts topics, facts, and search queries; AgentOS WebSearchService fans out to Firecrawl, Tavily, Serper, and Brave; results pass through semantic dedup, RRF fusion, and Cohere neural reranking. The resulting KnowledgeBundle ingests into an AgentOS sqlite-backed memory store. Every department analysis recalls semantically and cites the same sources you fed in. The orchestrator guarantees provenance: when the LLM omits citations, the research packet is auto-attached so the report always carries the sources the agent saw.</p>
         <div class="feat-ref">paracosm compile --seed-text / --seed-url &middot; KnowledgeBundle &middot; recallResearch()</div>
+      </div>
+      <div class="feat rv rv-d2">
+        <img class="feat-icon" src="/brand/feature-icons/replay.svg?v=1" width="48" height="48" alt="">
+        <h3>Replay-Verified Determinism</h3>
+        <p><code>wm.replay(stored)</code> re-executes the deterministic between-turn progression hook from each recorded snapshot, captures fresh snapshots, and compares them under canonical JSON. <code>matches=true</code> proves the kernel is byte-equal-deterministic for this artifact's transitions; <code>matches=false</code> names the first divergence path so you can localize the change. Pillar 2 (Reproducible) is now verifiable in code, not just promised in copy.</p>
+        <div class="feat-ref">WorldModel.replay() in paracosm/world-model &middot; canonicalJson &middot; firstDivergence</div>
       </div>
     </div>
   </div>
@@ -535,7 +542,7 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
     <h2 class="sec-title rv">Frequently asked questions</h2>
     <div class="faq-list rv">
       <details class="faq-item"><summary>What is Paracosm?</summary><div class="faq-body">An open-source TypeScript structured world model for AI agents, available on npm (<code>npm install paracosm</code>). You define or ground a world as a ScenarioPackage: departments, metrics, crisis templates, progression hooks. The engine populates the world, generates events from live state, and resolves outcomes through a seeded deterministic kernel. LLM-driven stages diverge because every prompt carries the leader's HEXACO profile. Two scenarios ship with the package (Mars Genesis, Lunar Outpost). You can compile new ones from a JSON draft with optional prompt, brief, or URL grounding. Paracosm fits the "structured / LLM-based / counterfactual" branch of the world-model taxonomy (Xing 2025, ACM CSUR 2025, Kirfel 2025).<div class="faq-cite">Positioning map: <a href="https://github.com/framersai/paracosm/blob/master/docs/positioning/world-model-mapping.md" target="_blank" rel="noopener">docs/positioning/world-model-mapping.md</a></div></div></details>
-      <details class="faq-item"><summary>How does tool forging work?</summary><div class="faq-body">When a department agent needs a calculation the codebase doesn't provide, it writes one. A medical officer facing a radiation crisis writes a dose calculator. An engineer writes a structural load model. The code executes in an isolated V8 sandbox with memory and time limits. An LLM judge reviews the output for safety and correctness before it enters the decision pipeline. The tool persists for future turns. None of these tools exist in the source code. The agents invent them at runtime.<div class="faq-cite">Implementation: AgentOS EmergentCapabilityEngine + EmergentJudge, sandboxed via isolated-vm</div></div></details>
+      <details class="faq-item"><summary>How does tool forging work?</summary><div class="faq-body">When a department agent needs a calculation the codebase doesn't provide, it writes one. A medical officer facing a radiation crisis writes a dose calculator. An engineer writes a structural load model. The code executes in a hardened node:vm sandbox with a wall-clock timeout and observed heap usage. An LLM judge reviews the output for safety and correctness before it enters the decision pipeline. The tool persists for future turns. None of these tools exist in the source code. The agents invent them at runtime.<div class="faq-cite">Implementation: AgentOS EmergentCapabilityEngine + EmergentJudge + CodeSandbox</div></div></details>
       <details class="faq-item"><summary>What is the HEXACO personality model?</summary><div class="faq-body">HEXACO is a six-factor personality framework from personality psychology: Honesty-Humility, Emotionality, Extraversion, Agreeableness, Conscientiousness, and Openness to Experience. Each agent in Paracosm carries six continuous values between 0 and 1. These values shift across turns through three drift mechanisms: leader influence (agents' traits pull toward their commander's profile), role activation (a chief engineer's conscientiousness trends upward), and outcome reinforcement (surviving a crisis through bold action increases openness).<div class="faq-cite">Ashton, M.C. &amp; Lee, K. (2007). "Empirical, Theoretical, and Practical Advantages of the HEXACO Model of Personality Structure." Personality and Social Psychology Review, 11(2), 150-166. doi:10.1177/1088868306294907</div></div></details>
       <details class="faq-item"><summary>Is the simulation deterministic?</summary><div class="faq-body">The kernel is fully deterministic. It uses Mulberry32, a 32-bit seeded PRNG. Given seed 950, the kernel produces identical agent rosters, lifecycle schedules, promotion sequences, and resource starting values on every run. The divergence between two parallel worlds comes entirely from the AI commander's decisions. Fix the seed, vary the personality, measure the outcome. This is the counterfactual world simulation model (CWSM) pattern.<div class="faq-cite">PRNG methodology follows Law, A.M. &amp; Kelton, W.D. Simulation Modeling and Analysis, 5th ed., McGraw-Hill, 2015. CWSM framing per Kirfel et al, 2025.</div></div></details>
       <details class="faq-item"><summary>What LLM providers work with Paracosm?</summary><div class="faq-body">OpenAI (GPT-5.4) and Anthropic (Claude Sonnet 4.6). All roles (commander, departments, crisis director, tool judge) default to the full model for reliable structured output and tool forging. You can override per-role in the setup panel or via the API. Mini models (GPT-5.4-mini, Claude Haiku) are available for cost optimization but produce lower quality results.</div></details>
