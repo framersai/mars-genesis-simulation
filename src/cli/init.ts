@@ -5,14 +5,16 @@
  *
  * Flag-driven only (no interactive prompts) so it composes with shell
  * scripts and CI. URL handling mirrors the server-app.ts pattern that
- * dynamically imports @framers/agentos's WebSearchService.
+ * dynamically imports AgentOS WebSearchService from the web-search subpath.
  *
  * @module paracosm/cli/init
  */
-import { mkdirSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
-import { resolve, basename } from 'node:path';
+import { mkdirSync, readdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
+import { resolve, basename, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { compileFromSeed } from '../engine/compiler/compile-from-seed.js';
 import { generateQuickstartLeaders } from '../runtime/world-model/index.js';
+import { fetchSeedFromUrl as fetchSeedFromUrlViaAgentOS } from './fetch-seed-url.js';
 import {
   renderPackageJson,
   renderRunMjs,
@@ -123,26 +125,6 @@ export function parseInitArgs(argv: readonly string[]): InitArgResult {
   };
 }
 
-/**
- * Fetch a URL via dynamic-imported @framers/agentos WebSearchService.
- * Mirrors the server-app.ts pattern at line 898 area; lazy-imports
- * keeps the cold-start path lean.
- */
-async function fetchSeedFromUrl(url: string): Promise<{ text: string; title: string }> {
-  const agentos = await import('@framers/agentos');
-  const WebSearchService = (agentos as unknown as {
-    WebSearchService: new (opts: unknown) => {
-      fetchSingleUrl: (u: string) => Promise<{ markdown?: string; text?: string; title?: string }>;
-    };
-  }).WebSearchService;
-  const service = new WebSearchService({});
-  const fetched = await service.fetchSingleUrl(url);
-  return {
-    text: fetched.markdown || fetched.text || '',
-    title: fetched.title || '',
-  };
-}
-
 function isUrl(s: string): boolean {
   return /^https?:\/\//.test(s);
 }
@@ -150,6 +132,24 @@ function isUrl(s: string): boolean {
 function isDirEmpty(dir: string): boolean {
   if (!existsSync(dir)) return true;
   return readdirSync(dir).length === 0;
+}
+
+/**
+ * Read the paracosm package.json sitting two directories up from this
+ * module file. Works from both the tsx (src/cli/init.ts) and built
+ * (dist/cli/init.js) layouts because both mirror src/.
+ *
+ * @returns The semver version string from paracosm's package.json.
+ * @throws Error when the package.json is unreadable or missing a version.
+ */
+function readOwnVersion(): string {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const pkgPath = resolve(here, '../../package.json');
+  const raw = JSON.parse(readFileSync(pkgPath, 'utf-8')) as { version: string };
+  if (typeof raw.version !== 'string' || raw.version.length === 0) {
+    throw new Error('paracosm package.json is missing a version field');
+  }
+  return raw.version;
 }
 
 /**
@@ -195,7 +195,7 @@ export async function runInit(argv: readonly string[], deps: RunInitDeps = {}): 
   if (isUrl(opts.domain)) {
     log(`[paracosm init] Resolving URL: ${opts.domain}`);
     try {
-      const fetcher = deps.fetchSeedFromUrl ?? fetchSeedFromUrl;
+      const fetcher = deps.fetchSeedFromUrl ?? fetchSeedFromUrlViaAgentOS;
       const fetched = await fetcher(opts.domain);
       seedText = fetched.text;
     } catch (err) {
@@ -234,11 +234,11 @@ export async function runInit(argv: readonly string[], deps: RunInitDeps = {}): 
 
   log(`[paracosm init] Writing files to ${opts.outputDir}/...`);
   mkdirSync(opts.outputDir, { recursive: true });
-  const paracosmVersion = deps.paracosmVersion ?? '1.0.0';
+  const paracosmVersion = deps.paracosmVersion ?? readOwnVersion();
   writeFileSync(`${opts.outputDir}/package.json`, renderPackageJson({ name: opts.name, paracosmVersion }));
   writeFileSync(`${opts.outputDir}/scenario.json`, JSON.stringify(scenario, null, 2) + '\n');
   writeFileSync(`${opts.outputDir}/leaders.json`, JSON.stringify(leaders, null, 2) + '\n');
-  writeFileSync(`${opts.outputDir}/run.mjs`, renderRunMjs({ mode: opts.mode }));
+  writeFileSync(`${opts.outputDir}/run.mjs`, renderRunMjs());
   writeFileSync(`${opts.outputDir}/README.md`, renderReadme({ name: opts.name, domain: opts.domain, mode: opts.mode, leaders: opts.leaders }));
   writeFileSync(`${opts.outputDir}/.env.example`, renderEnvExample());
   writeFileSync(`${opts.outputDir}/.gitignore`, renderGitignore());
