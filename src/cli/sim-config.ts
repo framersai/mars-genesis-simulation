@@ -186,8 +186,14 @@ export const DEFAULT_MODELS: Record<LlmProvider, SimulationModelConfig> = {
   openai: {
     // Flagship: forge code correctness.
     departments: 'gpt-5.4',
-    // Mid-tier: structured output, no novel code.
-    commander: 'gpt-5.4-mini',
+    // gpt-4o for commander: gpt-5.4-mini was failing CommanderDecisionSchema
+    // validation 3 attempts in a row (10 fields, nested arrays). Result was
+    // visible to users as "Commander decision unavailable; defer to
+    // department consensus" in artifacts. gpt-4o was tuned for JSON-mode
+    // / structured-output reliability and handles the schema cleanly.
+    // Same input price as gpt-5.4 ($2.50/M), $10/M output (vs $15/M on
+    // 5.4). Net per-run cost: ~$0.20 (was ~$0.15) for 6 turns.
+    commander: 'gpt-4o',
     director: 'gpt-5.4-mini',
     judge: 'gpt-5.4-mini',
     // Cheapest: high-volume parallel reactions.
