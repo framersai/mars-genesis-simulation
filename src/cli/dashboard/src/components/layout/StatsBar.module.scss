@@ -13,7 +13,11 @@
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  background: var(--bg-panel);
+  // Match the Footer + body root background so the dashboard chrome
+  // disappears into the body. The border-top below provides the only
+  // visual separator.
+  background: var(--bg-deep);
+  border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   font-family: var(--mono);
 }
