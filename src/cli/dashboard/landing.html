@@ -309,7 +309,7 @@ setTimeout(() =&gt; ctrl.<span class="fn">abort</span>(), <span class="num">120_
         <div class="code-block" style="border:none;border-radius:0;margin:0">
           <div class="code-header"><span>One-shot HTTP endpoint (curl, Python, third-party dashboards)</span><button class="code-copy" onclick="copyCode(this, document.getElementById('http-code').textContent)">Copy</button></div>
           <div class="code-body" id="http-code"><span class="cm"># Boot the server with the endpoint enabled.</span>
-PARACOSM_ENABLE_SIMULATE_ENDPOINT=true npx paracosm-dashboard
+PARACOSM_ENABLE_SIMULATE_ENDPOINT=true paracosm dashboard
 
 <span class="cm"># In another shell:</span>
 curl -X POST http://localhost:3456/simulate \
@@ -782,7 +782,7 @@ console.log(artifact.subject, artifact.intervention);</div>
       </div>
       <div class="code-block">
         <div class="code-header"><span>One-shot HTTP endpoint with curl</span><button class="code-copy" onclick="copyCode(this, document.getElementById('cb-curl').textContent)">Copy</button></div>
-        <div class="code-body" id="cb-curl"><span class="cm"># PARACOSM_ENABLE_SIMULATE_ENDPOINT=true npx paracosm-dashboard</span>
+        <div class="code-body" id="cb-curl"><span class="cm"># PARACOSM_ENABLE_SIMULATE_ENDPOINT=true paracosm dashboard</span>
 curl -X POST http://localhost:3456/simulate \
   -H <span class="str">'Content-Type: application/json'</span> \
   -H <span class="str">'X-OpenAI-Key: sk-...'</span> \

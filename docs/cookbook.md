@@ -322,7 +322,7 @@ For non-SSE consumers (curl, Python integrations, third-party dashboards) the se
 ### Request
 
 ```bash
-PARACOSM_ENABLE_SIMULATE_ENDPOINT=true npx paracosm-dashboard
+PARACOSM_ENABLE_SIMULATE_ENDPOINT=true paracosm dashboard
 
 curl -X POST http://localhost:3456/simulate \
   -H 'Content-Type: application/json' \

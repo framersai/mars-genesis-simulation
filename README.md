@@ -465,9 +465,9 @@ Non-SSE consumers (curl, Python integrations, third-party dashboards) can run a 
 
 ```bash
 export PARACOSM_ENABLE_SIMULATE_ENDPOINT=true
-npx paracosm serve   # or bring up your own server via createMarsServer
+paracosm dashboard   # or bring up your own server via createMarsServer
 
-curl -s -X POST http://localhost:5188/simulate \
+curl -s -X POST http://localhost:3456/simulate \
   -H 'Content-Type: application/json' \
   -H 'X-Anthropic-Key: sk-ant-...' \
   -d '{
