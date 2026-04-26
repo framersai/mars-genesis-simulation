@@ -83,39 +83,46 @@ export const hexacoModel: TraitModel = {
   },
   drift: {
     /**
-     * Outcome reinforcement table. Numbers preserved from the legacy
-     * runtime/hexaco-cues/trajectory.ts behavior. Each entry is the
-     * per-turn delta applied to the agent's axis value after that
-     * outcome class.
+     * Outcome reinforcement table. Values match the canonical
+     * `outcomePullForTrait` in `src/engine/core/progression.ts` so
+     * applying hexacoModel drift through the registry produces
+     * byte-identical output to the legacy `driftCommanderHexaco`
+     * path. Citations from the progression.ts header:
+     *
+     *   - Openness ↔ exploratory novelty (DeYoung 2014)
+     *   - Conscientiousness ↔ risk avoidance after failure
+     *     (Roberts et al 2008)
+     *   - Extraversion ↔ social-presence reinforcement
+     *   - Agreeableness ↔ post-conflict adjustment
+     *     (Lee & Ashton 2004)
+     *   - Emotionality activation under threat (Lee & Ashton 2004)
+     *   - Honesty-Humility ↔ strategic behavior (Hilbig & Zettler 2009)
      */
     outcomes: {
       openness: {
-        risky_success: 0.04,
-        risky_failure: -0.02,
-        conservative_success: -0.01,
+        risky_success: 0.03,
+        risky_failure: -0.04,
+        conservative_failure: 0.02,
       },
       conscientiousness: {
-        risky_failure: 0.04,
+        risky_failure: 0.03,
         conservative_success: 0.02,
-        safe_failure: 0.02,
       },
       extraversion: {
         risky_success: 0.02,
-        risky_failure: -0.03,
+        risky_failure: -0.02,
       },
       agreeableness: {
-        safe_failure: 0.03,
+        conservative_success: 0.02,
         risky_failure: -0.02,
       },
       emotionality: {
-        risky_failure: 0.04,
-        safe_failure: 0.03,
-        risky_success: -0.02,
+        risky_failure: 0.03,
+        conservative_failure: 0.02,
       },
       honestyHumility: {
-        safe_failure: 0.02,
-        conservative_failure: 0.02,
-        risky_success: -0.01,
+        risky_success: -0.02,
+        conservative_success: 0.02,
       },
     },
     leaderPull: {

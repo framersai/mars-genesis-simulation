@@ -9,16 +9,16 @@ import {
 } from '../../../src/engine/trait-models/drift.js';
 
 describe('applyOutcomeDrift', () => {
-  it('applies HEXACO openness +0.04 on risky_success', () => {
+  it('applies HEXACO openness +0.03 on risky_success (canonical progression.ts value)', () => {
     const profile = { modelId: 'hexaco', traits: { ...hexacoModel.defaults } };
     const next = applyOutcomeDrift(profile, hexacoModel, { outcome: 'risky_success' });
-    assert.ok(Math.abs(next.traits.openness - 0.54) < 1e-9);
+    assert.ok(Math.abs(next.traits.openness - 0.53) < 1e-9);
   });
 
-  it('applies HEXACO emotionality +0.04 on risky_failure', () => {
+  it('applies HEXACO emotionality +0.03 on risky_failure (canonical progression.ts value)', () => {
     const profile = { modelId: 'hexaco', traits: { ...hexacoModel.defaults } };
     const next = applyOutcomeDrift(profile, hexacoModel, { outcome: 'risky_failure' });
-    assert.ok(Math.abs(next.traits.emotionality - 0.54) < 1e-9);
+    assert.ok(Math.abs(next.traits.emotionality - 0.53) < 1e-9);
   });
 
   it('applies ai-agent verification-rigor +0.04 on risky_failure', () => {
