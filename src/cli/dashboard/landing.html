@@ -178,58 +178,185 @@
     <source src="/demo/sim-real.mp4?v=tabs" type="video/mp4">
   </video>
 
-  <p class="hero-sub" style="max-width:680px;margin:24px auto 0">Compile a prompt, brief, URL, or scenario JSON into a typed <code>ScenarioPackage</code>. Run HEXACO-personality leaders against a deterministic seeded kernel. Swap one variable and watch the trajectories diverge.</p>
+  <p class="hero-sub" style="max-width:680px;margin:24px auto 0">Four ways in: a 3-line free-text brief, a hand-written JSON contract, a curl POST, or the npm-installed CLI. Same engine, same artifact, your choice of entry point.</p>
 
 
   <div class="code-sec">
-    <div class="code-block">
-      <div class="code-header"><span>1. Install (npm, pnpm, or bun)</span><button class="code-copy" onclick="copyCode(this,'npm install paracosm')">Copy</button></div>
-      <div class="code-body" id="install-code"><span class="cm"># Any of these work; paracosm ships ESM + subpath exports</span>
+    <div class="code-block" style="margin-bottom:14px">
+      <div class="code-header"><span>Install (npm, pnpm, or bun)</span><button class="code-copy" onclick="copyCode(this,'npm install paracosm')">Copy</button></div>
+      <div class="code-body" id="install-code"><span class="cm"># ESM + subpath exports. Node 20+, Bun 1.x, or any TS runner with import-attributes.</span>
 npm  install paracosm
 pnpm add     paracosm
-bun  add     paracosm</div>
+bun  add     paracosm
+
+<span class="cm"># Or globally for the binaries:</span>
+npm install -g paracosm   <span class="cm"># exposes `paracosm` and `paracosm-dashboard`</span></div>
     </div>
-    <div class="code-block">
-      <div class="code-header"><span>2. Define or ground your world</span><button class="code-copy" onclick="copyCode(this, document.getElementById('json-code').textContent)">Copy</button></div>
-      <div class="code-body" id="json-code"><span class="cm">// my-world.json: the durable world contract</span>
-<span class="cm">// Leaders are configured separately so the same world</span>
-<span class="cm">// can be run with different personality matchups</span>
+
+    <!-- Tabbed examples -->
+    <div class="example-tabs" role="tablist" aria-label="Paracosm API entry points" style="margin-top:18px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg2)">
+      <div class="tab-buttons" style="display:flex;flex-wrap:wrap;border-bottom:1px solid var(--border);background:var(--bg3)">
+        <button class="tab-btn active" role="tab" aria-selected="true" data-tab="quickstart" style="background:none;border:none;border-right:1px solid var(--border);color:var(--t1);padding:12px 18px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;text-transform:uppercase">Quickstart</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="manual" style="background:none;border:none;border-right:1px solid var(--border);color:var(--t3);padding:12px 18px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;text-transform:uppercase">JSON contract</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="granular" style="background:none;border:none;border-right:1px solid var(--border);color:var(--t3);padding:12px 18px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;text-transform:uppercase">Granular API</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="http" style="background:none;border:none;border-right:1px solid var(--border);color:var(--t3);padding:12px 18px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;text-transform:uppercase">HTTP</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="cli" style="background:none;border:none;color:var(--t3);padding:12px 18px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;text-transform:uppercase">CLI</button>
+      </div>
+
+      <!-- QUICKSTART -->
+      <div class="tab-panel active" role="tabpanel" data-panel="quickstart">
+        <div class="code-block" style="border:none;border-radius:0;margin:0">
+          <div class="code-header"><span>Three lines: brief to running simulation</span><button class="code-copy" onclick="copyCode(this, document.getElementById('quickstart-code').textContent)">Copy</button></div>
+          <div class="code-body" id="quickstart-code"><span class="cm">// Free-text brief in. Compiled scenario, 3 HEXACO leaders, 3 RunArtifacts out.</span>
+<span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm/world-model'</span>;
+
+<span class="kw">const</span> wm = <span class="kw">await</span> WorldModel.<span class="fn">fromPrompt</span>({
+  seedText: <span class="str">'Q3 board brief: lab is preparing to release Atlas-7...'</span>,
+  domainHint: <span class="str">'AI safety lab leadership decision'</span>,
+});
+
+<span class="kw">const</span> { leaders, artifacts } = <span class="kw">await</span> wm.<span class="fn">quickstart</span>({ leaderCount: <span class="num">3</span> });
+artifacts.<span class="fn">forEach</span>((a, i) =&gt; console.<span class="fn">log</span>(leaders[i].name, a.fingerprint));</div>
+        </div>
+      </div>
+
+      <!-- MANUAL JSON -->
+      <div class="tab-panel" role="tabpanel" data-panel="manual" style="display:none">
+        <div class="code-block" style="border:none;border-radius:0;margin:0;border-bottom:1px solid var(--border)">
+          <div class="code-header"><span>my-world.json (durable contract)</span><button class="code-copy" onclick="copyCode(this, document.getElementById('manual-json-code').textContent)">Copy</button></div>
+          <div class="code-body" id="manual-json-code"><span class="cm">// Hand-written contract. Departments + metrics + nouns + setup.</span>
 {
   <span class="str">"id"</span>: <span class="str">"submarine-habitat"</span>,
   <span class="str">"labels"</span>: {
     <span class="str">"name"</span>: <span class="str">"Deep Ocean Habitat"</span>,
     <span class="str">"populationNoun"</span>: <span class="str">"crew"</span>,
     <span class="str">"settlementNoun"</span>: <span class="str">"habitat"</span>,
-    <span class="str">"currency"</span>: <span class="str">"credits"</span>
+    <span class="str">"timeUnitNoun"</span>: <span class="str">"day"</span>
   },
-  <span class="str">"setup"</span>: {
-    <span class="str">"defaultTurns"</span>: <span class="num">8</span>,
-    <span class="str">"defaultPopulation"</span>: <span class="num">50</span>,
-    <span class="str">"defaultStartYear"</span>: <span class="num">2040</span>,
-    <span class="str">"defaultSeed"</span>: <span class="num">42</span>
-  },
+  <span class="str">"setup"</span>: { <span class="str">"defaultTurns"</span>: <span class="num">8</span>, <span class="str">"defaultPopulation"</span>: <span class="num">50</span>, <span class="str">"defaultStartTime"</span>: <span class="num">1</span>, <span class="str">"defaultSeed"</span>: <span class="num">42</span> },
   <span class="str">"departments"</span>: [
-    {
-      <span class="str">"id"</span>: <span class="str">"life-support"</span>,
-      <span class="str">"label"</span>: <span class="str">"Life Support"</span>,
-      <span class="str">"role"</span>: <span class="str">"Chief Life Support Officer"</span>,
-      <span class="str">"instructions"</span>: <span class="str">"Analyze O2 levels, CO2 scrubbing capacity, water recycling."</span>
-    },
-    {
-      <span class="str">"id"</span>: <span class="str">"engineering"</span>,
-      <span class="str">"label"</span>: <span class="str">"Engineering"</span>,
-      <span class="str">"role"</span>: <span class="str">"Chief Engineer"</span>,
-      <span class="str">"instructions"</span>: <span class="str">"Analyze hull integrity, pressure systems, power generation."</span>
-    }
+    { <span class="str">"id"</span>: <span class="str">"life-support"</span>, <span class="str">"label"</span>: <span class="str">"Life Support"</span>, <span class="str">"role"</span>: <span class="str">"Chief Life Support Officer"</span>,
+      <span class="str">"instructions"</span>: <span class="str">"Analyze O2, CO2 scrubbing, water recycling."</span> },
+    { <span class="str">"id"</span>: <span class="str">"engineering"</span>, <span class="str">"label"</span>: <span class="str">"Engineering"</span>, <span class="str">"role"</span>: <span class="str">"Chief Engineer"</span>,
+      <span class="str">"instructions"</span>: <span class="str">"Hull integrity, pressure systems, power."</span> }
   ],
   <span class="str">"metrics"</span>: [
     { <span class="str">"id"</span>: <span class="str">"population"</span>, <span class="str">"format"</span>: <span class="str">"number"</span> },
     { <span class="str">"id"</span>: <span class="str">"morale"</span>, <span class="str">"format"</span>: <span class="str">"percent"</span> }
   ]
 }</div>
+        </div>
+        <div class="code-block" style="border:none;border-radius:0;margin:0">
+          <div class="code-header"><span>Compile + run</span><button class="code-copy" onclick="copyCode(this, document.getElementById('manual-ts-code').textContent)">Copy</button></div>
+          <div class="code-body" id="manual-ts-code"><span class="kw">import</span> { compileScenario } <span class="kw">from</span> <span class="str">'paracosm/compiler'</span>;
+<span class="kw">import</span> { runSimulation } <span class="kw">from</span> <span class="str">'paracosm/runtime'</span>;
+<span class="kw">import</span> worldJson <span class="kw">from</span> <span class="str">'./my-world.json'</span> <span class="kw">with</span> { type: <span class="str">'json'</span> };
+
+<span class="kw">const</span> scenario = <span class="kw">await</span> <span class="fn">compileScenario</span>(worldJson);
+<span class="kw">const</span> artifact = <span class="kw">await</span> <span class="fn">runSimulation</span>(myLeader, [], { scenario, maxTurns: <span class="num">6</span>, seed: <span class="num">42</span> });</div>
+        </div>
+      </div>
+
+      <!-- GRANULAR -->
+      <div class="tab-panel" role="tabpanel" data-panel="granular" style="display:none">
+        <div class="code-block" style="border:none;border-radius:0;margin:0">
+          <div class="code-header"><span>All knobs: per-role models, cost preset, snapshots, custom events, abort</span><button class="code-copy" onclick="copyCode(this, document.getElementById('granular-code').textContent)">Copy</button></div>
+          <div class="code-body" id="granular-code"><span class="kw">import</span> { createParacosmClient } <span class="kw">from</span> <span class="str">'paracosm'</span>;
+
+<span class="cm">// Pin defaults once, override per-call.</span>
+<span class="kw">const</span> client = <span class="fn">createParacosmClient</span>({
+  provider: <span class="str">'openai'</span>,
+  costPreset: <span class="str">'economy'</span>,                 <span class="cm">// or 'quality' (default)</span>
+  models: { departments: <span class="str">'gpt-5.4'</span>, judge: <span class="str">'gpt-5.4'</span> },
+  compilerProvider: <span class="str">'anthropic'</span>,           <span class="cm">// compile on a different provider</span>
+  compilerModel: <span class="str">'claude-sonnet-4-6'</span>,
+});
+
+<span class="kw">const</span> scenario = <span class="kw">await</span> client.<span class="fn">compileScenario</span>(worldJson, {
+  seedUrl: <span class="str">'https://ntrs.nasa.gov/citations/20210018970'</span>,
+  webSearch: <span class="kw">true</span>, maxSearches: <span class="num">5</span>,
+  cacheDir: <span class="str">'.paracosm/cache'</span>,
+  onProgress: (hook, status) =&gt; console.<span class="fn">log</span>(<span class="str">`[${status}] ${hook}`</span>),
+});
+
+<span class="kw">const</span> ctrl = <span class="kw">new</span> <span class="fn">AbortController</span>();
+setTimeout(() =&gt; ctrl.<span class="fn">abort</span>(), <span class="num">120_000</span>); <span class="cm">// kill after 2 min wall</span>
+
+<span class="kw">const</span> artifact = <span class="kw">await</span> client.<span class="fn">runSimulation</span>(leader, [], {
+  scenario, maxTurns: <span class="num">8</span>, seed: <span class="num">42</span>,
+  captureSnapshots: <span class="kw">true</span>,                  <span class="cm">// enable forking + replay</span>
+  customEvents: [
+    { turn: <span class="num">3</span>, title: <span class="str">'Dust storm'</span>, description: <span class="str">'72-hour storm cuts solar 80%.'</span> },
+    { turn: <span class="num">6</span>, title: <span class="str">'Supply drop'</span>, description: <span class="str">'3 months food reserves.'</span> },
+  ],
+  signal: ctrl.signal,
+  <span class="fn">onEvent</span>(e) {
+    <span class="kw">if</span> (e.type === <span class="str">'forge_attempt'</span>) console.<span class="fn">log</span>(<span class="str">'forge:'</span>, e.data.summary);
+    <span class="kw">if</span> (e.type === <span class="str">'decision_made'</span>) console.<span class="fn">log</span>(<span class="str">'decision:'</span>, e.data.summary);
+  },
+});
+
+<span class="cm">// Fork + replay are first-class. RunArtifact is Zod-validated.</span>
+<span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm/world-model'</span>;
+<span class="kw">const</span> wm = WorldModel.<span class="fn">fromScenario</span>(scenario);
+<span class="kw">const</span> branch = <span class="kw">await</span> (<span class="kw">await</span> wm.<span class="fn">forkFromArtifact</span>(artifact, <span class="num">3</span>)).<span class="fn">simulate</span>(altLeader, { maxTurns: <span class="num">6</span> });
+<span class="kw">const</span> replay = <span class="kw">await</span> wm.<span class="fn">replay</span>(artifact); <span class="cm">// { matches, divergence }</span></div>
+        </div>
+      </div>
+
+      <!-- HTTP -->
+      <div class="tab-panel" role="tabpanel" data-panel="http" style="display:none">
+        <div class="code-block" style="border:none;border-radius:0;margin:0">
+          <div class="code-header"><span>One-shot HTTP endpoint (curl, Python, third-party dashboards)</span><button class="code-copy" onclick="copyCode(this, document.getElementById('http-code').textContent)">Copy</button></div>
+          <div class="code-body" id="http-code"><span class="cm"># Boot the server with the endpoint enabled.</span>
+PARACOSM_ENABLE_SIMULATE_ENDPOINT=true npx paracosm-dashboard
+
+<span class="cm"># In another shell:</span>
+curl -X POST http://localhost:3456/simulate \
+  -H <span class="str">'Content-Type: application/json'</span> \
+  -H <span class="str">'X-OpenAI-Key: sk-...'</span> \
+  -d <span class="str">'{
+    "scenario": { "id": "submarine", "labels": {...}, "setup": {...}, "departments": [...], "metrics": [...] },
+    "leader":   { "name": "Captain Reyes", "archetype": "Pragmatist", "unit": "Station Alpha",
+                  "hexaco": { "openness": 0.4, "conscientiousness": 0.9, ... }, "instructions": "..." },
+    "options":  { "maxTurns": 4, "seed": 42, "costPreset": "economy", "captureSnapshots": true }
+  }'</span>
+
+<span class="cm"># Response: { artifact: RunArtifact, scenario: ScenarioPackage, durationMs: number }</span>
+<span class="cm"># Accepts a pre-compiled ScenarioPackage OR a raw draft (auto-compiled server-side).</span>
+<span class="cm"># Rate-limit shares the /setup IP bucket; body cap 5 MiB.</span></div>
+        </div>
+      </div>
+
+      <!-- CLI -->
+      <div class="tab-panel" role="tabpanel" data-panel="cli" style="display:none">
+        <div class="code-block" style="border:none;border-radius:0;margin:0">
+          <div class="code-header"><span>Terminal: run, dashboard, compile, scaffold</span><button class="code-copy" onclick="copyCode(this, document.getElementById('cli-code').textContent)">Copy</button></div>
+          <div class="code-body" id="cli-code"><span class="cm"># Run a simulation. Reads leaders.json from CWD or bundled example.</span>
+paracosm                                  <span class="cm"># default: leader 0, full turns</span>
+paracosm --leader 1 5                     <span class="cm"># leader index 1, 5 turns</span>
+paracosm --name <span class="str">"Custom"</span> --openness 0.85 \
+         --conscientiousness 0.4 6        <span class="cm"># override HEXACO inline</span>
+paracosm --leaders ./my-leaders.json --live   <span class="cm"># custom roster + live web search</span>
+
+<span class="cm"># Open the dashboard with N turns and live SSE streaming.</span>
+paracosm-dashboard 6                      <span class="cm"># http://localhost:3456</span>
+
+<span class="cm"># Compile a scenario draft into a runnable package (cached).</span>
+npx paracosm compile scenarios/lunar.json \
+  --seed-url https://ntrs.nasa.gov/citations/20210018970 \
+  --max-searches 5
+
+<span class="cm"># Optional: scaffold a fresh starter project from a free-text brief.</span>
+<span class="cm"># Equivalent to compileFromSeed + generateQuickstartLeaders + writing</span>
+<span class="cm"># package.json + run.mjs + README to disk. Skip if you already have a project.</span>
+paracosm init my-app --domain <span class="str">"AI lab Q4 release pressure"</span> --leaders 3</div>
+        </div>
+      </div>
     </div>
-    <div class="code-block">
-      <div class="code-header"><span>3. Compile, define leaders, run</span><button class="code-copy" onclick="copyCode(this, document.getElementById('api-code').textContent)">Copy</button></div>
+
+    <div class="code-block" style="margin-top:18px">
+      <div class="code-header"><span>End-to-end runner (real input/output captured)</span><button class="code-copy" onclick="copyCode(this, 'npx tsx scripts/cookbook-e2e.ts')">Copy</button></div>
       <div class="code-body" id="api-code"><span class="cm">// Save as index.ts next to my-world.json, then:</span>
 <span class="cm">//   npm install paracosm   (or: pnpm add paracosm / bun add paracosm)</span>
 <span class="cm">//   export OPENAI_API_KEY=sk-...          # or ANTHROPIC_API_KEY=sk-ant-...</span>
@@ -853,6 +980,29 @@ if (hamburger && mobileNav) {
     });
   });
 }
+
+// Tabbed examples (Quickstart / JSON contract / Granular API / HTTP / CLI)
+document.querySelectorAll('.example-tabs').forEach(tabs => {
+  const buttons = tabs.querySelectorAll('.tab-btn');
+  const panels = tabs.querySelectorAll('.tab-panel');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.tab;
+      buttons.forEach(b => {
+        const active = b === btn;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-selected', active ? 'true' : 'false');
+        b.style.color = active ? 'var(--t1)' : 'var(--t3)';
+        b.style.background = active ? 'var(--bg2)' : 'none';
+      });
+      panels.forEach(p => {
+        const show = p.dataset.panel === target;
+        p.classList.toggle('active', show);
+        p.style.display = show ? '' : 'none';
+      });
+    });
+  });
+});
 </script>
 </body>
 </html>
