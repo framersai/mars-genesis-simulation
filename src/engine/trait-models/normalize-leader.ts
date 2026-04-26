@@ -73,6 +73,16 @@ export function normalizeLeaderConfig(
   }
 
   // Path 2: legacy hexaco field. Synthesize a hexaco-modeled profile.
+  // Defensive guard: TS schema declares LeaderConfig.hexaco required,
+  // but JSON-loaded leader configs and runtime callers can violate
+  // that. Throw an explicit error instead of a `TypeError: cannot
+  // read 'openness' of undefined` deep inside hexacoToTraits.
+  if (!leader.hexaco) {
+    throw new Error(
+      `LeaderConfig "${leader.name ?? '<unnamed>'}" must have either ` +
+      `traitProfile or the legacy hexaco field. Both are missing.`,
+    );
+  }
   const model = registry.require('hexaco');
   const traits = hexacoToTraits(leader.hexaco, model);
   return {

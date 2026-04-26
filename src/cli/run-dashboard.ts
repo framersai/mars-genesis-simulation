@@ -32,9 +32,11 @@ function loadEnvFromCwd(): void {
 
 /**
  * Boot the SSE dashboard. Resolves to 0 once the server is listening
- * (or once the auto-launched simulation completes when [turns] was
- * supplied). The TCP listener holds the Node event loop alive after
- * resolution, so the process keeps serving requests until killed.
+ * (or once the auto-launched simulation completes when the maxTurns
+ * CLI option was supplied). Resolves to 1 if leader resolution fails
+ * during the auto-launch path. The TCP listener holds the Node event
+ * loop alive after a 0 resolution, so the process keeps serving
+ * requests until killed.
  *
  * Callers MUST treat exit code 0 as "server is up, do not call
  * process.exit". The umbrella binary at run.ts and the back-compat

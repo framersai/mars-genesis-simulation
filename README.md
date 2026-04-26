@@ -704,7 +704,11 @@ const releaseDirector = {
   name: 'Atlas-Bot Release Director',
   archetype: 'Aggressive AI Release Optimizer',
   unit: 'Frontier Lab',
-  hexaco: { ...defaults }, // legacy back-compat field, required
+  // Legacy back-compat hexaco field is still required by the v0.7
+  // schema; supply a representative HEXACO snapshot of the AI-system
+  // archetype's analogous human personality. Removal scheduled 0.9.0.
+  hexaco: { openness: 0.6, conscientiousness: 0.3, extraversion: 0.5,
+            agreeableness: 0.3, emotionality: 0.2, honestyHumility: 0.3 },
   traitProfile: {
     modelId: 'ai-agent',
     traits: {

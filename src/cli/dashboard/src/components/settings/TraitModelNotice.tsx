@@ -17,7 +17,7 @@ import styles from './TraitModelNotice.module.scss';
 export function TraitModelNotice() {
   return (
     <div className={styles.notice} role="note" aria-label="Pluggable trait models">
-      <span className={styles.badge}>NEW</span>
+      <span className={styles.badge} aria-hidden="true">NEW</span>
       <div className={styles.body}>
         <div className={styles.headline}>
           Leaders accept pluggable trait models.

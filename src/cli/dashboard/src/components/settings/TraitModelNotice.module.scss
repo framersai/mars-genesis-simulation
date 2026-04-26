@@ -18,14 +18,16 @@
 
 .badge {
   flex-shrink: 0;
-  padding: 2px 6px;
+  padding: 2px 7px;
   background: var(--amber);
   color: var(--bg-deep);
-  font-size: 9px;
+  // Decorative badge (aria-hidden in TSX) so the small font is OK
+  // for assistive tech; bumped 9px -> 11px for sighted readability.
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.08em;
   border-radius: 3px;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .body {
