@@ -1,0 +1,7 @@
+{
+  "maxTurns": 2,
+  "seed": 42,
+  "captureSnapshots": false,
+  "provider": "openai",
+  "costPreset": "economy"
+}

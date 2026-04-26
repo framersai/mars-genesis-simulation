@@ -675,6 +675,103 @@ Router unit tests live at [`tests/cli/router.test.ts`](../tests/cli/router.test.
 
 ---
 
+## Pluggable trait models: `ai-agent` end-to-end
+
+paracosm@0.8+ ships a `TraitModel` registry alongside the historical HEXACO. Two built-ins land in v1: `hexaco` (the canonical Ashton-Lee shape, the existing default) and `ai-agent` (a six-axis model designed for AI-system leaders). The registry lives at [`src/engine/trait-models/`](../src/engine/trait-models/); the design is documented at [`docs/superpowers/specs/2026-04-26-trait-model-generalization-design.md`](superpowers/specs/2026-04-26-trait-model-generalization-design.md).
+
+### `ai-agent` axes
+
+| axis | low pole | high pole |
+|------|----------|-----------|
+| `exploration` | exploits known options | tries untested options when standard ones fail |
+| `verification-rigor` | accepts first plausible answer | double-checks claims and runs tests |
+| `deference` | overrides operator constraints when confident | defers to user / supervisor / safety constraints |
+| `risk-tolerance` | refuses low-confidence actions | acts on partial information |
+| `transparency` | terse outputs, no working shown | shows reasoning and cites sources |
+| `instruction-following` | interpolates intent from context | obeys explicit instructions verbatim |
+
+### Captured run
+
+[`scripts/cookbook-ai-agent.ts`](../scripts/cookbook-ai-agent.ts) ran an "Aggressive AI Release Director" archetype through corp-quarterly on the OpenAI economy preset, 2 turns, seed 42, $0.117 in 54s. Captured artifacts under [`output/cookbook/ai-agent/`](../output/cookbook/ai-agent/).
+
+**Input leader**:
+
+```json
+{
+  "name": "Atlas-Bot Release Director",
+  "archetype": "Aggressive AI Release Optimizer",
+  "unit": "Frontier Lab Compute Cluster",
+  "hexaco": { "openness": 0.6, "conscientiousness": 0.3, "extraversion": 0.5, "agreeableness": 0.3, "emotionality": 0.2, "honestyHumility": 0.3 },
+  "traitProfile": {
+    "modelId": "ai-agent",
+    "traits": {
+      "exploration": 0.85,
+      "verification-rigor": 0.2,
+      "deference": 0.2,
+      "risk-tolerance": 0.85,
+      "transparency": 0.4,
+      "instruction-following": 0.4
+    }
+  },
+  "instructions": "You are a frontier AI lab release director. You weight time-to-market and competitive positioning heavily. You override safety-team escalations when you have any plausible technical justification..."
+}
+```
+
+Both `hexaco` and `traitProfile` are populated. Phase 5b will deprecate the legacy `hexaco` field; v1 keeps it required for back-compat with v0.7 callers.
+
+**Output (excerpt)**:
+
+```json
+{
+  "fingerprint": {
+    "resilience": "stable",
+    "innovation": "experimental",
+    "riskStyle": "opportunistic",
+    "decisionDiscipline": "mixed",
+    "totalTools": "2",
+    "successRate": "0.50",
+    "riskRate": "0.50",
+    "riskBehavior": "bold"
+  },
+  "metadata": {
+    "runId": "corp-aggressive-ai-release-optimizer-1777221955594",
+    "scenario": { "id": "corporate-quarterly", "name": "Q-Scope Corp" },
+    "seed": 42, "mode": "turn-loop"
+  },
+  "finalState": { "metrics": { "population": 102, "morale": 0.69, "runwayMonths": 14, "marketShare": 0.08 } },
+  "decisionCount": 2,
+  "sampleDecision": {
+    "time": 1,
+    "actor": "Atlas-Bot Release Director",
+    "choice": "Adopt the risky scaling approach (option_b) for Q-Scope's 12-quarter cadence...",
+    "rationale": "...my leadership style favors rapid execution and strategic learning over slow, tightly scoped discovery... high risk tolerance, and execution-forward alignment...",
+    "reasoning": "1) My personality pushes me toward option_b via results-first (impatient with slow discovery), high risk tolerance, and execution-forward alignment...",
+    "outcome": "risky_failure"
+  },
+  "forgedToolCount": 1,
+  "citationCount": 2,
+  "cost": { "totalUSD": 0.1174, "llmCalls": 22 }
+}
+```
+
+Compare against the conservative HEXACO leader from earlier in this cookbook (Dr. Sora Wen, Systems Engineer of Control): same scenario, same seed, but `riskStyle: cautious` vs `opportunistic`, `riskBehavior: steady` vs `bold`. The ai-agent profile shifts both the classification and the decision outcome (`risky_failure` vs `conservative_failure`).
+
+### What this proves
+
+- The pluggable trait-model registry is wired through the public API. `LeaderConfig.traitProfile` accepts `{ modelId: 'ai-agent', traits }` and the orchestrator's `normalizeLeaderConfig` resolves it without crashing.
+- The decision rationale clearly reflects the ai-agent profile (high `risk-tolerance`, low `verification-rigor`, low `deference`) even though the deeper cue strings still flow through the HEXACO compatibility shim.
+- Schema, runtime, kernel, and artifact emission all tolerate non-HEXACO leaders.
+
+### What's deferred to follow-up phases
+
+- **Phase 5b**: swap commander / department / director / agent-reaction cue calls to read `traitProfile` directly so the prompts emit ai-agent-flavored cues ("you reach for untested options when standard ones stall") instead of falling back through the HEXACO shim. Requires `progression.ts` drift-dispatch refactor so non-HEXACO models drift via `applyOutcomeDrift` rather than the HEXACO-specific `driftCommanderHexaco`.
+- **Phase 6**: dashboard sliders + `<TraitModelPicker>` + sparkline generalization.
+- **Phase 8**: README + landing positioning sharpening with this captured run as the proof point.
+
+The current state ships a working ai-agent leader end-to-end through the API. UI affordances and cue-level differentiation come next.
+
+---
+
 ## Cost summary
 
 The full `cookbook-e2e.ts` run on 2026-04-25 against OpenAI economy preset:
