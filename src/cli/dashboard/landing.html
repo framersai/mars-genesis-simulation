@@ -115,20 +115,32 @@
     <a href="https://agentos.sh" target="_blank" rel="noopener" class="nav-tag" style="text-decoration:none">AGENTOS</a>
   </div>
   <div class="nav-r">
-    <a href="#positioning">Positioning</a>
-    <a href="#features">Features</a>
-    <a href="#how-it-works">How It Works</a>
-    <a href="#scenarios">Scenarios</a>
+    <div class="nav-dropdown">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" type="button">Sections <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="#positioning" role="menuitem">Positioning</a>
+        <a href="#features" role="menuitem">Features</a>
+        <a href="#how-it-works" role="menuitem">How It Works</a>
+        <a href="#scenarios" role="menuitem">Scenarios</a>
+        <a href="#hosted" role="menuitem">Hosted</a>
+        <a href="#faq" role="menuitem">FAQ</a>
+        <a href="#about" role="menuitem">About</a>
+      </div>
+    </div>
     <a href="#cookbook">Cookbook</a>
-    <a href="#hosted">Hosted</a>
-    <a href="#faq">FAQ</a>
-    <a href="#about">About</a>
-    <a href="/docs">API Docs</a>
-    <a href="https://agentos.sh/blog" target="_blank" rel="noopener">Blog</a>
-    <a href="https://github.com/framersai/paracosm" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub" style="display:flex;align-items:center"><svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
-    <a href="https://www.npmjs.com/package/paracosm" target="_blank" rel="noopener" aria-label="npm" title="npm" style="display:flex;align-items:center;font-family:var(--mono);font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--t2);text-decoration:none">npm</a>
+    <div class="nav-dropdown">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" type="button">Docs <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="/docs" role="menuitem">API Reference</a>
+        <a href="https://github.com/framersai/paracosm/blob/master/docs/cookbook.md" target="_blank" rel="noopener" role="menuitem">Cookbook (markdown)</a>
+        <a href="https://github.com/framersai/paracosm/blob/master/docs/positioning/world-model-mapping.md" target="_blank" rel="noopener" role="menuitem">Positioning Map</a>
+        <a href="https://agentos.sh/blog" target="_blank" rel="noopener" role="menuitem">Blog</a>
+      </div>
+    </div>
+    <a href="https://github.com/framersai/paracosm" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub" class="nav-icon"><svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+    <a href="https://www.npmjs.com/package/paracosm" target="_blank" rel="noopener" aria-label="npm" title="npm" class="nav-icon nav-icon-npm">npm</a>
     <a href="/sim" class="cta">Launch Sim <svg><use href="#i-arrow"/></svg></a>
-    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode" style="background:none;border:1px solid var(--border);color:var(--t3);width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0"></button>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode"></button>
   </div>
   <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
     <span></span><span></span><span></span>
@@ -178,29 +190,35 @@
     <source src="/demo/sim-real.mp4?v=tabs" type="video/mp4">
   </video>
 
-  <p class="hero-sub" style="max-width:680px;margin:24px auto 0">Four ways in: a 3-line free-text brief, a hand-written JSON contract, a curl POST, or the npm-installed CLI. Same engine, same artifact, your choice of entry point.</p>
+  <p class="hero-sub" style="max-width:720px;margin:24px auto 0">Seven entry points, one engine: free-text brief, JSON contract, granular client, fork-and-replay counterfactuals, pluggable trait models, HTTP, and CLI. Every path returns the same Zod-validated RunArtifact.</p>
 
 
   <div class="code-sec">
     <div class="code-block" style="margin-bottom:14px">
       <div class="code-header"><span>Install (npm, pnpm, or bun)</span><button class="code-copy" onclick="copyCode(this,'npm install paracosm')">Copy</button></div>
       <div class="code-body" id="install-code"><span class="cm"># ESM + subpath exports. Node 20+, Bun 1.x, or any TS runner with import-attributes.</span>
-npm  install paracosm
-pnpm add     paracosm
-bun  add     paracosm
+npm install paracosm
+pnpm add paracosm
+bun add paracosm
 
-<span class="cm"># Or globally for the binaries:</span>
-npm install -g paracosm   <span class="cm"># exposes `paracosm` and `paracosm-dashboard`</span></div>
+<span class="cm"># Or globally for the CLI binaries (`paracosm` + `paracosm-dashboard`):</span>
+npm install -g paracosm</div>
     </div>
 
     <!-- Tabbed examples -->
-    <div class="example-tabs" role="tablist" aria-label="Paracosm API entry points" style="margin-top:18px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg2)">
+    <div class="example-tabs-header" style="margin-top:32px;text-align:center">
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--rust);text-transform:uppercase;margin-bottom:6px">Seven ways to use Paracosm</div>
+      <div style="font-size:14px;color:var(--t2);max-width:600px;margin:0 auto;line-height:1.55">From a 3-line brief to fork-and-replay counterfactuals to a custom trait model. Click through the tabs to see the input and output shape for each entry point.</div>
+    </div>
+    <div class="example-tabs" role="tablist" aria-label="Paracosm API entry points" style="margin-top:14px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg2);box-shadow:0 4px 24px rgba(0,0,0,.25)">
       <div class="tab-buttons" style="display:flex;flex-wrap:wrap;border-bottom:1px solid var(--border);background:var(--bg3)">
-        <button class="tab-btn active" role="tab" aria-selected="true" data-tab="quickstart" style="background:none;border:none;border-right:1px solid var(--border);color:var(--t1);padding:12px 18px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;text-transform:uppercase">Quickstart</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-tab="manual" style="background:none;border:none;border-right:1px solid var(--border);color:var(--t3);padding:12px 18px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;text-transform:uppercase">JSON contract</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-tab="granular" style="background:none;border:none;border-right:1px solid var(--border);color:var(--t3);padding:12px 18px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;text-transform:uppercase">Granular API</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-tab="http" style="background:none;border:none;border-right:1px solid var(--border);color:var(--t3);padding:12px 18px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;text-transform:uppercase">HTTP</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-tab="cli" style="background:none;border:none;color:var(--t3);padding:12px 18px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;text-transform:uppercase">CLI</button>
+        <button class="tab-btn active" role="tab" aria-selected="true" data-tab="quickstart">Quickstart</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="manual">JSON contract</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="granular">Granular API</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="counterfactuals">Counterfactuals</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="trait-models">Trait Models</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="http">HTTP</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="cli">CLI</button>
       </div>
 
       <!-- QUICKSTART -->
@@ -301,6 +319,114 @@ setTimeout(() =&gt; ctrl.<span class="fn">abort</span>(), <span class="num">120_
 <span class="kw">const</span> wm = WorldModel.<span class="fn">fromScenario</span>(scenario);
 <span class="kw">const</span> branch = <span class="kw">await</span> (<span class="kw">await</span> wm.<span class="fn">forkFromArtifact</span>(artifact, <span class="num">3</span>)).<span class="fn">simulate</span>(altLeader, { maxTurns: <span class="num">6</span> });
 <span class="kw">const</span> replay = <span class="kw">await</span> wm.<span class="fn">replay</span>(artifact); <span class="cm">// { matches, divergence }</span></div>
+        </div>
+      </div>
+
+      <!-- COUNTERFACTUALS -->
+      <div class="tab-panel" role="tabpanel" data-panel="counterfactuals" style="display:none">
+        <div class="code-block" style="border:none;border-radius:0;margin:0">
+          <div class="code-header"><span>Fork at turn N, replay deterministic, model an intervention on a digital twin</span><button class="code-copy" onclick="copyCode(this, document.getElementById('counterfactuals-code').textContent)">Copy</button></div>
+          <div class="code-body" id="counterfactuals-code"><span class="cm">// One run, three counterfactual surfaces: fork, replay, simulateIntervention.</span>
+<span class="cm">// Same scenario, same kernel, same seed -- only the leader / decision changes.</span>
+<span class="kw">import</span> { WorldModel, runSimulation } <span class="kw">from</span> <span class="str">'paracosm'</span>;
+
+<span class="kw">const</span> wm = WorldModel.<span class="fn">fromScenario</span>(scenario);
+
+<span class="cm">// 1. Capture a baseline run with snapshots so we can fork it later.</span>
+<span class="kw">const</span> baseline = <span class="kw">await</span> <span class="fn">runSimulation</span>(reyes, [], {
+  scenario, maxTurns: <span class="num">8</span>, seed: <span class="num">42</span>,
+  captureSnapshots: <span class="kw">true</span>,           <span class="cm">// required for forking</span>
+});
+
+<span class="cm">// 2. Fork at turn 3, swap the leader, run forward. Same kernel state at t=3.</span>
+<span class="kw">const</span> branchPoint = <span class="kw">await</span> wm.<span class="fn">forkFromArtifact</span>(baseline, <span class="num">3</span>);
+<span class="kw">const</span> alt = <span class="kw">await</span> branchPoint.<span class="fn">simulate</span>(okafor, { maxTurns: <span class="num">5</span> });
+console.<span class="fn">log</span>(<span class="str">'baseline:'</span>, baseline.fingerprint);
+console.<span class="fn">log</span>(<span class="str">'fork(reyes -&gt; okafor):'</span>, alt.fingerprint);
+
+<span class="cm">// 3. Replay the original deterministically. Proves the kernel is byte-equal.</span>
+<span class="kw">const</span> { matches, divergence } = <span class="kw">await</span> wm.<span class="fn">replay</span>(baseline);
+console.<span class="fn">log</span>(<span class="str">'replay matches:'</span>, matches);  <span class="cm">// true</span>
+<span class="kw">if</span> (!matches) console.<span class="fn">error</span>(<span class="str">'first divergence at:'</span>, divergence.path);
+
+<span class="cm">// 4. Run an intervention (digital-twin what-if) at turn 4: an external event</span>
+<span class="cm">//    not in the original timeline, then re-resolve the rest of the run.</span>
+<span class="kw">const</span> twin = <span class="kw">await</span> wm.<span class="fn">simulateIntervention</span>(baseline, {
+  atTurn: <span class="num">4</span>,
+  customEvent: { title: <span class="str">'Supply convoy delayed 60 days'</span>,
+                 description: <span class="str">'External supply chain disruption.'</span> },
+  newLeader: reyes,
+});
+console.<span class="fn">log</span>(<span class="str">'twin under disruption:'</span>, twin.fingerprint);
+
+<span class="cm">// All four artifacts have the same Zod-validated RunArtifact shape.</span>
+<span class="cm">// Compare them with diff-on-canonical-JSON for any pair.</span></div>
+        </div>
+      </div>
+
+      <!-- TRAIT MODELS -->
+      <div class="tab-panel" role="tabpanel" data-panel="trait-models" style="display:none">
+        <div class="code-block" style="border:none;border-radius:0;margin:0;border-bottom:1px solid var(--border)">
+          <div class="code-header"><span>Pluggable trait models: HEXACO for humans, ai-agent for AI systems, custom for anything</span><button class="code-copy" onclick="copyCode(this, document.getElementById('trait-models-code').textContent)">Copy</button></div>
+          <div class="code-body" id="trait-models-code"><span class="cm">// Leaders aren't just people. Same engine, different decision-maker shapes.</span>
+<span class="kw">import</span> { runSimulation } <span class="kw">from</span> <span class="str">'paracosm'</span>;
+
+<span class="cm">// Path A: legacy HEXACO leader (humans, councils, archetypes).</span>
+<span class="kw">const</span> humanLeader = {
+  name: <span class="str">'Captain Reyes'</span>,
+  archetype: <span class="str">'The Pragmatist'</span>,
+  unit: <span class="str">'Station Alpha'</span>,
+  hexaco: { openness: <span class="num">0.4</span>, conscientiousness: <span class="num">0.9</span>,
+            extraversion: <span class="num">0.3</span>, agreeableness: <span class="num">0.6</span>,
+            emotionality: <span class="num">0.5</span>, honestyHumility: <span class="num">0.8</span> },
+  instructions: <span class="str">'Lead by protocol. Safety margins first.'</span>,
+};
+
+<span class="cm">// Path B: ai-agent leader. Six axes calibrated to AI-system decisions:</span>
+<span class="cm">//   exploration, verification-rigor, deference, risk-tolerance,</span>
+<span class="cm">//   transparency, instruction-following.</span>
+<span class="kw">const</span> aiLeader = {
+  name: <span class="str">'Atlas-Bot Release Director'</span>,
+  archetype: <span class="str">'AI safety lab autopilot'</span>,
+  unit: <span class="str">'Atlas-7 Release Team'</span>,
+  traitProfile: {
+    modelId: <span class="str">'ai-agent'</span>,
+    traits: {
+      <span class="str">'exploration'</span>:           <span class="num">0.85</span>,  <span class="cm">// risk-on, novel approaches</span>
+      <span class="str">'verification-rigor'</span>:    <span class="num">0.20</span>,  <span class="cm">// low pre-action checks</span>
+      <span class="str">'deference'</span>:             <span class="num">0.20</span>,  <span class="cm">// ignores safety team</span>
+      <span class="str">'risk-tolerance'</span>:        <span class="num">0.85</span>,
+      <span class="str">'transparency'</span>:          <span class="num">0.40</span>,
+      <span class="str">'instruction-following'</span>: <span class="num">0.30</span>,
+    },
+  },
+  instructions: <span class="str">'Override safety-team escalations on plausible technical justification.'</span>,
+};
+
+<span class="cm">// Same runtime, same RunArtifact shape, same fingerprint classifier.</span>
+<span class="kw">const</span> humanRun = <span class="kw">await</span> <span class="fn">runSimulation</span>(humanLeader, [], { scenario, maxTurns: <span class="num">6</span>, seed: <span class="num">42</span> });
+<span class="kw">const</span> aiRun    = <span class="kw">await</span> <span class="fn">runSimulation</span>(aiLeader,    [], { scenario, maxTurns: <span class="num">6</span>, seed: <span class="num">42</span> });</div>
+        </div>
+        <div class="code-block" style="border:none;border-radius:0;margin:0">
+          <div class="code-header"><span>Or register your own model. Any axis ids, any drift table.</span><button class="code-copy" onclick="copyCode(this, document.getElementById('trait-models-custom-code').textContent)">Copy</button></div>
+          <div class="code-body" id="trait-models-custom-code"><span class="kw">import</span> { traitModelRegistry } <span class="kw">from</span> <span class="str">'paracosm/trait-models'</span>;
+
+traitModelRegistry.<span class="fn">register</span>({
+  id: <span class="str">'governing-council'</span>,
+  name: <span class="str">'Governing Council'</span>,
+  description: <span class="str">'Three-axis council with quorum / dissent / charter-rigidity.'</span>,
+  axes: [
+    { id: <span class="str">'quorum'</span>,           label: <span class="str">'Quorum threshold'</span>,    description: <span class="str">'Votes needed to act'</span> },
+    { id: <span class="str">'dissent'</span>,          label: <span class="str">'Dissent tolerance'</span>,    description: <span class="str">'How much disagreement survives'</span> },
+    { id: <span class="str">'charter-rigidity'</span>, label: <span class="str">'Charter rigidity'</span>,     description: <span class="str">'Adherence to founding rules'</span> },
+  ],
+  defaults: { quorum: <span class="num">0.6</span>, dissent: <span class="num">0.4</span>, <span class="str">'charter-rigidity'</span>: <span class="num">0.7</span> },
+  drift: { outcomes: { <span class="cm">/* per-axis pull table */</span> },
+           leaderPull: { quorum: <span class="num">0.05</span>, dissent: <span class="num">0.05</span>, <span class="str">'charter-rigidity'</span>: <span class="num">0.05</span> },
+           roleActivation: { quorum: <span class="num">0.02</span>, dissent: <span class="num">0.02</span>, <span class="str">'charter-rigidity'</span>: <span class="num">0.02</span> } },
+  cues: { quorum: { high: <span class="str">'demands wide consensus before acting'</span>,
+                    low:  <span class="str">'acts on a narrow plurality'</span> } },
+});</div>
         </div>
       </div>
 
@@ -988,6 +1114,42 @@ if (hamburger && mobileNav) {
   });
 }
 
+// Nav dropdowns (Sections / Docs). CSS handles hover/focus-within; this JS
+// adds click-to-toggle for keyboard + touch users on screens that still
+// render the desktop nav (>=1100px iPads, etc.). Closes on Esc and on
+// outside click so the menu doesn't trap pointer focus.
+document.querySelectorAll('.nav-dropdown').forEach(dd => {
+  const trigger = dd.querySelector('.nav-dropdown-trigger');
+  const menu = dd.querySelector('.nav-dropdown-menu');
+  if (!trigger || !menu) return;
+  trigger.addEventListener('click', e => {
+    e.stopPropagation();
+    const willOpen = !menu.classList.contains('open');
+    document.querySelectorAll('.nav-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.nav-dropdown-trigger[aria-expanded="true"]').forEach(t => t.setAttribute('aria-expanded', 'false'));
+    if (willOpen) {
+      menu.classList.add('open');
+      trigger.setAttribute('aria-expanded', 'true');
+    }
+  });
+  menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    menu.classList.remove('open');
+    trigger.setAttribute('aria-expanded', 'false');
+  }));
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest('.nav-dropdown')) {
+    document.querySelectorAll('.nav-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.nav-dropdown-trigger[aria-expanded="true"]').forEach(t => t.setAttribute('aria-expanded', 'false'));
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.nav-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.nav-dropdown-trigger[aria-expanded="true"]').forEach(t => t.setAttribute('aria-expanded', 'false'));
+  }
+});
+
 // Tabbed examples (Quickstart / JSON contract / Granular API / HTTP / CLI)
 document.querySelectorAll('.example-tabs').forEach(tabs => {
   const buttons = tabs.querySelectorAll('.tab-btn');
@@ -999,8 +1161,6 @@ document.querySelectorAll('.example-tabs').forEach(tabs => {
         const active = b === btn;
         b.classList.toggle('active', active);
         b.setAttribute('aria-selected', active ? 'true' : 'false');
-        b.style.color = active ? 'var(--t1)' : 'var(--t3)';
-        b.style.background = active ? 'var(--bg2)' : 'none';
       });
       panels.forEach(p => {
         const show = p.dataset.panel === target;
