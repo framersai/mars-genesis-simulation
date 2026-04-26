@@ -1,0 +1,28 @@
+paracosm <command> [options]
+
+A structured world model for AI agents. Compile prompts, briefs, URLs, or
+JSON contracts into typed scenarios. Run HEXACO-personality leaders against
+a deterministic kernel.
+
+Commands:
+  run                   Run a simulation against leaders.json
+  dashboard             Start the SSE web dashboard at http://localhost:3456
+  compile <scenario>    Compile a scenario draft into runnable hooks (cached)
+  init <dir>            Scaffold a starter project from a free-text brief
+  help [command]        Show help for a specific command
+  version               Print version
+
+Global flags:
+  --help, -h            Show help (works on every subcommand)
+  --version, -v         Print version
+
+Examples:
+  paracosm run                                            # default leader, full turns
+  paracosm run --leader 1 --turns 5                       # leader index 1, 5 turns
+  paracosm run --name "Reyes" --openness 0.85 6           # inline HEXACO override
+  paracosm dashboard --turns 6                            # opens browser dashboard
+  paracosm compile scenarios/lunar.json --seed-url <url>  # compile + cache
+  paracosm init my-app --domain "Submarine crew of 8"     # scaffold a project
+
+Docs:   https://paracosm.agentos.sh/docs
+GitHub: https://github.com/framersai/paracosm

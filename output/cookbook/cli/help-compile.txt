@@ -1,0 +1,16 @@
+paracosm compile <scenario.json> [options]
+
+Compile a scenario JSON draft into a runnable ScenarioPackage with generated
+TypeScript hooks. Caches per-hook on (scenario hash + model + schema version)
+so re-runs hit disk. Cost: roughly $0.10 per first compile, free thereafter.
+
+Options:
+  <scenario.json>       Required: path to a scenario JSON draft
+  --provider <p>        openai | anthropic (default: anthropic)
+  --model <m>           Model name (default: claude-sonnet-4-6)
+  --no-cache            Skip disk cache; force regeneration
+  --cache-dir <dir>     Cache directory (default: .paracosm/cache)
+  --seed-text <s>       Ground the scenario with an inline brief
+  --seed-url <url>      Ground the scenario with a URL (Firecrawl extraction)
+  --no-web-search       Skip live citation grounding during seed ingestion
+  --max-searches <n>    Cap live grounding searches (default: 5)

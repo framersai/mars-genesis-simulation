@@ -1,0 +1,11 @@
+{
+  "seedText": "Stardrift Online, a 4-month-old live-service MMO, just lost its creative\ndirector. The new director leads four teams: Narrative, Systems, Live Ops,\nand Player Trust. The studio has 380,000 monthly active users, a rising\ntoxicity metric, and a competing MMO launching in 9 weeks. Decisions\narrive on a weekly cadence: content drops, monetization cadence, balance\npatches, and player-trust interventions. The director's HEXACO profile\nshapes how they trade off retention, narrative integrity, monetization,\nand team morale.",
+  "domainHint": "live-service video game studio creative direction",
+  "options": {
+    "provider": "openai",
+    "model": "gpt-5.4-nano",
+    "draftProvider": "openai",
+    "draftModel": "gpt-5.4-mini",
+    "webSearch": false
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "seedText": "A novel respiratory pathogen designated NRV-2026 is detected in Toluca,\nMexico on March 14, 2026. The state governor convenes the Emergency\nHealth Council. Initial R0 estimates 4.2, case fatality rate 1.8% in\nadults under 60, 8.1% in over-60s. ICU bed capacity in the state is\n1,850 with 70% baseline occupancy. International borders 270km north\nremain open. State legislature is split 53/47 with the opposition\ncampaigning on civil liberties.\n\nSurveillance, hospital surge, school closure, mobility restriction,\ntravel screening, vaccine procurement, and economic relief decisions\narrive on a daily cadence. The governor's HEXACO profile shapes whether\nthey front-load aggressive containment or stage interventions to preserve\npolitical capital.",
+  "domainHint": "public health emergency response under regional governance",
+  "options": {
+    "provider": "openai",
+    "model": "gpt-5.4-nano",
+    "draftProvider": "openai",
+    "draftModel": "gpt-5.4-mini",
+    "webSearch": false
+  }
+}

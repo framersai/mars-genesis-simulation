@@ -1,0 +1,11 @@
+{
+  "seedText": "The colony ship Wayfinder-3 left Earth orbit in 2147 carrying 1,200 passengers\non a 200-year voyage to Tau Ceti e. The original captain died forty years ago.\nToday the bridge crew are descendants who have never seen Earth, never felt\nreal sunlight, and have grown up in a closed-loop biosphere with strict\nfertility scheduling, deck-based class stratification, and a dwindling\ngenetic-diversity index now flagged at 0.41 (below the 0.5 viability floor).\n\nThe captain chairs three permanent councils: Engineering, Biosphere, and\nCivic. A new faction calling itself the Earthbound Compact wants to reroute\nto Proxima B (closer, less hospitable) and arrive in 80 years rather than\nthe planned 160 left. The captain's HEXACO profile shapes how they weight\ngenerational equity, technical risk, and political legitimacy.",
+  "domainHint": "crewed multi-generational interstellar voyage with succession politics",
+  "options": {
+    "provider": "openai",
+    "model": "gpt-5.4-nano",
+    "draftProvider": "openai",
+    "draftModel": "gpt-5.4-mini",
+    "webSearch": false
+  }
+}
