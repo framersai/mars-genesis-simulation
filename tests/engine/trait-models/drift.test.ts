@@ -6,7 +6,11 @@ import {
   applyOutcomeDrift,
   applyLeaderPull,
   applyRoleActivation,
+  driftLeaderProfile,
 } from '../../../src/engine/trait-models/drift.js';
+import { driftCommanderHexaco } from '../../../src/engine/core/progression.js';
+import { hexacoToTraits } from '../../../src/engine/trait-models/normalize-leader.js';
+import type { HexacoProfile } from '../../../src/engine/core/state.js';
 
 describe('applyOutcomeDrift', () => {
   it('applies HEXACO openness +0.03 on risky_success (canonical progression.ts value)', () => {
@@ -91,5 +95,129 @@ describe('applyRoleActivation', () => {
         assert.equal(next.traits[axis.id], 0.5);
       }
     }
+  });
+});
+
+describe('driftLeaderProfile (regression: HEXACO byte-identical to driftCommanderHexaco)', () => {
+  /**
+   * For each outcome class, run both the legacy driftCommanderHexaco
+   * and the new driftLeaderProfile against an identical HEXACO leader
+   * + identical timeDelta + identical history. Compare per-axis values
+   * after one drift application; they must match within float-equality
+   * tolerance because they apply the same delta + same clamps.
+   */
+  const outcomes = [
+    'risky_success',
+    'risky_failure',
+    'conservative_success',
+    'conservative_failure',
+  ] as const;
+
+  const baseHexaco: HexacoProfile = {
+    openness: 0.6,
+    conscientiousness: 0.4,
+    extraversion: 0.55,
+    agreeableness: 0.45,
+    emotionality: 0.5,
+    honestyHumility: 0.65,
+  };
+
+  for (const outcome of outcomes) {
+    it(`drifts identically to driftCommanderHexaco on ${outcome} (timeDelta=1)`, () => {
+      const legacyHexaco: HexacoProfile = { ...baseHexaco };
+      const legacyHistory: Array<{ turn: number; time: number; hexaco: HexacoProfile }> = [];
+      driftCommanderHexaco(legacyHexaco, outcome, 1, 1, 0, legacyHistory);
+
+      const profile = {
+        modelId: 'hexaco',
+        traits: hexacoToTraits(baseHexaco, hexacoModel),
+      };
+      const profileHistory: Array<{ turn: number; time: number; profile: typeof profile }> = [];
+      const drifted = driftLeaderProfile(profile, hexacoModel, {
+        outcome,
+        timeDelta: 1,
+        turn: 1,
+        time: 0,
+        history: profileHistory,
+      });
+
+      // Per-axis equality
+      for (const axis of hexacoModel.axes) {
+        assert.ok(
+          Math.abs(drifted.traits[axis.id] - legacyHexaco[axis.id as keyof HexacoProfile]) < 1e-9,
+          `axis ${axis.id}: legacy=${legacyHexaco[axis.id as keyof HexacoProfile]} new=${drifted.traits[axis.id]}`,
+        );
+      }
+    });
+  }
+
+  it('drifts identically with timeDelta=2 (compounding)', () => {
+    const legacyHexaco: HexacoProfile = { ...baseHexaco };
+    const legacyHistory: Array<{ turn: number; time: number; hexaco: HexacoProfile }> = [];
+    driftCommanderHexaco(legacyHexaco, 'risky_failure', 2, 1, 0, legacyHistory);
+
+    const profile = { modelId: 'hexaco', traits: hexacoToTraits(baseHexaco, hexacoModel) };
+    const profileHistory: Array<{ turn: number; time: number; profile: typeof profile }> = [];
+    const drifted = driftLeaderProfile(profile, hexacoModel, {
+      outcome: 'risky_failure',
+      timeDelta: 2,
+      turn: 1,
+      time: 0,
+      history: profileHistory,
+    });
+
+    for (const axis of hexacoModel.axes) {
+      assert.ok(
+        Math.abs(drifted.traits[axis.id] - legacyHexaco[axis.id as keyof HexacoProfile]) < 1e-9,
+        `axis ${axis.id} compound`,
+      );
+    }
+  });
+
+  it('clamps to kernel bounds [0.05, 0.95]', () => {
+    const profile = {
+      modelId: 'hexaco',
+      traits: { ...hexacoToTraits(baseHexaco, hexacoModel), openness: 0.97 },
+    };
+    const history: Array<{ turn: number; time: number; profile: typeof profile }> = [];
+    const drifted = driftLeaderProfile(profile, hexacoModel, {
+      outcome: 'risky_success',
+      timeDelta: 1,
+      turn: 1,
+      time: 0,
+      history,
+    });
+    // 0.97 + 0.03 would be 1.00, but kernel clamp caps at 0.95
+    assert.ok(drifted.traits.openness <= 0.95);
+  });
+
+  it('pushes a snapshot to history', () => {
+    const profile = { modelId: 'hexaco', traits: hexacoToTraits(baseHexaco, hexacoModel) };
+    const history: Array<{ turn: number; time: number; profile: typeof profile }> = [];
+    driftLeaderProfile(profile, hexacoModel, {
+      outcome: 'risky_success',
+      timeDelta: 1,
+      turn: 3,
+      time: 18,
+      history,
+    });
+    assert.equal(history.length, 1);
+    assert.equal(history[0].turn, 3);
+    assert.equal(history[0].time, 18);
+  });
+
+  it('drifts ai-agent profile under the same kernel discipline', () => {
+    const profile = { modelId: 'ai-agent', traits: { ...aiAgentModel.defaults } };
+    const history: Array<{ turn: number; time: number; profile: typeof profile }> = [];
+    const drifted = driftLeaderProfile(profile, aiAgentModel, {
+      outcome: 'risky_failure',
+      timeDelta: 1,
+      turn: 1,
+      time: 0,
+      history,
+    });
+    // ai-agent risky_failure: verification-rigor +0.04, transparency +0.05
+    assert.ok(Math.abs(drifted.traits['verification-rigor'] - 0.54) < 1e-9);
+    assert.ok(Math.abs(drifted.traits.transparency - 0.55) < 1e-9);
   });
 });

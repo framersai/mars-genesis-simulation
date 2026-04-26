@@ -34,6 +34,7 @@ export {
   applyOutcomeDrift,
   applyLeaderPull,
   applyRoleActivation,
+  driftLeaderProfile,
 } from './trait-models/drift.js';
 export {
   normalizeLeaderConfig,

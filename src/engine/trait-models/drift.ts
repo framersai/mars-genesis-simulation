@@ -19,6 +19,33 @@
 import type { Outcome, TraitModel, TraitProfile } from './index.js';
 import { clampTrait, withDefaults } from './index.js';
 
+/**
+ * Lower bound for the kernel's drift clamp. Matches the canonical
+ * `[0.05, 0.95]` bounds applied by `driftCommanderHexaco` in
+ * `src/engine/core/progression.ts`. Keeps traits from saturating at
+ * the [0, 1] poles where small inputs flip behavior.
+ */
+const KERNEL_TRAIT_LOWER = 0.05;
+const KERNEL_TRAIT_UPPER = 0.95;
+
+/**
+ * Per-turn drift cap. Outcome-pull deltas are clamped to this range
+ * BEFORE multiplying by `timeDelta`. Matches progression.ts:142.
+ */
+const PER_TURN_DRIFT_CAP = 0.05;
+
+/**
+ * Clamp a trait value to the kernel's stricter bounds. Used by
+ * `driftLeaderProfile` so non-HEXACO models drift under the same
+ * saturation discipline as the legacy `driftCommanderHexaco`.
+ */
+function clampKernelTrait(value: number): number {
+  if (Number.isNaN(value)) return 0.5;
+  if (value < KERNEL_TRAIT_LOWER) return KERNEL_TRAIT_LOWER;
+  if (value > KERNEL_TRAIT_UPPER) return KERNEL_TRAIT_UPPER;
+  return value;
+}
+
 export interface DriftOutcomeContext {
   /** The outcome class the kernel emitted for this turn. */
   outcome: Outcome;
@@ -93,6 +120,58 @@ export function applyLeaderPull(
     }
   }
   return { modelId: agent.modelId, traits: out };
+}
+
+/**
+ * Drift a leader's TraitProfile in place after a turn outcome,
+ * mirroring the semantics of the legacy `driftCommanderHexaco` in
+ * `src/engine/core/progression.ts` but generic over trait models:
+ *
+ *   1. Per-axis pull from `model.drift.outcomes[axis][outcome]`
+ *      (defaulting to 0 when missing).
+ *   2. Pull is clamped to ±PER_TURN_DRIFT_CAP (±0.05) BEFORE applying
+ *      timeDelta scaling. Matches progression.ts:142.
+ *   3. Result clamped to [KERNEL_TRAIT_LOWER, KERNEL_TRAIT_UPPER]
+ *      ([0.05, 0.95]). Matches progression.ts:143.
+ *   4. The new traits are pushed to the snapshot history.
+ *
+ * For HEXACO leaders this produces byte-identical output to
+ * `driftCommanderHexaco` because hexacoModel.drift.outcomes mirrors
+ * the canonical `outcomePullForTrait` table (see hexaco.ts comments).
+ *
+ * For non-HEXACO leaders (ai-agent etc), this is the canonical drift
+ * call site. Throws when profile.modelId mismatches model.id.
+ */
+export function driftLeaderProfile(
+  profile: TraitProfile,
+  model: TraitModel,
+  ctx: {
+    outcome: Outcome | null;
+    timeDelta: number;
+    turn: number;
+    time: number;
+    history: Array<{ turn: number; time: number; profile: TraitProfile }>;
+  },
+): TraitProfile {
+  if (profile.modelId !== model.id) {
+    throw new Error(
+      `driftLeaderProfile: profile.modelId='${profile.modelId}' but model.id='${model.id}'`,
+    );
+  }
+  const filled = withDefaults(profile.traits, model);
+  const out: Record<string, number> = { ...filled };
+  for (const axis of model.axes) {
+    let pull = 0;
+    if (ctx.outcome) {
+      pull += model.drift.outcomes[axis.id]?.[ctx.outcome] ?? 0;
+    }
+    const cappedPull = Math.max(-PER_TURN_DRIFT_CAP, Math.min(PER_TURN_DRIFT_CAP, pull));
+    const delta = cappedPull * ctx.timeDelta;
+    out[axis.id] = clampKernelTrait(filled[axis.id] + delta);
+  }
+  const next: TraitProfile = { modelId: profile.modelId, traits: out };
+  ctx.history.push({ turn: ctx.turn, time: ctx.time, profile: next });
+  return next;
 }
 
 /**
