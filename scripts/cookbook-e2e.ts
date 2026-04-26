@@ -321,7 +321,7 @@ async function step5HttpSimulate(wm: WorldModel, leader: LeaderConfig): Promise<
     log(`  artifact.cost: $${body.artifact?.cost?.totalUSD?.toFixed(3) ?? '?'}`);
 
     persist('05-input-http-simulate.json', {
-      curl: `curl -X POST http://localhost:5188/simulate \\\n  -H 'Content-Type: application/json' \\\n  -H 'X-Anthropic-Key: sk-ant-...' \\\n  -d <body>`,
+      curl: `curl -X POST http://localhost:${port}/simulate \\\n  -H 'Content-Type: application/json' \\\n  -H 'X-OpenAI-Key: sk-...' \\\n  -d <body>`,
       requestBody: {
         scenario: '<full scenario object: see 01-output-scenario-package.json>',
         leader,

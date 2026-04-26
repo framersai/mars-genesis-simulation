@@ -29,7 +29,14 @@ dispatch(argv).then((result: DispatchResult) => {
   if (result.deprecation) {
     process.stderr.write(`\n[deprecated] ${result.deprecation}\n`);
   }
-  if (typeof result.exitCode === 'number') {
+  // Only force-exit on non-zero. Exit code 0 means "done normally" for
+  // run / compile / init / help / version (event loop drains naturally).
+  // For dashboard, exit code 0 means "server is listening"; the TCP
+  // socket holds the event loop alive so the process keeps serving
+  // requests until the user kills it. Calling process.exit(0) here
+  // would terminate the dashboard the moment server.listen() resolved,
+  // which mirrors the back-compat shim at serve.ts.
+  if (result.exitCode !== 0) {
     process.exit(result.exitCode);
   }
 }).catch((err: unknown) => {

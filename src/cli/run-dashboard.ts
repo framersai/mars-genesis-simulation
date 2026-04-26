@@ -31,11 +31,14 @@ function loadEnvFromCwd(): void {
 }
 
 /**
- * Boot the SSE dashboard. Returns a Promise that never resolves while
- * the server is listening (the dashboard runs until the user kills the
- * process). When `argv` includes a positional turn count, the dashboard
- * auto-launches a simulation on boot; otherwise it waits for setup
- * via /sim?tab=settings.
+ * Boot the SSE dashboard. Resolves to 0 once the server is listening
+ * (or once the auto-launched simulation completes when [turns] was
+ * supplied). The TCP listener holds the Node event loop alive after
+ * resolution, so the process keeps serving requests until killed.
+ *
+ * Callers MUST treat exit code 0 as "server is up, do not call
+ * process.exit". The umbrella binary at run.ts and the back-compat
+ * shim at serve.ts both honor that contract.
  */
 export async function runDashboard(argv: readonly string[]): Promise<number> {
   loadEnvFromCwd();
