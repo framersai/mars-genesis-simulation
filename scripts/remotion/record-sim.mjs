@@ -117,7 +117,12 @@ console.log('[record] webm written:', webmPath);
 
 const mp4Out = path.resolve(ASSETS_DIR, `${outName}.mp4`);
 console.log('[record] ffmpeg → mp4:', mp4Out);
-execFileSync('ffmpeg', [
+// Optional 6th arg: speed factor (e.g. "2.0" plays 2× faster). Defaults
+// to 1.0 (real time). When >1, applies setpts=1/N*PTS to compress the
+// real-time recording into a watchable hero loop while still showing
+// real activity beat-by-beat.
+const SPEED = parseFloat(process.argv[6] || '1.0');
+const ffmpegArgs = [
   '-y',
   '-ss', String(TRIM_START),
   '-i', webmPath,
@@ -127,7 +132,9 @@ execFileSync('ffmpeg', [
   '-crf', '22',
   '-pix_fmt', 'yuv420p',
   '-an',
+  ...(SPEED !== 1.0 ? ['-vf', `setpts=${(1 / SPEED).toFixed(4)}*PTS`] : []),
   mp4Out,
-], { stdio: ['ignore', 'inherit', 'inherit'] });
+];
+execFileSync('ffmpeg', ffmpegArgs, { stdio: ['ignore', 'inherit', 'inherit'] });
 
 console.log('[record] done. Output:', mp4Out);
