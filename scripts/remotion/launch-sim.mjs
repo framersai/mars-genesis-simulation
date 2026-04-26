@@ -25,11 +25,14 @@ await page.evaluate(() => {
   document.querySelectorAll('[data-tour-overlay], [data-tour], [data-tour-step]').forEach(el => el.remove());
 });
 
-console.log('[launch] click ▶RUN');
+console.log('[launch] click ▶RUN to open menu');
 const runBtn = page.locator('button', { hasText: /^▶RUN/ }).first();
 await runBtn.waitFor({ state: 'visible', timeout: 8000 });
 await runBtn.click();
+await page.waitForTimeout(900);
+console.log('[launch] click "Run New Simulation"');
+await page.getByText(/Run New Simulation/i).first().click({ timeout: 4000 });
 console.log('[launch] sim launched at', new Date().toISOString());
-await page.waitForTimeout(3000);
+await page.waitForTimeout(3500);
 await browser.close();
 console.log('[launch] browser closed; sim continues server-side');

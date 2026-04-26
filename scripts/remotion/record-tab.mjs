@@ -47,16 +47,11 @@ await page.addInitScript(() => {
   } catch {}
 });
 
-console.log(`[record:${tab}] -> /sim`);
-await page.goto(`${PROD}/sim`, { waitUntil: 'domcontentloaded', timeout: 30000 });
-await page.waitForTimeout(3500);
-
-console.log(`[record:${tab}] click #tab-${tab} (force)`);
-await page.locator(`#tab-${tab}`).click({ timeout: 6000, force: true });
-await page.waitForTimeout(1800);
-await killTour();
+console.log(`[record:${tab}] -> /sim?tab=${tab}`);
+await page.goto(`${PROD}/sim?tab=${tab}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+await page.waitForTimeout(4000);
 const aft = await page.evaluate(() => document.querySelector('[aria-selected="true"]')?.getAttribute('aria-label'));
-console.log(`[record:${tab}] active tab after click: ${aft}`);
+console.log(`[record:${tab}] active tab after settle: ${aft}`);
 
 async function killTour() {
   await page.evaluate(() => {
@@ -83,30 +78,50 @@ for (const text of ['Got it', 'Skip', 'Skip tour', 'Dismiss', 'Close']) {
 await killTour();
 
 if (tab === 'library') {
-  console.log('[record:library] settling 2s on the gallery view');
-  await page.waitForTimeout(2000);
-  console.log('[record:library] hover + click first run card');
-  const card = page.locator('[data-run-card], .run-card, [class*="runCard"], [class*="RunCard"]').first();
+  console.log('[record:library] beat 1: settle on gallery view (~3s)');
+  await page.waitForTimeout(3000);
+
+  console.log('[record:library] beat 2: hover first card (~1.2s)');
+  const card = page.locator('[data-run-card], .run-card, [class*="runCard"], [class*="RunCard"], a[href*="runId="]').first();
   if (await card.isVisible({ timeout: 4000 }).catch(() => false)) {
     await card.hover().catch(() => {});
-    await page.waitForTimeout(900);
-    await card.click().catch(() => {});
-    console.log('[record:library] drawer should be open');
-    await page.waitForTimeout(2200);
-    console.log('[record:library] click Replay');
+    await page.waitForTimeout(1200);
+
+    console.log('[record:library] beat 3: click card to open drawer');
+    await card.click({ force: true }).catch(() => {});
+    await page.waitForTimeout(2500);
+
+    console.log('[record:library] beat 4: click Replay button');
     const replayBtn = page.locator('button', { hasText: /^Replay$/i }).first();
-    if (await replayBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
-      await replayBtn.click().catch(() => {});
-      console.log('[record:library] waiting for replay result');
+    if (await replayBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await replayBtn.scrollIntoViewIfNeeded().catch(() => {});
+      await page.waitForTimeout(400);
+      await replayBtn.click({ force: true }).catch(() => {});
+      console.log('[record:library] beat 5: wait for replay verification');
+      await page.waitForTimeout(4000);
     } else {
-      console.log('[record:library] no Replay button visible (probably no completed runs)');
+      console.log('[record:library] no Replay button found; settling instead');
+      await page.waitForTimeout(3000);
     }
+
+    console.log('[record:library] beat 6: hold for closing pose');
+    await page.waitForTimeout(2000);
   } else {
     console.log('[record:library] no run cards visible — runs.db is empty');
+    await page.waitForTimeout(8000);
   }
 } else if (tab === 'branches') {
-  console.log('[record:branches] settling 3s on the branches view');
-  await page.waitForTimeout(3000);
+  console.log('[record:branches] beat 1: settle on branches view (~4s)');
+  await page.waitForTimeout(4000);
+  // If there's a fork-from-existing-run CTA, click it
+  const forkBtn = page.locator('button, a', { hasText: /Fork|Create branch|New branch/i }).first();
+  if (await forkBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+    console.log('[record:branches] beat 2: click fork CTA');
+    await forkBtn.click({ force: true }).catch(() => {});
+    await page.waitForTimeout(3000);
+  }
+  console.log('[record:branches] beat 3: hold for the rest');
+  await page.waitForTimeout(8000);
 }
 
 console.log(`[record:${tab}] holding for ${RECORD_SECONDS - 4}s more`);
