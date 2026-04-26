@@ -451,7 +451,7 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
       <div class="arch-row" style="border-left:3px solid var(--green)">
         <svg style="color:var(--green);width:24px;height:24px" viewBox="0 0 24 24"><path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <div class="arch-label" style="color:var(--green)">Paracosm is this</div>
-        <div class="arch-desc">Structured / LLM-based / counterfactual world simulator. Prompt/document/URL-grounded, JSON-contract-backed state space, seeded deterministic kernel, LLM-driven events and specialist analyses, HEXACO-personality leaders, runtime tool forging in hardened node:vm sandboxes. One universal Zod-validated RunArtifact spans turn-loop civ sims, batch-trajectory digital twins, and batch-point forecasts.</div>
+        <div class="arch-desc">Structured / LLM-based / counterfactual world simulator. Prompt/document/URL-grounded, JSON-contract-backed state space, seeded deterministic kernel, LLM-driven events and specialist analyses, pluggable trait-model leaders (HEXACO for humans, ai-agent for AI systems, custom registrable), runtime tool forging in hardened node:vm sandboxes. One universal Zod-validated RunArtifact spans turn-loop civ sims, batch-trajectory digital twins, and batch-point forecasts.</div>
         <div class="arch-tech">Xing 2025 / ACM CSUR 2025 / Kirfel 2025</div>
       </div>
       <div class="arch-row" style="border-left:3px solid var(--t4)">
@@ -506,9 +506,9 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
       </div>
       <div class="feat rv rv-d2">
         <img class="feat-icon" src="/brand/feature-icons/hexaco.svg?v=1" width="48" height="48" alt="">
-        <h3>HEXACO Personality Drift</h3>
-        <p>Each agent carries six continuous personality traits (Openness, Conscientiousness, Extraversion, Agreeableness, Emotionality, Honesty-Humility). These values shift over time through three mechanisms: leader influence, role-specific pressures, and outcome reinforcement. The same agent under two different leaders becomes a measurably different entity by turn 12.</p>
-        <div class="feat-ref">Ashton &amp; Lee, "Empirical, Theoretical, and Practical Advantages of the HEXACO Model," PSPR 11(2), 2007</div>
+        <h3>Pluggable Trait Models</h3>
+        <p>Leaders aren't locked to human personality. paracosm ships a TraitModel registry with two built-ins: <code>hexaco</code> (Ashton-Lee six-axis human personality) and <code>ai-agent</code> (six axes for AI-system leaders: exploration, verification-rigor, deference, risk-tolerance, transparency, instruction-following). Each model defines its axes, drift table, and prompt cues. Custom models register in one call. The same agent under two different leaders, on the same seed, becomes a measurably different entity by turn 12.</p>
+        <div class="feat-ref">Ashton &amp; Lee, PSPR 11(2), 2007 (HEXACO) &middot; ai-agent v1 calibrated by Frame.dev, 2026</div>
       </div>
       <div class="feat rv rv-d3">
         <img class="feat-icon" src="/brand/feature-icons/crisis.svg?v=1" width="48" height="48" alt="">

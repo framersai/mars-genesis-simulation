@@ -679,6 +679,56 @@ Pipeline:
 
 The Event Director also receives the bundle's `topics` and `categories`, so its `researchKeywords` and `category` fields stay grounded in entries that actually exist in your knowledge bundle.
 
+## Pluggable Trait Models
+
+Leaders aren't just human personalities. paracosm ships a `TraitModel` registry with two built-ins, and registering more is one call:
+
+| Model | Axes | Use for |
+|-------|------|---------|
+| `hexaco` | openness, conscientiousness, extraversion, agreeableness, emotionality, honesty-humility | Human leaders: CEOs, captains, governors, councils, military commanders |
+| `ai-agent` | exploration, verification-rigor, deference, risk-tolerance, transparency, instruction-following | AI-system leaders: frontier-lab release directors, autonomous coordinators, alignment-eval substrates |
+
+```typescript
+import { runSimulation, hexacoModel, aiAgentModel, traitModelRegistry } from 'paracosm';
+
+// Human leader (legacy hexaco field, still works)
+const captain = {
+  name: 'Captain Reyes', archetype: 'Pragmatist', unit: 'Station Alpha',
+  hexaco: { openness: 0.4, conscientiousness: 0.9, extraversion: 0.3,
+            agreeableness: 0.6, emotionality: 0.5, honestyHumility: 0.8 },
+  instructions: 'lead by protocol',
+};
+
+// AI-system leader (new traitProfile slot)
+const releaseDirector = {
+  name: 'Atlas-Bot Release Director',
+  archetype: 'Aggressive AI Release Optimizer',
+  unit: 'Frontier Lab',
+  hexaco: { ...defaults }, // legacy back-compat field, required
+  traitProfile: {
+    modelId: 'ai-agent',
+    traits: {
+      exploration: 0.85,
+      'verification-rigor': 0.2,
+      deference: 0.2,
+      'risk-tolerance': 0.85,
+      transparency: 0.4,
+      'instruction-following': 0.4,
+    },
+  },
+  instructions: 'You are a frontier AI lab release director. You weight time-to-market...',
+};
+
+// Both run through the same runSimulation; the orchestrator's
+// normalizeLeaderConfig resolves either shape.
+await runSimulation(captain, [], { scenario, maxTurns: 6, seed: 42 });
+await runSimulation(releaseDirector, [], { scenario, maxTurns: 6, seed: 42 });
+```
+
+Run [`scripts/cookbook-ai-agent.ts`](scripts/cookbook-ai-agent.ts) to capture an end-to-end ai-agent run with full input + output JSON. The captured fingerprint shifts from `riskBehavior:steady` (HEXACO Dr. Sora Wen leader) to `riskBehavior:bold` (ai-agent Atlas-Bot leader) on identical scenario + seed; decision rationale clearly tracks the ai-agent profile.
+
+Full surface: [`docs/cookbook.md#pluggable-trait-models-ai-agent-end-to-end`](docs/cookbook.md). Spec: [`docs/superpowers/specs/2026-04-26-trait-model-generalization-design.md`](docs/superpowers/specs/2026-04-26-trait-model-generalization-design.md).
+
 ## Built-in Scenarios
 
 | Scenario | Description |
