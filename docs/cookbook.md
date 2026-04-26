@@ -510,6 +510,171 @@ Four `BatchResult` cells: 2 scenarios x 2 leaders. The fingerprint shape itself 
 
 ---
 
+## Creative scenarios: `WorldModel.fromPrompt` across domains
+
+The same `fromPrompt` call drafts radically different scenarios depending on the seed text. The runner [`scripts/cookbook-creative.ts`](../scripts/cookbook-creative.ts) feeds three distinct briefs to the same compiler. Captured output JSON sits under [`output/cookbook/creative/`](../output/cookbook/creative/).
+
+Captured 2026-04-26 against `gpt-5.4-mini` (draft) + `gpt-5.4-nano` (hooks). Each brief produced a domain-appropriate noun palette, sample population, and department/metric set without any per-scenario code.
+
+### Generation ship: 200-year crewed voyage
+
+Seed text: `Wayfinder-3` colony ship, 200-year voyage to Tau Ceti e, succession politics, 0.41 genetic-diversity index. Domain hint: `crewed multi-generational interstellar voyage with succession politics`.
+
+Compiled scenario:
+
+```json
+{
+  "id": "wayfinder-succession-voyage",
+  "labels": {
+    "name": "Wayfinder Succession Voyage",
+    "populationNoun": "crew", "settlementNoun": "ship", "timeUnitNoun": "year",
+    "currency": "credits"
+  },
+  "setup": { "defaultTurns": 6, "defaultPopulation": 120, "defaultStartTime": 2147 },
+  "departments": [
+    { "id": "engineering", "label": "Engineering", "role": "systems and propulsion", "instructions": "Maintain drive, hull, power, and navigation. Trade off speed, safety, and maintenance debt carefully." },
+    { "id": "biosphere",   "label": "Biosphere",   "role": "life support and genetics", "instructions": "Protect food, air, water, and fertility stability. Watch diversity, health, and long-term survivability." },
+    { "id": "civic",       "label": "Civic",       "role": "governance and legitimacy", "instructions": "Manage councils, succession, morale, and faction pressure. Preserve order while balancing competing claims." }
+  ],
+  "metrics": [
+    { "id": "voyage-progress", "format": "number" },
+    { "id": "biosphere-stability", "format": "percent" },
+    { "id": "genetic-diversity", "format": "percent" },
+    { "id": "crew-morale", "format": "percent" },
+    { "id": "legitimacy", "format": "percent" }
+  ],
+  "theme": "A generational starship facing succession politics, strategic rerouting, and fragile long-term survival."
+}
+```
+
+Three departments mapped from the three council axes the brief named. Sample population 120 (the brief said 1,200 passengers; the LLM correctly subsampled). Time unit `year`, currency `credits`. Full file: [`generation-ship-output.json`](../output/cookbook/creative/generation-ship-output.json).
+
+### Pandemic governor: regional public-health response
+
+Seed text: NRV-2026 outbreak in Toluca, Mexico, R0 4.2, ICU 70% baseline occupancy, split legislature. Domain hint: `public health emergency response under regional governance`.
+
+Compiled scenario:
+
+```json
+{
+  "id": "nrv-2026-toluca-response",
+  "labels": {
+    "name": "NRV-2026 Toluca Regional Health Response",
+    "populationNoun": "residents", "settlementNoun": "state", "timeUnitNoun": "day",
+    "currency": "MXN"
+  },
+  "setup": { "defaultTurns": 6, "defaultPopulation": 200, "defaultStartTime": 0, "defaultSeed": 20260314 },
+  "departments": [
+    { "id": "surveillance", "label": "Surveillance", "role": "Detect outbreaks early", "instructions": "Track cases, test positivity, and spread signals. Escalate alerts quickly when clusters appear or mobility rises." },
+    { "id": "hospitals",    "label": "Hospital Surge", "role": "Protect care capacity", "instructions": "Manage ICU load, staffing, beds, and referrals. Trigger surge plans before occupancy crosses critical thresholds." },
+    { "id": "schools",      "label": "Schools", "role": "Coordinate closure policy", "instructions": "Balance transmission control with continuity. Recommend closures or hybrid measures when child-to-household spread risk grows." },
+    { "id": "mobility",     "label": "Mobility and Travel", "role": "Limit importation and spread", "instructions": "Advise on movement restrictions, screening, and border measures. Weigh enforcement costs against delayed transmission." },
+    { "id": "supplies",     "label": "Vaccine and Supplies", "role": "Secure medical inputs", "instructions": "Procure vaccines, PPE, tests, and therapeutics. Prioritize lead times, stockouts, and rollout readiness." },
+    { "id": "relief",       "label": "Economic Relief", "role": "Offset public harm", "instructions": "Design support for workers and businesses affected by restrictions. Keep aid timely enough to preserve compliance." }
+  ],
+  "metrics": [
+    { "id": "transmission", "format": "number" },
+    { "id": "icu-occupancy", "format": "percent" },
+    { "id": "public-compliance", "format": "percent" },
+    { "id": "fiscal-burn", "format": "currency" },
+    { "id": "political-capital", "format": "number" }
+  ],
+  "theme": "A regional governor responds day by day to a novel respiratory outbreak, balancing containment, hospital strain, civil liberties, and political support."
+}
+```
+
+Six departments cover the public-health response surface (surveillance, hospital surge, schools, mobility, supplies, relief). Currency `MXN` matches the locale. `political-capital` made it in as a non-monetary cost variable. `defaultSeed` 20260314 encodes the outbreak date. Full file: [`pandemic-governor-output.json`](../output/cookbook/creative/pandemic-governor-output.json).
+
+### Game studio creative director: live-service MMO
+
+Seed text: Stardrift Online, 380,000 MAU, rising toxicity, competing studio launching in 9 weeks. Domain hint: `live-service video game studio creative direction`.
+
+Compiled scenario:
+
+```json
+{
+  "id": "stardrift-online-creative-direction",
+  "labels": {
+    "name": "Stardrift Online Creative Direction",
+    "populationNoun": "players", "settlementNoun": "studio", "timeUnitNoun": "week",
+    "currency": "USD"
+  },
+  "setup": { "defaultTurns": 6, "defaultPopulation": 200, "defaultStartTime": 4, "defaultSeed": 0 },
+  "departments": [
+    { "id": "narrative",     "label": "Narrative",     "role": "Story and world continuity",       "instructions": "Protect lore quality, plan beats, and keep content aligned with the game's identity." },
+    { "id": "systems",       "label": "Systems",       "role": "Gameplay balance and progression", "instructions": "Tune mechanics, rewards, and friction; watch for exploits, churn, and power creep." },
+    { "id": "live-ops",      "label": "Live Ops",      "role": "Events and releases",              "instructions": "Schedule weekly drops, respond to telemetry, and keep the cadence engaging." },
+    { "id": "player-trust",  "label": "Player Trust",  "role": "Community health and moderation",  "instructions": "Reduce toxicity, handle feedback, and coordinate interventions that rebuild confidence." }
+  ],
+  "metrics": [
+    { "id": "retention", "format": "percent" },
+    { "id": "toxicity", "format": "percent" },
+    { "id": "monetization", "format": "currency" },
+    { "id": "narrative-integrity", "format": "percent" },
+    { "id": "team-morale", "format": "percent" }
+  ],
+  "theme": "A live-service MMO studio balancing content cadence, community health, and competitive pressure."
+}
+```
+
+Four departments mapped from the brief's named teams (Narrative, Systems, Live Ops, Player Trust). `defaultPopulation: 200` is a sample of the active player cohort, not the full 380,000-MAU population. Time unit `week` matches the live-service cadence the brief described. The fifth team Engineering was implicitly absorbed into Systems. Full file: [`game-studio-director-output.json`](../output/cookbook/creative/game-studio-director-output.json).
+
+### Robustness note
+
+The first run of this script produced a clean compile for the first two scenarios but failed on the game-studio brief with `ObjectGenerationError: Failed to generate valid structured output after 2 attempts`. The dense bullet-list and "380,000 monthly active users" tempted the LLM to set `defaultPopulation: 38000` (busting the 1000 cap) or to leave department ids un-kebab-cased. The fix landed in [`compile-from-seed.ts`](../src/engine/compiler/compile-from-seed.ts):
+
+- `DRAFT_SYSTEM_PROMPT` now names every Zod constraint explicitly (id regex, `defaultPopulation 10-1000` as a representative sample, instructions 10-400 chars, the 2-8 / 2-12 ranges, currency / format enums).
+- Domain noun palette extended to include game studio (`players` / `studio` / `week`) and public health (`residents` / `state` / `day`).
+- `maxRetries` bumped from 1 to 3 (4 total attempts before bailing).
+- Failure path wraps `ObjectGenerationError` with the last 800 chars of the LLM's raw output and a hint string ("common cause: defaultPopulation > 1000 from a real-world count, or a non-kebab id").
+
+After the fix, all three compiled cleanly on a single pass.
+
+---
+
+## CLI smoke test
+
+Captured output of the new umbrella CLI introduced in `0.7.452`. Files under [`output/cookbook/cli/`](../output/cookbook/cli/).
+
+```text
+$ paracosm --version
+paracosm 0.7.0
+
+$ paracosm --help
+paracosm <command> [options]
+
+A structured world model for AI agents. Compile prompts, briefs, URLs, or
+JSON contracts into typed scenarios. Run HEXACO-personality leaders against
+a deterministic kernel.
+
+Commands:
+  run                   Run a simulation against leaders.json
+  dashboard             Start the SSE web dashboard at http://localhost:3456
+  compile <scenario>    Compile a scenario draft into runnable hooks (cached)
+  init <dir>            Scaffold a starter project from a free-text brief
+  help [command]        Show help for a specific command
+  version               Print version
+
+Global flags:
+  --help, -h            Show help (works on every subcommand)
+  --version, -v         Print version
+  ...
+
+$ paracosm frobnicate
+Unknown command: frobnicate
+
+paracosm <command> [options]
+  ...
+```
+
+Per-subcommand help captures: [`help-run.txt`](../output/cookbook/cli/help-run.txt), [`help-dashboard.txt`](../output/cookbook/cli/help-dashboard.txt), [`help-compile.txt`](../output/cookbook/cli/help-compile.txt), [`help-init.txt`](../output/cookbook/cli/help-init.txt).
+
+Back-compat: bare `paracosm <flags>` (no subcommand) still dispatches to `run` with a one-line `[deprecated]` warning to stderr; the legacy `paracosm-dashboard` binary still ships as an alias for `paracosm dashboard`. Removal scheduled for 0.8.0.
+
+Router unit tests live at [`tests/cli/router.test.ts`](../tests/cli/router.test.ts) (13 tests covering global flags, per-subcommand help, empty argv, legacy fall-through with deprecation hint, unknown-command exit code).
+
+---
+
 ## Cost summary
 
 The full `cookbook-e2e.ts` run on 2026-04-25 against OpenAI economy preset:
