@@ -11,6 +11,7 @@ import { generateValidatedCode } from './llm-invocations/generateValidatedCode.j
 import { buildScenarioFixture } from './scenario-fixture.js';
 import { buildStateShapeBlock } from './state-shape-block.js';
 import { runArrowSync } from './sandbox-runner.js';
+import { isParseableArrowSource } from './source-validation.js';
 
 type FingerprintFn = (finalState: any, outcomeLog: any[], leader: any, toolRegs: Record<string, string[]>, maxTurns: number) => Record<string, string>;
 
@@ -25,7 +26,7 @@ DEPARTMENTS: ${depts}
 Function signature: (finalState, outcomeLog, leader, toolRegs, maxTurns) => Record<string, string>
 
 Inputs:
-- finalState: { agents, systems, politics, metadata: { currentTime, startTime, currentTurn } }
+- finalState: { agents, metrics, politics, metadata: { currentTime, startTime, currentTurn } }
 - outcomeLog: [{ turn, time, outcome: 'risky_success' | 'risky_failure' | 'conservative_success' | 'conservative_failure' }]
 - leader: { name, archetype, hexaco }
 - toolRegs: Record<dept, string[]> (department -> tool names)
@@ -49,7 +50,7 @@ export function parseResponse(text: string): FingerprintFn | null {
   let cleaned = text.trim();
   cleaned = cleaned.replace(/^```(?:typescript|ts|javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
   if (cleaned.endsWith(';')) cleaned = cleaned.slice(0, -1).trim();
-  if (!cleaned) return null;
+  if (!isParseableArrowSource(cleaned)) return null;
   return (finalState, outcomeLog, leader, toolRegs, maxTurns) =>
     runArrowSync<[unknown, unknown[], unknown, Record<string, string[]>, number], Record<string, string>>(
       cleaned,
@@ -101,7 +102,9 @@ export async function generateFingerprintHook(
     parse: parseResponse,
     smokeTest: buildSmokeTest(scenarioJson),
     fallback,
-    fallbackSource: '// Fallback fingerprint',
+    // Valid arrow literal so the cached source survives a parse round-
+    // trip. Includes `summary` per the smoke test's invariant.
+    fallbackSource: '(_finalState, _outcomeLog, _leader, _toolRegs, _maxTurns) => ({ summary: "fallback fingerprint" })',
     // Fingerprint is a small classifier function (~800 output tokens);
     // 2000 is comfortable headroom.
     maxTokens: 2000,

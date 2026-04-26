@@ -12,7 +12,7 @@ export interface CompileCliOptions {
   maxSearches?: number;
 }
 
-export function parseCompileCliOptions(argv: string[]): CompileCliOptions {
+export function parseCompileCliOptions(argv: readonly string[]): CompileCliOptions {
   const options: CompileCliOptions = {
     provider: 'anthropic',
     model: 'claude-sonnet-4-6',

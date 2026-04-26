@@ -686,7 +686,7 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
     traits: { ...leader.traitProfile!.traits },
   };
   const commanderTraitProfileHistory: TraitProfileSnapshot[] = [
-    { turn: 0, profile: { modelId: commanderTraitProfileLive.modelId, traits: { ...commanderTraitProfileLive.traits } } },
+    { turn: 0, time: 0, profile: { modelId: commanderTraitProfileLive.modelId, traits: { ...commanderTraitProfileLive.traits } } },
   ];
 
   // Commander does NOT use systemBlocks caching because AgentOS's

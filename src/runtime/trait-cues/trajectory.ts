@@ -24,11 +24,17 @@ const SUBSTANTIAL_DRIFT = 0.15;
 
 /**
  * One snapshot of a TraitProfile along the leader's command history.
- * The runtime stores these per-turn so the trajectory cue can
- * compare current vs first.
+ * The runtime stores these per-turn so the trajectory cue can compare
+ * current vs first.
+ *
+ * `time` carries the simulation clock at the time of the snapshot. The
+ * trajectory cue itself only reads `profile`, but `driftLeaderProfile`
+ * writes turn-and-time pairs so dashboard sparklines and replay
+ * artifacts can plot drift against simulated time.
  */
 export interface TraitProfileSnapshot {
   turn: number;
+  time: number;
   profile: TraitProfile;
 }
 
@@ -79,6 +85,7 @@ export function buildTrajectoryCueFromHexaco(
   const model = traitModelRegistry.require('hexaco');
   const profileHistory: TraitProfileSnapshot[] = history.map(snap => ({
     turn: snap.turn,
+    time: snap.time,
     profile: { modelId: 'hexaco', traits: hexacoToTraits(snap.hexaco, model) },
   }));
   const currentProfile: TraitProfile = {
