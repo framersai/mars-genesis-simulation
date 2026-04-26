@@ -1,0 +1,82 @@
+name: Bump @framers/* deps
+
+# Weekly cron + manual trigger. Bumps every @framers/* explicit version pin
+# in package.json files to the latest npm-published version, refreshes the
+# pnpm lockfile when present, bumps git submodule pointers when present,
+# and opens a single Pull Request with the diff. The same workflow drops
+# into every repo that depends on the agentos family.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Monday 06:00 UTC weekly
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Update submodules to latest (when present)
+        run: |
+          if [ -f .gitmodules ]; then
+            git submodule update --remote --recursive
+          fi
+
+      - name: Bump @framers/* deps to latest published versions
+        run: python3 .github/scripts/bump-framers-deps.py
+
+      - name: Refresh pnpm lockfile (when present)
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            pnpm install --no-frozen-lockfile
+          fi
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore(deps): bump @framers/* deps to latest published versions'
+          title: 'chore(deps): bump @framers/* deps to latest published versions'
+          body: |
+            Automated weekly bump of all `@framers/*` dependencies to their
+            latest npm-published versions.
+
+            Includes (when applicable):
+            - `package.json` explicit-pin updates (caret semver of latest)
+            - `pnpm-lock.yaml` refresh
+            - Git submodule pointer updates (where the parent repo has submodules)
+
+            Workspace `workspace:*` pins are not touched. Review the diff
+            for any unexpected major-version jumps before merging.
+          branch: chore/bump-framers-deps
+          base: master
+          delete-branch: true
+          add-paths: |
+            **/package.json
+            pnpm-lock.yaml
+            .gitmodules
