@@ -5,6 +5,7 @@
  */
 
 import type { HexacoProfile, Agent, SimulationState } from './core/state.js';
+import type { TraitProfile } from './trait-models/index.js';
 
 // ---------------------------------------------------------------------------
 // Primitive value types
@@ -336,7 +337,28 @@ export interface LeaderConfig {
    * naturally instead of being named after a Mars heritage concept.
    */
   unit: string;
+  /**
+   * Six-axis HEXACO personality profile. Required for back-compat with
+   * v0.7 callers; for non-HEXACO trait models (e.g. `ai-agent`), supply
+   * a representative HEXACO snapshot AND set `traitProfile` to the
+   * canonical model + traits the runtime should use. The
+   * `normalizeLeaderConfig` helper at runtime synthesizes a
+   * `traitProfile` from this field when `traitProfile` is omitted, so
+   * existing leader configs continue to work unchanged.
+   *
+   * @deprecated since 0.8.0: prefer `traitProfile` for new code.
+   *   Removal scheduled for 0.9.0.
+   */
   hexaco: HexacoProfile;
+  /**
+   * Pluggable trait profile naming a registered TraitModel and its
+   * per-axis values. When set, this overrides the legacy `hexaco`
+   * field for cue translation, drift, and prompt generation. When
+   * omitted, the runtime synthesizes a profile from `hexaco` with
+   * `modelId: 'hexaco'`. See
+   * `docs/superpowers/specs/2026-04-26-trait-model-generalization-design.md`.
+   */
+  traitProfile?: TraitProfile;
   instructions: string;
 }
 

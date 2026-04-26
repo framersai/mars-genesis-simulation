@@ -35,6 +35,12 @@ export {
   applyLeaderPull,
   applyRoleActivation,
 } from './trait-models/drift.js';
+export {
+  normalizeLeaderConfig,
+  hexacoToTraits,
+  traitsToHexaco,
+} from './trait-models/normalize-leader.js';
+export type { NormalizedLeaderConfig, NormalizeOptions } from './trait-models/normalize-leader.js';
 
 // Type system
 export type {

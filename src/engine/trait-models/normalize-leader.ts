@@ -1,0 +1,133 @@
+/**
+ * Back-compat resolver for LeaderConfig. Bridges the legacy
+ * `LeaderConfig.hexaco` field and the new `LeaderConfig.traitProfile`
+ * pluggable shape so v0.7 callers keep working while v0.8+ callers
+ * can supply non-HEXACO trait models.
+ *
+ * Resolution order:
+ *
+ *   1. If `leader.traitProfile` is set, use it as-is.
+ *   2. Else synthesize `traitProfile = { modelId: 'hexaco', traits:
+ *      leader.hexaco }` so HEXACO scenarios produce identical
+ *      drift / cues / prompts as before this module landed.
+ *
+ * The runtime calls `normalizeLeaderConfig` once per leader at
+ * simulate-start; downstream code reads from the normalized
+ * `traitProfile` field only. The legacy `hexaco` field is preserved
+ * on the artifact for back-compat artifact consumers but is
+ * informational, not load-bearing.
+ *
+ * @module paracosm/engine/trait-models/normalize-leader
+ */
+
+import type { LeaderConfig } from '../types.js';
+import type { HexacoProfile } from '../core/state.js';
+import type { TraitModel, TraitProfile, TraitModelRegistry } from './index.js';
+import { traitModelRegistry, withDefaults } from './index.js';
+// Side-effect import: register hexaco + ai-agent on the singleton.
+// The resolver is the canonical entry point for any consumer that
+// needs the singleton populated (orchestrator, dashboard, tests), so
+// importing the builtins here guarantees registration without
+// requiring callers to remember an explicit init.
+import './builtins.js';
+
+/**
+ * A LeaderConfig where `traitProfile` is guaranteed populated and
+ * filled with the model's defaults for any omitted axis. The runtime
+ * passes this shape downstream instead of the raw LeaderConfig so
+ * cue translation, drift, and prompt builders never have to handle
+ * the missing-traitProfile branch.
+ */
+export interface NormalizedLeaderConfig extends LeaderConfig {
+  traitProfile: TraitProfile;
+}
+
+export interface NormalizeOptions {
+  /**
+   * Registry to look up the model. Defaults to the process-wide
+   * singleton; tests inject their own.
+   */
+  registry?: TraitModelRegistry;
+}
+
+/**
+ * Normalize a LeaderConfig so `traitProfile` is guaranteed populated
+ * and every axis declared by the chosen model has a value (defaults
+ * fill omissions). Throws `UnknownTraitModelError` when
+ * `traitProfile.modelId` references an unregistered model.
+ */
+export function normalizeLeaderConfig(
+  leader: LeaderConfig,
+  options: NormalizeOptions = {},
+): NormalizedLeaderConfig {
+  const registry = options.registry ?? traitModelRegistry;
+
+  // Path 1: leader supplied a traitProfile explicitly.
+  if (leader.traitProfile) {
+    const model = registry.require(leader.traitProfile.modelId);
+    const filled = withDefaults(leader.traitProfile.traits, model);
+    return {
+      ...leader,
+      traitProfile: { modelId: leader.traitProfile.modelId, traits: filled },
+    };
+  }
+
+  // Path 2: legacy hexaco field. Synthesize a hexaco-modeled profile.
+  const model = registry.require('hexaco');
+  const traits = hexacoToTraits(leader.hexaco, model);
+  return {
+    ...leader,
+    traitProfile: { modelId: 'hexaco', traits },
+  };
+}
+
+/**
+ * Translate a HexacoProfile into the trait map the registered hexaco
+ * model expects. Field names match (camelCase axis ids on the model;
+ * camelCase field names on the legacy interface), so this is a
+ * straight copy with `withDefaults` filling any extra axes a future
+ * hexaco-extended model might define.
+ */
+export function hexacoToTraits(
+  hexaco: HexacoProfile,
+  model: TraitModel,
+): Record<string, number> {
+  const traits: Record<string, number> = {
+    openness: hexaco.openness,
+    conscientiousness: hexaco.conscientiousness,
+    extraversion: hexaco.extraversion,
+    agreeableness: hexaco.agreeableness,
+    emotionality: hexaco.emotionality,
+    honestyHumility: hexaco.honestyHumility,
+  };
+  return withDefaults(traits, model);
+}
+
+/**
+ * Inverse of `hexacoToTraits`: when an artifact carries a
+ * non-HEXACO `traitProfile` but a consumer wants a HexacoProfile-
+ * shaped snapshot for legacy display, project the traits down to the
+ * HEXACO axes that exist on this model. Missing axes default to 0.5.
+ *
+ * Used for back-compat dashboard sparkline rendering: the legacy
+ * sparkline reads HEXACO axes; until the dashboard generalizes
+ * (Phase 6), the resolver projects ai-agent profiles into HEXACO-
+ * shaped neutral profiles for display.
+ */
+export function traitsToHexaco(traits: Record<string, number>): HexacoProfile {
+  return {
+    openness: clampInUnitInterval(traits.openness ?? 0.5),
+    conscientiousness: clampInUnitInterval(traits.conscientiousness ?? 0.5),
+    extraversion: clampInUnitInterval(traits.extraversion ?? 0.5),
+    agreeableness: clampInUnitInterval(traits.agreeableness ?? 0.5),
+    emotionality: clampInUnitInterval(traits.emotionality ?? 0.5),
+    honestyHumility: clampInUnitInterval(traits.honestyHumility ?? 0.5),
+  };
+}
+
+function clampInUnitInterval(v: number): number {
+  if (Number.isNaN(v)) return 0.5;
+  if (v < 0) return 0;
+  if (v > 1) return 1;
+  return v;
+}
