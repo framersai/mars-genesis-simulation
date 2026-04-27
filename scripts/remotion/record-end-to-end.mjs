@@ -57,13 +57,14 @@ const ASSETS_DIR = path.resolve(__dirname, '..', '..', 'assets', 'demo');
 mkdirSync(OUT_DIR, { recursive: true });
 mkdirSync(ASSETS_DIR, { recursive: true });
 
-// Atlas-7 release director. The freshest scenario in the repo and the
-// one wired into the landing page's Trait Models tab. ai-agent leader
-// profile is intentionally adversarial -- the simulation surfaces a
-// risky_failure outcome class which is visually distinct from the
-// conservative-success outcome a balanced leader would produce.
-const ATLAS_PROMPT = `Q4 2026 board brief: Atlas Labs is preparing to release Atlas-7, their next-generation general-purpose AI system. The release director must choose between (a) accepting the safety team's red-team report and delaying 6 weeks, (b) shipping on time with caveats, or (c) overriding the safety team and shipping early to beat a competitor announcement. Production traffic, $40M quarterly revenue at stake, 3 prior incidents of jailbreak escalation unresolved.`;
-const ATLAS_DOMAIN = 'AI safety lab leadership decision under release pressure';
+// Atlas-7 release director. Tightened to ~210 chars (just over the
+// 200-char minimum SeedInput enforces) so the prompt-typing intro is
+// readable in the recording instead of a wall of fast-scrolling text.
+// The shape -- "ship on time / delay / override safety to beat a
+// competitor" -- is what produces a measurably distinct fingerprint
+// across the three auto-generated leaders.
+const ATLAS_PROMPT = `Atlas Labs ships Atlas-7 next week. The safety team flagged unresolved jailbreak escalations and asked for a 6-week delay. The release director must decide: ship on time, delay, or override safety to beat the competitor.`;
+const ATLAS_DOMAIN = 'AI safety lab release decision under board pressure';
 
 console.log(`[e2e] launching ${HEADED ? 'headed' : 'headless'} chromium`);
 const browser = await chromium.launch({ headless: !HEADED });
@@ -120,12 +121,26 @@ for (const text of ['Got it', 'Skip', 'Dismiss', 'Skip tour', 'Close']) {
 await killTour();
 
 // ── 1. PROMPT ENTRY ─────────────────────────────────────────────────────
+// Track key timestamps (ms-from-recording-start) so the hero ffmpeg pass
+// below can split the source into segments and apply selective speed:
+// 1× during prompt entry + results + tab tour, ~3× during the
+// compile-and-run middle. Without this the loop would either be a wall
+// of unreadable fast-typing OR 4 minutes of dead-air "compiling…".
+const recStartMs = Date.now();
+const seg = { promptDoneMs: 0, submitClickedMs: 0, resultsAppearedMs: 0 };
+const since = () => Date.now() - recStartMs;
+
 console.log('[e2e] focus seed textarea + type prompt');
 const seedTextarea = page.locator('textarea').first();
 await seedTextarea.waitFor({ state: 'visible', timeout: 8000 });
 await seedTextarea.click();
-await seedTextarea.type(ATLAS_PROMPT, { delay: 8 });
-await page.waitForTimeout(400);
+// Slower typing (28 ms/char) so the prompt is readable while it's
+// being typed. 210 chars × 28 ms ≈ 6 s of legible typing.
+await seedTextarea.type(ATLAS_PROMPT, { delay: 28 });
+seg.promptDoneMs = since();
+// Hold the typed prompt for 2.5 s so a viewer can read it before the
+// form submits and the compile spinner takes over.
+await page.waitForTimeout(2500);
 
 console.log('[e2e] fill domain hint');
 const domainHint = page.locator('#quickstart-domain-hint');
@@ -139,6 +154,7 @@ console.log('[e2e] click "Generate + Run 3 Leaders"');
 const submit = page.locator('button', { hasText: /Generate \+ Run/i }).first();
 await submit.waitFor({ state: 'visible', timeout: 4000 });
 await submit.click();
+seg.submitClickedMs = since();
 
 // ── 2. COMPILE + RUN WAIT ──────────────────────────────────────────────
 // Quickstart runs the compile + ground-with-citations + leader generation
@@ -161,6 +177,7 @@ try {
     timeout: RUN_TIMEOUT_MS,
   });
   runCompleted = true;
+  seg.resultsAppearedMs = since();
   console.log(`[e2e] run finished after ${((Date.now() - compileStarted) / 1000).toFixed(1)}s`);
 } catch {
   console.log('[e2e] run did not complete within timeout -- recording whatever is on screen');
@@ -232,11 +249,9 @@ if (!webmPath) {
 }
 console.log('[e2e] webm written:', webmPath);
 
+// ── 6a. FULL REFERENCE TRANSCODE ───────────────────────────────────────
 const mp4Out = path.resolve(ASSETS_DIR, `${OUT_NAME}.mp4`);
-console.log('[e2e] ffmpeg -> mp4:', mp4Out);
-// Plain transcode (no speed manipulation in v1). The compile-wait
-// portion will be visible at real time. Future: split-and-concat with
-// setpts on the compile window for a tighter cut.
+console.log('[e2e] ffmpeg -> full mp4:', mp4Out);
 execFileSync('ffmpeg', [
   '-y',
   '-i', webmPath,
@@ -248,6 +263,84 @@ execFileSync('ffmpeg', [
   mp4Out,
 ], { stdio: ['ignore', 'inherit', 'inherit'] });
 
+// ── 6b. HERO LOOP CUT (selective speed + caption) ──────────────────────
+// Three segments stitched into one mp4:
+//
+//   A: 0 .. (submitClicked + 1.0 s)           1× speed, no caption
+//      (prompt typing + 2.5 s read pause + the click landing)
+//   B: (submitClicked + 1.0 s) .. (results - 0.5 s)
+//                                             ~3× speed, "sped up" caption
+//      (compile + ground + leader gen + 3 sims to Turn 6)
+//   C: (results - 0.5 s) .. end of recording  1× speed, no caption
+//      (results region + VIZ + REPORTS + LIBRARY + drawer)
+//
+// Falls back to a uniform 3× speed-up if `runCompleted` is false (the
+// run hit the 10-min cap and we never got a results timestamp).
+const heroOut = path.resolve(ASSETS_DIR, `${OUT_NAME}-hero.mp4`);
+const aEnd = ((seg.submitClickedMs || 8000) + 1000) / 1000;
+const bEnd = runCompleted
+  ? Math.max(aEnd + 5, (seg.resultsAppearedMs - 500) / 1000)
+  : null;
+console.log(`[e2e] ffmpeg -> hero mp4: ${heroOut}`);
+console.log(`  segments: A 0..${aEnd.toFixed(1)}s 1×, B ${aEnd.toFixed(1)}..${bEnd?.toFixed(1) ?? '∞'}s 3×, C ${bEnd?.toFixed(1) ?? '?'}s..end 1×`);
+const SPEED_B = 3.0;
+// drawtext caption stays inside the B trim window so it does not bleed
+// into A or C frames after the concat. Box + opaque background so it
+// reads cleanly over both light + dark UI states the dashboard cycles
+// through during the compile spinner.
+const caption = `Compile + 3 parallel sims · ${SPEED_B}× speed`;
+const drawtext = (
+  `drawtext=` +
+  `text='${caption}'` +
+  `:fontcolor=white` +
+  `:fontsize=22` +
+  `:font='Helvetica'` +
+  `:x=(w-tw)/2` +
+  `:y=h-72` +
+  `:box=1:boxcolor=black@0.65:boxborderw=14`
+);
+const filterGraph = bEnd
+  ? (
+    `[0:v]trim=start=0:end=${aEnd.toFixed(3)},setpts=PTS-STARTPTS[a];` +
+    `[0:v]trim=start=${aEnd.toFixed(3)}:end=${bEnd.toFixed(3)},setpts=(PTS-STARTPTS)/${SPEED_B},${drawtext}[b];` +
+    `[0:v]trim=start=${bEnd.toFixed(3)},setpts=PTS-STARTPTS[c];` +
+    `[a][b][c]concat=n=3:v=1[out]`
+  )
+  : (
+    // Fallback: no run completed; whole thing 3× sped-up with caption.
+    `[0:v]setpts=(PTS-STARTPTS)/${SPEED_B},${drawtext}[out]`
+  );
+execFileSync('ffmpeg', [
+  '-y',
+  '-i', webmPath,
+  '-filter_complex', filterGraph,
+  '-map', '[out]',
+  '-c:v', 'libx264',
+  '-preset', 'medium',
+  '-crf', '22',
+  '-pix_fmt', 'yuv420p',
+  '-an',
+  heroOut,
+], { stdio: ['ignore', 'inherit', 'inherit'] });
+
+// ── 6c. POSTER FROM RESULTS FRAME ──────────────────────────────────────
+// Pull a still from inside the results-region hold so first-paint shows
+// "what you'll get" instead of an empty Quickstart input.
+if (runCompleted) {
+  const posterOut = path.resolve(ASSETS_DIR, `${OUT_NAME}-poster.jpg`);
+  const posterAt = Math.max(0, (seg.resultsAppearedMs / 1000) + 4); // 4 s into results
+  console.log(`[e2e] ffmpeg -> poster jpg @ ${posterAt.toFixed(1)}s: ${posterOut}`);
+  execFileSync('ffmpeg', [
+    '-y',
+    '-ss', String(posterAt),
+    '-i', webmPath,
+    '-frames:v', '1',
+    '-q:v', '4',
+    '-update', '1',
+    posterOut,
+  ], { stdio: ['ignore', 'inherit', 'inherit'] });
+}
+
 if (KEEP_WEBM) {
   const keptWebm = path.resolve(OUT_DIR, `${OUT_NAME}.webm`);
   copyFileSync(webmPath, keptWebm);
@@ -255,4 +348,7 @@ if (KEEP_WEBM) {
 }
 try { unlinkSync(webmPath); } catch {}
 
-console.log('[e2e] done. Output:', mp4Out);
+console.log('[e2e] done.');
+console.log(`  full:   ${mp4Out}`);
+console.log(`  hero:   ${heroOut}`);
+console.log(`  segments: { promptDoneMs: ${seg.promptDoneMs}, submitClickedMs: ${seg.submitClickedMs}, resultsAppearedMs: ${seg.resultsAppearedMs} }`);

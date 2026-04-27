@@ -43,8 +43,8 @@ const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'settings', label: 'SETTINGS' },
   { id: 'reports', label: 'REPORTS' },
   { id: 'branches', label: 'BRANCHES' },
-  { id: 'library', label: 'LIBRARY' },
   { id: 'chat', label: 'CHAT' },
+  { id: 'library', label: 'LIBRARY' },
   { id: 'log', label: 'LOG' },
   { id: 'about', label: 'ABOUT' },
 ];
