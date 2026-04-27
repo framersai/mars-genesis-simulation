@@ -184,10 +184,10 @@
   </div>
 
   <video class="hero-video" autoplay muted loop playsinline controls preload="metadata"
-    poster="/demo/e2e-atlas-7-poster.jpg?v=e2e-2"
-    aria-label="Paracosm end-to-end: Atlas-7 release-pressure prompt held on screen, then a 3x sped-up compile + three parallel HEXACO leader sims, then VIZ, REPORTS, LIBRARY, and run drawer at full speed."
+    poster="/demo/e2e-atlas-7-poster.jpg?v=e2e-3"
+    aria-label="Paracosm end-to-end: a coastal mayor's hurricane-evacuation decision held on screen, then a 3x sped-up compile + three parallel HEXACO leader sims, then VIZ, REPORTS, LIBRARY, and run drawer at full speed."
     style="display:block;width:min(960px,calc(100% - 48px));max-width:960px;margin:36px auto 0;border-radius:12px;border:1px solid var(--border);box-shadow:0 24px 60px rgba(0,0,0,0.4);background:var(--bg-card)">
-    <source src="/demo/e2e-atlas-7-hero.mp4?v=e2e-2" type="video/mp4">
+    <source src="/demo/e2e-atlas-7-hero.mp4?v=e2e-3" type="video/mp4">
   </video>
 
   <p class="hero-sub" style="max-width:720px;margin:24px auto 0">Seven entry points, one engine: free-text brief, JSON contract, granular client, fork-and-replay counterfactuals, pluggable trait models, HTTP, and CLI. Every path returns the same Zod-validated RunArtifact.</p>
@@ -206,7 +206,7 @@ npm install -g paracosm</div>
     </div>
 
     <!-- Tabbed examples -->
-    <div class="example-tabs-header" style="margin-top:32px;text-align:center">
+    <div class="example-tabs-header" id="cookbook" style="margin-top:32px;text-align:center;scroll-margin-top:80px">
       <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--rust);text-transform:uppercase;margin-bottom:6px">Seven ways to use Paracosm</div>
       <div style="font-size:14px;color:var(--t2);max-width:600px;margin:0 auto;line-height:1.55">From a 3-line brief to fork-and-replay counterfactuals to a custom trait model. Click through the tabs to see the input and output shape for each entry point.</div>
     </div>
@@ -885,11 +885,11 @@ console.log(artifact.subject, artifact.intervention);</div>
   </div>
 </section>
 
-<!-- COOKBOOK -->
-<section class="sec sec-alt" id="cookbook">
+<!-- WIRE-LEVEL COOKBOOK (deep capture) -->
+<section class="sec sec-alt" id="wire-cookbook">
   <div class="sec-inner">
-    <div class="sec-label rv">Cookbook</div>
-    <h2 class="sec-title rv">Wire-level inputs and outputs</h2>
+    <div class="sec-label rv">Wire-level capture</div>
+    <h2 class="sec-title rv">Real input JSON, real output JSON</h2>
     <p class="sec-desc rv">Every method in the public API has its real input JSON and real output JSON captured at <a href="https://github.com/framersai/paracosm/blob/master/docs/cookbook.md" target="_blank" rel="noopener" style="color:var(--amber)">docs/cookbook.md</a>. Run an AI lab director scenario through prompt-to-world, quickstart parallel leaders, branch at turn 1, replay the kernel, hit the HTTP endpoint, model an intervention on a digital twin, and dispatch a batch. One run, seven public surfaces, every JSON committed.</p>
 
     <div class="code-sec">

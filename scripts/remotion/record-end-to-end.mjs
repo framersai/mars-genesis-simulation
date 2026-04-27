@@ -57,14 +57,16 @@ const ASSETS_DIR = path.resolve(__dirname, '..', '..', 'assets', 'demo');
 mkdirSync(OUT_DIR, { recursive: true });
 mkdirSync(ASSETS_DIR, { recursive: true });
 
-// Atlas-7 release director. Tightened to ~210 chars (just over the
-// 200-char minimum SeedInput enforces) so the prompt-typing intro is
-// readable in the recording instead of a wall of fast-scrolling text.
-// The shape -- "ship on time / delay / override safety to beat a
-// competitor" -- is what produces a measurably distinct fingerprint
-// across the three auto-generated leaders.
-const ATLAS_PROMPT = `Atlas Labs ships Atlas-7 next week. The safety team flagged unresolved jailbreak escalations and asked for a 6-week delay. The release director must decide: ship on time, delay, or override safety to beat the competitor.`;
-const ATLAS_DOMAIN = 'AI safety lab release decision under board pressure';
+// Coastal mayor facing a hurricane. Universally relatable framing
+// (every coastal/storm region knows the "evacuate / shelter / harden"
+// choice tree) with concrete stakes (8,000 people, 36 hours, 14 ft
+// surge) the LLM can ground a vivid scenario around. Three decision
+// branches that produce measurably divergent leader fingerprints
+// (cautious public-safety lead → mandatory evacuation; consensus
+// political-coalition lead → voluntary; gritty resilience-engineer
+// lead → harden-in-place).
+const ATLAS_PROMPT = `Hurricane Cassandra is 36 hours from a coastal town of 8,000. Storm surge could top 14 feet. The mayor must order: full mandatory evacuation, voluntary evacuation with public shelters, or shelter-in-place with home-hardening grants. Highways clear in 6 hours. 22% of residents have no transport.`;
+const ATLAS_DOMAIN = 'Coastal mayor crisis leadership under hurricane time pressure';
 
 console.log(`[e2e] launching ${HEADED ? 'headed' : 'headless'} chromium`);
 const browser = await chromium.launch({ headless: !HEADED });
@@ -130,24 +132,29 @@ const recStartMs = Date.now();
 const seg = { promptDoneMs: 0, submitClickedMs: 0, resultsAppearedMs: 0 };
 const since = () => Date.now() - recStartMs;
 
-console.log('[e2e] focus seed textarea + type prompt');
+console.log('[e2e] focus seed textarea + fill prompt');
 const seedTextarea = page.locator('textarea').first();
 await seedTextarea.waitFor({ state: 'visible', timeout: 8000 });
 await seedTextarea.click();
-// Slower typing (28 ms/char) so the prompt is readable while it's
-// being typed. 210 chars × 28 ms ≈ 6 s of legible typing.
-await seedTextarea.type(ATLAS_PROMPT, { delay: 28 });
+// `fill` paints the prompt in one frame instead of streaming
+// keystrokes through React state on every char. Slow `type` runs hit
+// a 30 s playwright timeout when the seedText length counter re-renders
+// the parent on every keystroke during the 5+ s of typing. Visually
+// the prompt now appears in one beat and stays on screen for the
+// 5 s read-hold below — more readable than a fast typed-out wall of
+// text and more reliable than the streaming variant.
+await seedTextarea.fill(ATLAS_PROMPT);
 seg.promptDoneMs = since();
-// Hold the typed prompt for 2.5 s so a viewer can read it before the
+// Hold the typed prompt for 5 s so a viewer can read it before the
 // form submits and the compile spinner takes over.
-await page.waitForTimeout(2500);
+await page.waitForTimeout(5000);
 
 console.log('[e2e] fill domain hint');
 const domainHint = page.locator('#quickstart-domain-hint');
 if (await domainHint.isVisible({ timeout: 1500 }).catch(() => false)) {
   await domainHint.click();
-  await domainHint.type(ATLAS_DOMAIN, { delay: 12 });
-  await page.waitForTimeout(300);
+  await domainHint.fill(ATLAS_DOMAIN);
+  await page.waitForTimeout(500);
 }
 
 console.log('[e2e] click "Generate + Run 3 Leaders"');
