@@ -41,3 +41,24 @@
   font-family: var(--mono);
   font-size: 12px;
 }
+
+.compareCta {
+  background: linear-gradient(135deg, var(--amber) 0%, #b87425 100%);
+  color: var(--bg-deep);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+  align-self: center;
+  text-transform: uppercase;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(232, 180, 74, 0.35);
+  }
+}

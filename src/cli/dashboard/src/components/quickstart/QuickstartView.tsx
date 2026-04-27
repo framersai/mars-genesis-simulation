@@ -6,6 +6,7 @@
  */
 import { useState, useCallback, useEffect } from 'react';
 import { SeedInput } from './SeedInput';
+import { CompareModal } from '../compare/CompareModal.js';
 import { QuickstartProgress, type Stage, type LeaderProgress } from './QuickstartProgress';
 import { QuickstartResults } from './QuickstartResults';
 import type { LeaderConfig, ScenarioPackage } from '../../../../../engine/types.js';
@@ -42,8 +43,13 @@ type Phase =
 export function QuickstartView({ sse, sessionId }: QuickstartViewProps) {
   const [phase, setPhase] = useState<Phase>({ kind: 'input' });
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
+  // Bundle id for the just-finished run; surfaced as a "Compare all N
+  // actors" CTA on the results phase. Discovered by fetching the first
+  // artifact's RunRecord (the RunRecord carries bundleId from /setup).
+  const [bundleId, setBundleId] = useState<string | null>(null);
+  const [compareOpen, setCompareOpen] = useState(false);
 
-  const handleSeedReady = useCallback(async (payload: { seedText: string; sourceUrl?: string; domainHint?: string }) => {
+  const handleSeedReady = useCallback(async (payload: { seedText: string; sourceUrl?: string; domainHint?: string; actorCount?: number }) => {
     setErrorBanner(null);
     setPhase({ kind: 'progress', stage: 'compile' });
     try {
@@ -62,10 +68,14 @@ export function QuickstartView({ sse, sessionId }: QuickstartViewProps) {
       // advance optimistically since we don't get a separate signal.
       setPhase({ kind: 'progress', stage: 'leaders', scenario });
 
+      // Honor the actor-count from the seed input; fall back to 3 for
+      // back-compat with callers that don't supply one. Server-side
+      // GenerateLeadersSchema clamps 1-50 (Compare-runs UI cap).
+      const requestedCount = Math.max(1, Math.min(50, payload.actorCount ?? 3));
       const leadersRes = await fetch('/api/quickstart/generate-leaders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scenarioId, count: 3 }),
+        body: JSON.stringify({ scenarioId, count: requestedCount }),
       });
       if (!leadersRes.ok) {
         const body = await leadersRes.json().catch(() => ({} as { error?: string }));
@@ -112,6 +122,30 @@ export function QuickstartView({ sse, sessionId }: QuickstartViewProps) {
       });
     }
   }, [sse.results, phase]);
+
+  // After results arrive, look up the bundleId for the first artifact
+  // so the "Compare all N actors" CTA can open the CompareModal scoped
+  // to this Quickstart submission. The first runId is enough — every
+  // artifact in this submission shares the same bundleId.
+  useEffect(() => {
+    if (phase.kind !== 'results') return;
+    if (bundleId !== null) return;
+    const firstRunId = phase.artifacts[0]?.metadata?.runId;
+    if (!firstRunId) return;
+    let cancelled = false;
+    fetch(`/api/v1/runs/${encodeURIComponent(firstRunId)}`)
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return res.json() as Promise<{ record?: { bundleId?: string } }>;
+      })
+      .then((body) => {
+        if (cancelled) return;
+        const id = body?.record?.bundleId;
+        if (id) setBundleId(id);
+      })
+      .catch(() => { /* CTA stays hidden if lookup fails; UX degrades gracefully */ });
+    return () => { cancelled = true; };
+  }, [phase, bundleId]);
 
   // Derive per-leader progress from SSE events for the running phase.
   const leaderProgress: LeaderProgress[] | undefined =
@@ -168,12 +202,29 @@ export function QuickstartView({ sse, sessionId }: QuickstartViewProps) {
       {phase.kind === 'results' && (
         <>
           {errorBanner && <p className={styles.errorBanner} role="alert">{errorBanner}</p>}
+          {bundleId && phase.artifacts.length >= 2 && (
+            <button
+              type="button"
+              className={styles.compareCta}
+              onClick={() => setCompareOpen(true)}
+              aria-label={`Compare all ${phase.artifacts.length} actors side-by-side`}
+            >
+              Compare all {phase.artifacts.length} actors →
+            </button>
+          )}
           <QuickstartResults
             leaders={phase.leaders}
             artifacts={phase.artifacts}
             sessionId={sessionId}
             onSwap={handleSwap}
           />
+          {bundleId && compareOpen && (
+            <CompareModal
+              bundleId={bundleId}
+              open
+              onClose={() => setCompareOpen(false)}
+            />
+          )}
         </>
       )}
     </div>
