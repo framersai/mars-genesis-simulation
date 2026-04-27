@@ -1,19 +1,19 @@
 /**
- * Modal that lets the user swap one of the Quickstart-generated leaders
+ * Modal that lets the user swap one of the Quickstart-generated actors
  * for a preset from `paracosm/leader-presets`.
  *
- * @module paracosm/dashboard/quickstart/LeaderPresetPicker
+ * @module paracosm/dashboard/quickstart/ActorPresetPicker
  */
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { LEADER_PRESETS, type LeaderPreset } from '../../../../../engine/leader-presets.js';
-import styles from './LeaderPresetPicker.module.scss';
+import styles from './ActorPresetPicker.module.scss';
 
-export interface LeaderPresetPickerProps {
+export interface ActorPresetPickerProps {
   onSelect: (preset: LeaderPreset) => void;
   onClose: () => void;
 }
 
-export function LeaderPresetPicker({ onSelect, onClose }: LeaderPresetPickerProps) {
+export function ActorPresetPicker({ onSelect, onClose }: ActorPresetPickerProps) {
   const dialogRef = useFocusTrap<HTMLDivElement>(true);
   return (
     <div

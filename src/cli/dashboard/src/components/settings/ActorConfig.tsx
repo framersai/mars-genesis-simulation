@@ -1,9 +1,9 @@
 import { useId } from 'react';
 import { HexacoSlider } from './HexacoSlider';
 import { TraitModelNotice } from './TraitModelNotice';
-import styles from './LeaderConfig.module.scss';
+import styles from './ActorConfig.module.scss';
 
-export interface LeaderFormData {
+export interface ActorFormData {
   name: string;
   archetype: string;
   unit: string;
@@ -11,11 +11,16 @@ export interface LeaderFormData {
   hexaco: Record<string, number>;
 }
 
-interface LeaderConfigProps {
+/**
+ * @deprecated since 0.8.0 — alias for {@link ActorFormData}. Removed in 1.0.
+ */
+export type LeaderFormData = ActorFormData;
+
+interface ActorConfigProps {
   label: string;
   sideColor: string;
-  data: LeaderFormData;
-  onChange: (data: LeaderFormData) => void;
+  data: ActorFormData;
+  onChange: (data: ActorFormData) => void;
 }
 
 const HEXACO_TRAITS = [
@@ -37,8 +42,8 @@ const PERSONALITY_PRESETS = [
   { id: 'balanced', label: 'Balanced (all 0.50)', hexaco: { openness: 0.50, conscientiousness: 0.50, extraversion: 0.50, agreeableness: 0.50, emotionality: 0.50, honestyHumility: 0.50 } },
 ];
 
-export function LeaderConfig({ label, sideColor, data, onChange }: LeaderConfigProps) {
-  // One id prefix per component instance so two LeaderConfig components
+export function ActorConfig({ label, sideColor, data, onChange }: ActorConfigProps) {
+  // One id prefix per component instance so two ActorConfig components
   // on the same page (Commander A + Commander B) never collide.
   const idPrefix = useId();
   const nameId = `${idPrefix}-name`;
@@ -47,7 +52,7 @@ export function LeaderConfig({ label, sideColor, data, onChange }: LeaderConfigP
   const instructionsId = `${idPrefix}-instructions`;
   const presetId = `${idPrefix}-preset`;
 
-  const update = (field: keyof LeaderFormData, value: string) =>
+  const update = (field: keyof ActorFormData, value: string) =>
     onChange({ ...data, [field]: value });
 
   const updateHexaco = (key: string, value: number) =>

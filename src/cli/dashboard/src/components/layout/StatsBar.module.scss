@@ -1,5 +1,5 @@
 // StatsBar styles — F4 batch 2 migration from inline style objects.
-// Per-leader color is fed in via `--leader-color-a` / `--leader-color-b`
+// Per-leader color is fed in via `--actor-color-a` / `--actor-color-b`
 // CSS custom properties on the root so per-pill color references stay
 // in CSS rather than inline JS.
 
@@ -59,12 +59,12 @@
 
 .valueA {
   @extend .value;
-  color: var(--leader-color-a);
+  color: var(--actor-color-a);
 }
 
 .valueB {
   @extend .value;
-  color: var(--leader-color-b);
+  color: var(--actor-color-b);
 }
 
 .delta {

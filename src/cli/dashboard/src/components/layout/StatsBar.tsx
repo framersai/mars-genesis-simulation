@@ -100,10 +100,10 @@ export function StatsBar({ leaders, crisisText, toolRegistry }: StatsBarProps) {
   const bLeader = leaders[1];
   const aState = aLeader?.state;
   const bState = bLeader?.state;
-  const systemsA = aState?.metrics ?? null;
-  const systemsB = bState?.metrics ?? null;
-  const prevSystemsA = aState?.prevSystems ?? null;
-  const prevSystemsB = bState?.prevSystems ?? null;
+  const metricsA = aState?.metrics ?? null;
+  const metricsB = bState?.metrics ?? null;
+  const prevMetricsA = aState?.prevMetrics ?? null;
+  const prevMetricsB = bState?.prevMetrics ?? null;
   const deathsA = aState?.deaths ?? 0;
   const deathsB = bState?.deaths ?? 0;
   const deathCausesA = aState?.deathCauses;
@@ -158,7 +158,7 @@ export function StatsBar({ leaders, crisisText, toolRegistry }: StatsBarProps) {
     prevCountersRef.current = { toolsA, toolsB, reuseA, reuseB, citationsA, citationsB, deathsA, deathsB };
   }, [toolsA, toolsB, reuseA, reuseB, citationsA, citationsB, deathsA, deathsB]);
 
-  if (!systemsA && !systemsB) {
+  if (!metricsA && !metricsB) {
     return null;
   }
 
@@ -172,17 +172,17 @@ export function StatsBar({ leaders, crisisText, toolRegistry }: StatsBarProps) {
       role="region"
       aria-label="Leader statistics"
       style={{
-        ['--leader-color-a' as string]: colorA,
-        ['--leader-color-b' as string]: colorB,
+        ['--actor-color-a' as string]: colorA,
+        ['--actor-color-b' as string]: colorB,
       }}
     >
       {crisisText && <span className={styles.crisis}>{crisisText}</span>}
 
       {metrics.map(metric => {
-        const valA = systemsA?.[metric.id] ?? 0;
-        const valB = systemsB?.[metric.id] ?? 0;
-        const dA = delta(valA, prevSystemsA?.[metric.id]);
-        const dB = delta(valB, prevSystemsB?.[metric.id]);
+        const valA = metricsA?.[metric.id] ?? 0;
+        const valB = metricsB?.[metric.id] ?? 0;
+        const dA = delta(valA, prevMetricsA?.[metric.id]);
+        const dB = delta(valB, prevMetricsB?.[metric.id]);
         const fA = fmtVal(valA, metric.format);
         const fB = fmtVal(valB, metric.format);
         const suffix = fmtSuffix(metric.id);

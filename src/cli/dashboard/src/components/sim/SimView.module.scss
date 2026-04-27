@@ -1,5 +1,5 @@
 // SimView styles — F4 batch 2 migration from inline style objects.
-// Dynamic per-leader colors flow in via the `--leader-color` CSS
+// Dynamic per-leader colors flow in via the `--actor-color` CSS
 // custom property set on the relevant element.
 
 .root {
@@ -14,7 +14,7 @@
   background: var(--border);
 }
 
-// One leader's event column. Uses `--leader-color` for the spinner
+// One leader's event column. Uses `--actor-color` for the spinner
 // accent below.
 .leaderColumn {
   flex: 1;
@@ -51,7 +51,7 @@
   // `spinner` class lives in globals; this rule sets the accent color.
   // Exported here so the class can be composed via className + style
   // custom property (set on the parent).
-  border-top-color: var(--leader-color);
+  border-top-color: var(--actor-color);
 }
 
 .leaderColumnGeneratingLabel {

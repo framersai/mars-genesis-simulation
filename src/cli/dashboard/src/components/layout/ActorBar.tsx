@@ -2,10 +2,10 @@ import type { LeaderInfo } from '../../hooks/useGameState';
 import { getLeaderColorVar } from '../../hooks/useGameState';
 import { SparkLine } from '../shared/SparkLine';
 import { Tooltip } from '../shared/Tooltip';
-import styles from './LeaderBar.module.scss';
+import styles from './ActorBar.module.scss';
 
-interface LeaderBarProps {
-  /** Position in the leader lineup. 0 renders the primary palette, 1 the
+interface ActorBarProps {
+  /** Position in the actor lineup. 0 renders the primary palette, 1 the
    *  secondary. F2/F3 extends beyond 2 via the central color helper. */
   leaderIndex: number;
   leader: LeaderInfo | null;
@@ -28,7 +28,7 @@ function traitStr(label: string, val: number): string {
   return `${label} ${bar} ${num}`;
 }
 
-export function LeaderBar({ leaderIndex, leader, popHistory, moraleHistory, verdictPlacement }: LeaderBarProps) {
+export function ActorBar({ leaderIndex, leader, popHistory, moraleHistory, verdictPlacement }: ActorBarProps) {
   const sideColor = getLeaderColorVar(leaderIndex);
   const sideBg = leaderIndex === 0 ? 'rgba(232,180,74,.12)' : 'rgba(76,168,168,.12)';
   const sideBorder = leaderIndex === 0 ? 'var(--amber-dim)' : 'var(--teal-dim)';
@@ -53,9 +53,9 @@ export function LeaderBar({ leaderIndex, leader, popHistory, moraleHistory, verd
     <div
       className={styles.root}
       style={{
-        ['--leader-color' as string]: sideColor,
-        ['--leader-bg' as string]: sideBg,
-        ['--leader-border' as string]: sideBorder,
+        ['--actor-color' as string]: sideColor,
+        ['--actor-bg' as string]: sideBg,
+        ['--actor-border' as string]: sideBorder,
       }}
     >
       <div className={styles.headerRow}>

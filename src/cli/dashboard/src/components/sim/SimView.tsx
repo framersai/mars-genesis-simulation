@@ -4,7 +4,7 @@ import { getLeaderColorVar } from '../../hooks/useGameState';
 import { useScenarioContext } from '../../App';
 import { useCitationContext } from '../../hooks/useCitationRegistry';
 import { useToolContext } from '../../hooks/useToolRegistry';
-import { LeaderBar } from '../layout/LeaderBar';
+import { ActorBar } from '../layout/ActorBar';
 import { StatsBar } from '../layout/StatsBar';
 import { TurnEventHeader } from './TurnEventHeader';
 import { EventCard } from './EventCard';
@@ -52,7 +52,7 @@ function LeaderColumn({ leaderIndex, sideState, state }: { leaderIndex: number; 
   return (
     <section
       className={styles.leaderColumn}
-      style={{ ['--leader-color' as string]: sideColor }}
+      style={{ ['--actor-color' as string]: sideColor }}
       aria-label={`${sideState.leader?.name || sideLabel} events`}
     >
       <TurnEventHeader leaderIndex={leaderIndex} event={sideState.event} />
@@ -241,14 +241,14 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
           surfaces the verdict even before the user scrolls down to
           the banner card. */}
       <div className={`leaders-row ${styles.leadersRow}`}>
-        <LeaderBar
+        <ActorBar
           leaderIndex={0}
           leader={sideA?.leader || presetLeaderA}
           popHistory={sideA?.popHistory || []}
           moraleHistory={sideA?.moraleHistory || []}
           verdictPlacement={verdictPlacementFor('A')}
         />
-        <LeaderBar
+        <ActorBar
           leaderIndex={1}
           leader={sideB?.leader || presetLeaderB}
           popHistory={sideB?.popHistory || []}

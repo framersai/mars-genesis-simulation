@@ -15,20 +15,20 @@ import {
   downloadArtifactJson,
 } from './QuickstartView.helpers';
 import { formatDelta } from '../branches/BranchesTab.helpers';
-import { LeaderPresetPicker } from './LeaderPresetPicker';
+import { ActorPresetPicker } from './ActorPresetPicker';
 import type { RunArtifact } from '../../../../../engine/schema/index.js';
-import type { LeaderConfig } from '../../../../../engine/types.js';
+import type { ActorConfig } from '../../../../../engine/types.js';
 import type { LeaderPreset } from '../../../../../engine/leader-presets.js';
 import styles from './QuickstartResults.module.scss';
 
 export interface QuickstartResultsProps {
-  leaders: LeaderConfig[];
+  leaders: ActorConfig[];
   artifacts: RunArtifact[];
   sessionId?: string;
   onSwap: (leaderIndex: number, preset: LeaderPreset) => void;
 }
 
-const HEXACO_TRAITS: Array<keyof LeaderConfig['hexaco']> = [
+const HEXACO_TRAITS: Array<keyof ActorConfig['hexaco']> = [
   'openness', 'conscientiousness', 'extraversion',
   'agreeableness', 'emotionality', 'honestyHumility',
 ];
@@ -91,7 +91,7 @@ export function QuickstartResults({ leaders, artifacts, sessionId, onSwap }: Qui
         })}
       </div>
       {swapTargetIndex !== null && (
-        <LeaderPresetPicker
+        <ActorPresetPicker
           onSelect={preset => {
             onSwap(swapTargetIndex, preset);
             setSwapTargetIndex(null);
@@ -104,7 +104,7 @@ export function QuickstartResults({ leaders, artifacts, sessionId, onSwap }: Qui
 }
 
 interface LeaderResultCardProps {
-  leader: LeaderConfig;
+  leader: ActorConfig;
   artifact: RunArtifact;
   peers: RunArtifact[];
   timeLabel: string;

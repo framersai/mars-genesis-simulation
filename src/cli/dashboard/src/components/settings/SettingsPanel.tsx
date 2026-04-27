@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDashboardNavigation, useScenarioContext } from '../../App';
 import { useScenarioLabels } from '../../hooks/useScenarioLabels';
-import { LeaderConfig, type LeaderFormData } from './LeaderConfig';
+import { ActorConfig, type ActorFormData } from './ActorConfig';
 import { ScenarioEditor } from './ScenarioEditor';
 import { LoadPriorRunsCTA } from './LoadPriorRunsCTA';
 import { getDashboardTabFromHref, resolveSetupRedirectHref } from '../../tab-routing';
@@ -72,7 +72,7 @@ const TIER_LABELS: Record<ModelTier, { label: string; help: string }> = {
   agentReactions: { label: 'Agent Reactions',        help: 'One to two sentences per colonist per turn. Highest volume — pick cheapest.' },
 };
 
-function defaultLeader(idx: number): LeaderFormData {
+function defaultLeader(idx: number): ActorFormData {
   return {
     name: idx === 0 ? 'Actor A' : 'Actor B',
     archetype: idx === 0 ? 'The Visionary' : 'The Engineer',
@@ -101,8 +101,8 @@ export function SettingsPanel() {
     ? { name: defaultPreset.leaders[1].name, archetype: defaultPreset.leaders[1].archetype, unit: 'Colony Beta', instructions: defaultPreset.leaders[1].instructions, hexaco: defaultPreset.leaders[1].hexaco }
     : defaultLeader(1);
 
-  const [leaderA, setLeaderA] = useState<LeaderFormData>(initLeaderA);
-  const [leaderB, setLeaderB] = useState<LeaderFormData>(initLeaderB);
+  const [leaderA, setLeaderA] = useState<ActorFormData>(initLeaderA);
+  const [leaderB, setLeaderB] = useState<ActorFormData>(initLeaderB);
 
   // Re-populate from presets when scenario data loads (async fetch)
   // Depend on presets length because the fallback has presets:[] but same id
@@ -372,8 +372,8 @@ export function SettingsPanel() {
 
       {/* Leaders grid */}
       <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-        <LeaderConfig label="Commander A" sideColor="var(--vis)" data={leaderA} onChange={setLeaderA} />
-        <LeaderConfig label="Commander B" sideColor="var(--eng)" data={leaderB} onChange={setLeaderB} />
+        <ActorConfig label="Commander A" sideColor="var(--vis)" data={leaderA} onChange={setLeaderA} />
+        <ActorConfig label="Commander B" sideColor="var(--eng)" data={leaderB} onChange={setLeaderB} />
       </div>
 
       {/* Simulation config */}
