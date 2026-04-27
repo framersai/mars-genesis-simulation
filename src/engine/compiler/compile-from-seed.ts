@@ -30,6 +30,11 @@ export const DraftScenarioSchema = z.object({
     settlementNoun: z.string().min(2).max(32),
     timeUnitNoun: z.string().min(2).max(24),
     currency: z.string().min(1).max(16).optional(),
+    // Swappable decision-making entity. Optional so seed drafts that
+    // pre-date this field still validate; the compiler defaults it to
+    // "actor" / "actors" when absent (engine/compiler/index.ts).
+    actorNoun: z.string().min(2).max(32).optional(),
+    actorNounPlural: z.string().min(2).max(32).optional(),
   }),
   setup: z.object({
     defaultTurns: z.number().int().min(2).max(12),

@@ -31,7 +31,7 @@ export interface QuickstartProgressProps {
 const STAGES: Array<{ id: Stage; label: string }> = [
   { id: 'compile', label: 'Compile scenario' },
   { id: 'research', label: 'Ground with citations' },
-  { id: 'leaders', label: 'Generate 3 leaders' },
+  { id: 'leaders', label: 'Generate 3 actors' },
   { id: 'running', label: 'Run 3 simulations' },
 ];
 

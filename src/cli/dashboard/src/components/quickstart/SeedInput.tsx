@@ -205,7 +205,7 @@ export function SeedInput({ onSeedReady, disabled = false }: SeedInputProps) {
         onClick={submit}
         disabled={disabled || seedText.trim().length < 200}
       >
-        Generate + Run 3 Leaders
+        Generate + Run 3 Actors
       </button>
     </div>
   );

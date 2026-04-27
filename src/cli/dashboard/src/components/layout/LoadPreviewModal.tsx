@@ -116,7 +116,7 @@ export function LoadPreviewModal({
           <div className={styles.metaLabel}>Scenario</div>
           <div className={styles.metaValue}>{metadata.scenarioName}</div>
 
-          <div className={styles.metaLabel}>Leaders</div>
+          <div className={styles.metaLabel}>Actors</div>
           <div className={styles.metaValue}>
             {metadata.leaderNames.length > 0
               ? metadata.leaderNames.join(' · ')

@@ -364,8 +364,13 @@ function AppContent() {
     const secondId = gameState.leaderIds[1];
     const a = firstId ? gameState.leaders[firstId] : null;
     const b = secondId ? gameState.leaders[secondId] : null;
-    const nameA = a?.leader?.name || 'Leader A';
-    const nameB = b?.leader?.name || 'Leader B';
+    // Fallback names when the SSE stream has not yet sent a leader
+    // identity. Use the scenario's per-domain label (e.g. "Commander A"
+    // for Mars Genesis, "Mayor A" for a hurricane scenario) with a
+    // benign "Actor" default when the scenario doesn't specify.
+    const actorTitle = (scenario.labels.actorNoun ?? 'actor').replace(/^./, c => c.toUpperCase());
+    const nameA = a?.leader?.name || `${actorTitle} A`;
+    const nameB = b?.leader?.name || `${actorTitle} B`;
     const archA = a?.leader?.archetype || '';
     const archB = b?.leader?.archetype || '';
     const unitA = a?.leader?.unit || '';
@@ -511,8 +516,8 @@ function AppContent() {
       ...l,
       unit: i === 0 ? 'Colony Alpha' : 'Colony Beta',
     })) || [
-      { name: 'Leader A', archetype: 'The Visionary', unit: 'Colony Alpha', hexaco: { openness: 0.95, conscientiousness: 0.35, extraversion: 0.85, agreeableness: 0.55, emotionality: 0.3, honestyHumility: 0.65 }, instructions: '' },
-      { name: 'Leader B', archetype: 'The Engineer', unit: 'Colony Beta', hexaco: { openness: 0.25, conscientiousness: 0.97, extraversion: 0.3, agreeableness: 0.6, emotionality: 0.7, honestyHumility: 0.9 }, instructions: '' },
+      { name: 'Actor A', archetype: 'The Visionary', unit: 'Colony Alpha', hexaco: { openness: 0.95, conscientiousness: 0.35, extraversion: 0.85, agreeableness: 0.55, emotionality: 0.3, honestyHumility: 0.65 }, instructions: '' },
+      { name: 'Actor B', archetype: 'The Engineer', unit: 'Colony Beta', hexaco: { openness: 0.25, conscientiousness: 0.97, extraversion: 0.3, agreeableness: 0.6, emotionality: 0.7, honestyHumility: 0.9 }, instructions: '' },
     ];
     try {
       setLaunching(true);

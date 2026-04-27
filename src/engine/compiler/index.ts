@@ -351,7 +351,20 @@ export async function compileScenario(
     id: json.id ?? 'compiled-scenario',
     version: json.version ?? '1.0.0',
     engineArchetype: json.engineArchetype ?? 'closed_turn_based_settlement',
-    labels: json.labels ?? { name: 'Compiled Scenario', shortName: 'compiled', populationNoun: 'members', settlementNoun: 'settlement', currency: 'credits' },
+    // Labels: spread explicit values over benign defaults so a seed
+    // draft that lacks `actorNoun` / `actorNounPlural` (or any other
+    // optional noun) gets sensible UI fallbacks instead of leaving
+    // dashboard fields undefined.
+    labels: {
+      name: 'Compiled Scenario',
+      shortName: 'compiled',
+      populationNoun: 'members',
+      settlementNoun: 'settlement',
+      currency: 'credits',
+      actorNoun: 'actor',
+      actorNounPlural: 'actors',
+      ...(json.labels ?? {}),
+    },
     theme: json.theme ?? { primaryColor: '#6366f1', accentColor: '#818cf8', cssVariables: {} },
     setup: json.setup ?? { defaultTurns: 8, defaultSeed: 100, defaultStartTime: 2040, defaultPopulation: 50, configurableSections: ['leaders', 'departments', 'models'] },
     world,

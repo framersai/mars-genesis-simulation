@@ -74,7 +74,7 @@ const TIER_LABELS: Record<ModelTier, { label: string; help: string }> = {
 
 function defaultLeader(idx: number): LeaderFormData {
   return {
-    name: idx === 0 ? 'Leader A' : 'Leader B',
+    name: idx === 0 ? 'Actor A' : 'Actor B',
     archetype: idx === 0 ? 'The Visionary' : 'The Engineer',
     unit: idx === 0 ? 'Colony Alpha' : 'Colony Beta',
     instructions: '',

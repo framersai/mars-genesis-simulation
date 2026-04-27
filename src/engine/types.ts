@@ -38,6 +38,18 @@ export interface ScenarioLabels {
   timeUnitNoun?: string;
   /** Plural form of `timeUnitNoun` (e.g., "years", "hours", "quarters", "ticks"). Default when absent: "ticks". */
   timeUnitNounPlural?: string;
+  /**
+   * Singular display word for the swappable decision-making entity that
+   * runs each parallel counterfactual. Defaults to "actor" — the universal
+   * abstract type. Scenarios specialize it: Mars Genesis sets "commander",
+   * a hurricane scenario sets "incident commander", an AI release sets
+   * "release director", a quantum-game scenario sets "player". The
+   * engine type stays `LeaderConfig` for SDK back-compat; this label is
+   * for UI / copy / button text rendering only.
+   */
+  actorNoun?: string;
+  /** Plural form of `actorNoun`. Defaults to "actors". */
+  actorNounPlural?: string;
 }
 
 /** Visual theme for a scenario. Applied to the dashboard via CSS custom properties. */
