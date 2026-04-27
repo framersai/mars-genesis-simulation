@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { ListRunsFilters, RunHistoryStore } from '../run-history-store.js';
+import type { RunRecord } from '../run-record.js';
 import type { ParacosmServerMode } from '../server-mode.js';
 import type { ScenarioPackage } from '../../../engine/types.js';
 import { WorldModel, WorldModelReplayError } from '../../../runtime/world-model/index.js';
@@ -26,6 +27,12 @@ async function readBody(req: IncomingMessage): Promise<string> {
   const chunks: Buffer[] = [];
   for await (const chunk of req) chunks.push(chunk as Buffer);
   return Buffer.concat(chunks).toString('utf-8');
+}
+
+function publicRunRecord(record: RunRecord): Omit<RunRecord, 'artifactPath'> {
+  const { artifactPath, ...publicRecord } = record;
+  void artifactPath;
+  return publicRecord;
 }
 
 export interface HandlePlatformApiOptions {
@@ -79,6 +86,10 @@ export async function handlePlatformApiRoute(
         scenarioId: url.searchParams.get('scenario') ?? undefined,
         leaderConfigHash: url.searchParams.get('leader') ?? undefined,
         q: url.searchParams.get('q') ?? undefined,
+        // Filter by Quickstart bundle. The CompareModal uses
+        // /api/v1/bundles/:id directly; this filter is for Library tab
+        // breadcrumbs and ad-hoc URLs that scope a list to one bundle.
+        bundleId: url.searchParams.get('bundleId') ?? undefined,
         limit: clampLimit(url.searchParams.get('limit')),
         offset: clampOffset(url.searchParams.get('offset')),
       };
@@ -98,7 +109,7 @@ export async function handlePlatformApiRoute(
         'Content-Type': 'application/json',
         ...options.corsHeaders,
       });
-      res.end(JSON.stringify({ runs, total, hasMore }));
+      res.end(JSON.stringify({ runs: runs.map(publicRunRecord), total, hasMore }));
       return true;
     }
 
@@ -129,10 +140,23 @@ export async function handlePlatformApiRoute(
     const replayMatch = url.pathname.match(/^\/api\/v1\/runs\/([^/]+)\/replay-result$/);
     if (replayMatch && req.method === 'POST') {
       const runId = decodeURIComponent(replayMatch[1]);
-      const body = JSON.parse(await readBody(req)) as { matches: boolean };
+      let body: { matches?: unknown };
+      try {
+        body = JSON.parse(await readBody(req)) as { matches?: unknown };
+      } catch {
+        res.writeHead(400, { 'Content-Type': 'application/json', ...options.corsHeaders });
+        res.end(JSON.stringify({ error: 'invalid_json' }));
+        return true;
+      }
       if (typeof body?.matches !== 'boolean') {
         res.writeHead(400, { 'Content-Type': 'application/json', ...options.corsHeaders });
         res.end(JSON.stringify({ error: 'matches must be a boolean' }));
+        return true;
+      }
+      const record = await options.runHistoryStore.getRun(runId);
+      if (!record) {
+        res.writeHead(404, { 'Content-Type': 'application/json', ...options.corsHeaders });
+        res.end(JSON.stringify({ error: 'not_found', runId }));
         return true;
       }
       await options.runHistoryStore.recordReplayResult?.(runId, body.matches);
@@ -208,20 +232,20 @@ export async function handlePlatformApiRoute(
       }
       if (!record.artifactPath) {
         res.writeHead(410, { 'Content-Type': 'application/json', ...options.corsHeaders });
-        res.end(JSON.stringify({ error: 'artifact_unavailable', record }));
+        res.end(JSON.stringify({ error: 'artifact_unavailable', runId }));
         return true;
       }
       let artifact: unknown;
       try {
         const fs = await import('node:fs/promises');
         artifact = JSON.parse(await fs.readFile(record.artifactPath, 'utf-8'));
-      } catch (err) {
+      } catch {
         res.writeHead(410, { 'Content-Type': 'application/json', ...options.corsHeaders });
-        res.end(JSON.stringify({ error: 'artifact_unreadable', record, message: String(err) }));
+        res.end(JSON.stringify({ error: 'artifact_unreadable', runId, message: 'Artifact file unreadable' }));
         return true;
       }
       res.writeHead(200, { 'Content-Type': 'application/json', ...options.corsHeaders });
-      res.end(JSON.stringify({ record, artifact }));
+      res.end(JSON.stringify({ record: publicRunRecord(record), artifact }));
       return true;
     }
   } catch (error) {

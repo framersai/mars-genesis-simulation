@@ -835,6 +835,28 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       return;
     }
 
+    // Compare-runs UI: bundle endpoints. /api/v1/bundles/:id and
+    // /api/v1/bundles/:id/aggregate are read-only views over the
+    // RunHistoryStore. Same gating as platform-api routes above.
+    if (paracosmRoutesEnabled && req.url?.startsWith('/api/v1/bundles/') && req.method === 'GET') {
+      const match = req.url.match(/^\/api\/v1\/bundles\/([^/?]+)(\/aggregate)?(\?.*)?$/);
+      if (!match) {
+        res.writeHead(400, { 'Content-Type': 'application/json', ...corsHeaders });
+        res.end(JSON.stringify({ error: 'Invalid bundle URL' }));
+        return;
+      }
+      const bundleId = decodeURIComponent(match[1]);
+      const isAggregate = !!match[2];
+      const { handleListBundle, handleBundleAggregate } = await import('./bundle-routes.js');
+      try {
+        if (isAggregate) await handleBundleAggregate(bundleId, res, { runHistoryStore });
+        else await handleListBundle(bundleId, res, { runHistoryStore });
+      } catch (err) {
+        writeJsonError(res, err);
+      }
+      return;
+    }
+
     if (req.url === '/events') {
       res.writeHead(200, {
         'Content-Type': 'text/event-stream',
