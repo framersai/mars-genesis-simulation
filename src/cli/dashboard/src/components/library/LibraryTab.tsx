@@ -75,9 +75,9 @@ export function LibraryTab(): JSX.Element {
   const leaderOptions = React.useMemo(() => {
     const map = new Map<string, string>();
     runs.forEach(r => {
-      if (r.leaderConfigHash) {
-        const label = r.leaderName ? `${r.leaderName} (${r.leaderConfigHash.slice(0, 12)})` : r.leaderConfigHash.slice(0, 16);
-        map.set(r.leaderConfigHash, label);
+      if (r.actorConfigHash) {
+        const label = r.actorName ? `${r.actorName} (${r.actorConfigHash.slice(0, 12)})` : r.actorConfigHash.slice(0, 16);
+        map.set(r.actorConfigHash, label);
       }
     });
     return [...map.entries()].map(([hash, label]) => ({ hash, label })).sort((a, b) => a.label.localeCompare(b.label));
@@ -94,7 +94,7 @@ export function LibraryTab(): JSX.Element {
     onClose: () => setSelectedRunId(null),
   });
 
-  const filtersActive = Boolean(filters.q || filters.mode || filters.scenarioId || filters.leaderConfigHash);
+  const filtersActive = Boolean(filters.q || filters.mode || filters.scenarioId || filters.actorConfigHash);
 
   return (
     <div className={styles.tab}>
@@ -115,7 +115,7 @@ export function LibraryTab(): JSX.Element {
       </header>
 
       <HeroStatsStrip
-        filters={{ mode: filters.mode, scenario: filters.scenarioId, leader: filters.leaderConfigHash }}
+        filters={{ mode: filters.mode, scenario: filters.scenarioId, leader: filters.actorConfigHash }}
       />
 
       <SearchBar

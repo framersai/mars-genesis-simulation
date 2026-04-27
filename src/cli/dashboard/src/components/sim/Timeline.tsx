@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { GameState, LeaderSideState } from '../../hooks/useGameState';
-import { getLeaderColorVar } from '../../hooks/useGameState';
+import { getActorColorVar } from '../../hooks/useGameState';
 import { Tooltip } from '../shared/Tooltip';
 
 interface TimelineProps {
@@ -118,8 +118,8 @@ function TurnTooltipContent({ t, sideColor }: { t: TurnEntry; sideColor: string 
   );
 }
 
-function SideTimeline({ turns, leaderIndex }: { turns: TurnEntry[]; leaderIndex: number }) {
-  const sideColor = getLeaderColorVar(leaderIndex);
+function SideTimeline({ turns, actorIndex }: { turns: TurnEntry[]; actorIndex: number }) {
+  const sideColor = getActorColorVar(actorIndex);
   // Same tail-to-bottom pattern as the Sim column and Event Log:
   // auto-scroll when pinned, release on user scroll-up.
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -190,8 +190,8 @@ function SideTimeline({ turns, leaderIndex }: { turns: TurnEntry[]; leaderIndex:
 }
 
 export function Timeline({ state }: TimelineProps) {
-  const firstId = state.leaderIds[0];
-  const secondId = state.leaderIds[1];
+  const firstId = state.actorIds[0];
+  const secondId = state.actorIds[1];
   const sideA = firstId ? state.leaders[firstId] : null;
   const sideB = secondId ? state.leaders[secondId] : null;
   const turnsA = sideA ? extractTurns(sideA, state.isComplete) : [];
@@ -205,8 +205,8 @@ export function Timeline({ state }: TimelineProps) {
       display: 'flex', gap: '4px', height: '200px', overflow: 'hidden', flexShrink: 0,
       padding: '4px 8px', minWidth: 0, maxWidth: '100%',
     }}>
-      <SideTimeline turns={turnsA} leaderIndex={0} />
-      <SideTimeline turns={turnsB} leaderIndex={1} />
+      <SideTimeline turns={turnsA} actorIndex={0} />
+      <SideTimeline turns={turnsB} actorIndex={1} />
     </div>
   );
 }

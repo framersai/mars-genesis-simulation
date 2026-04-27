@@ -38,7 +38,7 @@ import { createCompilerTelemetry, type CompilerTelemetry } from '../engine/compi
 import { openSessionStore, type SessionStore, type TimestampedEvent } from './session-store.js';
 import { generateSessionTitle } from './session-title.js';
 import { resolveServerMode } from './server/server-mode.js';
-import { createRunRecord, hashLeaderConfig } from './server/run-record.js';
+import { createRunRecord, hashActorConfig } from './server/run-record.js';
 import { enrichRunRecordFromArtifact } from './server/enrich-run-record.js';
 import { createNoopRunHistoryStore, type RunHistoryStore } from './server/run-history-store.js';
 import { createSqliteRunHistoryStore } from './server/sqlite-run-history-store.js';
@@ -148,7 +148,7 @@ export interface CreateMarsServerOptions {
     scenario?: ScenarioPackage,
     onArtifact?: (
       artifact: import('../engine/schema/index.js').RunArtifact,
-      leader: import('../runtime/orchestrator.js').LeaderConfig,
+      leader: import('../runtime/orchestrator.js').ActorConfig,
     ) => void | Promise<void>,
   ) => Promise<void>;
   generateText?: (args: { provider: string; model: string; prompt: string }) => Promise<{ text: string }>;
@@ -194,7 +194,7 @@ export interface StartConfigHooks {
    */
   onArtifact?: (
     artifact: import('../engine/schema/index.js').RunArtifact,
-    leader: import('../runtime/orchestrator.js').LeaderConfig,
+    leader: import('../runtime/orchestrator.js').ActorConfig,
   ) => void | Promise<void>;
 }
 
@@ -1754,7 +1754,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         // one enriched record per completed artifact via the onArtifact
         // callback wired into the runner functions below. That callback
         // captures artifact-derived fields (artifactPath, costUSD,
-        // durationMs, mode, leaderName, leaderArchetype) which the Library
+        // durationMs, mode, actorName, actorArchetype) which the Library
         // tab needs to render gallery cards and to load full artifacts.
         // Generate a bundleId once per /setup invocation when the run
         // is a multi-leader batch. Every per-artifact RunRecord then
@@ -1767,7 +1767,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         const runRecord = createRunRecord({
           scenarioId: activeScenario.id,
           scenarioVersion: activeScenario.version,
-          leaderConfigHash: hashLeaderConfig({
+          actorConfigHash: hashActorConfig({
             leaders: simConfig.leaders,
             turns: simConfig.turns,
             seed: simConfig.seed,
@@ -1787,13 +1787,13 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         const persistSeed = simConfig.seed;
         const onArtifactPersist = async (
           artifact: import('../engine/schema/index.js').RunArtifact,
-          leader: import('../runtime/orchestrator.js').LeaderConfig,
+          leader: import('../runtime/orchestrator.js').ActorConfig,
         ) => {
           try {
             const perArtifactBase = {
               ...runRecord,
               runId: artifact.metadata.runId,
-              leaderConfigHash: hashLeaderConfig({
+              actorConfigHash: hashActorConfig({
                 leader,
                 turns: persistTurns,
                 seed: persistSeed,

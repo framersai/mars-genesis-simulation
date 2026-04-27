@@ -42,11 +42,11 @@ export const ScenarioExtensionsSchema = z.record(z.string(), z.unknown()).option
 // ---------------------------------------------------------------------------
 
 /**
- * Universal trait profile shape carried by `LeaderConfig.traitProfile`
+ * Universal trait profile shape carried by `ActorConfig.traitProfile`
  * (and, post-Phase 5b expansion, by `Agent.traitProfile`). Names a
  * registered TraitModel by `modelId` and supplies a per-axis float
  * map. The runtime cross-validates trait keys against the named
- * model's axes via `normalizeLeaderConfig`; Zod alone validates
+ * model's axes via `normalizeActorConfig`; Zod alone validates
  * structure here. See
  * [docs/superpowers/specs/2026-04-26-trait-model-generalization-design.md](../../../docs/superpowers/specs/2026-04-26-trait-model-generalization-design.md)
  * for the full design.
@@ -56,14 +56,14 @@ export const TraitProfileSchema = z.object({
    * Identifier of a registered TraitModel. kebab-case (or
    * identifier-safe) string, 2-32 chars. Examples: `hexaco`,
    * `ai-agent`. Validated structurally here; existence in the
-   * registry is checked at runtime by `normalizeLeaderConfig` and
+   * registry is checked at runtime by `normalizeActorConfig` and
    * surfaces as `UnknownTraitModelError` when missing.
    */
   modelId: z.string().min(2).max(32).regex(/^[a-zA-Z0-9_-]+$/, 'modelId must be identifier-safe'),
   /**
    * Per-axis trait values, each in [0, 1]. Keys are axis-ids
    * declared by the chosen TraitModel; cross-validation against
-   * `model.axes` happens in `normalizeLeaderConfig`. Empty maps are
+   * `model.axes` happens in `normalizeActorConfig`. Empty maps are
    * legal; missing axes default to the model's neutral values.
    */
   traits: z.record(z.string(), z.number().min(0).max(1)),

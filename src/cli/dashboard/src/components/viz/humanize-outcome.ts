@@ -1,5 +1,5 @@
 export interface HumanizeInput {
-  leaderName: string;
+  actorName: string;
   decision: string;
   outcome: string;
   deaths: number;
@@ -35,8 +35,8 @@ export function humanizeOutcome(input: HumanizeInput): string {
         .replace(/\s+$/, '');
 
   const core = target.length > 0
-    ? `${input.leaderName} ${verb} ${target.toLowerCase()}`
-    : `${input.leaderName} ${verb}`;
+    ? `${input.actorName} ${verb} ${target.toLowerCase()}`
+    : `${input.actorName} ${verb}`;
 
   const lossClause = input.deaths > 0 && input.dominantCause
     ? `, ${input.deaths} lost to ${input.dominantCause}`

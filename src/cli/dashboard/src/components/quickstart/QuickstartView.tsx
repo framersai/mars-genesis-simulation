@@ -7,9 +7,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { SeedInput } from './SeedInput';
 import { CompareModal } from '../compare/CompareModal.js';
-import { QuickstartProgress, type Stage, type LeaderProgress } from './QuickstartProgress';
+import { QuickstartProgress, type Stage, type ActorProgress } from './QuickstartProgress';
 import { QuickstartResults } from './QuickstartResults';
-import type { LeaderConfig, ScenarioPackage } from '../../../../../engine/types.js';
+import type { ActorConfig, ScenarioPackage } from '../../../../../engine/types.js';
 import type { RunArtifact } from '../../../../../engine/schema/index.js';
 import type { LeaderPreset } from '../../../../../engine/leader-presets.js';
 import type { SimEvent } from '../../hooks/useSSE';
@@ -20,7 +20,7 @@ interface SseResultItem {
   summary: Record<string, unknown>;
   fingerprint: Record<string, string> | null;
   artifact?: RunArtifact;
-  leaderIndex?: number;
+  actorIndex?: number;
 }
 
 export interface QuickstartViewProps {
@@ -37,8 +37,8 @@ export interface QuickstartViewProps {
 
 type Phase =
   | { kind: 'input' }
-  | { kind: 'progress'; stage: Stage; scenario?: ScenarioPackage; leaders?: LeaderConfig[] }
-  | { kind: 'results'; scenario: ScenarioPackage; leaders: LeaderConfig[]; artifacts: RunArtifact[] };
+  | { kind: 'progress'; stage: Stage; scenario?: ScenarioPackage; leaders?: ActorConfig[] }
+  | { kind: 'results'; scenario: ScenarioPackage; leaders: ActorConfig[]; artifacts: RunArtifact[] };
 
 export function QuickstartView({ sse, sessionId }: QuickstartViewProps) {
   const [phase, setPhase] = useState<Phase>({ kind: 'input' });
@@ -81,7 +81,7 @@ export function QuickstartView({ sse, sessionId }: QuickstartViewProps) {
         const body = await leadersRes.json().catch(() => ({} as { error?: string }));
         throw new Error(body.error ?? `Leader generation failed: HTTP ${leadersRes.status}`);
       }
-      const { leaders } = await leadersRes.json() as { leaders: LeaderConfig[] };
+      const { leaders } = await leadersRes.json() as { leaders: ActorConfig[] };
       setPhase({ kind: 'progress', stage: 'running', scenario, leaders });
 
       sse.reset();
@@ -148,7 +148,7 @@ export function QuickstartView({ sse, sessionId }: QuickstartViewProps) {
   }, [phase, bundleId]);
 
   // Derive per-leader progress from SSE events for the running phase.
-  const leaderProgress: LeaderProgress[] | undefined =
+  const actorProgress: ActorProgress[] | undefined =
     phase.kind === 'progress' && phase.stage === 'running' && phase.leaders
       ? phase.leaders.map((l, i) => {
           const lastTurn = sse.events
@@ -157,9 +157,9 @@ export function QuickstartView({ sse, sessionId }: QuickstartViewProps) {
               const t = (e.data as { turn?: number } | null | undefined)?.turn ?? 0;
               return t > max ? t : max;
             }, 0);
-          const result = sse.results.find(r => r.leaderIndex === i);
+          const result = sse.results.find(r => r.actorIndex === i);
           const errored = sse.errors.length > 0 && !result;
-          const status: LeaderProgress['status'] = errored
+          const status: ActorProgress['status'] = errored
             ? 'error'
             : sse.isAborted
               ? 'aborted'
@@ -176,11 +176,11 @@ export function QuickstartView({ sse, sessionId }: QuickstartViewProps) {
         })
       : undefined;
 
-  const handleSwap = useCallback((leaderIndex: number, preset: LeaderPreset) => {
+  const handleSwap = useCallback((actorIndex: number, preset: LeaderPreset) => {
     // MVP: swap points users at the Branches Fork flow for now.
     // v1.1 will wire this to a single-leader /setup POST that reruns
     // just that card in place.
-    void leaderIndex; void preset;
+    void actorIndex; void preset;
     setErrorBanner('Leader swap rerun is a v1.1 follow-up. Use "Fork in Branches" on the Branches tab to try a preset leader against this run.');
   }, []);
 
@@ -197,7 +197,7 @@ export function QuickstartView({ sse, sessionId }: QuickstartViewProps) {
         </>
       )}
       {phase.kind === 'progress' && (
-        <QuickstartProgress stage={phase.stage} leaders={leaderProgress} />
+        <QuickstartProgress stage={phase.stage} leaders={actorProgress} />
       )}
       {phase.kind === 'results' && (
         <>

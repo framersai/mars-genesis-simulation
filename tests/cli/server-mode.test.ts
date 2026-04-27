@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { resolveServerMode } from '../../src/cli/server/server-mode.js';
 import {
   createRunRecord,
-  hashLeaderConfig,
+  hashActorConfig,
 } from '../../src/cli/server/run-record.js';
 
 test('resolveServerMode prefers platform_api when auth env is enabled', () => {
@@ -18,7 +18,7 @@ test('createRunRecord emits a stable metadata envelope for every run', () => {
   const record = createRunRecord({
     scenarioId: 'mars-genesis',
     scenarioVersion: '0.4.88',
-    leaderConfigHash: hashLeaderConfig({ leaders: ['a', 'b'] }),
+    actorConfigHash: hashActorConfig({ leaders: ['a', 'b'] }),
     economicsProfile: 'balanced',
     sourceMode: 'local_demo',
     createdBy: 'anonymous',
@@ -28,5 +28,5 @@ test('createRunRecord emits a stable metadata envelope for every run', () => {
   assert.equal(record.createdBy, 'anonymous');
   assert.equal(record.economicsProfile, 'balanced');
   assert.ok(record.runId.startsWith('run_'));
-  assert.ok(record.leaderConfigHash.startsWith('leaders:'));
+  assert.ok(record.actorConfigHash.startsWith('leaders:'));
 });

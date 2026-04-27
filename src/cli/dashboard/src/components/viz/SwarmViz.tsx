@@ -67,8 +67,8 @@ interface SwarmVizProps {
  */
 export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
   const snapshotMap = useVizSnapshots(state);
-  const firstLeaderId = state.leaderIds[0];
-  const secondLeaderId = state.leaderIds[1];
+  const firstLeaderId = state.actorIds[0];
+  const secondLeaderId = state.actorIds[1];
   const snapsA = (firstLeaderId ? snapshotMap[firstLeaderId] : undefined) ?? [];
   const snapsB = (secondLeaderId ? snapshotMap[secondLeaderId] : undefined) ?? [];
   const sideStateA = firstLeaderId ? state.leaders[firstLeaderId] : null;
@@ -269,11 +269,11 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
     type Evt = { type: string; turn?: number; data?: Record<string, unknown> };
     const findLatest = () => {
       let best: { key: string; side: 'a' | 'b'; turn: number; category: string; title: string } | null = null;
-      const slots: Array<{ side: 'a' | 'b'; leaderName: string }> = [];
-      if (state.leaderIds[0]) slots.push({ side: 'a', leaderName: state.leaderIds[0] });
-      if (state.leaderIds[1]) slots.push({ side: 'b', leaderName: state.leaderIds[1] });
-      for (const { side, leaderName } of slots) {
-        const sideState = state.leaders[leaderName];
+      const slots: Array<{ side: 'a' | 'b'; actorName: string }> = [];
+      if (state.actorIds[0]) slots.push({ side: 'a', actorName: state.actorIds[0] });
+      if (state.actorIds[1]) slots.push({ side: 'b', actorName: state.actorIds[1] });
+      for (const { side, actorName } of slots) {
+        const sideState = state.leaders[actorName];
         if (!sideState) continue;
         const events = sideState.events as Evt[];
         for (let i = events.length - 1; i >= 0; i--) {
@@ -301,7 +301,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
       if (prev && prev.key === latest.key) return prev;
       return { ...latest, expiresAt: performance.now() + 5500 };
     });
-  }, [state.leaderIds, state.leaders, gridSettings.alerts, state.isRunning]);
+  }, [state.actorIds, state.leaders, gridSettings.alerts, state.isRunning]);
 
   // Dismiss crisis toast after timeout.
   useEffect(() => {
@@ -698,7 +698,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
         .map(cell => ({
           cell,
           side: 'a' as const,
-          leaderName: leaderA?.name ?? 'Leader A',
+          actorName: leaderA?.name ?? 'Leader A',
           sideColor: '#e8b44a',
         })),
       ...(snapB?.cells ?? [])
@@ -706,7 +706,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
         .map(cell => ({
           cell,
           side: 'b' as const,
-          leaderName: leaderB?.name ?? 'Leader B',
+          actorName: leaderB?.name ?? 'Leader B',
           sideColor: '#4ecdc4',
         })),
     ];
@@ -734,11 +734,11 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
       a: { attempts: [], reuses: [] },
       b: { attempts: [], reuses: [] },
     };
-    const slots: Array<{ side: 'a' | 'b'; leaderName: string }> = [];
-    if (state.leaderIds[0]) slots.push({ side: 'a', leaderName: state.leaderIds[0] });
-    if (state.leaderIds[1]) slots.push({ side: 'b', leaderName: state.leaderIds[1] });
-    for (const { side, leaderName } of slots) {
-      const sideState = state.leaders[leaderName];
+    const slots: Array<{ side: 'a' | 'b'; actorName: string }> = [];
+    if (state.actorIds[0]) slots.push({ side: 'a', actorName: state.actorIds[0] });
+    if (state.actorIds[1]) slots.push({ side: 'b', actorName: state.actorIds[1] });
+    for (const { side, actorName } of slots) {
+      const sideState = state.leaders[actorName];
       if (!sideState) continue;
       const firstByName = new Map<string, string>();
       for (const evt of sideState.events) {
@@ -808,8 +808,8 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
 
   const hexacoById = useMemo(() => {
     const m = new Map<string, HexacoShape>();
-    for (const leaderName of state.leaderIds) {
-      const sideState = state.leaders[leaderName];
+    for (const actorName of state.actorIds) {
+      const sideState = state.leaders[actorName];
       if (!sideState) continue;
       for (const evt of sideState.events) {
         if (evt.type !== 'agent_reactions') continue;
@@ -1171,8 +1171,8 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
             snapshot={snapA}
             previousSnapshot={prevSnapA}
             snapshotHistory={snapsA}
-            leaderName={leaderA?.name ?? 'Leader A'}
-            leaderArchetype={leaderA?.archetype ?? ''}
+            actorName={leaderA?.name ?? 'Leader A'}
+            actorArchetype={leaderA?.archetype ?? ''}
             leaderUnit={leaderA?.unit ?? ''}
             sideColor="var(--vis)"
             side="a"
@@ -1215,8 +1215,8 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
             snapshot={snapB}
             previousSnapshot={prevSnapB}
             snapshotHistory={snapsB}
-            leaderName={leaderB?.name ?? 'Leader B'}
-            leaderArchetype={leaderB?.archetype ?? ''}
+            actorName={leaderB?.name ?? 'Leader B'}
+            actorArchetype={leaderB?.archetype ?? ''}
             leaderUnit={leaderB?.unit ?? ''}
             sideColor="var(--eng)"
             side="b"
@@ -1361,8 +1361,8 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
           onClose={() => setSummaryOpen(false)}
           snapsA={snapsA}
           snapsB={snapsB}
-          leaderNameA={leaderA?.name ?? 'Leader A'}
-          leaderNameB={leaderB?.name ?? 'Leader B'}
+          actorNameA={leaderA?.name ?? 'Leader A'}
+          actorNameB={leaderB?.name ?? 'Leader B'}
           forgeApprovedA={forgeFeeds.a.attempts.filter(x => x.approved).length}
           forgeApprovedB={forgeFeeds.b.attempts.filter(x => x.approved).length}
           reuseCountA={forgeFeeds.a.reuses.length}

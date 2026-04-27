@@ -5,8 +5,8 @@ interface DivergenceRailProps {
 }
 
 export function DivergenceRail({ state }: DivergenceRailProps) {
-  const firstId = state.leaderIds[0];
-  const secondId = state.leaderIds[1];
+  const firstId = state.actorIds[0];
+  const secondId = state.actorIds[1];
   const a = firstId ? state.leaders[firstId] : null;
   const b = secondId ? state.leaders[secondId] : null;
   if (!a || !b) return null;

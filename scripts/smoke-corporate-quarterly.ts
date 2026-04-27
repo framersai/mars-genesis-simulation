@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { compileScenario } from '../src/engine/compiler/index.js';
 import { runSimulation } from '../src/runtime/index.js';
 import { RunArtifactSchema, type RunArtifact } from '../src/engine/schema/index.js';
-import type { LeaderConfig } from '../src/engine/types.js';
+import type { ActorConfig } from '../src/engine/types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -83,7 +83,7 @@ async function main(): Promise<void> {
   const scenarioId = worldJson.id as string;
   const setup = worldJson.setup as Record<string, unknown>;
   const labels = worldJson.labels as Record<string, string>;
-  const preset = (worldJson.presets as Array<{ leaders: LeaderConfig[] }>)[0];
+  const preset = (worldJson.presets as Array<{ leaders: ActorConfig[] }>)[0];
   const leaders = preset.leaders;
   log(`scenario: ${labels.name} (id=${scenarioId})`);
   log(`timeUnitNoun: ${labels.timeUnitNoun} / ${labels.timeUnitNounPlural}`);
@@ -150,8 +150,8 @@ async function main(): Promise<void> {
   log('\n[assert] validating both artifacts');
   for (let i = 0; i < artifacts.length; i++) {
     const a = artifacts[i];
-    const leaderName = leaders[i].name;
-    log(`  [${leaderName}]`);
+    const actorName = leaders[i].name;
+    log(`  [${actorName}]`);
 
     // 6a. Schema parse.
     RunArtifactSchema.parse(a);
@@ -159,9 +159,9 @@ async function main(): Promise<void> {
 
     // 6b. timeUnit fields.
     assert(a.trajectory?.timeUnit?.singular === labels.timeUnitNoun,
-      `${leaderName}: trajectory.timeUnit.singular expected "${labels.timeUnitNoun}", got "${a.trajectory?.timeUnit?.singular}"`);
+      `${actorName}: trajectory.timeUnit.singular expected "${labels.timeUnitNoun}", got "${a.trajectory?.timeUnit?.singular}"`);
     assert(a.trajectory?.timeUnit?.plural === labels.timeUnitNounPlural,
-      `${leaderName}: trajectory.timeUnit.plural expected "${labels.timeUnitNounPlural}", got "${a.trajectory?.timeUnit?.plural}"`);
+      `${actorName}: trajectory.timeUnit.plural expected "${labels.timeUnitNounPlural}", got "${a.trajectory?.timeUnit?.plural}"`);
     log(`    timeUnit      ✓ (${a.trajectory!.timeUnit.singular}/${a.trajectory!.timeUnit.plural})`);
 
     // 6c. Trajectory timepoints advance monotonically by `timePerTurn`.
@@ -170,29 +170,29 @@ async function main(): Promise<void> {
     //     times = [startTime, startTime+k, ..., startTime+(N-1)*k].
     const timepoints = a.trajectory?.timepoints ?? [];
     assert(timepoints.length === MAX_TURNS,
-      `${leaderName}: expected ${MAX_TURNS} timepoints, got ${timepoints.length}`);
+      `${actorName}: expected ${MAX_TURNS} timepoints, got ${timepoints.length}`);
     for (let j = 0; j < timepoints.length; j++) {
       const expected = expectedStart + j * expectedStep;
       assert(timepoints[j].time === expected,
-        `${leaderName}: timepoint[${j}].time expected ${expected}, got ${timepoints[j].time}`);
+        `${actorName}: timepoint[${j}].time expected ${expected}, got ${timepoints[j].time}`);
     }
     log(`    timepoints    ✓ (${timepoints.map(tp => tp.time).join(' -> ')})`);
 
     // 6d. finalState.metrics populated (rebucketed from .systems).
     assert(typeof a.finalState?.metrics?.population === 'number',
-      `${leaderName}: finalState.metrics.population missing or non-numeric`);
+      `${actorName}: finalState.metrics.population missing or non-numeric`);
     log(`    finalState    ✓ (population=${a.finalState!.metrics.population})`);
 
     // 6e. Deep-scan for forbidden legacy year-family keys.
     const forbidden = findForbiddenKey(a);
     assert(forbidden === null,
-      `${leaderName}: forbidden year-family key found at path "${forbidden}"`);
+      `${actorName}: forbidden year-family key found at path "${forbidden}"`);
     log(`    no-year-keys  ✓`);
 
     // 6f. Cost ceiling.
     const cost = a.cost?.totalUSD ?? 0;
     assert(cost <= COST_CEILING_USD_PER_LEADER,
-      `${leaderName}: cost ${cost.toFixed(4)} exceeded ceiling ${COST_CEILING_USD_PER_LEADER}`);
+      `${actorName}: cost ${cost.toFixed(4)} exceeded ceiling ${COST_CEILING_USD_PER_LEADER}`);
     log(`    cost          ✓ ($${cost.toFixed(4)})`);
   }
 

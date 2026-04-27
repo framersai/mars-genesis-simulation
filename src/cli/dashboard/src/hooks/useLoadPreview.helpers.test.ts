@@ -20,7 +20,7 @@ import {
 const sampleMetadata: PreviewMetadata = {
   scenarioName: 'Mars Genesis',
   schemaVersion: 2,
-  leaderNames: ['Aria Chen', 'Vik Voss'],
+  actorNames: ['Aria Chen', 'Vik Voss'],
   turnCount: 6,
   eventCount: 83,
   startedAt: '2026-04-21T14:32:00.000Z',
@@ -55,7 +55,7 @@ const canonicalFixture = {
         turn: 1,
         time: 2035,
         scenario: { name: 'Mars Genesis', id: 'mars-genesis' },
-        systems: { population: 30, morale: 0.8 },
+        metrics: { population: 30, morale: 0.8 },
       },
     },
     {
@@ -109,7 +109,7 @@ test('extractPreviewMetadata: canonical fixture populates every field', () => {
   assert.ok(meta, 'returns metadata');
   assert.equal(meta!.scenarioName, 'Mars Genesis');
   assert.equal(meta!.schemaVersion, 2);
-  assert.deepEqual(meta!.leaderNames, ['Aria Chen', 'Vik Voss']);
+  assert.deepEqual(meta!.actorNames, ['Aria Chen', 'Vik Voss']);
   assert.equal(meta!.turnCount, 6);
   assert.equal(meta!.eventCount, 4);
   assert.equal(meta!.hasVerdict, true);
@@ -126,7 +126,7 @@ test('extractPreviewMetadata: legacy fixture (no schemaVersion) reports legacy +
   assert.ok(meta, 'returns metadata');
   assert.equal(meta!.schemaVersion, 'legacy');
   assert.equal(meta!.hasVerdict, false);
-  assert.deepEqual(meta!.leaderNames, ['Alice']);
+  assert.deepEqual(meta!.actorNames, ['Alice']);
   assert.equal(meta!.turnCount, 3);
   assert.equal(meta!.eventCount, 2);
 });
@@ -148,10 +148,10 @@ test('extractPreviewMetadata: non-object input returns null', () => {
   assert.equal(extractPreviewMetadata(42), null);
 });
 
-test('extractPreviewMetadata: single-leader fixture produces 1-element leaderNames', () => {
+test('extractPreviewMetadata: single-leader fixture produces 1-element actorNames', () => {
   const meta = extractPreviewMetadata(legacyFixture);
-  assert.equal(meta!.leaderNames.length, 1);
-  assert.equal(meta!.leaderNames[0], 'Alice');
+  assert.equal(meta!.actorNames.length, 1);
+  assert.equal(meta!.actorNames[0], 'Alice');
 });
 
 test('extractPreviewMetadata: deduplicates leader names across many events', () => {
@@ -164,7 +164,7 @@ test('extractPreviewMetadata: deduplicates leader names across many events', () 
     ],
   };
   const meta = extractPreviewMetadata(fixture);
-  assert.deepEqual(meta!.leaderNames, ['Alice', 'Bob']);
+  assert.deepEqual(meta!.actorNames, ['Alice', 'Bob']);
 });
 
 test('extractPreviewMetadata: skips events without a leader field when aggregating', () => {
@@ -176,7 +176,7 @@ test('extractPreviewMetadata: skips events without a leader field when aggregati
     ],
   };
   const meta = extractPreviewMetadata(fixture);
-  assert.deepEqual(meta!.leaderNames, ['Alice']);
+  assert.deepEqual(meta!.actorNames, ['Alice']);
 });
 
 test('extractPreviewMetadata: verdict=null reports hasVerdict false', () => {

@@ -14,7 +14,7 @@ import styles from './QuickstartProgress.module.scss';
 export type Stage = 'compile' | 'research' | 'leaders' | 'running' | 'done';
 export type StageStatus = 'pending' | 'active' | 'done';
 
-export interface LeaderProgress {
+export interface ActorProgress {
   name: string;
   archetype: string;
   currentTurn: number;
@@ -24,7 +24,7 @@ export interface LeaderProgress {
 
 export interface QuickstartProgressProps {
   stage: Stage;
-  leaders?: LeaderProgress[];
+  leaders?: ActorProgress[];
   onCancel?: () => void;
 }
 
@@ -65,8 +65,8 @@ export function QuickstartProgress({ stage, leaders, onCancel }: QuickstartProgr
         <div className={styles.leaders}>
           {leaders.map((l, i) => (
             <div key={i} className={styles.leader}>
-              <span className={styles.leaderName}>{l.name}</span>
-              <span className={styles.leaderArchetype}>{l.archetype}</span>
+              <span className={styles.actorName}>{l.name}</span>
+              <span className={styles.actorArchetype}>{l.archetype}</span>
               <span className={`${styles.leaderStatus} ${styles[`leader_${l.status}`]}`}>
                 {l.status === 'running' ? `Turn ${l.currentTurn} / ${l.maxTurns}` : l.status.toUpperCase()}
               </span>

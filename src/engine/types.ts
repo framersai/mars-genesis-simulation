@@ -44,7 +44,7 @@ export interface ScenarioLabels {
    * abstract type. Scenarios specialize it: Mars Genesis sets "commander",
    * a hurricane scenario sets "incident commander", an AI release sets
    * "release director", a quantum-game scenario sets "player". The
-   * engine type stays `LeaderConfig` for SDK back-compat; this label is
+   * engine type stays `ActorConfig` for SDK back-compat; this label is
    * for UI / copy / button text rendering only.
    */
   actorNoun?: string;
@@ -286,7 +286,7 @@ export interface ScenarioHooks {
   /** Returns location/identity/health phrasing for agent reaction prompts */
   reactionContextHook?: (colonist: Agent, ctx: { time: number; turn: number }) => string;
   /** Computes a timeline fingerprint classification from final simulation state */
-  fingerprintHook?: (finalState: SimulationState, outcomeLog: Array<{ turn: number; time: number; outcome: string }>, leader: LeaderConfig, toolRegs: Record<string, string[]>, maxTurns: number) => Record<string, string>;
+  fingerprintHook?: (finalState: SimulationState, outcomeLog: Array<{ turn: number; time: number; outcome: string }>, leader: ActorConfig, toolRegs: Record<string, string[]>, maxTurns: number) => Record<string, string>;
   /** Returns a milestone event for narrative anchor turns (turn 1, final turn) */
   getMilestoneEvent?: (turn: number, maxTurns: number) => MilestoneEventDef | null;
   /** Returns politics deltas for political/social events, null if not applicable */
@@ -339,12 +339,12 @@ export interface Scenario {
 
 /**
  * Configuration for a simulation actor — the swappable decision-making
- * entity that runs each parallel counterfactual. Was `LeaderConfig` in
+ * entity that runs each parallel counterfactual. Was `ActorConfig` in
  * 0.7.x; renamed in 0.8.0 to match the user-facing terminology
  * (`scenario.labels.actorNoun` selects the per-domain label like
  * "commander" / "mayor" / "release director").
  *
- * The legacy `LeaderConfig` name is exported below as a `@deprecated`
+ * The legacy `ActorConfig` name is exported below as a `@deprecated`
  * type alias so 0.7.x callers compile unchanged. Drop in 1.0.
  */
 export interface ActorConfig {
@@ -363,7 +363,7 @@ export interface ActorConfig {
    * v0.7 callers; for non-HEXACO trait models (e.g. `ai-agent`), supply
    * a representative HEXACO snapshot AND set `traitProfile` to the
    * canonical model + traits the runtime should use. The
-   * `normalizeLeaderConfig` helper at runtime synthesizes a
+   * `normalizeActorConfig` helper at runtime synthesizes a
    * `traitProfile` from this field when `traitProfile` is omitted, so
    * existing leader configs continue to work unchanged.
    *
@@ -382,15 +382,6 @@ export interface ActorConfig {
   traitProfile?: TraitProfile;
   instructions: string;
 }
-
-/**
- * @deprecated since 0.8.0 — alias for {@link ActorConfig}. Will be
- * removed in 1.0. Existing callers compile unchanged; new code should
- * import `ActorConfig` directly. The runtime function
- * `runSimulation(actor, ...)` accepts either type since they are
- * structurally identical.
- */
-export type LeaderConfig = ActorConfig;
 
 // ---------------------------------------------------------------------------
 // LLM provider types

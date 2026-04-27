@@ -12,7 +12,7 @@ import { createMarsServer } from './server-app.js';
 import { normalizeSimulationConfig } from './sim-config.js';
 import { parseCliRunOptions } from './cli-run-options.js';
 import { resolveLeaders, parseLeadersFlag } from './leaders-resolver.js';
-import type { LeaderConfig } from './types.js';
+import type { ActorConfig } from './types.js';
 
 function loadEnvFromCwd(): void {
   const envPath = resolve(process.cwd(), '.env');
@@ -64,7 +64,7 @@ export async function runDashboard(argv: readonly string[]): Promise<number> {
   }
 
   const explicitPath = parseLeadersFlag(argv);
-  let leaders: LeaderConfig[];
+  let leaders: ActorConfig[];
   try {
     const resolved = resolveLeaders({ explicitPath });
     leaders = resolved.leaders;

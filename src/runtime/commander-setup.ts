@@ -22,7 +22,7 @@
 
 import type { Department, HexacoProfile } from '../engine/core/state.js';
 import type { SimulationKernel } from '../engine/core/kernel.js';
-import type { ScenarioPackage, LeaderConfig } from '../engine/types.js';
+import type { ScenarioPackage, ActorConfig } from '../engine/types.js';
 import type { CallUsage } from './cost-tracker.js';
 import { buildPromotionPrompt } from './runtime-helpers.js';
 import { sendAndValidate } from './llm-invocations/sendAndValidate.js';
@@ -107,7 +107,7 @@ export interface PromotionKernel {
 export interface RunPromotionArgs {
   kernel: PromotionKernel;
   scenario: ScenarioPackage;
-  leader: LeaderConfig;
+  leader: ActorConfig;
   startTime: number;
   /** Commander session `.send(prompt)` — returns whatever AgentOS returns. */
   sendToCommander: (prompt: string) => Promise<{ text: string; usage?: CallUsage }>;

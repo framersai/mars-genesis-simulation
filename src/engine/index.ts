@@ -38,15 +38,11 @@ export {
 } from './trait-models/drift.js';
 export {
   normalizeActorConfig,
-  /** @deprecated since 0.8.0 — alias for normalizeActorConfig. Removed in 1.0. */
-  normalizeLeaderConfig,
   hexacoToTraits,
   traitsToHexaco,
 } from './trait-models/normalize-leader.js';
 export type {
   NormalizedActorConfig,
-  /** @deprecated since 0.8.0 — alias for NormalizedActorConfig. */
-  NormalizedLeaderConfig,
   NormalizeOptions,
 } from './trait-models/normalize-leader.js';
 
@@ -100,8 +96,6 @@ export type { SystemsPatch, PolicyEffect, SimulationInitOverrides } from './core
 export type { HexacoSnapshot, LifeEvent } from './core/state.js';
 export type {
   ActorConfig,
-  /** @deprecated since 0.8.0 — alias for ActorConfig. Removed in 1.0. */
-  LeaderConfig,
   LlmProvider,
   SimulationModelConfig,
   Scenario,

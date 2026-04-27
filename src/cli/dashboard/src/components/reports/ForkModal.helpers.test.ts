@@ -6,9 +6,9 @@ import assert from 'node:assert/strict';
 
 import { resolveLeaderPresets, estimateForkCost, parseCustomEvents } from './ForkModal.helpers.js';
 import { marsScenario } from '../../../../../engine/mars/index.js';
-import type { LeaderConfig } from '../../../../../engine/types.js';
+import type { ActorConfig } from '../../../../../engine/types.js';
 
-function fakeCustom(name: string): LeaderConfig {
+function fakeCustom(name: string): ActorConfig {
   return {
     name,
     archetype: 'Session',

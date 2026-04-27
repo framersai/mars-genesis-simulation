@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  normalizeLeaderConfig,
+  normalizeActorConfig,
   hexacoToTraits,
   traitsToHexaco,
 } from '../../../src/engine/trait-models/normalize-leader.js';
@@ -11,9 +11,9 @@ import {
   TraitModelRegistry,
   UnknownTraitModelError,
 } from '../../../src/engine/trait-models/index.js';
-import type { LeaderConfig } from '../../../src/engine/types.js';
+import type { ActorConfig } from '../../../src/engine/types.js';
 
-const baseLegacyLeader: LeaderConfig = {
+const baseLegacyLeader: ActorConfig = {
   name: 'Captain Reyes',
   archetype: 'Pragmatist',
   unit: 'Station Alpha',
@@ -35,10 +35,10 @@ function freshRegistry() {
   return reg;
 }
 
-describe('normalizeLeaderConfig', () => {
+describe('normalizeActorConfig', () => {
   it('synthesizes traitProfile from legacy hexaco field', () => {
     const reg = freshRegistry();
-    const normalized = normalizeLeaderConfig(baseLegacyLeader, { registry: reg });
+    const normalized = normalizeActorConfig(baseLegacyLeader, { registry: reg });
     assert.equal(normalized.traitProfile.modelId, 'hexaco');
     assert.equal(normalized.traitProfile.traits.openness, 0.4);
     assert.equal(normalized.traitProfile.traits.conscientiousness, 0.9);
@@ -47,7 +47,7 @@ describe('normalizeLeaderConfig', () => {
 
   it('preserves explicit traitProfile when set', () => {
     const reg = freshRegistry();
-    const leader: LeaderConfig = {
+    const leader: ActorConfig = {
       ...baseLegacyLeader,
       traitProfile: {
         modelId: 'ai-agent',
@@ -61,7 +61,7 @@ describe('normalizeLeaderConfig', () => {
         },
       },
     };
-    const normalized = normalizeLeaderConfig(leader, { registry: reg });
+    const normalized = normalizeActorConfig(leader, { registry: reg });
     assert.equal(normalized.traitProfile.modelId, 'ai-agent');
     assert.equal(normalized.traitProfile.traits.exploration, 0.85);
     // Hexaco field is preserved on the normalized output (back-compat).
@@ -70,14 +70,14 @@ describe('normalizeLeaderConfig', () => {
 
   it('fills missing axes with model defaults', () => {
     const reg = freshRegistry();
-    const leader: LeaderConfig = {
+    const leader: ActorConfig = {
       ...baseLegacyLeader,
       traitProfile: {
         modelId: 'ai-agent',
         traits: { exploration: 0.85 }, // others omitted, default to 0.5
       },
     };
-    const normalized = normalizeLeaderConfig(leader, { registry: reg });
+    const normalized = normalizeActorConfig(leader, { registry: reg });
     assert.equal(normalized.traitProfile.traits.exploration, 0.85);
     assert.equal(normalized.traitProfile.traits.deference, 0.5);
     assert.equal(normalized.traitProfile.traits['verification-rigor'], 0.5);
@@ -85,12 +85,12 @@ describe('normalizeLeaderConfig', () => {
 
   it('throws UnknownTraitModelError on unregistered modelId', () => {
     const reg = freshRegistry();
-    const leader: LeaderConfig = {
+    const leader: ActorConfig = {
       ...baseLegacyLeader,
       traitProfile: { modelId: 'nope', traits: {} },
     };
     assert.throws(
-      () => normalizeLeaderConfig(leader, { registry: reg }),
+      () => normalizeActorConfig(leader, { registry: reg }),
       (err: unknown) => {
         assert.ok(err instanceof UnknownTraitModelError);
         return true;
@@ -101,7 +101,7 @@ describe('normalizeLeaderConfig', () => {
   it('uses the singleton registry by default', () => {
     // The singleton has hexaco + ai-agent registered via builtins.ts.
     // No `registry` option passed.
-    const normalized = normalizeLeaderConfig(baseLegacyLeader);
+    const normalized = normalizeActorConfig(baseLegacyLeader);
     assert.equal(normalized.traitProfile.modelId, 'hexaco');
   });
 });

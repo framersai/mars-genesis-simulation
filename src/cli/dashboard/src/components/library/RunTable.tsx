@@ -40,7 +40,7 @@ export function RunTable(props: RunTableProps): JSX.Element {
           >
             <td>{r.scenarioId}</td>
             <td><span data-mode={r.mode ?? 'unknown'} className={styles.modeCell}>{r.mode ?? '-'}</span></td>
-            <td>{r.leaderName ?? '-'}</td>
+            <td>{r.actorName ?? '-'}</td>
             <td>{r.costUSD != null ? `$${r.costUSD.toFixed(2)}` : '-'}</td>
             <td>{r.durationMs != null ? `${(r.durationMs / 1000).toFixed(0)}s` : '-'}</td>
             <td>{r.createdAt.slice(0, 19).replace('T', ' ')}</td>

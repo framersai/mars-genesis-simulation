@@ -32,7 +32,7 @@ export interface PreviewMetadata {
   /** Saved schema version or `'legacy'` for pre-0.5 files. */
   schemaVersion: number | 'legacy';
   /** Deduplicated list of leader names seen in the event stream. */
-  leaderNames: string[];
+  actorNames: string[];
   /** Highest turn number observed across all events. */
   turnCount: number;
   /** Number of events in the stream. */
@@ -105,13 +105,13 @@ export function extractPreviewMetadata(
   const events = Array.isArray(obj.events) ? (obj.events as EventLike[]) : null;
   if (!events || events.length === 0) return null;
 
-  const leaderNames: string[] = [];
+  const actorNames: string[] = [];
   const seenLeaders = new Set<string>();
   let maxTurn = 0;
   for (const e of events) {
     if (typeof e?.leader === 'string' && e.leader && !seenLeaders.has(e.leader)) {
       seenLeaders.add(e.leader);
-      leaderNames.push(e.leader);
+      actorNames.push(e.leader);
     }
     const turn = extractTurn(e);
     if (turn > maxTurn) maxTurn = turn;
@@ -140,7 +140,7 @@ export function extractPreviewMetadata(
   return {
     scenarioName,
     schemaVersion,
-    leaderNames,
+    actorNames,
     turnCount: maxTurn,
     eventCount: events.length,
     startedAt,

@@ -114,7 +114,7 @@ export interface TraitModel {
 
 /**
  * A leader's (or agent's) profile under a specific trait model. Stored
- * on LeaderConfig.traitProfile and Agent.traitProfile.
+ * on ActorConfig.traitProfile and Agent.traitProfile.
  */
 export interface TraitProfile {
   /** id of the registered TraitModel. */
@@ -201,7 +201,7 @@ export class TraitModelRegistry {
     for (const axis of model.axes) {
       // Axis ids accept kebab-case OR camelCase identifier-safe strings.
       // The hexaco model's `honestyHumility` axis is camelCase to match
-      // the legacy LeaderConfig.hexaco.honestyHumility field name so the
+      // the legacy ActorConfig.hexaco.honestyHumility field name so the
       // back-compat resolver can synthesize TraitProfile.traits from
       // the legacy field without renaming. New models should still
       // prefer kebab-case for new axes.

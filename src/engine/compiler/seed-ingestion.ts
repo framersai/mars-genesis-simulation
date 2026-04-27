@@ -16,8 +16,12 @@
 
 import type { KnowledgeBundle, KnowledgeCitation, KnowledgeTopic } from '../types.js';
 import type { GenerateTextFn } from './types.js';
+import {
+  searchCredential,
+  type SearchCredentialOptions,
+} from '../provider-credentials.js';
 
-export interface SeedIngestionOptions {
+export interface SeedIngestionOptions extends SearchCredentialOptions {
   /** LLM generateText function */
   generateText: GenerateTextFn;
   /** Enable live web search to enrich with real citations. Requires search API keys in env. */
@@ -75,24 +79,29 @@ Focus on extractable, verifiable facts. Search queries should target academic pa
 async function searchForCitations(
   queries: string[],
   maxSearches: number,
+  credentials: SearchCredentialOptions = {},
 ): Promise<Array<{ query: string; results: Array<{ title: string; url: string; snippet: string }> }>> {
   const searchResults: Array<{ query: string; results: Array<{ title: string; url: string; snippet: string }> }> = [];
+  const firecrawlKey = searchCredential(credentials.firecrawlKey, 'FIRECRAWL_API_KEY');
+  const tavilyKey = searchCredential(credentials.tavilyKey, 'TAVILY_API_KEY');
+  const serperKey = searchCredential(credentials.serperKey, 'SERPER_API_KEY');
+  const braveKey = searchCredential(credentials.braveKey, 'BRAVE_API_KEY');
 
   try {
     const { WebSearchService, FirecrawlProvider, TavilyProvider, SerperProvider, BraveProvider } = await import('@framers/agentos/web-search');
     const service = new WebSearchService();
 
-    if (process.env.FIRECRAWL_API_KEY) service.registerProvider(new FirecrawlProvider(process.env.FIRECRAWL_API_KEY));
-    if (process.env.TAVILY_API_KEY) service.registerProvider(new TavilyProvider(process.env.TAVILY_API_KEY));
-    if (process.env.SERPER_API_KEY) service.registerProvider(new SerperProvider(process.env.SERPER_API_KEY));
-    if (process.env.BRAVE_API_KEY) service.registerProvider(new BraveProvider(process.env.BRAVE_API_KEY));
+    if (firecrawlKey) service.registerProvider(new FirecrawlProvider(firecrawlKey));
+    if (tavilyKey) service.registerProvider(new TavilyProvider(tavilyKey));
+    if (serperKey) service.registerProvider(new SerperProvider(serperKey));
+    if (braveKey) service.registerProvider(new BraveProvider(braveKey));
 
     if (!service.hasProviders()) {
       console.log('  [seed] No search API keys configured. Skipping web search enrichment.');
       return [];
     }
 
-    const useRerank = !!process.env.COHERE_API_KEY;
+    const useRerank = !!searchCredential(credentials.cohereKey, 'COHERE_API_KEY');
     const queriesToRun = queries.slice(0, maxSearches);
 
     for (const query of queriesToRun) {
@@ -108,14 +117,13 @@ async function searchForCitations(
     }
   } catch {
     // AgentOS web-search module not available, try direct Serper fallback
-    const key = process.env.SERPER_API_KEY;
-    if (!key) return [];
+    if (!serperKey) return [];
 
     for (const query of queries.slice(0, maxSearches)) {
       try {
         const res = await fetch('https://google.serper.dev/search', {
           method: 'POST',
-          headers: { 'X-API-KEY': key, 'Content-Type': 'application/json' },
+          headers: { 'X-API-KEY': serperKey, 'Content-Type': 'application/json' },
           body: JSON.stringify({ q: query, num: 3 }),
         });
         if (res.ok) {
@@ -228,7 +236,7 @@ export async function ingestSeed(
   let searchResults: Array<{ query: string; results: Array<{ title: string; url: string; snippet: string }> }> = [];
   if (webSearch && extracted.searchQueries.length > 0) {
     onProgress?.('search', 'start');
-    searchResults = await searchForCitations(extracted.searchQueries, maxSearches);
+    searchResults = await searchForCitations(extracted.searchQueries, maxSearches, options);
     onProgress?.('search', 'done');
     const totalCitations = searchResults.reduce((sum, sr) => sum + sr.results.length, 0);
     console.log(`  [seed] Web search found ${totalCitations} citations from ${searchResults.length} queries`);
@@ -253,7 +261,7 @@ export async function ingestFromUrl(
 
   // Try Firecrawl first for clean markdown extraction
   try {
-    const key = process.env.FIRECRAWL_API_KEY;
+    const key = searchCredential(options.firecrawlKey, 'FIRECRAWL_API_KEY');
     if (key) {
       const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
         method: 'POST',

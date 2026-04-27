@@ -7,7 +7,7 @@
  *   - GET /api/v1/bundles/:id/aggregate  -> server-side rollup (counts, cost)
  *
  * Lazy-loading: members in the listBundle response carry only the
- * RunRecord summary (cost, duration, leaderName, summaryTrajectory).
+ * RunRecord summary (cost, duration, actorName, summaryTrajectory).
  * Full RunArtifact JSON is fetched per-cell via the existing
  * /api/v1/runs/:id endpoint when a cell is pinned or opened.
  *

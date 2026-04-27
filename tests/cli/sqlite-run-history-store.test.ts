@@ -9,7 +9,7 @@ function makeRun(overrides: Partial<RunRecord> = {}): RunRecord {
     createdAt: new Date().toISOString(),
     scenarioId: 'mars-genesis',
     scenarioVersion: '0.4.88',
-    leaderConfigHash: 'leaders:abc',
+    actorConfigHash: 'leaders:abc',
     economicsProfile: 'balanced',
     sourceMode: 'local_demo',
     createdBy: 'anonymous',
@@ -59,21 +59,21 @@ test('listRuns filters by sourceMode', async () => {
   assert.equal(rows[0].runId, 'r2');
 });
 
-test('listRuns filters by leaderConfigHash', async () => {
+test('listRuns filters by actorConfigHash', async () => {
   const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
-  await store.insertRun(makeRun({ runId: 'r1', leaderConfigHash: 'leaders:abc' }));
-  await store.insertRun(makeRun({ runId: 'r2', leaderConfigHash: 'leaders:def' }));
-  const rows = await store.listRuns({ leaderConfigHash: 'leaders:def' });
+  await store.insertRun(makeRun({ runId: 'r1', actorConfigHash: 'leaders:abc' }));
+  await store.insertRun(makeRun({ runId: 'r2', actorConfigHash: 'leaders:def' }));
+  const rows = await store.listRuns({ actorConfigHash: 'leaders:def' });
   assert.equal(rows.length, 1);
   assert.equal(rows[0].runId, 'r2');
 });
 
 test('listRuns combines all three filters with AND semantics', async () => {
   const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
-  await store.insertRun(makeRun({ runId: 'match', scenarioId: 'mars-genesis', sourceMode: 'platform_api', leaderConfigHash: 'leaders:abc' }));
-  await store.insertRun(makeRun({ runId: 'wrong-scenario', scenarioId: 'lunar-outpost', sourceMode: 'platform_api', leaderConfigHash: 'leaders:abc' }));
-  await store.insertRun(makeRun({ runId: 'wrong-mode', scenarioId: 'mars-genesis', sourceMode: 'local_demo', leaderConfigHash: 'leaders:abc' }));
-  const rows = await store.listRuns({ scenarioId: 'mars-genesis', sourceMode: 'platform_api', leaderConfigHash: 'leaders:abc' });
+  await store.insertRun(makeRun({ runId: 'match', scenarioId: 'mars-genesis', sourceMode: 'platform_api', actorConfigHash: 'leaders:abc' }));
+  await store.insertRun(makeRun({ runId: 'wrong-scenario', scenarioId: 'lunar-outpost', sourceMode: 'platform_api', actorConfigHash: 'leaders:abc' }));
+  await store.insertRun(makeRun({ runId: 'wrong-mode', scenarioId: 'mars-genesis', sourceMode: 'local_demo', actorConfigHash: 'leaders:abc' }));
+  const rows = await store.listRuns({ scenarioId: 'mars-genesis', sourceMode: 'platform_api', actorConfigHash: 'leaders:abc' });
   assert.equal(rows.length, 1);
   assert.equal(rows[0].runId, 'match');
 });
@@ -156,7 +156,7 @@ test('SqliteRunHistoryStore round-trips Library-tab denormalized fields', async 
     createdAt: new Date().toISOString(),
     scenarioId: 'mars-genesis',
     scenarioVersion: '0.7.0',
-    leaderConfigHash: 'leaders:abc123',
+    actorConfigHash: 'leaders:abc123',
     economicsProfile: 'balanced',
     sourceMode: 'local_demo',
     createdBy: 'anonymous',
@@ -164,8 +164,8 @@ test('SqliteRunHistoryStore round-trips Library-tab denormalized fields', async 
     costUSD: 0.42,
     durationMs: 12345,
     mode: 'batch-trajectory',
-    leaderName: 'Marcus Reinhardt',
-    leaderArchetype: 'pragmatist',
+    actorName: 'Marcus Reinhardt',
+    actorArchetype: 'pragmatist',
   };
   await store.insertRun(record);
   const fetched = await store.getRun(record.runId);
@@ -187,8 +187,8 @@ test('listRuns filters by simulation mode (turn-loop vs batch-trajectory)', asyn
 
 test('listRuns filters by free-text q across scenario, leader, archetype', async () => {
   const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
-  await store.insertRun(makeRun({ runId: 'mars-1', scenarioId: 'mars-genesis', leaderName: 'Ada', leaderArchetype: 'visionary' }));
-  await store.insertRun(makeRun({ runId: 'lunar-1', scenarioId: 'lunar-outpost', leaderName: 'Marcus', leaderArchetype: 'pragmatist' }));
+  await store.insertRun(makeRun({ runId: 'mars-1', scenarioId: 'mars-genesis', actorName: 'Ada', actorArchetype: 'visionary' }));
+  await store.insertRun(makeRun({ runId: 'lunar-1', scenarioId: 'lunar-outpost', actorName: 'Marcus', actorArchetype: 'pragmatist' }));
   const lunar = await store.listRuns({ q: 'lunar' });
   assert.equal(lunar.length, 1);
   assert.equal(lunar[0].runId, 'lunar-1');

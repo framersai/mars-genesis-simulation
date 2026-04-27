@@ -5,7 +5,7 @@
  * @module paracosm/dashboard/quickstart/ActorPresetPicker
  */
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { LEADER_PRESETS, type LeaderPreset } from '../../../../../engine/leader-presets.js';
+import { ACTOR_PRESETS, type LeaderPreset } from '../../../../../engine/leader-presets.js';
 import styles from './ActorPresetPicker.module.scss';
 
 export interface ActorPresetPickerProps {
@@ -34,7 +34,7 @@ export function ActorPresetPicker({ onSelect, onClose }: ActorPresetPickerProps)
           <button type="button" onClick={onClose} aria-label="Close">×</button>
         </header>
         <ul className={styles.list}>
-          {Object.values(LEADER_PRESETS).map(p => (
+          {Object.values(ACTOR_PRESETS).map(p => (
             <li key={p.id}>
               <button
                 type="button"

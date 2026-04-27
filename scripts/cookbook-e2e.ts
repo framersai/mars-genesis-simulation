@@ -10,7 +10,7 @@
  *
  * Steps:
  *   1. WorldModel.fromPrompt({ seedText, domainHint })
- *   2. wm.quickstart({ leaderCount: 3 })
+ *   2. wm.quickstart({ actorCount: 3 })
  *   3. wm.forkFromArtifact(trunk, atTurn=1).simulate(altLeader)
  *   4. wm.replay(trunk)
  *   5. POST /simulate (in-process server)
@@ -29,7 +29,7 @@ import { WorldModel } from '../src/runtime/world-model/index.js';
 import { runBatch } from '../src/runtime/batch.js';
 import { compileScenario } from '../src/engine/compiler/index.js';
 import { marsScenario } from '../src/engine/mars/index.js';
-import type { LeaderConfig } from '../src/engine/types.js';
+import type { ActorConfig } from '../src/engine/types.js';
 import type { RunArtifact, SubjectConfig, InterventionConfig } from '../src/engine/schema/index.js';
 import { createMarsServer } from '../src/cli/server-app.js';
 
@@ -202,11 +202,11 @@ async function loadKnownGoodWorld(): Promise<WorldModel> {
   return WorldModel.fromScenario(compiled);
 }
 
-async function step2Quickstart(wm: WorldModel): Promise<{ trunk: RunArtifact; allLeaders: LeaderConfig[]; allArtifacts: RunArtifact[] }> {
+async function step2Quickstart(wm: WorldModel): Promise<{ trunk: RunArtifact; allLeaders: ActorConfig[]; allArtifacts: RunArtifact[] }> {
   log('\n[2/7] wm.quickstart: auto-generated leaders run in parallel');
   const t0 = Date.now();
   const result = await wm.quickstart({
-    leaderCount: 3,
+    actorCount: 3,
     maxTurns: 3,
     seed: 42,
     captureSnapshots: true,
@@ -223,7 +223,7 @@ async function step2Quickstart(wm: WorldModel): Promise<{ trunk: RunArtifact; al
   log(`  ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
   persist('02-input-quickstart-options.json', {
-    leaderCount: 3, maxTurns: 3, seed: 42, captureSnapshots: true,
+    actorCount: 3, maxTurns: 3, seed: 42, captureSnapshots: true,
     provider: 'openai', model: 'gpt-5.4-nano',
   });
   persist('02-output-leaders.json', result.leaders);
@@ -232,7 +232,7 @@ async function step2Quickstart(wm: WorldModel): Promise<{ trunk: RunArtifact; al
   return { trunk: result.artifacts[0], allLeaders: result.leaders, allArtifacts: result.artifacts };
 }
 
-async function step3Fork(wm: WorldModel, trunk: RunArtifact, altLeader: LeaderConfig): Promise<RunArtifact> {
+async function step3Fork(wm: WorldModel, trunk: RunArtifact, altLeader: ActorConfig): Promise<RunArtifact> {
   log('\n[3/7] wm.forkFromArtifact: branch at turn 1 with a different leader');
   const t0 = Date.now();
   const branchWm = await wm.forkFromArtifact(trunk, 1);
@@ -274,7 +274,7 @@ async function step4Replay(wm: WorldModel, trunk: RunArtifact): Promise<void> {
   persist('04-output-replay-result.json', { matches: replay.matches, divergence: replay.divergence });
 }
 
-async function step5HttpSimulate(wm: WorldModel, leader: LeaderConfig): Promise<void> {
+async function step5HttpSimulate(wm: WorldModel, leader: ActorConfig): Promise<void> {
   log('\n[5/7] POST /simulate: in-process server, real curl-equivalent fetch');
   const t0 = Date.now();
 
@@ -340,7 +340,7 @@ async function step5HttpSimulate(wm: WorldModel, leader: LeaderConfig): Promise<
   log(`  ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 }
 
-async function step6DigitalTwin(wm: WorldModel, leader: LeaderConfig): Promise<RunArtifact> {
+async function step6DigitalTwin(wm: WorldModel, leader: ActorConfig): Promise<RunArtifact> {
   log('\n[6/7] wm.simulateIntervention: digital-twin pattern');
   const t0 = Date.now();
   const subject: SubjectConfig = {
@@ -381,7 +381,7 @@ async function step6DigitalTwin(wm: WorldModel, leader: LeaderConfig): Promise<R
   return artifact;
 }
 
-async function step7Batch(wm: WorldModel, leaders: LeaderConfig[]): Promise<void> {
+async function step7Batch(wm: WorldModel, leaders: ActorConfig[]): Promise<void> {
   log('\n[7/7] runBatch: N scenarios x M leaders manifest');
   const t0 = Date.now();
   // marsScenario is already a compiled ScenarioPackage exported from
@@ -457,11 +457,11 @@ async function main(): Promise<void> {
   // for the expensive quickstart simulations. Set FORCE=1 to override.
   const resumeAvailable = !process.env.FORCE && existsSync(join(OUTPUT_DIR, '02-output-leaders.json'));
   let wm: WorldModel;
-  let allLeaders: LeaderConfig[];
+  let allLeaders: ActorConfig[];
   if (resumeAvailable) {
     log('\n[resume] reusing captured leaders + scenario from prior run');
     wm = await loadKnownGoodWorld();
-    allLeaders = JSON.parse(readFileSync(join(OUTPUT_DIR, '02-output-leaders.json'), 'utf8')) as LeaderConfig[];
+    allLeaders = JSON.parse(readFileSync(join(OUTPUT_DIR, '02-output-leaders.json'), 'utf8')) as ActorConfig[];
   } else {
     await step1FromPrompt();
     wm = await loadKnownGoodWorld();

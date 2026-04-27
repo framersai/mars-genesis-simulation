@@ -34,7 +34,7 @@ function mkEntry(id: number, scenario = 'mars'): LocalHistoryEntry {
     results: [],
     verdict: null,
     scenarioShortName: scenario,
-    summary: { leaderNames: [], turnCount: 0, eventCount: 0 },
+    summary: { actorNames: [], turnCount: 0, eventCount: 0 },
   };
 }
 
@@ -104,7 +104,7 @@ test('summarizeEvents: collects unique leader names', () => {
     { type: 'turn_start', leader: 'Alice', data: { turn: 2 } },
   ] as never;
   const s = summarizeEvents(events, []);
-  assert.deepEqual(s.leaderNames, ['Alice', 'Bob']);
+  assert.deepEqual(s.actorNames, ['Alice', 'Bob']);
 });
 
 test('summarizeEvents: turnCount is max turn across events', () => {
@@ -174,7 +174,7 @@ test('migrateLegacySlot: valid legacy payload -> ring entry', () => {
   const entry = migrateLegacySlot(legacy, 'mars');
   assert.ok(entry);
   assert.equal(entry!.scenarioShortName, 'mars');
-  assert.deepEqual(entry!.summary.leaderNames, ['Alice']);
+  assert.deepEqual(entry!.summary.actorNames, ['Alice']);
   assert.equal(entry!.createdAt, '2026-04-20T12:00:00.000Z');
 });
 

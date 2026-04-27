@@ -3,7 +3,7 @@
  *
  * - `POST /api/quickstart/fetch-seed`: URL -> extracted main text + title.
  * - `POST /api/quickstart/compile-from-seed`: seedText -> compiled ScenarioPackage.
- * - `POST /api/quickstart/generate-leaders`: scenarioId -> LeaderConfig[].
+ * - `POST /api/quickstart/generate-leaders`: scenarioId -> ActorConfig[].
  *
  * Each is stateless except for the compiled-scenario install: a
  * successful `compile-from-seed` installs the result as the active

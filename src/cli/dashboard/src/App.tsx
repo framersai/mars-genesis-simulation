@@ -360,8 +360,8 @@ function AppContent() {
   }, [setActiveTab]);
 
   const handleCopySummary = useCallback(() => {
-    const firstId = gameState.leaderIds[0];
-    const secondId = gameState.leaderIds[1];
+    const firstId = gameState.actorIds[0];
+    const secondId = gameState.actorIds[1];
     const a = firstId ? gameState.leaders[firstId] : null;
     const b = secondId ? gameState.leaders[secondId] : null;
     // Fallback names when the SSE stream has not yet sent a leader

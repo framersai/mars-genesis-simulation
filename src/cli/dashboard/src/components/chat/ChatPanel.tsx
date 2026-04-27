@@ -52,8 +52,8 @@ const moodColors: Record<string, string> = {
 function EventContext({ memory, events, scenario }: { memory: AgentMemoryInfo; events: GameState; scenario: { labels: { eventNoun?: string; eventNounSingular?: string } } }) {
   // Collect event titles from every leader's timeline, deduped by turn.
   const eventTimeline: Array<{ turn: number; time: number; title: string; category: string }> = [];
-  for (const leaderName of events.leaderIds) {
-    const sideState = events.leaders[leaderName];
+  for (const actorName of events.actorIds) {
+    const sideState = events.leaders[actorName];
     if (!sideState) continue;
     for (const evt of sideState.events) {
       if (evt.type === 'turn_start' && evt.data.title && evt.data.title !== 'Director generating...') {
@@ -159,8 +159,8 @@ export function ChatPanel({ state, onChatUsage }: ChatPanelProps) {
 
   const agents = useMemo(() => {
     const map = new Map<string, AgentInfo>();
-    for (const leaderName of state.leaderIds) {
-      const sideState = state.leaders[leaderName];
+    for (const actorName of state.actorIds) {
+      const sideState = state.leaders[actorName];
       if (!sideState) continue;
       for (const evt of sideState.events) {
         if (evt.type === 'agent_reactions') {

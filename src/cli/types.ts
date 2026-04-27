@@ -1,7 +1,7 @@
 import type { HexacoProfile } from '../engine/core/state.js';
 export type { HexacoProfile };
 
-export interface LeaderConfig {
+export interface ActorConfig {
   name: string;
   archetype: string;
   unit: string;
@@ -54,7 +54,7 @@ export interface SimulationLog {
   version: '1.0.0';
   startedAt: string;
   completedAt: string;
-  leader: Omit<LeaderConfig, 'instructions'>;
+  leader: Omit<ActorConfig, 'instructions'>;
   turns: TurnResult[];
   finalAssessment: {
     population: number;

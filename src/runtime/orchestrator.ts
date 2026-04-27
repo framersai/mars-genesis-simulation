@@ -36,7 +36,7 @@ import { SeededRng } from '../engine/core/rng.js';
 import { classifyOutcome, classifyOutcomeById, driftCommanderHexaco } from '../engine/core/progression.js';
 import { buildTrajectoryCue } from './hexaco-cues/trajectory.js';
 import { buildTrajectoryCue as buildTrajectoryCueGeneric, type TraitProfileSnapshot } from './trait-cues/trajectory.js';
-import { normalizeLeaderConfig } from '../engine/trait-models/normalize-leader.js';
+import { normalizeActorConfig } from '../engine/trait-models/normalize-leader.js';
 import { traitModelRegistry, type TraitProfile } from '../engine/trait-models/index.js';
 import { driftLeaderProfile } from '../engine/trait-models/drift.js';
 import type { DepartmentReport, CommanderDecision, TurnArtifact } from './contracts.js';
@@ -68,10 +68,10 @@ import { applyCustomEventToCrisis, buildTimeSchedule } from './runtime-helpers.j
 import { classifyProviderError, shouldAbortRun, type ClassifiedProviderError } from './provider-errors.js';
 import { EffectRegistry } from '../engine/effect-registry.js';
 import { marsScenario } from '../engine/mars/index.js';
-import type { LeaderConfig } from '../engine/types.js';
+import type { ActorConfig } from '../engine/types.js';
 import type { ResolvedEconomicsProfile } from './economics-profile.js';
 import { projectSystemBags } from './world-snapshot.js';
-export type { LeaderConfig };
+export type { ActorConfig };
 
 
 
@@ -436,7 +436,7 @@ export interface RunOptions extends RuntimeCredentialOptions {
   intervention?: InterventionConfig;
 }
 
-export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPersonnel[], opts: RunOptions = {}): Promise<RunArtifact> {
+export async function runSimulation(leader: ActorConfig, keyPersonnel: KeyPersonnel[], opts: RunOptions = {}): Promise<RunArtifact> {
   const startedAtIso = new Date().toISOString();
   const { agent } = await import('@framers/agentos');
   const sc = opts.scenario ?? marsScenario;
@@ -449,7 +449,7 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
   // traitProfile from leader.hexaco. Non-HEXACO callers (e.g. ai-agent
   // leaders) get their explicit traitProfile passed through.
   // See docs/superpowers/specs/2026-04-26-trait-model-generalization-design.md.
-  leader = normalizeLeaderConfig(leader);
+  leader = normalizeActorConfig(leader);
   const timePerTurn = opts.timePerTurn ?? opts.scenario?.setup?.defaultTimePerTurn ?? 1;
   const requestedProvider = resolveProviderFromCredentials(opts.provider, opts, 'openai');
   const requestedProviderApiKey = apiKeyForProvider(requestedProvider, opts);
@@ -1061,7 +1061,7 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
       const alive = preState.agents.filter(c => c.health.alive);
       const dirCtx: DirectorContext = {
         turn, time,
-        leaderName: leader.name, leaderArchetype: leader.archetype, leaderHexaco: commanderHexacoLive,
+        actorName: leader.name, actorArchetype: leader.archetype, leaderHexaco: commanderHexacoLive,
         leaderHexacoHistory: commanderHexacoHistory,
         state: preState.metrics as unknown as Record<string, number>,
         politics: preState.politics as unknown as Record<string, number | string | boolean>,
@@ -2088,8 +2088,8 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
   });
 
   const writtenPath = writeRunOutput(output, {
-    leaderName: leader.name,
-    leaderArchetype: leader.archetype,
+    actorName: leader.name,
+    actorArchetype: leader.archetype,
     turns: artifacts.length,
     toolRegs,
   });

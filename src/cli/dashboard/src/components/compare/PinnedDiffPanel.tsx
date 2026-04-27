@@ -36,8 +36,8 @@ export function PinnedDiffPanel({ pinnedIds, members }: PinnedDiffPanelProps): J
       <header className={styles.head} style={headStyle}>
         {pinnedRecords.map((r) => (
           <div key={r.runId} className={styles.column}>
-            <h4>{r.leaderName ?? 'Unknown'}</h4>
-            {r.leaderArchetype && <span className={styles.archetype}>{r.leaderArchetype}</span>}
+            <h4>{r.actorName ?? 'Unknown'}</h4>
+            {r.actorArchetype && <span className={styles.archetype}>{r.actorArchetype}</span>}
             <div className={styles.statusRow}>
               {loading[r.runId] && <span className={styles.loading}>loading…</span>}
               {errors[r.runId] && <span className={styles.error}>{errors[r.runId]}</span>}

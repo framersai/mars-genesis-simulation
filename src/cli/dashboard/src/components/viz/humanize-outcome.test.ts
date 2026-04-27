@@ -4,7 +4,7 @@ import { humanizeOutcome } from './humanize-outcome.js';
 
 test('humanizeOutcome synthesizes decision + death count + cause', () => {
   const str = humanizeOutcome({
-    leaderName: 'Aria',
+    actorName: 'Aria',
     decision: 'Select Arcadia Planitia for the first permanent settlement landfall.',
     outcome: 'conservative_success',
     deaths: 3,
@@ -17,7 +17,7 @@ test('humanizeOutcome synthesizes decision + death count + cause', () => {
 
 test('humanizeOutcome handles zero deaths cleanly', () => {
   const str = humanizeOutcome({
-    leaderName: 'Dietrich',
+    actorName: 'Dietrich',
     decision: 'Shelter in place in the reinforced core.',
     outcome: 'conservative_success',
     deaths: 0,
@@ -30,7 +30,7 @@ test('humanizeOutcome handles zero deaths cleanly', () => {
 
 test('humanizeOutcome marks risky_failure with a distinct phrase', () => {
   const str = humanizeOutcome({
-    leaderName: 'Aria',
+    actorName: 'Aria',
     decision: 'Push exterior maintenance crews into the storm.',
     outcome: 'risky_failure',
     deaths: 5,
@@ -43,7 +43,7 @@ test('humanizeOutcome marks risky_failure with a distinct phrase', () => {
 
 test('humanizeOutcome falls back to neutral template when decision is empty', () => {
   const str = humanizeOutcome({
-    leaderName: 'Dietrich',
+    actorName: 'Dietrich',
     decision: '',
     outcome: 'conservative_success',
     deaths: 1,

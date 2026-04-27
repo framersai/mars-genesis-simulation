@@ -1,5 +1,5 @@
 import type { LeaderInfo } from '../../hooks/useGameState';
-import { getLeaderColorVar } from '../../hooks/useGameState';
+import { getActorColorVar } from '../../hooks/useGameState';
 import { SparkLine } from '../shared/SparkLine';
 import { Tooltip } from '../shared/Tooltip';
 import styles from './ActorBar.module.scss';
@@ -7,7 +7,7 @@ import styles from './ActorBar.module.scss';
 interface ActorBarProps {
   /** Position in the actor lineup. 0 renders the primary palette, 1 the
    *  secondary. F2/F3 extends beyond 2 via the central color helper. */
-  leaderIndex: number;
+  actorIndex: number;
   leader: LeaderInfo | null;
   popHistory: number[];
   moraleHistory: number[];
@@ -28,11 +28,11 @@ function traitStr(label: string, val: number): string {
   return `${label} ${bar} ${num}`;
 }
 
-export function ActorBar({ leaderIndex, leader, popHistory, moraleHistory, verdictPlacement }: ActorBarProps) {
-  const sideColor = getLeaderColorVar(leaderIndex);
-  const sideBg = leaderIndex === 0 ? 'rgba(232,180,74,.12)' : 'rgba(76,168,168,.12)';
-  const sideBorder = leaderIndex === 0 ? 'var(--amber-dim)' : 'var(--teal-dim)';
-  const fallbackLabel = `Leader ${String.fromCharCode(65 + leaderIndex)}`;
+export function ActorBar({ actorIndex, leader, popHistory, moraleHistory, verdictPlacement }: ActorBarProps) {
+  const sideColor = getActorColorVar(actorIndex);
+  const sideBg = actorIndex === 0 ? 'rgba(232,180,74,.12)' : 'rgba(76,168,168,.12)';
+  const sideBorder = actorIndex === 0 ? 'var(--amber-dim)' : 'var(--teal-dim)';
+  const fallbackLabel = `Leader ${String.fromCharCode(65 + actorIndex)}`;
   const name = leader?.name || fallbackLabel;
   const archetype = leader?.archetype || '';
   const unit = leader?.unit || '';

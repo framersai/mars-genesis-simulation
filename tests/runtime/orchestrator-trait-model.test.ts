@@ -4,7 +4,7 @@
  *
  * Does NOT actually run a simulation (would require LLM calls). The
  * test exercises the runSimulation entry path through the
- * normalizeLeaderConfig step and asserts the call passes input
+ * normalizeActorConfig step and asserts the call passes input
  * validation without throwing on an ai-agent traitProfile.
  *
  * @module tests/runtime/orchestrator-trait-model
@@ -13,7 +13,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  normalizeLeaderConfig,
+  normalizeActorConfig,
 } from '../../src/engine/trait-models/normalize-leader.js';
 import { aiAgentModel } from '../../src/engine/trait-models/ai-agent.js';
 import { hexacoModel } from '../../src/engine/trait-models/hexaco.js';
@@ -21,7 +21,7 @@ import {
   TraitModelRegistry,
   UnknownTraitModelError,
 } from '../../src/engine/trait-models/index.js';
-import type { LeaderConfig } from '../../src/engine/types.js';
+import type { ActorConfig } from '../../src/engine/types.js';
 
 const baseHexaco = {
   openness: 0.5,
@@ -34,20 +34,20 @@ const baseHexaco = {
 
 describe('orchestrator pre-flight: trait-model normalization', () => {
   it('legacy hexaco-only leader normalizes to a hexaco traitProfile', () => {
-    const leader: LeaderConfig = {
+    const leader: ActorConfig = {
       name: 'Captain Reyes',
       archetype: 'Pragmatist',
       unit: 'Station Alpha',
       hexaco: { ...baseHexaco, conscientiousness: 0.9 },
       instructions: 'lead by protocol',
     };
-    const normalized = normalizeLeaderConfig(leader);
+    const normalized = normalizeActorConfig(leader);
     assert.equal(normalized.traitProfile.modelId, 'hexaco');
     assert.equal(normalized.traitProfile.traits.conscientiousness, 0.9);
   });
 
   it('ai-agent leader passes through normalization unchanged', () => {
-    const leader: LeaderConfig = {
+    const leader: ActorConfig = {
       name: 'Atlas-Bot Director',
       archetype: 'Cautious AI Lead',
       unit: 'Frontier Lab',
@@ -65,7 +65,7 @@ describe('orchestrator pre-flight: trait-model normalization', () => {
       },
       instructions: 'evaluate the model release',
     };
-    const normalized = normalizeLeaderConfig(leader);
+    const normalized = normalizeActorConfig(leader);
     assert.equal(normalized.traitProfile.modelId, 'ai-agent');
     assert.equal(normalized.traitProfile.traits['verification-rigor'], 0.9);
     assert.equal(normalized.traitProfile.traits.deference, 0.85);
@@ -74,7 +74,7 @@ describe('orchestrator pre-flight: trait-model normalization', () => {
   });
 
   it('ai-agent leader with partial traits fills missing axes from defaults', () => {
-    const leader: LeaderConfig = {
+    const leader: ActorConfig = {
       name: 'Atlas-Bot',
       archetype: 'Aggressive AI Lead',
       unit: 'Frontier Lab',
@@ -85,7 +85,7 @@ describe('orchestrator pre-flight: trait-model normalization', () => {
       },
       instructions: 'ship fast',
     };
-    const normalized = normalizeLeaderConfig(leader);
+    const normalized = normalizeActorConfig(leader);
     assert.equal(normalized.traitProfile.traits.exploration, 0.85);
     assert.equal(normalized.traitProfile.traits['risk-tolerance'], 0.85);
     // omitted axes default to 0.5
@@ -94,7 +94,7 @@ describe('orchestrator pre-flight: trait-model normalization', () => {
   });
 
   it('throws UnknownTraitModelError on unregistered modelId', () => {
-    const leader: LeaderConfig = {
+    const leader: ActorConfig = {
       name: 'Phantom',
       archetype: 'Unknown',
       unit: 'Nowhere',
@@ -103,7 +103,7 @@ describe('orchestrator pre-flight: trait-model normalization', () => {
       instructions: '',
     };
     assert.throws(
-      () => normalizeLeaderConfig(leader),
+      () => normalizeActorConfig(leader),
       (err: unknown) => {
         assert.ok(err instanceof UnknownTraitModelError);
         return true;

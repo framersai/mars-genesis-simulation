@@ -1,6 +1,6 @@
 import { useMemo, useRef, useEffect } from 'react';
 import type { LeaderSideState } from '../../hooks/useGameState';
-import { getLeaderColorVar } from '../../hooks/useGameState';
+import { getActorColorVar } from '../../hooks/useGameState';
 import type { ToolRegistry } from '../../hooks/useToolRegistry';
 import { useScenarioContext } from '../../App';
 import { formatBagTooltip } from './StatsBar.helpers';
@@ -137,8 +137,8 @@ export function StatsBar({ leaders, crisisText, toolRegistry }: StatsBarProps) {
       for (let i = 1; i < entry.history.length; i++) {
         const h = entry.history[i];
         if (h.rejected) continue;
-        if (h.leaderName === aLeaderName) a++;
-        else if (h.leaderName === bLeaderName) b++;
+        if (h.actorName === aLeaderName) a++;
+        else if (h.actorName === bLeaderName) b++;
       }
     }
     return { reuseA: a, reuseB: b };
@@ -163,8 +163,8 @@ export function StatsBar({ leaders, crisisText, toolRegistry }: StatsBarProps) {
   }
 
   const metrics = scenario.ui.headerMetrics.slice(0, 4);
-  const colorA = getLeaderColorVar(0);
-  const colorB = getLeaderColorVar(1);
+  const colorA = getActorColorVar(0);
+  const colorB = getActorColorVar(1);
 
   return (
     <div

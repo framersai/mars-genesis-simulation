@@ -261,12 +261,12 @@ export function RunMenu({
                   {history.map((entry) => {
                     const ts = Date.parse(entry.createdAt) || entry.id;
                     const leaders =
-                      entry.summary.leaderNames.join(' vs ') ||
+                      entry.summary.actorNames.join(' vs ') ||
                       entry.scenarioShortName;
                     const turns = entry.summary.turnCount
                       ? `${entry.summary.turnCount} turn${entry.summary.turnCount === 1 ? '' : 's'}`
                       : '';
-                    // Dedup: when leaderNames is empty we already fell
+                    // Dedup: when actorNames is empty we already fell
                     // back to scenarioShortName for `leaders`; don't
                     // repeat it in line2.
                     const line2 = [

@@ -32,7 +32,7 @@
  * @module paracosm/world-model
  */
 
-import { runSimulation, replaySimulation, WorldModelReplayError, type RunOptions, type LeaderConfig } from '../orchestrator.js';
+import { runSimulation, replaySimulation, WorldModelReplayError, type RunOptions, type ActorConfig } from '../orchestrator.js';
 import { runBatch, type BatchConfig, type BatchManifest } from '../batch.js';
 import { canonicalJson } from '../canonical-json.js';
 import { compileScenario } from '../../engine/compiler/index.js';
@@ -61,11 +61,11 @@ export type WorldModelBatchOptions = Omit<BatchConfig, 'scenarios'>;
 
 /**
  * Options for {@link WorldModel.quickstart}. Every field has a sensible
- * default; callers typically only set `leaderCount`.
+ * default; callers typically only set `actorCount`.
  */
 export interface WorldModelQuickstartOptions {
   /** How many leaders the quickstart should run in parallel. Default 3. Range 2..6. */
-  leaderCount?: number;
+  actorCount?: number;
   /** Scenario-level seed for each leader's run. Default: the scenario's
    *  `setup.defaultSeed`, else 42. */
   seed?: number;
@@ -89,7 +89,7 @@ export interface WorldModelQuickstartResult {
   /** The scenario the quickstart ran against. */
   scenario: ScenarioPackage;
   /** The leaders the LLM generated for this run. */
-  leaders: LeaderConfig[];
+  leaders: ActorConfig[];
   /** One {@link RunArtifact} per leader, in the same order as `leaders`. */
   artifacts: RunArtifact[];
 }
@@ -141,7 +141,7 @@ export interface WorldModelReplayResult {
 export interface ForkOptions {
   /** Reserved for a future single-call fork API. Pass the leader to
    *  the subsequent `.simulate()` call today. */
-  leader?: LeaderConfig;
+  leader?: ActorConfig;
   /** Reserved for a future single-call fork API. Pass the seed to the
    *  subsequent `.simulate()` call today. */
   seed?: number;
@@ -280,7 +280,7 @@ export class WorldModel {
    *   seedText: 'Q3 board brief: the company needs to decide between...',
    *   domainHint: 'corporate strategic decision',
    * }, { provider: 'anthropic' });
-   * const result = await wm.quickstart({ leaderCount: 3 });
+   * const result = await wm.quickstart({ actorCount: 3 });
    * ```
    */
   static async fromPrompt(
@@ -309,7 +309,7 @@ export class WorldModel {
    * WorldModel does not double-apply.
    */
   async simulate(
-    leader: LeaderConfig,
+    leader: ActorConfig,
     options: WorldModelSimulateOptions = {},
     keyPersonnel: KeyPersonnel[] = [],
   ): Promise<RunArtifact> {
@@ -386,7 +386,7 @@ export class WorldModel {
   async simulateIntervention(
     subject: SubjectConfig,
     intervention: InterventionConfig,
-    leader: LeaderConfig,
+    leader: ActorConfig,
     options: Omit<WorldModelSimulateOptions, 'subject' | 'intervention'> = {},
     keyPersonnel: KeyPersonnel[] = [],
   ): Promise<RunArtifact> {
@@ -422,13 +422,13 @@ export class WorldModel {
    * @example
    * ```ts
    * const wm = await WorldModel.fromPrompt({ seedText });
-   * const { leaders, artifacts } = await wm.quickstart({ leaderCount: 3 });
+   * const { leaders, artifacts } = await wm.quickstart({ actorCount: 3 });
    * artifacts.forEach((a, i) => console.log(leaders[i].name, a.fingerprint));
    * ```
    */
   async quickstart(options: WorldModelQuickstartOptions = {}): Promise<WorldModelQuickstartResult> {
     const {
-      leaderCount = 3,
+      actorCount = 3,
       seed = this.scenario.setup.defaultSeed ?? 42,
       maxTurns = this.scenario.setup.defaultTurns,
       captureSnapshots = true,
@@ -436,11 +436,11 @@ export class WorldModel {
       model = 'claude-sonnet-4-6',
     } = options;
 
-    if (leaderCount < 2 || leaderCount > 6) {
-      throw new Error(`WorldModel.quickstart: leaderCount must be between 2 and 6, got ${leaderCount}.`);
+    if (actorCount < 2 || actorCount > 6) {
+      throw new Error(`WorldModel.quickstart: actorCount must be between 2 and 6, got ${actorCount}.`);
     }
 
-    const leaders = await generateQuickstartLeaders(this.scenario, leaderCount, { provider, model });
+    const leaders = await generateQuickstartLeaders(this.scenario, actorCount, { provider, model });
 
     const artifacts = await Promise.all(leaders.map(leader => runSimulation(leader, [], {
       scenario: this.scenario,
@@ -669,7 +669,7 @@ export async function generateQuickstartLeaders(
   scenario: ScenarioPackage,
   count: number,
   opts: { provider?: string; model?: string } = {},
-): Promise<LeaderConfig[]> {
+): Promise<ActorConfig[]> {
   const provider = opts.provider ?? 'anthropic';
   const model = opts.model ?? 'claude-sonnet-4-6';
   const deptRoles = scenario.departments.map(d => `${d.label} (${d.role})`).join(', ');
@@ -695,5 +695,5 @@ Generate exactly ${count} archetypal leaders. Each one makes recognizably differ
     maxRetries: 1,
   });
 
-  return result.object.leaders as LeaderConfig[];
+  return result.object.leaders as ActorConfig[];
 }

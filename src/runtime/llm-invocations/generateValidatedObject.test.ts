@@ -84,6 +84,33 @@ test('generateValidatedObject calls onUsage on success', async () => {
   assert.equal(usageSeen.costUSD, 0.001);
 });
 
+test('generateValidatedObject forwards explicit apiKey to AgentOS', async () => {
+  let receivedApiKey: string | undefined;
+  let receivedFallbackProviders: unknown;
+  const mockGenerateObject = async (opts: { apiKey?: string; fallbackProviders?: unknown }) => {
+    receivedApiKey = opts.apiKey;
+    receivedFallbackProviders = opts.fallbackProviders;
+    return {
+      object: { value: 'ok' },
+      text: '{}',
+      usage: { totalTokens: 10 },
+      finishReason: 'stop',
+      provider: 'mock',
+      model: 'mock-model',
+    };
+  };
+  await generateValidatedObject({
+    provider: 'mock',
+    model: 'mock-model',
+    schema: TestSchema,
+    prompt: 'test',
+    apiKey: 'sk-request',
+    _generateObjectImpl: mockGenerateObject as any,
+  });
+  assert.equal(receivedApiKey, 'sk-request');
+  assert.deepEqual(receivedFallbackProviders, []);
+});
+
 test('generateValidatedObject surfaces attempts count from generateObject', async () => {
   // generateObject's retry loop is internal; we expose its retry count
   // through the finishReason or via a wrapper — for now, the wrapper

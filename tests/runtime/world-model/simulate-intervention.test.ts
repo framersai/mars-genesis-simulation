@@ -8,10 +8,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { WorldModel } from '../../../src/runtime/world-model/index.js';
 import { marsScenario } from '../../../src/engine/mars/index.js';
-import type { LeaderConfig } from '../../../src/runtime/orchestrator.js';
+import type { ActorConfig } from '../../../src/runtime/orchestrator.js';
 import type { SubjectConfig, InterventionConfig, RunArtifact } from '../../../src/engine/schema/index.js';
 
-const LEADER: LeaderConfig = {
+const LEADER: ActorConfig = {
   name: 'Intervention Leader',
   archetype: 'Tester',
   unit: 'Test Unit',
@@ -35,7 +35,7 @@ const INTERVENTION: InterventionConfig = {
 test('WorldModel.simulateIntervention forwards subject and intervention into RunOptions', async () => {
   const wm = WorldModel.fromScenario(marsScenario);
   let captured: { subject?: SubjectConfig; intervention?: InterventionConfig } = {};
-  (wm as unknown as { simulate: (l: LeaderConfig, o?: { subject?: SubjectConfig; intervention?: InterventionConfig }) => Promise<RunArtifact> }).simulate = async (_leader, opts) => {
+  (wm as unknown as { simulate: (l: ActorConfig, o?: { subject?: SubjectConfig; intervention?: InterventionConfig }) => Promise<RunArtifact> }).simulate = async (_leader, opts) => {
     captured = { subject: opts?.subject, intervention: opts?.intervention };
     return {
       metadata: { runId: 'r1', scenario: { id: marsScenario.id, name: 'Mars' }, mode: 'turn-loop', startedAt: '2026-04-25T00:00:00.000Z' },
@@ -51,7 +51,7 @@ test('WorldModel.simulateIntervention forwards subject and intervention into Run
 test('WorldModel.simulateIntervention preserves additional simulate options', async () => {
   const wm = WorldModel.fromScenario(marsScenario);
   let capturedOpts: Record<string, unknown> = {};
-  (wm as unknown as { simulate: (l: LeaderConfig, o?: Record<string, unknown>) => Promise<RunArtifact> }).simulate = async (_l, opts) => {
+  (wm as unknown as { simulate: (l: ActorConfig, o?: Record<string, unknown>) => Promise<RunArtifact> }).simulate = async (_l, opts) => {
     capturedOpts = (opts ?? {}) as Record<string, unknown>;
     return { metadata: { runId: 'r2', scenario: { id: marsScenario.id, name: 'Mars' }, mode: 'turn-loop', startedAt: '2026-04-25T00:00:00.000Z' } } as unknown as RunArtifact;
   };

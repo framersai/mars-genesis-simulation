@@ -19,7 +19,7 @@ function makeRun(overrides: Partial<RunRecord> = {}): RunRecord {
     createdAt: new Date().toISOString(),
     scenarioId: 'mars-genesis',
     scenarioVersion: '0.4.88',
-    leaderConfigHash: 'leaders:abc',
+    actorConfigHash: 'leaders:abc',
     economicsProfile: 'balanced',
     sourceMode: 'local_demo',
     createdBy: 'anonymous',
@@ -83,10 +83,26 @@ test('GET /api/v1/runs returns { runs, total, hasMore } envelope', async () => {
   assert.equal(parsed.hasMore, false);
 });
 
+test('GET /api/v1/runs omits server artifactPath from public records', async () => {
+  const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
+  await store.insertRun(makeRun({ runId: 'r-public-list', artifactPath: '/tmp/private-list-path.json' }));
+
+  const captured: CapturedResponse = { statusCode: 0, body: '', headers: {} };
+  await handlePlatformApiRoute(
+    makeReq('/api/v1/runs'),
+    makeRes(captured),
+    { runHistoryStore: store, corsHeaders: {}, ...ENABLED },
+  );
+
+  const parsed = JSON.parse(captured.body);
+  assert.equal(parsed.runs[0].artifactPath, undefined);
+  assert.doesNotMatch(captured.body, /private-list-path/);
+});
+
 test('GET /api/v1/runs respects scenario + sourceMode + leader query params', async () => {
   const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
-  await store.insertRun(makeRun({ runId: 'match', scenarioId: 'mars-genesis', sourceMode: 'platform_api', leaderConfigHash: 'leaders:abc' }));
-  await store.insertRun(makeRun({ runId: 'wrong', scenarioId: 'lunar-outpost', sourceMode: 'platform_api', leaderConfigHash: 'leaders:abc' }));
+  await store.insertRun(makeRun({ runId: 'match', scenarioId: 'mars-genesis', sourceMode: 'platform_api', actorConfigHash: 'leaders:abc' }));
+  await store.insertRun(makeRun({ runId: 'wrong', scenarioId: 'lunar-outpost', sourceMode: 'platform_api', actorConfigHash: 'leaders:abc' }));
   const captured: CapturedResponse = { statusCode: 0, body: '', headers: {} };
   await handlePlatformApiRoute(
     makeReq('/api/v1/runs?scenario=mars-genesis&sourceMode=platform_api&leader=leaders%3Aabc'),
@@ -164,6 +180,7 @@ test('GET /api/v1/runs/:runId returns 200 with { record, artifact } when artifac
   assert.equal(captured.statusCode, 200);
   const parsed = JSON.parse(captured.body);
   assert.equal(parsed.record.runId, 'r-detail');
+  assert.equal(parsed.record.artifactPath, undefined);
   assert.equal(parsed.artifact.metadata.runId, 'r-detail');
 });
 
@@ -203,6 +220,21 @@ test('GET /api/v1/runs/:runId returns 410 when artifact file is unreadable', asy
   );
   assert.equal(captured.statusCode, 410);
   assert.match(captured.body, /artifact_unreadable/);
+});
+
+test('GET /api/v1/runs/:runId unreadable response does not leak artifactPath', async () => {
+  const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
+  await store.insertRun(makeRun({ runId: 'r-hidden-path', artifactPath: '/tmp/secret-run-artifact.json' }));
+  const captured: CapturedResponse = { statusCode: 0, body: '', headers: {} };
+  await handlePlatformApiRoute(
+    makeReq('/api/v1/runs/r-hidden-path'),
+    makeRes(captured),
+    { runHistoryStore: store, corsHeaders: {}, ...ENABLED },
+  );
+
+  assert.equal(captured.statusCode, 410);
+  assert.doesNotMatch(captured.body, /secret-run-artifact/);
+  assert.equal(JSON.parse(captured.body).record, undefined);
 });
 
 test('GET /api/v1/runs/aggregate returns sums across all runs', async () => {
@@ -276,6 +308,35 @@ test('POST /api/v1/runs/:runId/replay-result returns 400 when matches is not a b
     { runHistoryStore: store, corsHeaders: {}, ...ENABLED },
   );
   assert.equal(captured.statusCode, 400);
+});
+
+test('POST /api/v1/runs/:runId/replay-result returns 400 for invalid JSON', async () => {
+  const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
+  await store.insertRun(makeRun({ runId: 'r-invalid-json' }));
+
+  const captured: CapturedResponse = { statusCode: 0, body: '', headers: {} };
+  await handlePlatformApiRoute(
+    makeReq('/api/v1/runs/r-invalid-json/replay-result', 'POST', '{not json'),
+    makeRes(captured),
+    { runHistoryStore: store, corsHeaders: {}, ...ENABLED },
+  );
+
+  assert.equal(captured.statusCode, 400);
+  assert.match(captured.body, /invalid_json/);
+});
+
+test('POST /api/v1/runs/:runId/replay-result returns 404 for unknown runId', async () => {
+  const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
+
+  const captured: CapturedResponse = { statusCode: 0, body: '', headers: {} };
+  await handlePlatformApiRoute(
+    makeReq('/api/v1/runs/missing-run/replay-result', 'POST', JSON.stringify({ matches: true })),
+    makeRes(captured),
+    { runHistoryStore: store, corsHeaders: {}, ...ENABLED },
+  );
+
+  assert.equal(captured.statusCode, 404);
+  assert.match(captured.body, /not_found/);
 });
 
 // ─────────────────────────────────────────────────────────────────────

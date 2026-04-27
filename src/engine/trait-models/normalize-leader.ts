@@ -1,6 +1,6 @@
 /**
- * Back-compat resolver for LeaderConfig. Bridges the legacy
- * `LeaderConfig.hexaco` field and the new `LeaderConfig.traitProfile`
+ * Back-compat resolver for ActorConfig. Bridges the legacy
+ * `ActorConfig.hexaco` field and the new `ActorConfig.traitProfile`
  * pluggable shape so v0.7 callers keep working while v0.8+ callers
  * can supply non-HEXACO trait models.
  *
@@ -11,7 +11,7 @@
  *      leader.hexaco }` so HEXACO scenarios produce identical
  *      drift / cues / prompts as before this module landed.
  *
- * The runtime calls `normalizeLeaderConfig` once per leader at
+ * The runtime calls `normalizeActorConfig` once per leader at
  * simulate-start; downstream code reads from the normalized
  * `traitProfile` field only. The legacy `hexaco` field is preserved
  * on the artifact for back-compat artifact consumers but is
@@ -20,7 +20,7 @@
  * @module paracosm/engine/trait-models/normalize-leader
  */
 
-import type { ActorConfig, LeaderConfig } from '../types.js';
+import type { ActorConfig } from '../types.js';
 import type { HexacoProfile } from '../core/state.js';
 import type { TraitModel, TraitProfile, TraitModelRegistry } from './index.js';
 import { traitModelRegistry, withDefaults } from './index.js';
@@ -32,31 +32,16 @@ import { traitModelRegistry, withDefaults } from './index.js';
 import './builtins.js';
 
 /**
- * A LeaderConfig where `traitProfile` is guaranteed populated and
+ * An ActorConfig where `traitProfile` is guaranteed populated and
  * filled with the model's defaults for any omitted axis. The runtime
- * passes this shape downstream instead of the raw LeaderConfig so
+ * passes this shape downstream instead of the raw ActorConfig so
  * cue translation, drift, and prompt builders never have to handle
  * the missing-traitProfile branch.
- */
-/**
- * A LeaderConfig where `traitProfile` is guaranteed populated and
- * filled with the model's defaults for any omitted axis. The runtime
- * passes this shape downstream instead of the raw LeaderConfig so
- * cue translation, drift, and prompt builders never have to handle
- * the missing-traitProfile branch.
- *
- * Renamed from `NormalizedLeaderConfig` in 0.8.0; the legacy name is
- * preserved as a deprecated alias below.
  */
 export interface NormalizedActorConfig extends ActorConfig {
   traitProfile: TraitProfile;
 }
 
-/**
- * @deprecated since 0.8.0 — alias for {@link NormalizedActorConfig}.
- * Removed in 1.0.
- */
-export type NormalizedLeaderConfig = NormalizedActorConfig;
 
 export interface NormalizeOptions {
   /**
@@ -67,14 +52,10 @@ export interface NormalizeOptions {
 }
 
 /**
- * Normalize a LeaderConfig so `traitProfile` is guaranteed populated
+ * Normalize an ActorConfig so `traitProfile` is guaranteed populated
  * and every axis declared by the chosen model has a value (defaults
  * fill omissions). Throws `UnknownTraitModelError` when
  * `traitProfile.modelId` references an unregistered model.
- */
-/**
- * Normalize an actor config. Renamed from `normalizeLeaderConfig` in
- * 0.8.0; the legacy name is re-exported below as a deprecated alias.
  */
 export function normalizeActorConfig(
   leader: ActorConfig,
@@ -97,7 +78,7 @@ export function normalizeActorConfig(
     }
     if (unknown.length > 0) {
       throw new Error(
-        `LeaderConfig "${leader.name ?? '<unnamed>'}" traitProfile ` +
+        `ActorConfig "${leader.name ?? '<unnamed>'}" traitProfile ` +
         `(modelId='${leader.traitProfile.modelId}') references axes ` +
         `not declared by the model: [${unknown.join(', ')}]. ` +
         `Declared axes: [${[...declaredAxes].join(', ')}].`,
@@ -111,13 +92,13 @@ export function normalizeActorConfig(
   }
 
   // Path 2: legacy hexaco field. Synthesize a hexaco-modeled profile.
-  // Defensive guard: TS schema declares LeaderConfig.hexaco required,
+  // Defensive guard: TS schema declares ActorConfig.hexaco required,
   // but JSON-loaded leader configs and runtime callers can violate
   // that. Throw an explicit error instead of a `TypeError: cannot
   // read 'openness' of undefined` deep inside hexacoToTraits.
   if (!leader.hexaco) {
     throw new Error(
-      `LeaderConfig "${leader.name ?? '<unnamed>'}" must have either ` +
+      `ActorConfig "${leader.name ?? '<unnamed>'}" must have either ` +
       `traitProfile or the legacy hexaco field. Both are missing.`,
     );
   }
@@ -129,11 +110,6 @@ export function normalizeActorConfig(
   };
 }
 
-/**
- * @deprecated since 0.8.0 — alias for {@link normalizeActorConfig}.
- * Removed in 1.0.
- */
-export const normalizeLeaderConfig = normalizeActorConfig;
 
 /**
  * Translate a HexacoProfile into the trait map the registered hexaco

@@ -39,8 +39,8 @@ export function BundleCard({ entry, onOpen }: BundleCardProps): JSX.Element {
       <ul className={styles.actors} aria-label="Bundle members">
         {entry.members.slice(0, 5).map((m) => (
           <li key={m.runId} className={styles.actor}>
-            {m.leaderName ?? 'Unknown'}
-            {m.leaderArchetype ? <span className={styles.archetype}> · {m.leaderArchetype}</span> : null}
+            {m.actorName ?? 'Unknown'}
+            {m.actorArchetype ? <span className={styles.archetype}> · {m.actorArchetype}</span> : null}
           </li>
         ))}
         {entry.members.length > 5 && (

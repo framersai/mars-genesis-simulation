@@ -31,6 +31,19 @@ test('canonicalJson throws on circular references', () => {
   assert.throws(() => canonicalJson(obj), /circular|cyclic/i);
 });
 
+test('canonicalJson allows repeated object references in separate branches', () => {
+  const shared = { z: 1, a: 2 };
+  assert.equal(
+    canonicalJson({ first: shared, second: shared }),
+    '{"first":{"a":2,"z":1},"second":{"a":2,"z":1}}',
+  );
+});
+
+test('canonicalJson serializes Date values like JSON.stringify', () => {
+  const date = new Date('2026-04-25T00:00:00.000Z');
+  assert.equal(canonicalJson({ date }), '{"date":"2026-04-25T00:00:00.000Z"}');
+});
+
 test('canonicalJson handles arrays of objects', () => {
   const out = canonicalJson([{ b: 1, a: 2 }, { d: 4, c: 3 }]);
   assert.equal(out, '[{"a":2,"b":1},{"c":3,"d":4}]');

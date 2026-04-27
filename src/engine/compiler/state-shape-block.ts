@@ -4,7 +4,7 @@
  * on each runtime state bag so the LLM cannot silently hallucinate
  * nested access patterns.
  *
- * Paracosm's runtime `SimulationState` carries `systems`, `politics`,
+ * Paracosm's runtime `SimulationState` carries `metrics`, `politics`,
  * `statuses`, `environment`, `agents`, `metadata` at the top level.
  * Scenario-declared keys under `world.metrics` + `world.capacities`
  * both flatten into `state.metrics`. `world.politics` / `world.statuses`

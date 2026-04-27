@@ -70,7 +70,7 @@ interface EventBlock {
 
 interface TurnData {
   time?: number;
-  systems?: Record<string, unknown>;
+  metrics?: Record<string, unknown>;
   events: Map<number, EventBlock>;
   reactions: Array<Record<string, unknown>>;
   totalReactions: number;
@@ -126,8 +126,8 @@ export function ReportView({ state, verdict, reportSections }: ReportViewProps) 
         type: 'BRANCH_OPTIMISTIC',
         localId,
         forkedAtTurn: payload.atTurn,
-        leaderName: payload.leader.name,
-        leaderArchetype: payload.leader.archetype,
+        actorName: payload.leader.name,
+        actorArchetype: payload.leader.archetype,
       });
       const parentTurns = payload.parentArtifact.trajectory?.timepoints?.length ?? 6;
       const seed = payload.seedOverride ?? payload.parentArtifact.metadata.seed ?? 42;
@@ -173,12 +173,12 @@ export function ReportView({ state, verdict, reportSections }: ReportViewProps) 
     // Iterate the first two leaders and bind each to the local 'a'/'b'
     // slot in the per-turn map. F1 preserves the 2-slot map shape in
     // this file; F2/F3 will generalize `TurnData` into an array.
-    const leaderSlots: Array<{ side: 'a' | 'b'; leaderName: string }> = [];
-    if (state.leaderIds[0]) leaderSlots.push({ side: 'a', leaderName: state.leaderIds[0] });
-    if (state.leaderIds[1]) leaderSlots.push({ side: 'b', leaderName: state.leaderIds[1] });
+    const actorSlots: Array<{ side: 'a' | 'b'; actorName: string }> = [];
+    if (state.actorIds[0]) actorSlots.push({ side: 'a', actorName: state.actorIds[0] });
+    if (state.actorIds[1]) actorSlots.push({ side: 'b', actorName: state.actorIds[1] });
 
-    for (const { side, leaderName } of leaderSlots) {
-      const sideState = state.leaders[leaderName];
+    for (const { side, actorName } of actorSlots) {
+      const sideState = state.leaders[actorName];
       if (!sideState) continue;
       const pending = new Map<number, { decision: string; rationale: string; policies: string[] }>();
 
@@ -269,8 +269,8 @@ export function ReportView({ state, verdict, reportSections }: ReportViewProps) 
       .sort((a, b) => a[0] - b[0]);
   }, [state]);
 
-  const firstId = state.leaderIds[0];
-  const secondId = state.leaderIds[1];
+  const firstId = state.actorIds[0];
+  const secondId = state.actorIds[1];
   const sideA = firstId ? state.leaders[firstId] : null;
   const sideB = secondId ? state.leaders[secondId] : null;
   const nameA = sideA?.leader?.name || 'Leader A';
@@ -522,12 +522,12 @@ export function ReportView({ state, verdict, reportSections }: ReportViewProps) 
           <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
             <CommanderTrajectoryCard
               events={sideA?.events ?? []}
-              leaderName={nameA}
+              actorName={nameA}
               baselineHexaco={sideA?.leader?.hexaco}
             />
             <CommanderTrajectoryCard
               events={sideB?.events ?? []}
-              leaderName={nameB}
+              actorName={nameB}
               baselineHexaco={sideB?.leader?.hexaco}
             />
           </div>

@@ -15,7 +15,7 @@ function loadScenarioJson(relativePath: string): Record<string, unknown> {
   return JSON.parse(readFileSync(join(REPO_ROOT, relativePath), 'utf8')) as Record<string, unknown>;
 }
 
-test('buildScenarioFixture: mars scenario produces systems with every declared metric', () => {
+test('buildScenarioFixture: mars scenario produces metrics with every declared metric', () => {
   const fixture = buildScenarioFixture(marsScenario as unknown as Record<string, unknown>);
   const declaredKeys = Object.keys((marsScenario.world as { metrics: Record<string, unknown> }).metrics);
   for (const key of declaredKeys) {
@@ -23,7 +23,7 @@ test('buildScenarioFixture: mars scenario produces systems with every declared m
   }
 });
 
-test('buildScenarioFixture: runtime shape has systems/politics/statuses/environment/agents/metadata', () => {
+test('buildScenarioFixture: runtime shape has metrics/politics/statuses/environment/agents/metadata', () => {
   const fixture = buildScenarioFixture(marsScenario as unknown as Record<string, unknown>);
   assert.equal(typeof fixture.metrics, 'object');
   assert.equal(typeof fixture.politics, 'object');

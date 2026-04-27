@@ -19,7 +19,7 @@ export interface AgentSnapshot {
   shortTermMemory: string[];
 }
 
-export interface SystemsState {
+export interface MetricsState {
   population: number;
   morale: number;
   foodMonthsReserve: number;
@@ -66,8 +66,8 @@ export interface TurnEventInfo {
  */
 export interface LeaderSideState {
   leader: LeaderInfo | null;
-  systems: SystemsState | null;
-  prevSystems: SystemsState | null;
+  metrics: MetricsState | null;
+  prevMetrics: MetricsState | null;
   /**
    * Categorical statuses bag (world.statuses declarations), as of the
    * most recent `turn_done` event. Undefined for Mars-shape scenarios
@@ -153,9 +153,9 @@ export interface CostBreakdown {
 export interface GameState {
   /** Per-leader state, keyed by `leader.name` (matches SimEvent.leader). */
   leaders: Record<string, LeaderSideState>;
-  /** Launch order. leaderIds[0] renders in the first column, leaderIds[1] second.
+  /** Launch order. actorIds[0] renders in the first column, actorIds[1] second.
    *  F2/F3 will generalize to N-column rendering against the full list. */
-  leaderIds: string[];
+  actorIds: string[];
   turn: number;
   time: number;
   maxTurns: number;
@@ -174,7 +174,7 @@ export interface GameState {
  * "visionary" palette, index 1 is "engineer". Indices 2+ fall back to
  * amber for now; F2/F3 extends the palette when N>2 rendering ships.
  */
-export function getLeaderColorVar(index: number): string {
+export function getActorColorVar(index: number): string {
   if (index === 0) return 'var(--vis)';
   if (index === 1) return 'var(--eng)';
   return 'var(--amber)';
@@ -186,7 +186,7 @@ export function getLeaderColorVar(index: number): string {
  */
 export function createEmptyLeaderSideState(): LeaderSideState {
   return {
-    leader: null, systems: null, prevSystems: null, event: null,
+    leader: null, metrics: null, prevMetrics: null, event: null,
     events: [], popHistory: [], moraleHistory: [],
     deaths: 0, deathCauses: {}, tools: 0, toolNames: new Set<string>(), citations: 0, decisions: 0,
     pendingDecision: '', pendingRationale: '', pendingReasoning: '', pendingPolicies: [],
@@ -206,7 +206,7 @@ function emptyCost(): CostBreakdown {
 export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): GameState {
   const state: GameState = {
     leaders: {},
-    leaderIds: [],
+    actorIds: [],
     turn: 0, time: 0, maxTurns: 6, seed: 950,
     isRunning: false, isComplete,
     cost: emptyCost(),
@@ -215,17 +215,17 @@ export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): Ga
 
   /**
    * Resolve (or lazily create) per-leader state. First-seen order drives
-   * leaderIds so the dashboard's leader-column ordering is stable and
+   * actorIds so the dashboard's leader-column ordering is stable and
    * deterministic. Returns null only if the event's leader field is
    * empty (server-synthetic events like sim_saved).
    */
-  const getLeaderSide = (leaderName: string): LeaderSideState | null => {
-    if (!leaderName) return null;
-    let s = state.leaders[leaderName];
+  const getLeaderSide = (actorName: string): LeaderSideState | null => {
+    if (!actorName) return null;
+    let s = state.leaders[actorName];
     if (!s) {
       s = createEmptyLeaderSideState();
-      state.leaders[leaderName] = s;
-      state.leaderIds.push(leaderName);
+      state.leaders[actorName] = s;
+      state.actorIds.push(actorName);
     }
     return s;
   };
@@ -233,7 +233,7 @@ export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): Ga
   for (let i = 0; i < sseEvents.length; i++) {
     const evt = sseEvents[i];
     const dd = evt.data || {};
-    const leaderName = evt.leader || '';
+    const actorName = evt.leader || '';
 
     // Per-leader cost tracking. Each event's _cost payload is the
     // CUMULATIVE spend for that leader, so we overwrite the slot rather
@@ -250,12 +250,12 @@ export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): Ga
       forgeStats?: { attempts: number; approved: number; rejected: number; approvedConfidenceSum: number };
     } | undefined;
 
-    if (evtCost && leaderName) {
+    if (evtCost && actorName) {
       // Guarantee the leader exists in the map so cost tracking
       // stays consistent even if no state-shaping event has landed yet
       // for this leader (rare but possible on cost-before-turn ordering).
-      getLeaderSide(leaderName);
-      state.costByLeader[leaderName] = {
+      getLeaderSide(actorName);
+      state.costByLeader[actorName] = {
         totalTokens: evtCost.totalTokens ?? 0,
         totalCostUSD: evtCost.totalCostUSD ?? 0,
         llmCalls: evtCost.llmCalls ?? 0,
@@ -349,7 +349,7 @@ export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): Ga
       continue;
     }
 
-    const s = getLeaderSide(leaderName);
+    const s = getLeaderSide(actorName);
     if (!s) continue;
 
     const processed: ProcessedEvent = {
@@ -400,10 +400,10 @@ export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): Ga
           };
         }
         if (dd.metrics) {
-          s.prevSystems = s.metrics ? { ...s.metrics } : null;
-          s.metrics = dd.metrics as SystemsState;
-          s.popHistory.push((dd.metrics as SystemsState).population || 0);
-          s.moraleHistory.push(Math.round(((dd.metrics as SystemsState).morale || 0) * 100));
+          s.prevMetrics = s.metrics ? { ...s.metrics } : null;
+          s.metrics = dd.metrics as MetricsState;
+          s.popHistory.push((dd.metrics as MetricsState).population || 0);
+          s.moraleHistory.push(Math.round(((dd.metrics as MetricsState).morale || 0) * 100));
         }
         if (dd.deaths) s.deaths += Number(dd.deaths) || 0;
         s.events.push(processed);
@@ -471,8 +471,8 @@ export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): Ga
 
       case 'turn_done':
         if (dd.metrics) {
-          s.prevSystems = s.metrics ? { ...s.metrics } : null;
-          s.metrics = dd.metrics as SystemsState;
+          s.prevMetrics = s.metrics ? { ...s.metrics } : null;
+          s.metrics = dd.metrics as MetricsState;
         }
         if (dd.statuses && typeof dd.statuses === 'object') {
           s.statuses = { ...dd.statuses as Record<string, string | boolean> };

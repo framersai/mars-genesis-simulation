@@ -61,7 +61,7 @@ function rowToRecord(row: RunRow): RunRecord {
     createdAt: row.created_at,
     scenarioId: row.scenario_id,
     scenarioVersion: row.scenario_version,
-    leaderConfigHash: row.leader_config_hash,
+    actorConfigHash: row.leader_config_hash,
     economicsProfile: row.economics_profile,
     sourceMode: row.source_mode as RunRecord['sourceMode'],
     createdBy: row.created_by as RunRecord['createdBy'],
@@ -70,8 +70,8 @@ function rowToRecord(row: RunRow): RunRecord {
   if (row.cost_usd !== null) record.costUSD = row.cost_usd;
   if (row.duration_ms !== null) record.durationMs = row.duration_ms;
   if (row.mode !== null) record.mode = row.mode as RunRecord['mode'];
-  if (row.leader_name !== null) record.leaderName = row.leader_name;
-  if (row.leader_archetype !== null) record.leaderArchetype = row.leader_archetype;
+  if (row.leader_name !== null) record.actorName = row.leader_name;
+  if (row.leader_archetype !== null) record.actorArchetype = row.leader_archetype;
   if (row.bundle_id !== null) record.bundleId = row.bundle_id;
   if (row.summary_trajectory !== null) {
     try {
@@ -158,9 +158,9 @@ export function createSqliteRunHistoryStore(options: SqliteRunHistoryStoreOption
        artifact_path, cost_usd, duration_ms, mode, leader_name, leader_archetype,
        bundle_id, summary_trajectory)
     VALUES
-      (@runId, @createdAt, @scenarioId, @scenarioVersion, @leaderConfigHash,
+      (@runId, @createdAt, @scenarioId, @scenarioVersion, @actorConfigHash,
        @economicsProfile, @sourceMode, @createdBy,
-       @artifactPath, @costUSD, @durationMs, @mode, @leaderName, @leaderArchetype,
+       @artifactPath, @costUSD, @durationMs, @mode, @actorName, @actorArchetype,
        @bundleId, @summaryTrajectory)
   `);
 
@@ -170,7 +170,7 @@ export function createSqliteRunHistoryStore(options: SqliteRunHistoryStoreOption
       createdAt: run.createdAt,
       scenarioId: run.scenarioId,
       scenarioVersion: run.scenarioVersion,
-      leaderConfigHash: run.leaderConfigHash,
+      actorConfigHash: run.actorConfigHash,
       economicsProfile: run.economicsProfile,
       sourceMode: run.sourceMode,
       createdBy: run.createdBy,
@@ -178,8 +178,8 @@ export function createSqliteRunHistoryStore(options: SqliteRunHistoryStoreOption
       costUSD: run.costUSD ?? null,
       durationMs: run.durationMs ?? null,
       mode: run.mode ?? null,
-      leaderName: run.leaderName ?? null,
-      leaderArchetype: run.leaderArchetype ?? null,
+      actorName: run.actorName ?? null,
+      actorArchetype: run.actorArchetype ?? null,
       bundleId: run.bundleId ?? null,
       summaryTrajectory: run.summaryTrajectory ? JSON.stringify(run.summaryTrajectory) : null,
     };
@@ -204,9 +204,9 @@ export function createSqliteRunHistoryStore(options: SqliteRunHistoryStoreOption
       clauses.push('scenario_id = @scenarioId');
       params.scenarioId = filters.scenarioId;
     }
-    if (filters?.leaderConfigHash) {
-      clauses.push('leader_config_hash = @leaderConfigHash');
-      params.leaderConfigHash = filters.leaderConfigHash;
+    if (filters?.actorConfigHash) {
+      clauses.push('leader_config_hash = @actorConfigHash');
+      params.actorConfigHash = filters.actorConfigHash;
     }
     if (filters?.q) {
       clauses.push('(scenario_id LIKE @q OR leader_name LIKE @q OR leader_archetype LIKE @q)');
@@ -250,14 +250,14 @@ export function createSqliteRunHistoryStore(options: SqliteRunHistoryStoreOption
       return rows.map(rowToRecord);
     },
 
-    async countRuns(filters?: Pick<ListRunsFilters, 'mode' | 'sourceMode' | 'scenarioId' | 'leaderConfigHash' | 'q'>): Promise<number> {
+    async countRuns(filters?: Pick<ListRunsFilters, 'mode' | 'sourceMode' | 'scenarioId' | 'actorConfigHash' | 'q'>): Promise<number> {
       const { where, params } = buildWhere(filters);
       const sql = `SELECT COUNT(*) AS n FROM runs ${where}`;
       const row = db.prepare<unknown[], { n: number }>(sql).get(params);
       return row?.n ?? 0;
     },
 
-    async aggregateStats(filters?: Pick<ListRunsFilters, 'mode' | 'sourceMode' | 'scenarioId' | 'leaderConfigHash'>): Promise<RunsAggregate> {
+    async aggregateStats(filters?: Pick<ListRunsFilters, 'mode' | 'sourceMode' | 'scenarioId' | 'actorConfigHash'>): Promise<RunsAggregate> {
       const { where, params } = buildWhere(filters);
       const sql = `
         SELECT

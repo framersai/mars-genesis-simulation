@@ -13,7 +13,7 @@ import { parseCliRunOptions } from './cli-run-options.js';
 import { DEFAULT_KEY_PERSONNEL } from './sim-config.js';
 import { marsScenario } from '../engine/mars/index.js';
 import { resolveLeaders, parseLeadersFlag } from './leaders-resolver.js';
-import type { LeaderConfig } from './types.js';
+import type { ActorConfig } from './types.js';
 
 /**
  * Load `.env` from the current working directory (CWD-scoped, not
@@ -35,7 +35,7 @@ function loadEnv(): void {
   }
 }
 
-function loadLeaders(argv: readonly string[]): LeaderConfig[] {
+function loadLeaders(argv: readonly string[]): ActorConfig[] {
   const explicitPath = parseLeadersFlag(argv);
   try {
     const resolved = resolveLeaders({ explicitPath });
@@ -52,9 +52,9 @@ function loadLeaders(argv: readonly string[]): LeaderConfig[] {
   }
 }
 
-function parseLeaderFromArgs(args: readonly string[]): Partial<LeaderConfig> {
-  const leader: Partial<LeaderConfig> & { hexaco?: Partial<LeaderConfig['hexaco']> } = {};
-  const hexaco: Partial<LeaderConfig['hexaco']> = {};
+function parseLeaderFromArgs(args: readonly string[]): Partial<ActorConfig> {
+  const leader: Partial<ActorConfig> & { hexaco?: Partial<ActorConfig['hexaco']> } = {};
+  const hexaco: Partial<ActorConfig['hexaco']> = {};
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i];
     const next = args[i + 1];
@@ -69,8 +69,8 @@ function parseLeaderFromArgs(args: readonly string[]): Partial<LeaderConfig> {
     else if (arg === '--emotionality' && next) { hexaco.emotionality = parseFloat(next); i += 1; }
     else if (arg === '--honesty' && next) { hexaco.honestyHumility = parseFloat(next); i += 1; }
   }
-  if (Object.keys(hexaco).length) leader.hexaco = hexaco as LeaderConfig['hexaco'];
-  return leader as Partial<LeaderConfig>;
+  if (Object.keys(hexaco).length) leader.hexaco = hexaco as ActorConfig['hexaco'];
+  return leader as Partial<ActorConfig>;
 }
 
 function getLeaderIndex(args: readonly string[]): number {
@@ -98,7 +98,7 @@ export async function runSim(argv: readonly string[]): Promise<number> {
   }
 
   const baseLeader = leaders[leaderIdx] || leaders[0];
-  const leader: LeaderConfig = {
+  const leader: ActorConfig = {
     ...baseLeader,
     ...cliLeader,
     hexaco: { ...baseLeader.hexaco, ...(cliLeader.hexaco || {}) },

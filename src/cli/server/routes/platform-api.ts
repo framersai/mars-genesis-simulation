@@ -84,7 +84,7 @@ export async function handlePlatformApiRoute(
           : undefined,
         sourceMode: sourceModeParam ? (sourceModeParam as ParacosmServerMode) : undefined,
         scenarioId: url.searchParams.get('scenario') ?? undefined,
-        leaderConfigHash: url.searchParams.get('leader') ?? undefined,
+        actorConfigHash: url.searchParams.get('leader') ?? undefined,
         q: url.searchParams.get('q') ?? undefined,
         // Filter by Quickstart bundle. The CompareModal uses
         // /api/v1/bundles/:id directly; this filter is for Library tab
@@ -98,7 +98,7 @@ export async function handlePlatformApiRoute(
         mode: filters.mode,
         sourceMode: filters.sourceMode,
         scenarioId: filters.scenarioId,
-        leaderConfigHash: filters.leaderConfigHash,
+        actorConfigHash: filters.actorConfigHash,
         q: filters.q,
       };
       const total = options.runHistoryStore.countRuns
@@ -123,7 +123,7 @@ export async function handlePlatformApiRoute(
           : undefined,
         sourceMode: sourceModeParam ? (sourceModeParam as ParacosmServerMode) : undefined,
         scenarioId: url.searchParams.get('scenario') ?? undefined,
-        leaderConfigHash: url.searchParams.get('leader') ?? undefined,
+        actorConfigHash: url.searchParams.get('leader') ?? undefined,
       };
       const stats = options.runHistoryStore.aggregateStats
         ? await options.runHistoryStore.aggregateStats(aggFilters)

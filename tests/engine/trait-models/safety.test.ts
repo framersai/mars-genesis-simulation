@@ -8,7 +8,7 @@
  *     never emitted; low/high are optional per CueZone interface.
  *   - Drift dispatcher treats missing outcome entries as zero delta,
  *     never throws.
- *   - normalizeLeaderConfig rejects traitProfile.traits keys that
+ *   - normalizeActorConfig rejects traitProfile.traits keys that
  *     reference axes the named model does not declare.
  *   - Replay fails fast when modelId references an unregistered
  *     model (UnknownTraitModelError surfaces from require()).
@@ -25,8 +25,8 @@ import { hexacoModel } from '../../../src/engine/trait-models/hexaco.js';
 import { aiAgentModel } from '../../../src/engine/trait-models/ai-agent.js';
 import { buildCueLine, pickCues } from '../../../src/engine/trait-models/cue-translator.js';
 import { applyOutcomeDrift, driftLeaderProfile } from '../../../src/engine/trait-models/drift.js';
-import { normalizeLeaderConfig } from '../../../src/engine/trait-models/normalize-leader.js';
-import type { LeaderConfig } from '../../../src/engine/types.js';
+import { normalizeActorConfig } from '../../../src/engine/trait-models/normalize-leader.js';
+import type { ActorConfig } from '../../../src/engine/types.js';
 
 /**
  * A hand-rolled minimal model with deliberately missing zones and
@@ -133,8 +133,8 @@ describe('drift dispatcher: missing outcome safety', () => {
   });
 });
 
-describe('normalizeLeaderConfig: axis validation', () => {
-  const baseLeader: LeaderConfig = {
+describe('normalizeActorConfig: axis validation', () => {
+  const baseLeader: ActorConfig = {
     name: 'Test',
     archetype: 'Test',
     unit: 'Test',
@@ -146,7 +146,7 @@ describe('normalizeLeaderConfig: axis validation', () => {
   };
 
   it('rejects traitProfile.traits keys that the model does not declare', () => {
-    const leader: LeaderConfig = {
+    const leader: ActorConfig = {
       ...baseLeader,
       traitProfile: {
         modelId: 'hexaco',
@@ -158,7 +158,7 @@ describe('normalizeLeaderConfig: axis validation', () => {
       },
     };
     assert.throws(
-      () => normalizeLeaderConfig(leader),
+      () => normalizeActorConfig(leader),
       (err: unknown) => {
         assert.match(
           (err as Error).message,
@@ -170,7 +170,7 @@ describe('normalizeLeaderConfig: axis validation', () => {
   });
 
   it('lists every unknown axis when multiple are bad', () => {
-    const leader: LeaderConfig = {
+    const leader: ActorConfig = {
       ...baseLeader,
       traitProfile: {
         modelId: 'ai-agent',
@@ -183,7 +183,7 @@ describe('normalizeLeaderConfig: axis validation', () => {
       },
     };
     assert.throws(
-      () => normalizeLeaderConfig(leader),
+      () => normalizeActorConfig(leader),
       (err: unknown) => {
         const msg = (err as Error).message;
         assert.match(msg, /creativity/);
@@ -194,14 +194,14 @@ describe('normalizeLeaderConfig: axis validation', () => {
   });
 
   it('allows partial trait maps (missing axes default, no rejection)', () => {
-    const leader: LeaderConfig = {
+    const leader: ActorConfig = {
       ...baseLeader,
       traitProfile: {
         modelId: 'ai-agent',
         traits: { exploration: 0.85 }, // others omitted
       },
     };
-    const normalized = normalizeLeaderConfig(leader);
+    const normalized = normalizeActorConfig(leader);
     assert.equal(normalized.traitProfile.traits.exploration, 0.85);
     assert.equal(normalized.traitProfile.traits['verification-rigor'], 0.5);
   });
@@ -213,9 +213,9 @@ describe('normalizeLeaderConfig: axis validation', () => {
       unit: 'Y',
       instructions: '',
       // hexaco intentionally absent (TS escape hatch via runtime cast)
-    } as unknown as LeaderConfig;
+    } as unknown as ActorConfig;
     assert.throws(
-      () => normalizeLeaderConfig(leader),
+      () => normalizeActorConfig(leader),
       /must have either traitProfile or the legacy hexaco field/,
     );
   });

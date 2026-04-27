@@ -24,7 +24,7 @@ const baseRecord = (overrides: Partial<RunRecord>): RunRecord => ({
   createdAt: '2026-04-26T00:00:00Z',
   scenarioId: 's',
   scenarioVersion: '1.0.0',
-  leaderConfigHash: 'h1',
+  actorConfigHash: 'h1',
   economicsProfile: 'demo',
   sourceMode: 'hosted_demo',
   createdBy: 'anonymous',

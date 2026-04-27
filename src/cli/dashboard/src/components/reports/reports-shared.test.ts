@@ -27,7 +27,7 @@ test('classifyTurn returns shared when both titles match, divergent otherwise', 
 
 test('collectMetricSeries extracts six metrics per side from turn_done events', () => {
   const state = {
-    leaderIds: ['Alice', 'Bob'],
+    actorIds: ['Alice', 'Bob'],
     leaders: {
       Alice: {
         events: [
@@ -54,9 +54,9 @@ test('collectMetricSeries extracts six metrics per side from turn_done events', 
   assert.deepEqual(morale!.a, [{ turn: 1, value: 0.8 }, { turn: 2, value: 0.7 }]);
 });
 
-test('collectMetricSeries drops events without a systems payload', () => {
+test('collectMetricSeries drops events without a metrics payload', () => {
   const state = {
-    leaderIds: ['Alice', 'Bob'],
+    actorIds: ['Alice', 'Bob'],
     leaders: {
       Alice: {
         events: [

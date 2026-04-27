@@ -12,12 +12,12 @@
  * discipline, etc.).
  */
 import type { SimulationState, TurnOutcome } from '../engine/core/state.js';
-import type { LeaderConfig } from '../engine/types.js';
+import type { ActorConfig } from '../engine/types.js';
 
 export function genericFingerprint(
   finalState: SimulationState,
   outcomeLog: Array<{ turn: number; time: number; outcome: TurnOutcome }>,
-  leader: LeaderConfig,
+  leader: ActorConfig,
   toolRegs: Record<string, string[]>,
   maxTurns: number,
 ): Record<string, string> {

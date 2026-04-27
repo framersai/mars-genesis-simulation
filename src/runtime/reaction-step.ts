@@ -69,6 +69,8 @@ export interface RunReactionStepArgs {
   lastEventCategory: string;
   lastOutcome: TurnOutcome | null;
   provider: LlmProvider;
+  /** Explicit provider API key for this run. */
+  apiKey?: string;
   modelConfig: SimulationModelConfig;
   execution?: Partial<SimulationExecutionConfig>;
   trackUsage: (result: { usage?: CallUsage }, site?: 'reactions') => void;
@@ -99,7 +101,7 @@ export async function runReactionStep(args: RunReactionStepArgs): Promise<Reacti
   const {
     kernel, scenario, turn, time, seed,
     turnEvents, turnEventTitles, lastEventCategory, lastOutcome,
-    provider, modelConfig, execution,
+    provider, apiKey, modelConfig, execution,
     trackUsage, reportProviderError, recordSchemaAttempt, emit,
   } = args;
 
@@ -161,6 +163,7 @@ export async function runReactionStep(args: RunReactionStepArgs): Promise<Reacti
       eligibleAgents, reactionCtx,
       {
         provider,
+        apiKey,
         model: modelConfig.agentReactions || 'gpt-4o-mini',
         maxConcurrent: 25,
         reactionContextHook: scenario.hooks.reactionContextHook,

@@ -20,13 +20,13 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { LeaderConfig } from './types.js';
+import type { ActorConfig } from './types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export interface ResolvedLeaders {
-  leaders: LeaderConfig[];
+  leaders: ActorConfig[];
   /** Absolute path of the file the leaders were read from. Surfaces
    *  in CLI output so users know which file is actually in use. */
   sourcePath: string;
@@ -55,7 +55,7 @@ export function resolveLeaders(options: { explicitPath?: string } = {}): Resolve
 
   for (const { path, isExample } of candidates) {
     if (!existsSync(path)) continue;
-    const raw = JSON.parse(readFileSync(path, 'utf-8')) as { leaders?: LeaderConfig[] };
+    const raw = JSON.parse(readFileSync(path, 'utf-8')) as { leaders?: ActorConfig[] };
     const leaders = Array.isArray(raw.leaders) ? raw.leaders : [];
     return { leaders, sourcePath: path, isExample };
   }

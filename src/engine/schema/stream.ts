@@ -4,10 +4,8 @@
  *
  * Current 17 event types from
  * [`SimEventPayloadMap`](../../runtime/orchestrator.ts) are formalized
- * here with three renames (see design spec): `dept_start`/`dept_done` →
- * `specialist_start`/`specialist_done` (match SpecialistNote primitive),
- * `commander_deciding`/`commander_decided` → `decision_pending`/`decision_made`
- * (works for non-commander actors), `drift` → `personality_drift`.
+ * here using the published specialist, decision, and personality event
+ * names from the universal schema.
  *
  * `time: number` replaces the legacy `year: number` envelope field per
  * F23's time-units rename. Both are optional on the envelope (some events
@@ -31,7 +29,7 @@ const TurnStartDataSchema = z.object({
   category: z.string().optional(),
   births: z.number().optional(),
   deaths: z.number().optional(),
-  systems: z.record(z.string(), z.number()).optional(),
+  metrics: z.record(z.string(), z.number()).optional(),
   emergent: z.boolean().optional(),
   turnSummary: z.string().optional(),
   totalEvents: z.number().optional(),
@@ -134,7 +132,7 @@ const BulletinDataSchema = z.object({
 
 const TurnDoneDataSchema = z.object({
   summary: z.string().optional(),
-  systems: z.record(z.string(), z.number()),
+  metrics: z.record(z.string(), z.number()),
   /**
    * Categorical statuses bag (world.statuses declarations). Emitted
    * when the scenario declared any; omitted for Mars-shape scenarios
@@ -190,7 +188,7 @@ const SimAbortedDataSchema = z.object({
   summary: z.string().optional(),
   reason: z.string(),
   completedTurns: z.number().int().min(0),
-  systems: z.record(z.string(), z.number()),
+  metrics: z.record(z.string(), z.number()),
   toolsForged: z.number().int().min(0),
 });
 

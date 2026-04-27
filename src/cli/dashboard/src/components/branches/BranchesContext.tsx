@@ -56,9 +56,9 @@ export interface BranchState {
   /** Turn at which this branch was forked from the parent run. */
   forkedAtTurn: number;
   /** Override leader's name, for the card header. */
-  leaderName: string;
+  actorName: string;
   /** Override leader's archetype, for the card subtitle. */
-  leaderArchetype: string;
+  actorArchetype: string;
   /** Current lifecycle status. */
   status: BranchStatus;
   /**
@@ -95,8 +95,8 @@ export type BranchesAction =
       type: 'BRANCH_OPTIMISTIC';
       localId: string;
       forkedAtTurn: number;
-      leaderName: string;
-      leaderArchetype: string;
+      actorName: string;
+      actorArchetype: string;
     }
   | { type: 'BRANCH_TURN_PROGRESS'; localId: string; currentTurn: number }
   | { type: 'BRANCH_COMPLETE'; localId: string; artifact: RunArtifact }
@@ -128,8 +128,8 @@ export function branchesReducer(state: BranchesState, action: BranchesAction): B
           {
             localId: action.localId,
             forkedAtTurn: action.forkedAtTurn,
-            leaderName: action.leaderName,
-            leaderArchetype: action.leaderArchetype,
+            actorName: action.actorName,
+            actorArchetype: action.actorArchetype,
             status: 'running',
             currentTurn: action.forkedAtTurn,
           },

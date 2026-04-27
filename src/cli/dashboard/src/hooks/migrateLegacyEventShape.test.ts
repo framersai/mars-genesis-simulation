@@ -85,10 +85,10 @@ test('loads the full legacy-0.4-run fixture and migrates all events', async () =
   // the new keys.
   assert.ok(out.events.length === 4, 'fixture has 4 events');
   assert.equal(out.events[0].type, 'turn_start');
-  assert.ok(out.events[0].data?.metrics, 'turn_start now has systems');
+  assert.ok(out.events[0].data?.metrics, 'turn_start now has metrics');
   assert.equal(out.events[1].type, 'systems_snapshot', 'colony_snapshot was rewritten');
   assert.equal(out.events[2].type, 'outcome');
   assert.ok(out.events[2].data?.systemDeltas, 'outcome now has systemDeltas');
-  assert.ok(out.events[3].data?.metrics, 'turn_done now has systems');
+  assert.ok(out.events[3].data?.metrics, 'turn_done now has metrics');
   assert.equal(out.results?.[0]?.leader?.unit, 'Station Alpha');
 });

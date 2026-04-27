@@ -1,7 +1,7 @@
 /**
  * Lightweight UI announcement that paracosm now ships a pluggable
  * TraitModel registry. Renders a single info-level notice block above
- * the HEXACO sliders in LeaderConfig so dashboard users discover the
+ * the HEXACO sliders in ActorConfig so dashboard users discover the
  * registry without the full slider generalization (deferred to a
  * follow-up phase that will replace HEXACO sliders with model-aware
  * slider grids).

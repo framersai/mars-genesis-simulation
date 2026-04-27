@@ -11,7 +11,7 @@ export type {
   SimEventType,
   SimEventPayloadMap,
   SimEventCostPayload,
-  LeaderConfig,
+  ActorConfig,
 } from './orchestrator.js';
 export type { CostPreset } from '../cli/sim-config.js';
 export { createParacosmClient } from './client.js';

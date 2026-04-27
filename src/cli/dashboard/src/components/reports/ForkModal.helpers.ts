@@ -5,10 +5,10 @@
  *
  * @module reports/ForkModal.helpers
  */
-import type { ScenarioPackage, LeaderConfig } from '../../../../../engine/types.js';
+import type { ScenarioPackage, ActorConfig } from '../../../../../engine/types.js';
 
-function normalizeHexacoProfile(hexaco: Record<string, number>): LeaderConfig['hexaco'] {
-  const readTrait = (trait: keyof LeaderConfig['hexaco']) => {
+function normalizeHexacoProfile(hexaco: Record<string, number>): ActorConfig['hexaco'] {
+  const readTrait = (trait: keyof ActorConfig['hexaco']) => {
     const value = hexaco[trait];
     return Number.isFinite(value) ? value : 0.5;
   };
@@ -35,13 +35,13 @@ function normalizeHexacoProfile(hexaco: Record<string, number>): LeaderConfig['h
  *
  * @param scenario Currently-active scenario.
  * @param sessionCustoms Extra leaders the user built this session.
- * @returns Array of {@link LeaderConfig}. Empty when scenario has
+ * @returns Array of {@link ActorConfig}. Empty when scenario has
  *   no presets and no customs were supplied.
  */
 export function resolveLeaderPresets(
   scenario: ScenarioPackage,
-  sessionCustoms: LeaderConfig[] = [],
-): LeaderConfig[] {
+  sessionCustoms: ActorConfig[] = [],
+): ActorConfig[] {
   const presetLeaders = (scenario.presets?.[0]?.leaders ?? []).map(l => ({
     name: l.name,
     archetype: l.archetype,

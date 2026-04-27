@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import type { GameState, LeaderSideState, LeaderInfo } from '../../hooks/useGameState';
-import { getLeaderColorVar } from '../../hooks/useGameState';
+import { getActorColorVar } from '../../hooks/useGameState';
 import { useScenarioContext } from '../../App';
 import { useCitationContext } from '../../hooks/useCitationRegistry';
 import { useToolContext } from '../../hooks/useToolRegistry';
@@ -30,7 +30,7 @@ interface SimViewProps {
   launching?: boolean;
 }
 
-function LeaderColumn({ leaderIndex, sideState, state }: { leaderIndex: number; sideState: LeaderSideState; state: GameState }) {
+function LeaderColumn({ actorIndex, sideState, state }: { actorIndex: number; sideState: LeaderSideState; state: GameState }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const pinnedRef = useRef(true);
   const onScroll = () => {
@@ -46,8 +46,8 @@ function LeaderColumn({ leaderIndex, sideState, state }: { leaderIndex: number; 
   }, [sideState.events.length]);
 
   const isWaiting = !sideState.leader && !state.isRunning;
-  const sideColor = getLeaderColorVar(leaderIndex);
-  const sideLabel = `Leader ${String.fromCharCode(65 + leaderIndex)}`;
+  const sideColor = getActorColorVar(actorIndex);
+  const sideLabel = `Leader ${String.fromCharCode(65 + actorIndex)}`;
 
   return (
     <section
@@ -55,7 +55,7 @@ function LeaderColumn({ leaderIndex, sideState, state }: { leaderIndex: number; 
       style={{ ['--actor-color' as string]: sideColor }}
       aria-label={`${sideState.leader?.name || sideLabel} events`}
     >
-      <TurnEventHeader leaderIndex={leaderIndex} event={sideState.event} />
+      <TurnEventHeader actorIndex={actorIndex} event={sideState.event} />
 
       <div ref={scrollRef} onScroll={onScroll} className={styles.leaderColumnScroll}>
         {!isWaiting && sideState.events.length === 0 && state.isRunning && (
@@ -87,11 +87,11 @@ function LeaderColumn({ leaderIndex, sideState, state }: { leaderIndex: number; 
               const group = deptsByTurn.get(event.turn) || [event];
               return (
                 <div key={`depts-${event.turn}`} className={styles.deptsRow}>
-                  {group.map(e => <EventCard key={e.id} event={e} leaderIndex={leaderIndex} />)}
+                  {group.map(e => <EventCard key={e.id} event={e} actorIndex={actorIndex} />)}
                 </div>
               );
             }
-            return <EventCard key={event.id} event={event} leaderIndex={leaderIndex} />;
+            return <EventCard key={event.id} event={event} actorIndex={actorIndex} />;
           });
         })()}
       </div>
@@ -152,8 +152,8 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
   const [localLaunching, setLocalLaunching] = useState(false);
   const launching = launchingProp ?? localLaunching;
 
-  const firstId = state.leaderIds[0];
-  const secondId = state.leaderIds[1];
+  const firstId = state.actorIds[0];
+  const secondId = state.actorIds[1];
   const sideA = firstId ? state.leaders[firstId] : null;
   const sideB = secondId ? state.leaders[secondId] : null;
   const hasEvents = Object.values(state.leaders).some(s => s.events.length > 0);
@@ -242,14 +242,14 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
           the banner card. */}
       <div className={`leaders-row ${styles.leadersRow}`}>
         <ActorBar
-          leaderIndex={0}
+          actorIndex={0}
           leader={sideA?.leader || presetLeaderA}
           popHistory={sideA?.popHistory || []}
           moraleHistory={sideA?.moraleHistory || []}
           verdictPlacement={verdictPlacementFor('A')}
         />
         <ActorBar
-          leaderIndex={1}
+          actorIndex={1}
           leader={sideB?.leader || presetLeaderB}
           popHistory={sideB?.popHistory || []}
           moraleHistory={sideB?.moraleHistory || []}
@@ -258,7 +258,7 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
       </div>
 
       <StatsBar
-        leaders={state.leaderIds.slice(0, 2).map(id => ({ id, state: state.leaders[id] }))}
+        leaders={state.actorIds.slice(0, 2).map(id => ({ id, state: state.leaders[id] }))}
         crisisText={crisisText}
         toolRegistry={toolRegistry}
       />
@@ -363,8 +363,8 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
 
       {/* Two columns (only show when there are events or sim is running) */}
       <div className={`sim-columns ${styles.simColumns} ${columnsVisible ? '' : styles.simColumnsHidden}`}>
-        {sideA && <LeaderColumn leaderIndex={0} sideState={sideA} state={state} />}
-        {sideB && <LeaderColumn leaderIndex={1} sideState={sideB} state={state} />}
+        {sideA && <LeaderColumn actorIndex={0} sideState={sideA} state={state} />}
+        {sideB && <LeaderColumn actorIndex={1} sideState={sideB} state={state} />}
       </div>
 
       {/* Verdict surfaces as a global top banner (App.tsx) and inline

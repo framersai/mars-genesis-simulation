@@ -5,7 +5,7 @@ import type { RunRecord } from '../../../../server/run-record.js';
 
 const r = (overrides: Partial<RunRecord>): RunRecord => ({
   runId: 'x', createdAt: '2026-04-26T00:00:00Z', scenarioId: 's', scenarioVersion: '1',
-  leaderConfigHash: 'h', economicsProfile: 'demo', sourceMode: 'hosted_demo', createdBy: 'anonymous',
+  actorConfigHash: 'h', economicsProfile: 'demo', sourceMode: 'hosted_demo', createdBy: 'anonymous',
   ...overrides,
 });
 

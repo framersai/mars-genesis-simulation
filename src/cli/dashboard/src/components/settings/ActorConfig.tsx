@@ -11,11 +11,6 @@ export interface ActorFormData {
   hexaco: Record<string, number>;
 }
 
-/**
- * @deprecated since 0.8.0 — alias for {@link ActorFormData}. Removed in 1.0.
- */
-export type LeaderFormData = ActorFormData;
-
 interface ActorConfigProps {
   label: string;
   sideColor: string;

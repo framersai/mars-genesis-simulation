@@ -4,7 +4,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import { handleSimulate, type SimulateDeps } from '../../src/cli/simulate-route.js';
 import { marsScenario } from '../../src/engine/mars/index.js';
-import type { ScenarioPackage, LeaderConfig } from '../../src/engine/types.js';
+import type { ScenarioPackage, ActorConfig } from '../../src/engine/types.js';
 import type { RunArtifact } from '../../src/engine/schema/index.js';
 
 function fakeRes() {
@@ -20,7 +20,7 @@ function fakeRes() {
   };
 }
 
-function fakeLeader(overrides: Partial<LeaderConfig> = {}): LeaderConfig {
+function fakeLeader(overrides: Partial<ActorConfig> = {}): ActorConfig {
   return {
     name: 'Test Leader',
     archetype: 'Tester',
@@ -148,26 +148,31 @@ test('simulate: runSimulation throws -> 500 with generic message (no stack leak)
   assert.doesNotMatch(r.body.error, /kernel crash detail/);
 });
 
-test('simulate: runSimulation is called WITHOUT apiKey or anthropicKey on the options object', async () => {
-  // BYO-key billing routes through process.env at the server-app layer,
-  // not through RunOptions. RunOptions does not declare apiKey or
-  // anthropicKey; passing them to runSimulation would silently no-op.
+test('simulate: request credentials are forwarded through compile and run options', async () => {
   const { res, get } = fakeRes();
   let receivedOpts: Record<string, unknown> = {};
+  let compileOpts: Record<string, unknown> = {};
   await handleSimulate(
     {} as IncomingMessage,
     res,
-    { scenario: marsScenario, leader: fakeLeader() },
+    { scenario: marsScenario, leader: fakeLeader(), options: { provider: 'openai' } },
     fakeDeps({
+      compileScenario: async (_raw, opts) => {
+        compileOpts = opts as unknown as Record<string, unknown>;
+        return marsScenario;
+      },
       runSimulation: async (_leader, _personnel, opts) => {
         receivedOpts = opts as unknown as Record<string, unknown>;
         return fakeArtifact();
       },
     }),
+    { apiKey: 'sk-openai-request', anthropicKey: 'sk-ant-request' },
   );
   assert.equal(get().status, 200);
-  assert.ok(!('apiKey' in receivedOpts), 'apiKey must not appear on RunOptions');
-  assert.ok(!('anthropicKey' in receivedOpts), 'anthropicKey must not appear on RunOptions');
+  assert.equal(compileOpts.apiKey, 'sk-openai-request');
+  assert.equal(compileOpts.anthropicKey, 'sk-ant-request');
+  assert.equal(receivedOpts.apiKey, 'sk-openai-request');
+  assert.equal(receivedOpts.anthropicKey, 'sk-ant-request');
 });
 
 test('simulate: SimulateDeps no longer carries userApiKey or userAnthropicKey', () => {

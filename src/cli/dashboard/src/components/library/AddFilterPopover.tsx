@@ -44,11 +44,11 @@ export function AddFilterPopover(props: AddFilterPopoverProps): JSX.Element {
               ))}
             </fieldset>
           )}
-          {!currentFilters.leaderConfigHash && leaderOptions.length > 0 && (
+          {!currentFilters.actorConfigHash && leaderOptions.length > 0 && (
             <fieldset className={styles.section}>
               <legend>Leader</legend>
               {leaderOptions.map(l => (
-                <button key={l.hash} onClick={() => { onAdd({ leaderConfigHash: l.hash }); setOpen(false); }}>{l.label}</button>
+                <button key={l.hash} onClick={() => { onAdd({ actorConfigHash: l.hash }); setOpen(false); }}>{l.label}</button>
               ))}
             </fieldset>
           )}

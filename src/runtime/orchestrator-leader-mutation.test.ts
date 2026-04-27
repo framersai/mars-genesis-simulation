@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 /**
  * Regression test: runSimulation must NOT mutate the caller's
- * LeaderConfig.hexaco. The drift lives in orchestrator-local state
+ * ActorConfig.hexaco. The drift lives in orchestrator-local state
  * (`commanderHexacoLive` + `commanderHexacoHistory`), not in the input
  * object.
  *

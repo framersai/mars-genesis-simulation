@@ -10,7 +10,7 @@ export interface ListRunsFilters {
    *  free up that name for the more user-relevant simulation mode. */
   sourceMode?: ParacosmServerMode;
   scenarioId?: string;
-  leaderConfigHash?: string;
+  actorConfigHash?: string;
   /** Free-text search across scenario, leader name, leader archetype. */
   q?: string;
   /** Filter to runs sharing a bundle (one Quickstart submission). */
@@ -35,8 +35,8 @@ export interface RunHistoryStore {
    *  view to fetch a Quickstart bundle's members in one query. Returns
    *  members ordered by `created_at ASC` so the first leader is first. */
   listRunsByBundleId?(bundleId: string): Promise<RunRecord[]>;
-  countRuns?(filters?: Pick<ListRunsFilters, 'mode' | 'sourceMode' | 'scenarioId' | 'leaderConfigHash' | 'q'>): Promise<number>;
-  aggregateStats?(filters?: Pick<ListRunsFilters, 'mode' | 'sourceMode' | 'scenarioId' | 'leaderConfigHash'>): Promise<RunsAggregate>;
+  countRuns?(filters?: Pick<ListRunsFilters, 'mode' | 'sourceMode' | 'scenarioId' | 'actorConfigHash' | 'q'>): Promise<number>;
+  aggregateStats?(filters?: Pick<ListRunsFilters, 'mode' | 'sourceMode' | 'scenarioId' | 'actorConfigHash'>): Promise<RunsAggregate>;
   recordReplayResult?(runId: string, matches: boolean): Promise<void>;
 }
 

@@ -25,7 +25,7 @@ export interface QuickstartResultsProps {
   leaders: ActorConfig[];
   artifacts: RunArtifact[];
   sessionId?: string;
-  onSwap: (leaderIndex: number, preset: LeaderPreset) => void;
+  onSwap: (actorIndex: number, preset: LeaderPreset) => void;
 }
 
 const HEXACO_TRAITS: Array<keyof ActorConfig['hexaco']> = [
@@ -126,7 +126,7 @@ function LeaderResultCard({
   return (
     <article className={styles.card}>
       <header className={styles.cardHeader}>
-        <h4 className={styles.leaderName}>{leader.name}</h4>
+        <h4 className={styles.actorName}>{leader.name}</h4>
         <span className={styles.archetype}>{leader.archetype}</span>
         <button
           type="button"

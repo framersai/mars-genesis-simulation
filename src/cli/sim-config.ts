@@ -1,6 +1,6 @@
 import type { KeyPersonnel } from '../engine/core/agent-generator.js';
 import type { Department } from '../engine/core/state.js';
-import type { LeaderConfig } from './types.js';
+import type { ActorConfig } from './types.js';
 import {
   resolveEconomicsProfile,
   type ResolvedEconomicsProfile,
@@ -55,7 +55,7 @@ export interface SimulationExecutionConfig {
 }
 
 export interface SimulationSetupPayload {
-  leaders: LeaderConfig[];
+  leaders: ActorConfig[];
   provider?: LlmProvider;
   turns?: number;
   seed?: number;
@@ -112,7 +112,7 @@ export interface SimulationSetupPayload {
 }
 
 export interface NormalizedSimulationConfig {
-  leaders: LeaderConfig[];
+  leaders: ActorConfig[];
   provider: LlmProvider;
   turns: number;
   seed: number;

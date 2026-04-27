@@ -14,15 +14,15 @@ export function CompareCell({ record, pinned, onTogglePin, onOpen }: CompareCell
     <article className={[styles.cell, pinned ? styles.pinned : ''].filter(Boolean).join(' ')}>
       <header className={styles.head}>
         <div className={styles.titles}>
-          <h4 className={styles.name}>{record.leaderName ?? 'Unknown'}</h4>
-          {record.leaderArchetype && <p className={styles.archetype}>{record.leaderArchetype}</p>}
+          <h4 className={styles.name}>{record.actorName ?? 'Unknown'}</h4>
+          {record.actorArchetype && <p className={styles.archetype}>{record.actorArchetype}</p>}
         </div>
         <label className={styles.pinLabel} title={pinned ? 'Unpin' : 'Pin to compare side-by-side'}>
           <input
             type="checkbox"
             checked={pinned}
             onChange={onTogglePin}
-            aria-label={pinned ? `Unpin ${record.leaderName ?? 'actor'}` : `Pin ${record.leaderName ?? 'actor'} to compare`}
+            aria-label={pinned ? `Unpin ${record.actorName ?? 'actor'}` : `Pin ${record.actorName ?? 'actor'} to compare`}
           />
           <span aria-hidden="true">{pinned ? '★' : '☆'}</span>
         </label>
@@ -31,7 +31,7 @@ export function CompareCell({ record, pinned, onTogglePin, onOpen }: CompareCell
       <footer className={styles.foot}>
         <span className={styles.cost}>{record.costUSD ? `$${record.costUSD.toFixed(2)}` : '—'}</span>
         <span className={styles.duration}>{record.durationMs ? `${Math.round(record.durationMs / 1000)}s` : '—'}</span>
-        <button onClick={onOpen} className={styles.openBtn} aria-label={`Open ${record.leaderName ?? 'run'} details`}>Open</button>
+        <button onClick={onOpen} className={styles.openBtn} aria-label={`Open ${record.actorName ?? 'run'} details`}>Open</button>
       </footer>
     </article>
   );

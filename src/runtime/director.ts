@@ -52,8 +52,8 @@ export type DirectorCrisis = DirectorEvent & { crisis?: string };
 export interface DirectorContext {
   turn: number;
   time: number;
-  leaderName: string;
-  leaderArchetype: string;
+  actorName: string;
+  actorArchetype: string;
   leaderHexaco: HexacoProfile;
   /** Commander's HEXACO per-turn history for trajectory cue generation. */
   leaderHexacoHistory?: HexacoSnapshot[];
@@ -181,7 +181,7 @@ function buildDirectorPrompt(ctx: DirectorContext, maxEvents: number = 3): strin
   return `GENERATE EVENT FOR TURN ${ctx.turn}, YEAR ${ctx.time}
 
 SIMULATION STATE:
-- Commander: ${ctx.leaderName} (${ctx.leaderArchetype})
+- Commander: ${ctx.actorName} (${ctx.actorArchetype})
 - Population: ${ctx.aliveCount} alive (${ctx.nativeBornCount} native-born)
 - Recent: +${ctx.recentBirths} births, -${ctx.recentDeaths} deaths
 ${stateLines}
@@ -274,6 +274,8 @@ export class EventDirector {
      * can feed per-schema retry telemetry into its cost tracker.
      */
     onSchemaAttempt?: (attempts: number, fellBack: boolean) => void,
+    /** Explicit provider API key for this run. */
+    apiKey?: string,
   ): Promise<DirectorEventBatch> {
     const prompt = buildDirectorPrompt(ctx, maxEvents);
     const systemInstructions = (instructions || DEFAULT_DIRECTOR_INSTRUCTIONS)
@@ -297,24 +299,25 @@ export class EventDirector {
         // 2500 caps runaway yap without risking truncation on the
         // event array.
         maxTokens: 2500,
+        apiKey,
         onUsage,
         onProviderError,
       });
       const { object, fromFallback } = directorResult;
       onSchemaAttempt?.(directorResult.attempts, fromFallback);
       if (fromFallback) {
-        console.log(`  [director] Schema fallback for ${ctx.leaderName}, using canned`);
+        console.log(`  [director] Schema fallback for ${ctx.actorName}, using canned`);
       } else {
         const batch: DirectorEventBatch = {
           events: object.events.slice(0, maxEvents) as DirectorEvent[],
           pacing: object.pacing,
           reasoning: object.reasoning,
         };
-        console.log(`  [director] Generated ${batch.events.length} events (${batch.pacing}) for ${ctx.leaderName}: ${batch.events.map(e => `"${e.title}"`).join(', ')}`);
+        console.log(`  [director] Generated ${batch.events.length} events (${batch.pacing}) for ${ctx.actorName}: ${batch.events.map(e => `"${e.title}"`).join(', ')}`);
         return batch;
       }
     } catch (err) {
-      console.log(`  [director] Validated batch error for ${ctx.leaderName}: ${err}`);
+      console.log(`  [director] Validated batch error for ${ctx.actorName}: ${err}`);
       // Already-classified error from generateValidatedObject fired
       // onProviderError; fall through to canned fallback so the turn
       // still runs, but a terminal quota/auth error has already
