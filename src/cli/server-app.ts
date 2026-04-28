@@ -1583,6 +1583,59 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       return;
     }
 
+    // Admin destructive wipe: clears the runs + sessions tables and
+    // optionally the on-disk artifact JSONs under <APP_DIR>/output/.
+    // Same ADMIN_WRITE gate as /admin/sessions/save above. Returns the
+    // counts of deleted rows + files.
+    if (req.url === '/admin/data/wipe' && req.method === 'POST') {
+      if (!adminWrite) {
+        res.writeHead(403, { 'Content-Type': 'application/json', ...corsHeaders });
+        res.end(JSON.stringify({ error: 'ADMIN_WRITE not enabled on this server' }));
+        return;
+      }
+      let body: { wipeRuns?: boolean; wipeSessions?: boolean; wipeOutput?: boolean } = {};
+      try {
+        const raw = await readBody(req, maxRequestBodyBytes);
+        if (raw) body = JSON.parse(raw);
+      } catch (err) {
+        void err; // Empty body is fine — defaults below.
+      }
+      const wipeRuns = body.wipeRuns !== false;
+      const wipeSessions = body.wipeSessions !== false;
+      const wipeOutput = body.wipeOutput === true;
+
+      const result: { runs: number; sessions: number; outputFiles: number } = { runs: 0, sessions: 0, outputFiles: 0 };
+      try {
+        if (wipeRuns && runHistoryStore?.wipeAll) {
+          result.runs = await runHistoryStore.wipeAll();
+        }
+        if (wipeSessions && sessionStore) {
+          result.sessions = await sessionStore.wipeAll();
+        }
+        if (wipeOutput) {
+          const outputDir = resolve(env.APP_DIR || '.', 'output');
+          if (existsSync(outputDir)) {
+            for (const file of readdirSync(outputDir)) {
+              if (file.startsWith('v3-') && file.endsWith('.json')) {
+                try {
+                  unlinkSync(resolve(outputDir, file));
+                  result.outputFiles += 1;
+                } catch (err) {
+                  void err; // Best-effort; one failure shouldn't abort the rest.
+                }
+              }
+            }
+          }
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json', ...corsHeaders });
+        res.end(JSON.stringify({ wiped: result }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json', ...corsHeaders });
+        res.end(JSON.stringify({ error: String(err) }));
+      }
+      return;
+    }
+
     if (req.url === '/sessions' && req.method === 'GET') {
       if (!sessionStore) {
         res.writeHead(503, { 'Content-Type': 'application/json', ...corsHeaders });

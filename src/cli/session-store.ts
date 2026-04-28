@@ -114,6 +114,12 @@ export interface SessionStore {
    * LLM call must not block the save itself.
    */
   updateTitle(id: string, title: string): Promise<void>;
+  /**
+   * Destructive: delete every saved session. Used by the
+   * `/admin/data/wipe` endpoint for one-shot cleanups. Returns the
+   * count of deleted rows.
+   */
+  wipeAll(): Promise<number>;
   /** Releases the underlying connection. */
   close(): Promise<void>;
 }
@@ -288,6 +294,13 @@ export function openSessionStore(
       if (!clean) return;
       const adapter = await getAdapter();
       await adapter.run('UPDATE sessions SET title = ? WHERE id = ?', [clean, id]);
+    },
+
+    async wipeAll() {
+      const adapter = await getAdapter();
+      const before = await adapter.get<{ n: number }>('SELECT COUNT(*) AS n FROM sessions');
+      await adapter.run('DELETE FROM sessions');
+      return before?.n ?? 0;
     },
 
     async close() {

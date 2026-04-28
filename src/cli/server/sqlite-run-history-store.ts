@@ -385,5 +385,12 @@ export function createSqliteRunHistoryStore(options: SqliteRunHistoryStoreOption
         [matches ? 1 : 0, runId],
       );
     },
+
+    async wipeAll(): Promise<number> {
+      const adapter = await getAdapter();
+      const before = await adapter.get<{ n: number }>(`SELECT COUNT(*) AS n FROM runs`);
+      await adapter.run(`DELETE FROM runs`);
+      return before?.n ?? 0;
+    },
   };
 }
