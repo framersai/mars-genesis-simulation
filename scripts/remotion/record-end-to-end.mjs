@@ -189,21 +189,42 @@ try {
 } catch {
   console.log('[e2e] run did not complete within timeout -- recording whatever is on screen');
 }
-// Hold the results card briefly so the verdict + leader fingerprint are
-// visible in the recording before we tab-tour onto extras.
-const RESULTS_HOLD_S = runCompleted ? 8 : 0;
-if (RESULTS_HOLD_S > 0) {
-  console.log(`[e2e] hold Quickstart results for ${RESULTS_HOLD_S}s`);
-  await page.waitForTimeout(RESULTS_HOLD_S * 1000);
+// Hold the Quickstart results region so the viewer reads the verdict
+// + actor traits + delta chips before we move on. We scroll mid-hold
+// to expose the lower actor cards (the third one falls below the fold
+// on 720p viewports). The pre-scroll hold and post-scroll hold are
+// each long enough to land naturally without feeling rushed.
+const RESULTS_HOLD_TOP_S = 5;
+const RESULTS_HOLD_SCROLLED_S = 6;
+if (runCompleted) {
+  console.log(`[e2e] hold Quickstart results: ${RESULTS_HOLD_TOP_S}s top, scroll, ${RESULTS_HOLD_SCROLLED_S}s scrolled`);
+  await page.waitForTimeout(RESULTS_HOLD_TOP_S * 1000);
+  // Scroll the page so the third actor card + Compare CTA enter view.
+  // 480px is the empirically-good drop on a 720p viewport for the
+  // current QuickstartResults grid.
+  await page.evaluate(() => {
+    window.scrollTo({ top: 480, behavior: 'smooth' });
+  });
+  await page.waitForTimeout(RESULTS_HOLD_SCROLLED_S * 1000);
+  // Scroll back to the top so subsequent tabs render from a known
+  // baseline (some tabs hold their own scroll position).
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await page.waitForTimeout(400);
 }
 
-// ── 3-4. VIZ / REPORTS / LIBRARY TAB TOUR ─────────────────────────────
-// With the Atlas-7 run installed in the runs database (the results
-// region appearing implies artifacts in `sse.results` and a backing
-// RunRecord), tab-switching now shows real Atlas-7 state instead of
-// whatever cached run was last on screen.
-const VIZ_HOLD_S = 10;
-const REPORTS_HOLD_S = 10;
+// ── 3a. SIM TAB + CONSTELLATION VIEW ──────────────────────────────────
+// Show the Sim tab in side-by-side layout briefly, then flip into the
+// Constellation layout (radial graph of all actors with edges colored
+// by HEXACO fingerprint similarity) so the demo highlights the new
+// multi-actor visualization. The Constellation toggle button carries
+// data-layout="constellation"; clicking it is a pure client-side state
+// flip, no URL change.
+const SIM_SIDE_HOLD_S = 5;
+const SIM_CONSTELLATION_HOLD_S = 8;
+const VIZ_HOLD_S = 9;
+const VIZ_SCROLL_HOLD_S = 4;
+const REPORTS_HOLD_TOP_S = 6;
+const REPORTS_HOLD_SCROLLED_S = 7;
 const LIBRARY_HOLD_S = 6;
 const DRAWER_HOLD_S = 8;
 
@@ -217,13 +238,56 @@ async function clickTab(id) {
   return ok;
 }
 
-console.log(`[e2e] -> VIZ tab (${VIZ_HOLD_S}s)`);
+console.log(`[e2e] -> SIM tab (${SIM_SIDE_HOLD_S}s side-by-side, ${SIM_CONSTELLATION_HOLD_S}s constellation)`);
+await clickTab('sim');
+await page.waitForTimeout(SIM_SIDE_HOLD_S * 1000);
+// Flip to Constellation layout. The toggle is rendered by SimLayoutToggle
+// and exposes data-layout="constellation". Auto-enables when actorCount
+// >= 3, but the user can toggle manually too. We click regardless so the
+// recording deterministically lands on the constellation regardless of
+// whether the auto-enable already fired for this run size.
+const switched = await page.evaluate(() => {
+  const btn = document.querySelector('button[data-layout="constellation"]');
+  if (btn instanceof HTMLElement) { btn.click(); return true; }
+  return false;
+});
+if (!switched) console.log('[e2e] constellation toggle not found (single actor or layout API moved)');
+await page.waitForTimeout(SIM_CONSTELLATION_HOLD_S * 1000);
+
+console.log(`[e2e] -> VIZ tab (${VIZ_HOLD_S}s top, scroll, ${VIZ_SCROLL_HOLD_S}s scrolled)`);
 await clickTab('viz');
 await page.waitForTimeout(VIZ_HOLD_S * 1000);
+// Scroll inside the viz panel to expose the lower visualization rows.
+// VIZ uses a column-flex layout where the divergence rail and stats
+// strip sit below the fold on 720p; a single 360px nudge brings them
+// into view.
+await page.evaluate(() => window.scrollBy({ top: 360, behavior: 'smooth' }));
+await page.waitForTimeout(VIZ_SCROLL_HOLD_S * 1000);
+await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+await page.waitForTimeout(300);
 
-console.log(`[e2e] -> REPORTS tab (${REPORTS_HOLD_S}s)`);
+console.log(`[e2e] -> REPORTS tab (${REPORTS_HOLD_TOP_S}s top, scroll, ${REPORTS_HOLD_SCROLLED_S}s scrolled)`);
 await clickTab('reports');
-await page.waitForTimeout(REPORTS_HOLD_S * 1000);
+await page.waitForTimeout(REPORTS_HOLD_TOP_S * 1000);
+// Scroll the Reports content column (not the page) so the lower
+// sections — fingerprint comparison, decision-tree diff, per-turn
+// rationale — enter view. ReportSideNav sits to the right at desktop
+// widths; the content column owns its own overflow.
+await page.evaluate(() => {
+  const content = document.querySelector('.reports-content, [class*="reports-content"]');
+  if (content instanceof HTMLElement) {
+    content.scrollTo({ top: 700, behavior: 'smooth' });
+  } else {
+    window.scrollBy({ top: 600, behavior: 'smooth' });
+  }
+});
+await page.waitForTimeout(REPORTS_HOLD_SCROLLED_S * 1000);
+await page.evaluate(() => {
+  const content = document.querySelector('.reports-content, [class*="reports-content"]');
+  if (content instanceof HTMLElement) content.scrollTo({ top: 0, behavior: 'instant' });
+  else window.scrollTo({ top: 0, behavior: 'instant' });
+});
+await page.waitForTimeout(300);
 
 console.log(`[e2e] -> LIBRARY tab (${LIBRARY_HOLD_S}s)`);
 await clickTab('library');
@@ -298,6 +362,11 @@ execFileSync('ffmpeg', [
   '-preset', 'medium',
   '-crf', '22',
   '-pix_fmt', 'yuv420p',
+  // +faststart relocates the moov atom to the front of the file so
+  // browsers can scrub through the timeline without first downloading
+  // the whole mp4. Without it the landing-page <video controls> bar
+  // shows the scrubber but seeking is disabled until full buffer.
+  '-movflags', '+faststart',
   '-an',
   mp4Out,
 ], { stdio: ['ignore', 'inherit', 'inherit'] });
@@ -363,6 +432,11 @@ execFileSync('ffmpeg', [
   '-preset', 'medium',
   '-crf', '22',
   '-pix_fmt', 'yuv420p',
+  // +faststart relocates the moov atom to the front of the file so
+  // browsers can scrub through the timeline without first downloading
+  // the whole mp4. Without it the landing-page <video controls> bar
+  // shows the scrubber but seeking is disabled until full buffer.
+  '-movflags', '+faststart',
   '-an',
   heroOut,
 ], { stdio: ['ignore', 'inherit', 'inherit'] });

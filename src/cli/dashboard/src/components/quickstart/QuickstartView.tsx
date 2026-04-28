@@ -197,7 +197,12 @@ export function QuickstartView({ sse, sessionId }: QuickstartViewProps) {
         </>
       )}
       {phase.kind === 'progress' && (
-        <QuickstartProgress stage={phase.stage} actors={actorProgress} />
+        <QuickstartProgress
+          stage={phase.stage}
+          actors={actorProgress}
+          events={sse.events}
+          actorCount={phase.actors?.length ?? actorProgress?.length ?? 3}
+        />
       )}
       {phase.kind === 'results' && (
         <>
