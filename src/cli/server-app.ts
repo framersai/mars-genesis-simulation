@@ -1593,7 +1593,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         res.end(JSON.stringify({ error: 'ADMIN_WRITE not enabled on this server' }));
         return;
       }
-      let body: { wipeRuns?: boolean; wipeSessions?: boolean; wipeOutput?: boolean } = {};
+      let body: { wipeRuns?: boolean; wipeSessions?: boolean; wipeOutput?: boolean; wipeEventBuffer?: boolean } = {};
       try {
         const raw = await readBody(req, maxRequestBodyBytes);
         if (raw) body = JSON.parse(raw);
@@ -1603,14 +1603,27 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       const wipeRuns = body.wipeRuns !== false;
       const wipeSessions = body.wipeSessions !== false;
       const wipeOutput = body.wipeOutput === true;
+      // Default-on: the event buffer is the SSE replay source. Leaving
+      // it intact while wiping every other store means a page reload
+      // re-renders the just-wiped run from the buffer, which surprised
+      // users and looked like Wipe All wasn't actually working.
+      const wipeEventBuffer = body.wipeEventBuffer !== false;
 
-      const result: { runs: number; sessions: number; outputFiles: number } = { runs: 0, sessions: 0, outputFiles: 0 };
+      const result: { runs: number; sessions: number; outputFiles: number; eventBuffer: boolean } = { runs: 0, sessions: 0, outputFiles: 0, eventBuffer: false };
       try {
         if (wipeRuns && runHistoryStore?.wipeAll) {
           result.runs = await runHistoryStore.wipeAll();
         }
         if (wipeSessions && sessionStore) {
           result.sessions = await sessionStore.wipeAll();
+        }
+        if (wipeEventBuffer) {
+          // Same path the in-process /clear endpoint uses: clear the
+          // in-memory buffer + cancel any pending persist + remove the
+          // .event-buffer.json snapshot from disk.
+          clearEventBuffer();
+          simConfig = null;
+          result.eventBuffer = true;
         }
         if (wipeOutput) {
           const outputDir = resolve(env.APP_DIR || '.', 'output');
