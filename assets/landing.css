@@ -871,6 +871,46 @@ footer { padding: 28px 24px; border-top: 1px solid var(--border); background: va
 
 .light .nav-mobile { background: rgba(248, 242, 228, .96); }
 
+/* Mobile-nav collapsible groups (mirrors desktop's "Sections" / "Docs"
+   dropdowns). Native <details>/<summary> so no JS needed; the chevron
+   rotates on [open]. Nested <a> rows indent + lose the bottom border
+   so the group reads as one block. */
+.nav-mobile-group {
+  border-bottom: 1px solid rgba(48, 42, 34, .25);
+}
+.nav-mobile-group > summary {
+  font-size: 15px;
+  color: var(--t2);
+  font-weight: 500;
+  padding: 10px 0;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: color .2s;
+}
+.nav-mobile-group > summary::-webkit-details-marker { display: none; }
+.nav-mobile-group > summary::after {
+  content: "▾";
+  font-size: 11px;
+  color: var(--t3);
+  transition: transform .2s ease;
+}
+.nav-mobile-group[open] > summary::after {
+  transform: rotate(180deg);
+}
+.nav-mobile-group:hover > summary { color: var(--t1); }
+.nav-mobile-group > a {
+  padding-left: 16px;
+  font-size: 14px;
+  color: var(--t3);
+  border-bottom: none;
+}
+.nav-mobile-group > a:last-of-type {
+  padding-bottom: 8px;
+}
+
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 880px) {
