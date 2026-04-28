@@ -1,0 +1,24 @@
+{
+  "metadata": {
+    "runId": "run_studio_fixture_turn_loop",
+    "scenario": { "id": "mars-genesis", "name": "Mars Genesis" },
+    "mode": "turn-loop",
+    "startedAt": "2026-04-26T00:00:00.000Z",
+    "completedAt": "2026-04-26T00:01:30.000Z"
+  },
+  "leader": { "name": "Aria Chen", "archetype": "The Visionary" },
+  "cost": { "totalUSD": 0.42 },
+  "trajectory": {
+    "timeUnit": { "singular": "month", "plural": "months" },
+    "timepoints": [
+      { "t": 1, "label": "M1", "worldSnapshot": { "metrics": { "morale": 0.85, "population": 100 } } },
+      { "t": 2, "label": "M2", "worldSnapshot": { "metrics": { "morale": 0.80, "population": 102 } } },
+      { "t": 3, "label": "M3", "worldSnapshot": { "metrics": { "morale": 0.75, "population": 104 } } }
+    ]
+  },
+  "decisions": [
+    { "label": "Conserve power" },
+    { "label": "Mine ice" },
+    { "label": "Expand habitat" }
+  ]
+}
