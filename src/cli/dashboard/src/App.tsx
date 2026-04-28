@@ -644,7 +644,17 @@ function AppContent() {
             launching={launching}
             history={history.entries}
             onRestoreHistory={(entry) => history.restore(entry, sse.loadEvents)}
-            onClearHistory={history.clear}
+            onClearHistory={() => {
+              // Clear all browser-side state — the local LOAD-menu
+              // ring, the localStorage event-cache, the in-memory SSE
+              // state (which feeds Sim/Constellation/EventLog), and
+              // the userTriggeredRun toast gate. Doesn't touch server
+              // data; that's what Wipe All is for.
+              history.clear();
+              persistence.clearCache();
+              sse.reset();
+              setUserTriggeredRun(false);
+            }}
           />
           <TabBar active={activeTab} onTabChange={setActiveTab} scenario={scenario} />
           <VerdictBanner

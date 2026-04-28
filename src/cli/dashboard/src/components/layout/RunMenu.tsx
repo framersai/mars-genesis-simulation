@@ -320,17 +320,22 @@ export function RunMenu({
                     <button
                       type="button"
                       className={historyStyles.historyClearAll}
+                      title="Wipe everything in this browser: saved-runs ring, event cache, current sim state. Server data untouched — use Wipe All in the ⋯ menu for that."
                       onClick={() => {
                         if (
                           window.confirm(
-                            'Clear all local history? This cannot be undone.',
+                            'Clear all local browser state?\n\n' +
+                            '  • Saved-runs ring (this dropdown)\n' +
+                            '  • Event cache (Sim / Constellation / Log)\n' +
+                            '  • Current SSE state\n\n' +
+                            'Server-stored runs are NOT affected (use Wipe All in the ⋯ menu for that).\n\nCannot be undone.',
                           )
                         ) {
                           onClearHistory();
                         }
                       }}
                     >
-                      Clear local history
+                      Clear local data
                     </button>
                   )}
                 </div>
