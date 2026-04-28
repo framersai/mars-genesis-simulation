@@ -27,7 +27,19 @@ export function StudioDropZone({ onLoaded }: StudioDropZoneProps): JSX.Element {
       setError({ message: `File is too large (max ${MAX_FILE_BYTES / 1024 / 1024} MB)`, hint: `Got ${Math.round(file.size / 1024 / 1024)} MB` });
       return;
     }
-    const text = await file.text();
+    let text: string;
+    try {
+      text = await file.text();
+    } catch (err) {
+      // file.text() can reject if the underlying File handle is
+      // revoked mid-read (rare on local drag-drop, common on iOS
+      // when an OS picker hands back a stale reference).
+      setError({
+        message: 'Failed to read file',
+        hint: err instanceof Error ? err.message : String(err),
+      });
+      return;
+    }
     const result = parseStudioInput(text);
     if (result.kind === 'error') {
       setError({ message: result.message, hint: result.hint });

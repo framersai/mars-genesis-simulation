@@ -21,7 +21,7 @@ export interface StudioBundleViewProps {
 }
 
 export function StudioBundleView(props: StudioBundleViewProps): JSX.Element {
-  const { artifacts, onPromote, onCompare, promoteBusy, alreadyExisted } = props;
+  const { artifacts, bundleId, onPromote, onCompare, promoteBusy, alreadyExisted } = props;
   const [drillIdx, setDrillIdx] = React.useState<number | null>(null);
 
   if (drillIdx !== null && artifacts[drillIdx]) {
@@ -47,6 +47,14 @@ export function StudioBundleView(props: StudioBundleViewProps): JSX.Element {
 
   return (
     <div>
+      {bundleId && (
+        // Surface the bundle's identity so users can correlate the
+        // loaded JSON with a Library row after a Promote, and so
+        // shared/re-imported bundles are recognizable across reloads.
+        <div className={styles.bundleIdChip} title={bundleId}>
+          {bundleId.length > 32 ? `${bundleId.slice(0, 28)}…` : bundleId}
+        </div>
+      )}
       <div className={styles.bundleActions}>
         <button
           type="button"

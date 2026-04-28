@@ -34,13 +34,16 @@ export function StudioTab(): JSX.Element {
   const onPromoteSingle = React.useCallback(async () => {
     if (!loaded || loaded.input.kind !== 'single') return;
     const result = await promote.promoteSingle(loaded.input.artifact);
-    if (result) setLoaded({ ...loaded, promote: result });
+    // Functional updater so a state change between the await and the
+    // resolve (e.g. user dropped a different file) merges into the
+    // latest state instead of overwriting it with the stale `loaded`.
+    if (result) setLoaded((prev) => (prev ? { ...prev, promote: result } : prev));
   }, [loaded, promote]);
 
   const onPromoteBundle = React.useCallback(async () => {
     if (!loaded || loaded.input.kind !== 'bundle') return;
     const result = await promote.promoteBundle(loaded.input.artifacts);
-    if (result) setLoaded({ ...loaded, promote: result });
+    if (result) setLoaded((prev) => (prev ? { ...prev, promote: result } : prev));
   }, [loaded, promote]);
 
   const onCompare = React.useCallback(() => setCompareOpen(true), []);

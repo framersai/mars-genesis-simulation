@@ -132,6 +132,15 @@ export function ConstellationView({ state, onActorClick }: ConstellationViewProp
                 r={NODE_RADIUS}
                 fill={color}
                 onClick={() => onActorClick(id)}
+                onKeyDown={(e) => {
+                  // Mirror native button semantics: Enter or Space
+                  // activates the node. preventDefault stops Space
+                  // from page-scrolling the SVG container.
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onActorClick(id);
+                  }
+                }}
                 tabIndex={0}
                 role="button"
                 aria-label={`Open report for ${id}`}

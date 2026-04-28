@@ -94,11 +94,14 @@ export function SettingsPanel() {
   const navigateTab = useDashboardNavigation();
 
   const defaultPreset = scenario.presets.find(p => p.id === 'default');
+  // Spread the hexaco object so the form's per-trait edits don't mutate
+  // the preset that lives in the scenario context (which is shared with
+  // every other consumer that reads scenario.presets).
   const initLeaderA = defaultPreset?.actors?.[0]
-    ? { name: defaultPreset.actors[0].name, archetype: defaultPreset.actors[0].archetype, unit: 'Colony Alpha', instructions: defaultPreset.actors[0].instructions, hexaco: defaultPreset.actors[0].hexaco }
+    ? { name: defaultPreset.actors[0].name, archetype: defaultPreset.actors[0].archetype, unit: 'Colony Alpha', instructions: defaultPreset.actors[0].instructions, hexaco: { ...defaultPreset.actors[0].hexaco } }
     : defaultLeader(0);
   const initLeaderB = defaultPreset?.actors?.[1]
-    ? { name: defaultPreset.actors[1].name, archetype: defaultPreset.actors[1].archetype, unit: 'Colony Beta', instructions: defaultPreset.actors[1].instructions, hexaco: defaultPreset.actors[1].hexaco }
+    ? { name: defaultPreset.actors[1].name, archetype: defaultPreset.actors[1].archetype, unit: 'Colony Beta', instructions: defaultPreset.actors[1].instructions, hexaco: { ...defaultPreset.actors[1].hexaco } }
     : defaultLeader(1);
 
   const [leaderA, setLeaderA] = useState<ActorFormData>(initLeaderA);

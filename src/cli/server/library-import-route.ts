@@ -69,10 +69,26 @@ export async function handleLibraryImport(
     }
     const bundleId = `bundle_${randomUUID()}`;
     const result: { runIds: string[]; alreadyExisted: boolean[] } = { runIds: [], alreadyExisted: [] };
-    for (const artifact of artifacts) {
-      const inserted = await insertOne(artifact, bundleId, deps);
-      result.runIds.push(inserted.runId);
-      result.alreadyExisted.push(inserted.alreadyExisted);
+    for (let i = 0; i < artifacts.length; i += 1) {
+      const artifact = artifacts[i];
+      try {
+        const inserted = await insertOne(artifact, bundleId, deps);
+        result.runIds.push(inserted.runId);
+        result.alreadyExisted.push(inserted.alreadyExisted);
+      } catch (err) {
+        // Surface the failing artifact's index + runId so the client
+        // can show a partial-success state and retry just the broken
+        // one rather than the whole bundle.
+        const message = err instanceof Error ? err.message : String(err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          error: `Failed to insert bundle item ${i}: ${message}`,
+          bundleId,
+          failedRunId: artifact.metadata?.runId,
+          insertedSoFar: result,
+        }));
+        return;
+      }
     }
     res.writeHead(201, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ bundleId, ...result }));
@@ -97,9 +113,19 @@ export async function handleLibraryImport(
   }
   // Same Zod-strip avoidance as the bundle path: forward the raw input
   // so `leader` / `cost` survive into enrichRunRecordFromArtifact.
-  const inserted = await insertOne(parsed.data.artifact as RunArtifact, undefined, deps);
-  res.writeHead(201, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify(inserted));
+  try {
+    const inserted = await insertOne(parsed.data.artifact as RunArtifact, undefined, deps);
+    res.writeHead(201, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(inserted));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const failedRunId = (parsed.data.artifact as RunArtifact)?.metadata?.runId;
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      error: `Failed to insert artifact: ${message}`,
+      failedRunId,
+    }));
+  }
 }
 
 async function insertOne(

@@ -136,6 +136,19 @@
   margin-top: 0.25rem;
 }
 
+.bundleIdChip {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-3);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 3px 8px;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.04em;
+}
+
 .bundleActions {
   display: flex;
   gap: 0.5rem;
