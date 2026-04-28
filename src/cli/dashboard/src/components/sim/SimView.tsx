@@ -13,6 +13,9 @@ import { Timeline } from './Timeline';
 import { SimFooterBar } from './SimFooterBar';
 import { RerunPanel } from './RerunPanel';
 import { LoadPriorRunsCTA } from '../settings/LoadPriorRunsCTA';
+import { SimLayoutToggle, type SimLayout } from './SimLayoutToggle';
+import { ConstellationView } from './ConstellationView';
+import { ActorDrillInModal } from './ActorDrillInModal';
 import styles from './SimView.module.scss';
 
 interface SimViewProps {
@@ -152,6 +155,28 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
   const [localLaunching, setLocalLaunching] = useState(false);
   const launching = launchingProp ?? localLaunching;
 
+  // Constellation layout state. Default constellation when N>=3 (because
+  // the existing 2-column layout literally won't fit). User can toggle
+  // manually; userPickedLayoutRef sticks the manual choice through
+  // mid-run actor count changes.
+  const [layout, setLayout] = useState<SimLayout>(
+    () => state.actorIds.length >= 3 ? 'constellation' : 'side-by-side',
+  );
+  const userPickedLayoutRef = useRef(false);
+  const setLayoutWithOverride = useCallback((next: SimLayout) => {
+    userPickedLayoutRef.current = true;
+    setLayout(next);
+  }, []);
+  useEffect(() => {
+    if (userPickedLayoutRef.current) return;
+    if (state.actorIds.length >= 3 && layout === 'side-by-side') {
+      setLayout('constellation');
+    }
+  }, [state.actorIds.length, layout]);
+
+  const [drillInActor, setDrillInActor] = useState<string | null>(null);
+  const drillInIndex = drillInActor ? state.actorIds.indexOf(drillInActor) : 0;
+
   const firstId = state.actorIds[0];
   const secondId = state.actorIds[1];
   const sideA = firstId ? state.actors[firstId] : null;
@@ -237,31 +262,47 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
 
   return (
     <div className={styles.root}>
-      {/* Shared leaders row. Winner/tie/second chip on each card
-          surfaces the verdict even before the user scrolls down to
-          the banner card. */}
-      <div className={`leaders-row ${styles.leadersRow}`}>
-        <ActorBar
-          actorIndex={0}
-          leader={sideA?.leader || presetLeaderA}
-          popHistory={sideA?.popHistory || []}
-          moraleHistory={sideA?.moraleHistory || []}
-          verdictPlacement={verdictPlacementFor('A')}
-        />
-        <ActorBar
-          actorIndex={1}
-          leader={sideB?.leader || presetLeaderB}
-          popHistory={sideB?.popHistory || []}
-          moraleHistory={sideB?.moraleHistory || []}
-          verdictPlacement={verdictPlacementFor('B')}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+        <SimLayoutToggle
+          layout={layout}
+          actorCount={state.actorIds.length}
+          onChange={setLayoutWithOverride}
         />
       </div>
+      {layout === 'constellation' ? (
+        <ConstellationView
+          state={state}
+          onActorClick={(name) => setDrillInActor(name)}
+        />
+      ) : (
+        <>
+          {/* Shared leaders row. Winner/tie/second chip on each card
+              surfaces the verdict even before the user scrolls down to
+              the banner card. */}
+          <div className={`leaders-row ${styles.leadersRow}`}>
+            <ActorBar
+              actorIndex={0}
+              leader={sideA?.leader || presetLeaderA}
+              popHistory={sideA?.popHistory || []}
+              moraleHistory={sideA?.moraleHistory || []}
+              verdictPlacement={verdictPlacementFor('A')}
+            />
+            <ActorBar
+              actorIndex={1}
+              leader={sideB?.leader || presetLeaderB}
+              popHistory={sideB?.popHistory || []}
+              moraleHistory={sideB?.moraleHistory || []}
+              verdictPlacement={verdictPlacementFor('B')}
+            />
+          </div>
 
-      <StatsBar
-        actors={state.actorIds.slice(0, 2).map(id => ({ id, state: state.actors[id] }))}
-        crisisText={crisisText}
-        toolRegistry={toolRegistry}
-      />
+          <StatsBar
+            actors={state.actorIds.slice(0, 2).map(id => ({ id, state: state.actors[id] }))}
+            crisisText={crisisText}
+            toolRegistry={toolRegistry}
+          />
+        </>
+      )}
 
       {/* Slim sim-progress bar. Visible while the run is active and
           hides on completion. */}
@@ -381,6 +422,15 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
       {/* Re-run-with-seed+1 epilogue. Extracted to its own file in F4
           batch 2 to satisfy audit finding F8 (modular concerns). */}
       <RerunPanel enabled={state.isComplete && !state.isRunning} />
+
+      {/* Drill-in modal for Constellation node clicks. Renders nothing
+          when actorName is null. */}
+      <ActorDrillInModal
+        actorName={drillInActor}
+        actorIndex={drillInIndex >= 0 ? drillInIndex : 0}
+        state={state}
+        onClose={() => setDrillInActor(null)}
+      />
     </div>
   );
 }
