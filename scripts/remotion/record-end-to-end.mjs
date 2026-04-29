@@ -464,9 +464,14 @@ const filterGraph = bEnd
     `[a][b][c]concat=n=3:v=1[out]`
   )
   : (
-    // Fallback: no run completed; trim leading flash + uniform speedup
-    // + caption over the whole thing.
-    `[0:v]trim=start=${A_START_S.toFixed(3)},setpts=(PTS-STARTPTS)/${SPEED_B},${drawtext}[out]`
+    // Fallback (run did not finish in time). Preserve segment A at 1×
+    // so the typing + click are still readable; speed up everything
+    // after click at SPEED_B with the segment-B caption. The earlier
+    // "uniform 12× over the whole thing" version buried the typing
+    // phase too — viewers lost the input moment.
+    `[0:v]trim=start=${A_START_S.toFixed(3)}:end=${aEnd.toFixed(3)},setpts=PTS-STARTPTS[a];` +
+    `[0:v]trim=start=${aEnd.toFixed(3)},setpts=(PTS-STARTPTS)/${SPEED_B},${drawtext}[b];` +
+    `[a][b]concat=n=2:v=1[out]`
   );
 execFileSync('ffmpeg', [
   '-y',
