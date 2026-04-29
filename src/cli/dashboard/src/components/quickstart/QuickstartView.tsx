@@ -254,10 +254,13 @@ export function QuickstartView({ sse, sessionId, onRunStarted, onInterventionRes
         <>
           <header className={styles.header}>
             <h2>Quickstart</h2>
-            <p>Paste a brief, drop a PDF, or supply a URL. Paracosm compiles a scenario and runs three distinct actors against it.</p>
+            <p>Two ways in: test a single subject under one intervention (digital twin), or compile a fresh scenario from a brief and run three actors against it.</p>
           </header>
           {errorBanner && <p className={styles.errorBanner} role="alert">{errorBanner}</p>}
-          <SeedInput onSeedReady={handleSeedReady} />
+          {/* Digital-twin path on top: the dt demo is the primary
+              action we want viewers to see first. The seed-input
+              compile-a-scenario path stays available below as the
+              alternative for users with their own brief / PDF / URL. */}
           {onInterventionResult && (
             <InterventionDemoCard
               onResult={onInterventionResult}
@@ -265,6 +268,7 @@ export function QuickstartView({ sse, sessionId, onRunStarted, onInterventionRes
               onError={(msg) => setErrorBanner(msg)}
             />
           )}
+          <SeedInput onSeedReady={handleSeedReady} />
         </>
       )}
       {phase.kind === 'progress' && (

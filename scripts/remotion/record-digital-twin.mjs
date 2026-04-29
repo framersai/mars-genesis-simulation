@@ -205,12 +205,12 @@ execFileSync('ffmpeg', [
 // caption, C (DigitalTwinPanel hold) at 1× with caption. Total target
 // ~25-35s.
 const heroOut = path.resolve(ASSETS_DIR, `${OUT_NAME}-hero.mp4`);
-// Trim 2s off the front. Recorder waits ~2s for hydration + killTour
-// before scrolling, so cutting the first 2s of source removes most of
-// the empty-Quickstart phase. Source 2s onward shows the scroll
-// landing on the dt card and the typewriter animation running through
-// subject + intervention fields.
-const A_START_S = 2.0;
+// Trim 0.7s — the dt card is now at the top of QuickstartView
+// (above the seed input), so by the time the page settles the dt
+// card is already in frame at the top. Brief 0.7s lead-in of the
+// page header + tab bar before the typewriter starts is fine; no
+// empty-Quickstart-textarea phase to skip.
+const A_START_S = 0.7;
 const aEnd = ((seg.clickedMs || 8000) + 800) / 1000;
 const bEnd = resultRendered
   ? Math.max(aEnd + 4, (seg.resultRenderedMs - 500) / 1000)
