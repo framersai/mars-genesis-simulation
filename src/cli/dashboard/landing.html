@@ -753,99 +753,103 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
 
     <div class="dt-grid rv" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:32px;align-items:stretch">
       <div class="code-block" style="margin:0">
-        <div class="code-header"><span>Worked example · 25% RIF on a 100-person company</span></div>
+        <div class="code-header"><span>Worked example · 90-day Atlas-7 release delay for red-team + DPO</span></div>
         <div class="code-body"><span class="kw">import</span> { DigitalTwin } <span class="kw">from</span> <span class="str">'paracosm/digital-twin'</span>;
 
 <span class="kw">const</span> twin = <span class="kw">await</span> DigitalTwin.fromJson(scenarioJson);
 
 <span class="kw">const</span> subject = {
-  id: <span class="str">'acme-corp'</span>,
-  kind: <span class="str">'organization'</span>,
-  attributes: {
-    headcount: 100,
-    revenue_arr: 24_000_000,
-    morale: 0.78,
-    runway_months: 14,
+  id: <span class="str">'frontier-lab-2026'</span>,
+  name: <span class="str">'Atlas Lab'</span>,
+  profile: {
+    headcount: 480,
+    modelGen: <span class="str">'Atlas-7'</span>,
+    alignmentBench: 0.84,
   },
+  signals: [
+    { label: <span class="str">'AlignmentBench-2026'</span>, value: 0.84 },
+    { label: <span class="str">'spec-gaming-rate'</span>, value: 0.042 },
+  ],
 };
 
 <span class="kw">const</span> intervention = {
-  id: <span class="str">'rif-q2'</span>,
-  kind: <span class="str">'policy'</span>,
-  description: <span class="str">'25% RIF, severance 8 weeks'</span>,
-  parameters: { percent: 25, severance_weeks: 8 },
+  id: <span class="str">'delay-90d'</span>,
+  name: <span class="str">'90-day release delay'</span>,
+  description: <span class="str">'Hold Atlas-7 release 90 days for'</span>
+    + <span class="str">' additional red-team + DPO mitigation passes.'</span>,
+  duration: { value: 90, unit: <span class="str">'days'</span> },
 };
 
 <span class="kw">const</span> artifact = <span class="kw">await</span> twin.simulateIntervention(
-  subject, intervention, leader, { maxTurns: 4 }
+  subject, intervention, leader, { maxTurns: 4, seed: 11 }
 );
 
-<span class="cm">// artifact.trajectory.timepoints[t].state</span>
-<span class="cm">//   carries the per-quarter snapshot</span></div>
+<span class="cm">// artifact.subject + artifact.intervention preserved</span>
+<span class="cm">// artifact.trajectory.timepoints[t].worldSnapshot</span>
+<span class="cm">//   carries per-quarter metrics + politics + env</span></div>
       </div>
 
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px">
         <div style="font-family:var(--mono);font-size:11px;color:var(--rust);letter-spacing:1.5px;text-transform:uppercase">Output · artifact.trajectory</div>
 
-        <svg viewBox="0 0 460 220" style="width:100%;height:auto" role="img" aria-label="Trajectory: headcount, morale, and runway across 4 quarters post-RIF">
+        <svg viewBox="0 0 460 220" style="width:100%;height:auto" role="img" aria-label="Trajectory across 4 quarters: alignment bench, spec-gaming rate, and board confidence post 90-day delay">
           <defs>
-            <linearGradient id="dt-headcount" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="var(--rust)" stop-opacity="0.9"/>
-              <stop offset="100%" stop-color="var(--rust)" stop-opacity="0.6"/>
-            </linearGradient>
-            <linearGradient id="dt-morale" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="var(--amber)" stop-opacity="0.9"/>
-              <stop offset="100%" stop-color="var(--amber)" stop-opacity="0.6"/>
-            </linearGradient>
-            <linearGradient id="dt-runway" x1="0" y1="0" x2="1" y2="0">
+            <linearGradient id="dt-align" x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stop-color="var(--teal)" stop-opacity="0.9"/>
               <stop offset="100%" stop-color="var(--teal)" stop-opacity="0.6"/>
             </linearGradient>
+            <linearGradient id="dt-specgame" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="var(--rust)" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="var(--rust)" stop-opacity="0.6"/>
+            </linearGradient>
+            <linearGradient id="dt-board" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="var(--amber)" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="var(--amber)" stop-opacity="0.6"/>
+            </linearGradient>
           </defs>
 
-          <!-- Axis labels -->
           <text x="20"  y="210" fill="var(--t3)" font-family="var(--mono)" font-size="10">Q0</text>
           <text x="125" y="210" fill="var(--t3)" font-family="var(--mono)" font-size="10">Q1</text>
           <text x="230" y="210" fill="var(--t3)" font-family="var(--mono)" font-size="10">Q2</text>
           <text x="335" y="210" fill="var(--t3)" font-family="var(--mono)" font-size="10">Q3</text>
           <text x="430" y="210" fill="var(--t3)" font-family="var(--mono)" font-size="10">Q4</text>
 
-          <!-- Headcount line: 100 → 75 → 75 → 78 → 82 -->
-          <polyline points="20,30 130,90 235,90 340,82 440,72" fill="none" stroke="url(#dt-headcount)" stroke-width="2.5"/>
-          <circle cx="20"  cy="30" r="3.5" fill="var(--rust)"/>
-          <circle cx="130" cy="90" r="3.5" fill="var(--rust)"/>
-          <circle cx="235" cy="90" r="3.5" fill="var(--rust)"/>
-          <circle cx="340" cy="82" r="3.5" fill="var(--rust)"/>
-          <circle cx="440" cy="72" r="3.5" fill="var(--rust)"/>
+          <!-- Alignment bench: 0.84 → 0.86 → 0.89 → 0.91 → 0.91 (rising on red-team passes) -->
+          <polyline points="20,80 130,65 235,42 340,28 440,28" fill="none" stroke="url(#dt-align)" stroke-width="2.5"/>
+          <circle cx="20"  cy="80" r="3.5" fill="var(--teal)"/>
+          <circle cx="130" cy="65" r="3.5" fill="var(--teal)"/>
+          <circle cx="235" cy="42" r="3.5" fill="var(--teal)"/>
+          <circle cx="340" cy="28" r="3.5" fill="var(--teal)"/>
+          <circle cx="440" cy="28" r="3.5" fill="var(--teal)"/>
 
-          <!-- Morale line: 0.78 → 0.42 → 0.55 → 0.68 → 0.71 -->
-          <polyline points="20,80 130,170 235,138 340,108 440,100" fill="none" stroke="url(#dt-morale)" stroke-width="2.5"/>
-          <circle cx="20"  cy="80"  r="3.5" fill="var(--amber)"/>
-          <circle cx="130" cy="170" r="3.5" fill="var(--amber)"/>
-          <circle cx="235" cy="138" r="3.5" fill="var(--amber)"/>
-          <circle cx="340" cy="108" r="3.5" fill="var(--amber)"/>
-          <circle cx="440" cy="100" r="3.5" fill="var(--amber)"/>
+          <!-- Spec-gaming: 0.042 → 0.038 → 0.024 → 0.014 → 0.011 (dropping on DPO mitigation) -->
+          <polyline points="20,115 130,125 235,150 340,170 440,178" fill="none" stroke="url(#dt-specgame)" stroke-width="2.5"/>
+          <circle cx="20"  cy="115" r="3.5" fill="var(--rust)"/>
+          <circle cx="130" cy="125" r="3.5" fill="var(--rust)"/>
+          <circle cx="235" cy="150" r="3.5" fill="var(--rust)"/>
+          <circle cx="340" cy="170" r="3.5" fill="var(--rust)"/>
+          <circle cx="440" cy="178" r="3.5" fill="var(--rust)"/>
 
-          <!-- Runway line: 14 → 19 → 21 → 22 → 22 -->
-          <polyline points="20,135 130,75 235,55 340,48 440,48" fill="none" stroke="url(#dt-runway)" stroke-width="2.5"/>
-          <circle cx="20"  cy="135" r="3.5" fill="var(--teal)"/>
-          <circle cx="130" cy="75"  r="3.5" fill="var(--teal)"/>
-          <circle cx="235" cy="55"  r="3.5" fill="var(--teal)"/>
-          <circle cx="340" cy="48"  r="3.5" fill="var(--teal)"/>
-          <circle cx="440" cy="48"  r="3.5" fill="var(--teal)"/>
+          <!-- Board confidence: 75 → 60 → 55 → 68 → 78 (dips on delay, recovers when wins ship) -->
+          <polyline points="20,55 130,95 235,110 340,75 440,45" fill="none" stroke="url(#dt-board)" stroke-width="2.5"/>
+          <circle cx="20"  cy="55"  r="3.5" fill="var(--amber)"/>
+          <circle cx="130" cy="95"  r="3.5" fill="var(--amber)"/>
+          <circle cx="235" cy="110" r="3.5" fill="var(--amber)"/>
+          <circle cx="340" cy="75"  r="3.5" fill="var(--amber)"/>
+          <circle cx="440" cy="45"  r="3.5" fill="var(--amber)"/>
         </svg>
 
         <div style="display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:11px">
-          <span style="display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--rust)"></span><span style="color:var(--t2)">headcount</span> <span style="color:var(--t3)">100 → 82</span></span>
-          <span style="display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--amber)"></span><span style="color:var(--t2)">morale</span> <span style="color:var(--t3)">0.78 → 0.71 (dips Q1)</span></span>
-          <span style="display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--teal)"></span><span style="color:var(--t2)">runway_months</span> <span style="color:var(--t3)">14 → 22</span></span>
+          <span style="display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--teal)"></span><span style="color:var(--t2)">alignmentBench</span> <span style="color:var(--t3)">0.84 → 0.91</span></span>
+          <span style="display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--rust)"></span><span style="color:var(--t2)">spec_gaming_rate</span> <span style="color:var(--t3)">0.042 → 0.011</span></span>
+          <span style="display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--amber)"></span><span style="color:var(--t2)">boardConfidence</span> <span style="color:var(--t3)">75 → 60 → 78 (dips Q1, recovers Q4)</span></span>
         </div>
 
-        <p style="font-size:12px;color:var(--t3);line-height:1.6;margin:4px 0 0">Fork the same artifact at Q1 with a different leader HEXACO profile to compare counterfactuals — risk-averse vs. expansion-minded — on the exact same intervention.</p>
+        <p style="font-size:12px;color:var(--t3);line-height:1.6;margin:4px 0 0">Real cookbook output — see <a href="https://github.com/framersai/paracosm/blob/master/output/cookbook/06-output-digital-twin-artifact.json" target="_blank" rel="noopener" style="color:var(--amber)">06-output-digital-twin-artifact.json</a>. Fork at Q1 with an expansion-minded leader HEXACO to compare counterfactuals: ship-now vs. delay-and-mitigate.</p>
       </div>
     </div>
 
-    <p class="sec-desc rv" style="margin-top:24px;font-size:14px;color:var(--t3)">The same shape works for medical interventions (subject = patient, intervention = treatment), policy modeling (subject = jurisdiction, intervention = ordinance), and product launches (subject = market, intervention = pricing change). The kernel doesn't care about the domain; the scenario contract names the world.</p>
+    <p class="sec-desc rv" style="margin-top:24px;font-size:14px;color:var(--t3)">The same shape applies to medical interventions (subject = patient, intervention = treatment), policy modeling (subject = jurisdiction, intervention = ordinance), and product launches (subject = market, intervention = pricing change). The kernel is domain-agnostic — the scenario contract names the world.</p>
   </div>
 </section>
 
