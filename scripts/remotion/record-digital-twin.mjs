@@ -102,24 +102,38 @@ const recStartMs = Date.now();
 const seg = { introHoldMs: 0, clickedMs: 0, resultRenderedMs: 0 };
 const since = () => Date.now() - recStartMs;
 
-// ── 1. SCROLL DIRECTLY TO INTERVENTION DEMO CARD ───────────────────────
-// The recorder skips the empty SeedInput intro entirely. After scroll
-// the InterventionDemoCard kicks off a typewriter animation (subject
-// fields type in, then intervention fields). Hold 6s so the full
-// type-in completes BEFORE the click — that's the "input being
-// entered" moment the dt demo needs to convey.
+// ── 1. TYPE THE PATIENT CASE INTO THE DT TEXTAREA ──────────────────────
+// The dt card has a free-text case-description textarea at the top
+// (id="dt-case-input"). The recorder types the case description with
+// human-pacing keystrokes so the recording shows genuine input being
+// entered (not just an auto-typewriter). While the user types, the
+// IntersectionObserver below ALSO fires the typewriter on the
+// "parsed" Subject + Intervention cards, so the viewer sees:
 //
-// Typewriter timing (set in InterventionDemoCard.tsx via
-// IntersectionObserver + startDelayMs):
-//   Subject:     starts 300ms after card enters viewport,  ~3s to type
-//   Intervention: starts 1700ms after viewport entry,      ~3s to type
-//   Both done at: ~4.7s
-console.log('[dt] scroll directly to InterventionDemoCard (skipping empty-seed framing)');
-const card = page.locator('text=Or test an intervention').first();
-await card.waitFor({ state: 'visible', timeout: 15000 });
-await card.scrollIntoViewIfNeeded();
+//   1. Empty textarea
+//   2. Case description being typed (real keystrokes)
+//   3. Below: subject + intervention fields type-fill in parallel as
+//      the "parsed" output of the input
+//   4. Click Run
+//
+// This is the input moment the demo was missing.
+console.log('[dt] focus dt-case-input textarea + type case description');
+const caseInput = page.locator('#dt-case-input');
+await caseInput.waitFor({ state: 'visible', timeout: 15000 });
+await caseInput.scrollIntoViewIfNeeded();
+await caseInput.click();
 seg.introHoldMs = since();
-await page.waitForTimeout(9000);
+
+const CASE_TEXT = 'Maria Chen, 58, type 2 diabetes for 4 years. HbA1c 7.8%, BMI 31, sedentary, family history of CVD, on metformin. Test a 12-week semaglutide + lifestyle protocol: titrate to 1.0mg by week 4, 150min/wk graded exercise, dietitian-led nutrition, biweekly behavioral checkpoints.';
+// ~25ms per keystroke gives a natural human cadence over the ~5-7s of
+// typing. Slower than `type` defaults but readable in the recording.
+await page.keyboard.type(CASE_TEXT, { delay: 25 });
+
+// Brief settle after typing so the typewriter on the parsed Subject +
+// Intervention cards has a moment to finish before the click. Total
+// segment-A wall time before click: 0.5s scroll + ~7s typing + 2s
+// settle = ~9.5s — enough to read everything.
+await page.waitForTimeout(2000);
 
 // ── 3. CLICK "Run intervention demo" ───────────────────────────────────
 console.log('[dt] click Run intervention demo button');

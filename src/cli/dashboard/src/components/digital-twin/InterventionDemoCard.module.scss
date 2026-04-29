@@ -44,6 +44,49 @@
   margin: 0;
 }
 
+.caseInput {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  color: var(--text-1);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.55;
+  resize: vertical;
+  min-height: 96px;
+  outline: none;
+  transition: border-color 0.15s ease;
+
+  &::placeholder {
+    color: var(--text-3);
+    opacity: 0.85;
+  }
+
+  &:focus {
+    border-color: var(--amber);
+  }
+}
+
+.parsedHint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 4px 0 -2px;
+}
+
+.parsedHintArrow {
+  color: var(--amber);
+  font-size: 13px;
+  line-height: 1;
+}
+
 .preview {
   display: grid;
   grid-template-columns: 1fr 1fr;

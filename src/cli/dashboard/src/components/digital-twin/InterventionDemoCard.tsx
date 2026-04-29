@@ -234,12 +234,26 @@ export function InterventionDemoCard({ onResult, onError, onRunStart }: Interven
   return (
     <div ref={cardRef} className={styles.card}>
       <div className={styles.heading}>
-        <h3 className={styles.title}>Or test an intervention</h3>
-        <span className={styles.eyebrow}>digital twin · single subject</span>
+        <h3 className={styles.title}>Run a digital twin</h3>
+        <span className={styles.eyebrow}>type a case · single subject</span>
       </div>
       <p className={styles.copy}>
-        Hold a person constant, apply one intervention, watch the trajectory. The example below runs Maria&apos;s 12-week semaglutide + lifestyle protocol against a five-department care-team scenario (endocrinology, nutrition, behavioral health, cardiology, lifestyle coach) at economy cost (~$0.20).
+        Describe a patient and an intervention. Paracosm runs a real
+        LLM-driven simulation across a five-department care team
+        (endocrinology, nutrition, behavioral health, cardiology,
+        lifestyle coach) and returns a typed RunArtifact with the
+        trajectory.
       </p>
+      <textarea
+        id="dt-case-input"
+        className={styles.caseInput}
+        placeholder="e.g. Maria Chen, 58, type 2 diabetes for 4 years. HbA1c 7.8%, BMI 31, sedentary, family history of CVD, on metformin. Test a 12-week semaglutide + lifestyle protocol: titrate to 1.0mg by week 4, 150min/wk graded exercise, dietitian-led nutrition, biweekly behavioral checkpoints."
+        rows={5}
+      />
+      <div className={styles.parsedHint}>
+        <span className={styles.parsedHintArrow}>↓</span>
+        <span>Parsed into Subject + Intervention</span>
+      </div>
       <div className={styles.preview}>
         <div className={styles.previewCell}>
           <div className={styles.previewHeader}>
