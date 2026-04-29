@@ -103,6 +103,12 @@ export function SeedInput({ onSeedReady, disabled = false }: SeedInputProps) {
     }
   }, []);
 
+  // Tab id stays 'paste' for backward compat with existing telemetry
+  // and tests; the visible label is "WRITE" so the textarea reads as
+  // an invitation to type, not just paste. Multiple users called this
+  // out as confusing — "Paste" implied the only valid input was
+  // pre-existing text from a clipboard.
+  const TAB_LABELS: Record<Tab, string> = { paste: 'WRITE', url: 'URL', pdf: 'PDF' };
   return (
     <div className={styles.seedInput}>
       <div className={styles.tabs} role="tablist">
@@ -116,7 +122,7 @@ export function SeedInput({ onSeedReady, disabled = false }: SeedInputProps) {
             disabled={disabled}
             type="button"
           >
-            {t.toUpperCase()}
+            {TAB_LABELS[t]}
           </button>
         ))}
       </div>
@@ -124,7 +130,7 @@ export function SeedInput({ onSeedReady, disabled = false }: SeedInputProps) {
       {tab === 'paste' && (
         <textarea
           className={styles.textarea}
-          placeholder="Paste a brief, article, meeting notes, or any domain-specific source material (at least 200 characters)."
+          placeholder="Type or paste a brief, article, meeting notes, or any domain-specific source material (at least 200 characters)."
           value={seedText}
           onChange={e => setSeedText(e.target.value)}
           rows={12}
