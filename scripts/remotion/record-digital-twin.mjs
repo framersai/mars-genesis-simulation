@@ -215,7 +215,7 @@ console.log(`  segments: A ${A_START_S.toFixed(1)}..${aEnd.toFixed(1)}s 1×, B $
 // (Atlas Lab) and real cost ($0.057) so the demo reads as concrete
 // rather than aspirational.
 const captionA = 'What if Atlas Lab held Atlas-7 for 90 days of red-team passes?';
-const captionB = `wm.simulateIntervention runs against the live scenario · ${SPEED_B}× speed`;
+const captionB = `twin.simulateIntervention runs against the live scenario · ${SPEED_B}× speed`;
 // `$` inside drawtext text= breaks bash interpolation when this script
 // is invoked from a shell with the filtergraph rebuilt inline; spell out
 // "USD" instead so the caption survives manual re-runs too.
