@@ -99,30 +99,56 @@ test('buildResearchLog: real citations render dispatch + per-query + per-source 
         {
           query: 'hurricane evacuation',
           sources: [
-            { title: 'NHC Hurricane Prep Guide', link: 'https://nhc.noaa.gov/prepare', domain: 'nhc.noaa.gov' },
-            { title: 'Coastal Evacuation Best Practices', link: 'https://fema.gov/evac', domain: 'fema.gov' },
+            { title: 'NHC Hurricane Prep Guide', link: 'https://nhc.noaa.gov/prepare', domain: 'nhc.noaa.gov', provider: 'serper' },
+            { title: 'Coastal Evacuation Best Practices', link: 'https://fema.gov/evac', domain: 'fema.gov', provider: 'tavily' },
           ],
         },
         {
           query: 'storm surge response',
           sources: [
-            { title: 'Storm Surge Modeling 2024', link: 'https://noaa.gov/surge', domain: 'noaa.gov' },
+            { title: 'Storm Surge Modeling 2024', link: 'https://noaa.gov/surge', domain: 'noaa.gov', provider: 'serper' },
           ],
         },
       ],
       totalSources: 3,
       durationMs: 4400,
+      providersUsed: ['serper', 'tavily'],
+      providersFailed: [],
     },
   }));
   // dispatch + 2 query buckets + 3 source rows + 1 summary = 7 lines.
   assert.equal(lines.length, 7);
   assert.equal(lines[0].tag, 'POST');
   assert.match(lines[0].body, /2 queries/);
+  assert.match(lines[0].body, /serper \+ tavily/);
   assert.equal(lines[1].tag, 'QUERY');
-  assert.equal(lines[2].tag, 'NHC.NOAA.GOV');
+  // Provider tag now drives the source tag, not the domain.
+  assert.equal(lines[2].tag, 'SERPER');
+  assert.equal(lines[3].tag, 'TAVILY');
   assert.equal(lines[lines.length - 1].tone, 'done');
   assert.match(lines[lines.length - 1].body, /3 unique sources attached/);
   assert.match(lines[lines.length - 1].body, /4\.4s/);
+});
+
+test('buildResearchLog: failed providers surface as warn lines', () => {
+  const lines = buildResearchLog(ctx({
+    stage: 'research',
+    phaseTransitionMs: { compile: T0, research: T0 + 100 },
+    groundingSummary: {
+      citations: [{
+        query: 'q',
+        sources: [{ title: 'A', link: 'https://a/x', domain: 'a', provider: 'serper' }],
+      }],
+      totalSources: 1,
+      durationMs: 1000,
+      providersUsed: ['serper'],
+      providersFailed: [{ provider: 'firecrawl', reason: 'Firecrawl HTTP 402: Insufficient credits' }],
+    },
+  }));
+  const warnLine = lines.find((l) => l.tone === 'warn');
+  assert.ok(warnLine, 'firecrawl failure should appear as a warn line');
+  assert.equal(warnLine?.tag, 'FIRECRAW');
+  assert.match(warnLine?.body ?? '', /Insufficient credits/);
 });
 
 test('buildActorsLog: dispatch + OK lines once next stage starts', () => {

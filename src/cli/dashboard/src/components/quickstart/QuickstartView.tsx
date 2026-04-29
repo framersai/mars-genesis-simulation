@@ -24,10 +24,12 @@ export type GroundingSummary =
   | {
       citations: Array<{
         query: string;
-        sources: Array<{ title: string; link: string; domain: string }>;
+        sources: Array<{ title: string; link: string; domain: string; provider?: string }>;
       }>;
       totalSources: number;
       durationMs: number;
+      providersUsed?: string[];
+      providersFailed?: Array<{ provider: string; reason: string }>;
     };
 
 interface SseResultItem {
@@ -106,9 +108,7 @@ export function QuickstartView({ sse, sessionId, onRunStarted }: QuickstartViewP
           body: JSON.stringify({ scenarioId }),
         });
         if (groundRes.ok) {
-          const groundBody = await groundRes.json() as
-            | { skipped: true; reason: string }
-            | { citations: Array<{ query: string; sources: Array<{ title: string; link: string; domain: string }> }>; totalSources: number; durationMs: number };
+          const groundBody = await groundRes.json() as GroundingSummary;
           setGroundingSummary(groundBody);
         }
       } catch {

@@ -140,10 +140,12 @@ export interface GroundingSummaryForLog {
   reason?: string;
   citations?: Array<{
     query: string;
-    sources: Array<{ title: string; link: string; domain: string }>;
+    sources: Array<{ title: string; link: string; domain: string; provider?: string }>;
   }>;
   totalSources?: number;
   durationMs?: number;
+  providersUsed?: string[];
+  providersFailed?: Array<{ provider: string; reason: string }>;
 }
 
 export interface BuildLogContext {
@@ -224,13 +226,28 @@ export function buildResearchLog(ctx: BuildLogContext): LogLine[] {
   }
 
   if (groundingSummary?.citations && groundingSummary.citations.length > 0) {
+    const providerList = groundingSummary.providersUsed?.length
+      ? ` · providers: ${groundingSummary.providersUsed.join(' + ')}`
+      : '';
     lines.push({
       ts: baseTs,
       glyph: '→',
       tag: 'POST',
-      body: `/api/quickstart/ground-scenario · ${groundingSummary.citations.length} queries`,
+      body: `/api/quickstart/ground-scenario · ${groundingSummary.citations.length} queries${providerList}`,
       tone: stage === 'research' ? 'active' : 'info',
     });
+    // Surface failed providers as warn lines (e.g. Firecrawl 402) so
+    // the viewer sees WHY a provider didn't contribute rather than
+    // wondering why one of the configured search sources is missing.
+    for (const fail of groundingSummary.providersFailed ?? []) {
+      lines.push({
+        ts: baseTs,
+        glyph: '⚠',
+        tag: fail.provider.toUpperCase().slice(0, 8),
+        body: `provider unavailable: ${fail.reason.slice(0, 120)}`,
+        tone: 'warn',
+      });
+    }
     for (const bucket of groundingSummary.citations) {
       lines.push({
         ts: baseTs,
@@ -240,10 +257,15 @@ export function buildResearchLog(ctx: BuildLogContext): LogLine[] {
         tone: 'info',
       });
       for (const src of bucket.sources.slice(0, 3)) {
+        // Tag with the provider name when present (SERPER / TAVILY /
+        // FIRECRAWL); fall back to the source domain otherwise.
+        const tag = (src.provider ?? '').toUpperCase()
+          || src.domain.toUpperCase().slice(0, 16)
+          || 'SRC';
         lines.push({
           ts: baseTs,
           glyph: '·',
-          tag: src.domain.toUpperCase().slice(0, 16) || 'SRC',
+          tag,
           body: src.title,
           tone: 'done',
         });

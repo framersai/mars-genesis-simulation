@@ -214,6 +214,8 @@ export async function handleGroundScenario(
       totalSources: result.totalSources,
       durationMs: result.durationMs,
       emptyQueries: result.emptyQueries,
+      providersUsed: result.providersUsed,
+      providersFailed: result.providersFailed,
     }));
   } catch (err) {
     res.writeHead(500, { 'Content-Type': 'application/json' });

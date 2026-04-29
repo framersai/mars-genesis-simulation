@@ -20,18 +20,28 @@
 import type { ScenarioPackage } from '../../engine/types.js';
 
 const SERPER_ENDPOINT = 'https://google.serper.dev/search';
+const TAVILY_ENDPOINT = 'https://api.tavily.com/search';
+const FIRECRAWL_ENDPOINT = 'https://api.firecrawl.dev/v1/search';
+
+/** Identifier for the search provider that surfaced a given result.
+ *  Lets the UI render a per-source provider chip and lets the
+ *  grounding pass dedupe across providers. */
+export type SearchProvider = 'serper' | 'tavily' | 'firecrawl';
 
 export interface SerperResult {
-  /** Result title from Serper. */
+  /** Result title from the search provider. */
   title: string;
   /** Canonical URL of the source. */
   link: string;
-  /** Free-text snippet from Serper, usually 100-200 chars. */
+  /** Free-text snippet, usually 100-200 chars. */
   snippet: string;
   /** Optional date string, present for news-style results. */
   date?: string;
   /** Origin domain (e.g. "wikipedia.org"); derived from `link`. */
   domain: string;
+  /** Which provider surfaced this result. Surfaced in the citation
+   *  log so the demo viewer sees parallel-provider grounding. */
+  provider: SearchProvider;
 }
 
 export interface GroundingCitation {
@@ -66,6 +76,14 @@ export interface GroundingResult {
   durationMs: number;
   /** Queries that returned 0 results or failed. Used to surface gaps. */
   emptyQueries: string[];
+  /** Providers that successfully returned at least one result on at
+   *  least one query. Surfaced as a chip row in the Quickstart card so
+   *  the demo viewer sees which sources backed the run. */
+  providersUsed: SearchProvider[];
+  /** Providers that errored out for every query (e.g. Firecrawl when
+   *  the account is out of credits). Logged as warn lines so the user
+   *  knows why a provider didn't contribute. */
+  providersFailed: Array<{ provider: SearchProvider; reason: string }>;
 }
 
 /**
@@ -127,9 +145,22 @@ interface SerperRawResult {
   date?: string;
 }
 
+interface TavilyRawResult {
+  title?: string;
+  url?: string;
+  content?: string;
+  published_date?: string;
+}
+
+interface FirecrawlRawResult {
+  title?: string;
+  url?: string;
+  description?: string;
+}
+
 /**
- * One Serper search. Returns up to `maxResults` unique results. Throws
- * on network/parse errors so the caller can mark the query as failed
+ * One Serper search. Returns up to `maxResults` results. Throws on
+ * network/parse errors so the caller can mark the query as failed
  * in its progress log; never returns null/undefined.
  */
 export async function searchSerper(
@@ -161,29 +192,115 @@ export async function searchSerper(
       snippet: typeof r.snippet === 'string' ? r.snippet : '',
       date: typeof r.date === 'string' ? r.date : undefined,
       domain: urlDomain(r.link),
+      provider: 'serper' as const,
     }));
 }
 
 /**
- * Run the grounding pass for a scenario. Calls searchSerper for each
- * derived query in parallel, deduplicates results by URL across
- * queries, and emits progress callbacks for the Quickstart UI.
+ * One Tavily search. Tavily ships its own AI-summarized results so
+ * the snippets are denser than Serper's. Auth is body-based
+ * (api_key field) rather than header — we use the modern body shape.
+ */
+export async function searchTavily(
+  query: string,
+  apiKey: string,
+  maxResults = 5,
+  fetchImpl: typeof fetch = fetch,
+): Promise<SerperResult[]> {
+  const res = await fetchImpl(TAVILY_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ api_key: apiKey, query, max_results: maxResults }),
+  });
+  if (!res.ok) {
+    throw new Error(`Tavily HTTP ${res.status}: ${await res.text().catch(() => '<no body>')}`);
+  }
+  const body = (await res.json()) as { results?: TavilyRawResult[] };
+  const results = body.results ?? [];
+  return results
+    .filter((r): r is TavilyRawResult & { title: string; url: string } =>
+      typeof r.title === 'string' && typeof r.url === 'string')
+    .slice(0, maxResults)
+    .map((r) => ({
+      title: r.title,
+      link: r.url,
+      snippet: typeof r.content === 'string' ? r.content : '',
+      date: typeof r.published_date === 'string' ? r.published_date : undefined,
+      domain: urlDomain(r.url),
+      provider: 'tavily' as const,
+    }));
+}
+
+/**
+ * One Firecrawl search. Currently disabled in the grounding pass
+ * because the production account is out of credits (HTTP 402). Kept
+ * for completeness so the grounding helper can light up Firecrawl
+ * automatically once credits are topped up — no code change required.
+ */
+export async function searchFirecrawl(
+  query: string,
+  apiKey: string,
+  maxResults = 5,
+  fetchImpl: typeof fetch = fetch,
+): Promise<SerperResult[]> {
+  const res = await fetchImpl(FIRECRAWL_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ query, limit: maxResults }),
+  });
+  if (!res.ok) {
+    throw new Error(`Firecrawl HTTP ${res.status}: ${await res.text().catch(() => '<no body>')}`);
+  }
+  const body = (await res.json()) as { data?: FirecrawlRawResult[] };
+  const data = body.data ?? [];
+  return data
+    .filter((r): r is FirecrawlRawResult & { title: string; url: string } =>
+      typeof r.title === 'string' && typeof r.url === 'string')
+    .slice(0, maxResults)
+    .map((r) => ({
+      title: r.title,
+      link: r.url,
+      snippet: typeof r.description === 'string' ? r.description : '',
+      domain: urlDomain(r.url),
+      provider: 'firecrawl' as const,
+    }));
+}
+
+/**
+ * Run the grounding pass for a scenario. For each derived query, fans
+ * out to every configured search provider (Serper, Tavily, Firecrawl)
+ * in parallel, dedupes by URL across providers + queries, and emits
+ * progress callbacks for the Quickstart UI.
  *
- * Returns null when SERPER_API_KEY is not set so the caller can skip
- * the whole stage gracefully (rather than fail the run).
+ * Provider selection: every provider whose API key is non-empty is
+ * tried. A provider that fails on every query (e.g. Firecrawl HTTP 402
+ * when out of credits) is reported in `providersFailed` rather than
+ * crashing the whole pass — the run continues with whatever providers
+ * are healthy.
+ *
+ * Returns null only when ALL providers are missing API keys; otherwise
+ * returns a result that may be partially-populated.
  */
 export async function groundScenario(
   scenario: ScenarioPackage,
   options: {
     serperApiKey?: string;
+    tavilyApiKey?: string;
+    firecrawlApiKey?: string;
     maxResultsPerQuery?: number;
     onProgress?: (event: GroundingProgressEvent) => void;
     fetchImpl?: typeof fetch;
   } = {},
 ): Promise<GroundingResult | null> {
-  const apiKey = options.serperApiKey ?? process.env.SERPER_API_KEY;
-  if (!apiKey) return null;
-  const maxPerQuery = options.maxResultsPerQuery ?? 5;
+  const serperKey = options.serperApiKey ?? process.env.SERPER_API_KEY ?? '';
+  const tavilyKey = options.tavilyApiKey ?? process.env.TAVILY_API_KEY ?? '';
+  const firecrawlKey = options.firecrawlApiKey ?? process.env.FIRECRAWL_API_KEY ?? '';
+  if (!serperKey && !tavilyKey && !firecrawlKey) return null;
+
+  const maxPerQuery = options.maxResultsPerQuery ?? 4;
   const fetchImpl = options.fetchImpl ?? fetch;
 
   const t0 = Date.now();
@@ -192,8 +309,34 @@ export async function groundScenario(
   const citations: GroundingCitation[] = [];
   const emptyQueries: string[] = [];
 
-  // Run all queries in parallel — Serper is rate-limited per minute
-  // not per second, so 3 simultaneous calls are well under any cap.
+  // Track per-provider success/failure across all queries so we can
+  // surface providersUsed / providersFailed at the end. We treat a
+  // provider as "used" when it returned at least one result for any
+  // query, "failed" when it errored on every query that asked it.
+  const providerSucceededAtLeastOnce = new Set<SearchProvider>();
+  const providerFailureMessages = new Map<SearchProvider, string>();
+  const providerCallCount = new Map<SearchProvider, number>();
+  const providerFailureCount = new Map<SearchProvider, number>();
+
+  type ProviderCall = {
+    provider: SearchProvider;
+    fn: () => Promise<SerperResult[]>;
+  };
+
+  const providersForQuery = (q: string): ProviderCall[] => {
+    const calls: ProviderCall[] = [];
+    if (serperKey) {
+      calls.push({ provider: 'serper', fn: () => searchSerper(q, serperKey, maxPerQuery, fetchImpl) });
+    }
+    if (tavilyKey) {
+      calls.push({ provider: 'tavily', fn: () => searchTavily(q, tavilyKey, maxPerQuery, fetchImpl) });
+    }
+    if (firecrawlKey) {
+      calls.push({ provider: 'firecrawl', fn: () => searchFirecrawl(q, firecrawlKey, maxPerQuery, fetchImpl) });
+    }
+    return calls;
+  };
+
   await Promise.all(
     queries.map(async (q) => {
       options.onProgress?.({
@@ -201,40 +344,68 @@ export async function groundScenario(
         query: q,
         elapsedMs: Date.now() - t0,
       });
-      try {
-        const raw = await searchSerper(q, apiKey, maxPerQuery, fetchImpl);
-        const deduped = raw.filter((r) => {
-          if (seenUrls.has(r.link)) return false;
-          seenUrls.add(r.link);
-          return true;
-        });
-        if (deduped.length === 0) emptyQueries.push(q);
-        citations.push({ query: q, sources: deduped });
-        options.onProgress?.({
-          kind: 'query_done',
-          query: q,
-          resultCount: deduped.length,
-          totalCitations: seenUrls.size,
-          elapsedMs: Date.now() - t0,
-        });
-      } catch (err) {
-        emptyQueries.push(q);
-        citations.push({ query: q, sources: [] });
-        options.onProgress?.({
-          kind: 'query_failed',
-          query: q,
-          error: err instanceof Error ? err.message : String(err),
-          elapsedMs: Date.now() - t0,
-        });
+      const calls = providersForQuery(q);
+      const settled = await Promise.allSettled(calls.map((c) => c.fn()));
+      const merged: SerperResult[] = [];
+      for (let i = 0; i < calls.length; i += 1) {
+        const { provider } = calls[i];
+        const result = settled[i];
+        providerCallCount.set(provider, (providerCallCount.get(provider) ?? 0) + 1);
+        if (result.status === 'fulfilled') {
+          if (result.value.length > 0) providerSucceededAtLeastOnce.add(provider);
+          merged.push(...result.value);
+        } else {
+          providerFailureCount.set(provider, (providerFailureCount.get(provider) ?? 0) + 1);
+          const msg = result.reason instanceof Error ? result.reason.message : String(result.reason);
+          providerFailureMessages.set(provider, msg);
+        }
       }
+      // Dedup by URL across providers and prior queries so a Wikipedia
+      // hit that appears on both Serper + Tavily is shown once. The
+      // surviving copy is the first one we saw; later copies could
+      // theoretically merge metadata but the simple-first-wins rule
+      // is what the UI expects.
+      const deduped = merged.filter((r) => {
+        if (seenUrls.has(r.link)) return false;
+        seenUrls.add(r.link);
+        return true;
+      });
+      if (deduped.length === 0) emptyQueries.push(q);
+      citations.push({ query: q, sources: deduped });
+      options.onProgress?.({
+        kind: 'query_done',
+        query: q,
+        resultCount: deduped.length,
+        totalCitations: seenUrls.size,
+        elapsedMs: Date.now() - t0,
+      });
     }),
   );
+
+  // A provider is "failed" iff it was called for every query and
+  // failed every call. A provider that hit credits-exhausted on the
+  // first query and was therefore tried again on the second / third
+  // (and failed there too) gets reported. A provider that succeeded
+  // even once goes into providersUsed instead.
+  const providersFailed: Array<{ provider: SearchProvider; reason: string }> = [];
+  for (const [provider, fails] of providerFailureCount.entries()) {
+    if (providerSucceededAtLeastOnce.has(provider)) continue;
+    const calls = providerCallCount.get(provider) ?? 0;
+    if (calls > 0 && fails === calls) {
+      providersFailed.push({
+        provider,
+        reason: providerFailureMessages.get(provider) ?? 'unknown',
+      });
+    }
+  }
 
   const result: GroundingResult = {
     citations,
     totalSources: seenUrls.size,
     durationMs: Date.now() - t0,
     emptyQueries,
+    providersUsed: [...providerSucceededAtLeastOnce],
+    providersFailed,
   };
   options.onProgress?.({
     kind: 'complete',

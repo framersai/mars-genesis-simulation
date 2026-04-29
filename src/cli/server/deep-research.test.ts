@@ -116,9 +116,102 @@ test('searchSerper: drops malformed entries (no title or no link)', async () => 
   assert.equal(results[0].title, 'Good');
 });
 
-test('groundScenario: returns null when no SERPER_API_KEY available', async () => {
-  const out = await groundScenario(makeScenario(), { serperApiKey: '' });
+test('groundScenario: returns null when ALL provider keys missing', async () => {
+  const out = await groundScenario(makeScenario(), {
+    serperApiKey: '',
+    tavilyApiKey: '',
+    firecrawlApiKey: '',
+  });
   assert.equal(out, null);
+});
+
+test('groundScenario: fans out to Serper + Tavily when both keys set', async () => {
+  let serperCalls = 0;
+  let tavilyCalls = 0;
+  const fakeFetch = (async (url: string | URL | Request) => {
+    const u = typeof url === 'string' ? url : url.toString();
+    if (u.includes('serper')) {
+      serperCalls += 1;
+      return new Response(JSON.stringify({
+        organic: [{ title: `Serper ${serperCalls}`, link: `https://serper.example/${serperCalls}`, snippet: '' }],
+      }), { status: 200 });
+    }
+    if (u.includes('tavily')) {
+      tavilyCalls += 1;
+      return new Response(JSON.stringify({
+        results: [{ title: `Tavily ${tavilyCalls}`, url: `https://tavily.example/${tavilyCalls}`, content: '' }],
+      }), { status: 200 });
+    }
+    return new Response('{}', { status: 200 });
+  }) as typeof fetch;
+
+  const out = await groundScenario(makeScenario(), {
+    serperApiKey: 's',
+    tavilyApiKey: 't',
+    firecrawlApiKey: '',
+    fetchImpl: fakeFetch,
+  });
+  assert.ok(out);
+  assert.equal(serperCalls, 3, 'Serper called once per query');
+  assert.equal(tavilyCalls, 3, 'Tavily called once per query');
+  // Sources from both providers should be present in the output, with
+  // provider tags carried through.
+  const allProviders = out.citations.flatMap((c) => c.sources.map((s) => s.provider));
+  assert.ok(allProviders.includes('serper'), 'Serper sources present');
+  assert.ok(allProviders.includes('tavily'), 'Tavily sources present');
+  assert.deepEqual(new Set(out.providersUsed), new Set(['serper', 'tavily']));
+  assert.equal(out.providersFailed.length, 0);
+});
+
+test('groundScenario: provider that 402s on every query lands in providersFailed', async () => {
+  const fakeFetch = (async (url: string | URL | Request) => {
+    const u = typeof url === 'string' ? url : url.toString();
+    if (u.includes('firecrawl')) {
+      return new Response('{"error":"Insufficient credits"}', { status: 402 });
+    }
+    if (u.includes('serper')) {
+      return new Response(JSON.stringify({
+        organic: [{ title: 'OK', link: `https://serper.example/${Math.random()}`, snippet: '' }],
+      }), { status: 200 });
+    }
+    return new Response('{}', { status: 200 });
+  }) as typeof fetch;
+
+  const out = await groundScenario(makeScenario(), {
+    serperApiKey: 's',
+    tavilyApiKey: '',
+    firecrawlApiKey: 'fc',
+    fetchImpl: fakeFetch,
+  });
+  assert.ok(out);
+  assert.deepEqual(out.providersUsed, ['serper']);
+  assert.equal(out.providersFailed.length, 1);
+  assert.equal(out.providersFailed[0].provider, 'firecrawl');
+  assert.match(out.providersFailed[0].reason, /402/);
+});
+
+test('groundScenario: dedupes a Wikipedia URL that appears on both providers', async () => {
+  const wikiHit = { title: 'Wikipedia article', link: 'https://en.wikipedia.org/wiki/Hurricane', snippet: '' };
+  const fakeFetch = (async (url: string | URL | Request) => {
+    const u = typeof url === 'string' ? url : url.toString();
+    if (u.includes('serper')) {
+      return new Response(JSON.stringify({ organic: [wikiHit] }), { status: 200 });
+    }
+    if (u.includes('tavily')) {
+      return new Response(JSON.stringify({ results: [{ ...wikiHit, url: wikiHit.link, content: '' }] }), { status: 200 });
+    }
+    return new Response('{}', { status: 200 });
+  }) as typeof fetch;
+  const out = await groundScenario(makeScenario(), {
+    serperApiKey: 's',
+    tavilyApiKey: 't',
+    firecrawlApiKey: '',
+    fetchImpl: fakeFetch,
+  });
+  assert.ok(out);
+  // 3 queries × Wikipedia via 2 providers each = 6 raw results, but
+  // all share the same URL → 1 unique source total.
+  assert.equal(out.totalSources, 1);
 });
 
 test('groundScenario: dedupes URLs across queries', async () => {
