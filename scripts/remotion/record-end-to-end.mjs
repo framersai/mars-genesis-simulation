@@ -425,7 +425,7 @@ const aEnd = ((seg.submitClickedMs || 8000) + 1000) / 1000;
 const bEnd = runCompleted
   ? Math.max(aEnd + 5, (seg.resultsAppearedMs - 500) / 1000)
   : null;
-const SPEED_B = 10.0;
+const SPEED_B = 12.0;
 console.log(`[e2e] ffmpeg -> hero mp4: ${heroOut}`);
 console.log(`  segments: A ${A_START_S.toFixed(1)}..${aEnd.toFixed(1)}s 1×, B ${aEnd.toFixed(1)}..${bEnd?.toFixed(1) ?? '∞'}s ${SPEED_B}×, C ${bEnd?.toFixed(1) ?? '?'}s..end 1×`);
 // drawtext caption stays inside the B trim window so it does not bleed
