@@ -102,11 +102,14 @@ export function InterventionDemoCard({ onResult, onError, onRunStart }: Interven
         body: JSON.stringify({
           subject: SUBJECT_PAYLOAD,
           intervention: INTERVENTION_PAYLOAD,
-          // 1 turn keeps the run under Cloudflare's 100s gateway timeout
-          // even when LLM calls run hot. The trajectory still has the
-          // initial snapshot + post-turn-1 snapshot, which is enough to
-          // show meaningful divergence in the trajectory mini-chart.
-          options: { maxTurns: 1, seed: 11, costPreset: 'economy' },
+          // 2 turns gives the LLM a chance to emit two events whose
+          // categories hit the scenario's effects map; one turn left
+          // every metric flat at its initial because a single event is
+          // not enough to land a category match on every scenario
+          // metric. Cold compile is pre-warmed on boot, so the wire
+          // budget is just simulation time: ~50-90s for 2 turns at
+          // economy, comfortably under Cloudflare's 100s gateway.
+          options: { maxTurns: 2, seed: 11, costPreset: 'economy' },
         }),
       });
       if (!res.ok) {
@@ -150,10 +153,10 @@ export function InterventionDemoCard({ onResult, onError, onRunStart }: Interven
         {running ? (
           <span className={styles.timer}>
             <span className={styles.spinner} />
-            {elapsedSec}s elapsed · 1 turn × LLM decisions, typically 20-60s
+            {elapsedSec}s elapsed · 2 turns × LLM decisions, typically 40-90s
           </span>
         ) : (
-          <span className={styles.helper}>1 turn · seed 11 · economy preset</span>
+          <span className={styles.helper}>2 turns · seed 11 · economy preset</span>
         )}
       </div>
     </div>

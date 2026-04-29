@@ -78,6 +78,31 @@ const CHART_COLORS: Record<string, string> = {
   marketShare: '#7cb6ff',
 };
 
+// closed_turn_based_settlement engine archetype injects colony defaults
+// (population, powerKw, foodMonthsReserve, waterLitersPerDay,
+// pressurizedVolumeM3, lifeSupportCapacity, infrastructureModules,
+// scienceOutput, morale) on top of every scenario's world.metrics. For
+// the AI-lab digital-twin run those defaults are noise — the panel
+// would render alignmentBench next to lifeSupportCapacity and the
+// reader has to mentally filter. We allow-list the metrics the
+// frontier-ai-lab scenario declares + a couple cross-scenario metrics
+// (boardConfidence, investorPressure) so the grid only shows
+// subject-relevant numbers. Falls back to "show every metric" when
+// the artifact is from a non-AI-lab scenario (no AI-lab metrics
+// present means we are not in digital-twin mode).
+const FRONTIER_AI_LAB_METRICS = new Set([
+  'alignmentBench',
+  'specGamingRate',
+  'capabilityIndex',
+  'releaseReadiness',
+  'redTeamCoverage',
+  'runwayMonths',
+  'burnRate',
+  'population',
+  'boardConfidence',
+  'investorPressure',
+]);
+
 function formatNumber(value: number): string {
   if (Number.isNaN(value)) return '—';
   if (Math.abs(value) >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
@@ -173,7 +198,16 @@ export function DigitalTwinPanel({ artifact, state, onDismiss }: DigitalTwinPane
     const keys = new Set<string>();
     Object.keys(finalMetrics).forEach(k => keys.add(k));
     Object.keys(initialMetrics).forEach(k => keys.add(k));
-    return Array.from(keys).slice(0, 9);
+    // If any frontier-ai-lab metric is present we're in digital-twin
+    // mode; filter the grid to subject-shaped metrics. Otherwise we're
+    // rendering against a non-AI-lab artifact and the unrestricted
+    // first-9 view is the right fallback (Mars / corporate-quarterly /
+    // lunar / submarine).
+    const inDigitalTwinScenario = Array.from(keys).some(k => FRONTIER_AI_LAB_METRICS.has(k));
+    const filtered = inDigitalTwinScenario
+      ? Array.from(keys).filter(k => FRONTIER_AI_LAB_METRICS.has(k))
+      : Array.from(keys);
+    return filtered.slice(0, 12);
   }, [finalMetrics, initialMetrics]);
 
   const fingerprintTop = fingerprint
