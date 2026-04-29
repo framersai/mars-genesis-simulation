@@ -189,24 +189,26 @@ try {
 } catch {
   console.log('[e2e] run did not complete within timeout -- recording whatever is on screen');
 }
-// Hold the Quickstart results region so the viewer reads the verdict
-// + actor traits + delta chips before we move on. We scroll mid-hold
-// to expose the lower actor cards (the third one falls below the fold
-// on 720p viewports). The pre-scroll hold and post-scroll hold are
-// each long enough to land naturally without feeling rushed.
-const RESULTS_HOLD_TOP_S = 5;
-const RESULTS_HOLD_SCROLLED_S = 6;
+// Hold the Quickstart results region with a three-stage scroll so the
+// viewer sees: (1) verdict banner + first actor card at top, (2) the
+// middle actor card with its HEXACO bars + delta chips, (3) the third
+// actor card + Compare CTA at the bottom. Each step has a short dwell
+// so the eye lands naturally before the next scroll fires.
+const RESULTS_HOLD_TOP_S = 4;
+const RESULTS_HOLD_MID_S = 4;
+const RESULTS_HOLD_BOTTOM_S = 5;
 if (runCompleted) {
-  console.log(`[e2e] hold Quickstart results: ${RESULTS_HOLD_TOP_S}s top, scroll, ${RESULTS_HOLD_SCROLLED_S}s scrolled`);
+  console.log(`[e2e] hold Quickstart results: ${RESULTS_HOLD_TOP_S}s top, scroll mid, ${RESULTS_HOLD_MID_S}s, scroll bottom, ${RESULTS_HOLD_BOTTOM_S}s`);
   await page.waitForTimeout(RESULTS_HOLD_TOP_S * 1000);
-  // Scroll the page so the third actor card + Compare CTA enter view.
-  // 480px is the empirically-good drop on a 720p viewport for the
-  // current QuickstartResults grid.
-  await page.evaluate(() => {
-    window.scrollTo({ top: 480, behavior: 'smooth' });
-  });
-  await page.waitForTimeout(RESULTS_HOLD_SCROLLED_S * 1000);
-  // Scroll back to the top so subsequent tabs render from a known
+  // Stage 2: scroll to expose actor card 2 + the start of actor 3.
+  await page.evaluate(() => window.scrollTo({ top: 360, behavior: 'smooth' }));
+  await page.waitForTimeout(RESULTS_HOLD_MID_S * 1000);
+  // Stage 3: scroll to fully reveal the third actor card + Compare CTA
+  // + Library link. 720px lands the bottom of the page in frame on a
+  // 720p viewport with the current QuickstartResults grid.
+  await page.evaluate(() => window.scrollTo({ top: 720, behavior: 'smooth' }));
+  await page.waitForTimeout(RESULTS_HOLD_BOTTOM_S * 1000);
+  // Snap back to the top so subsequent tabs render from a known
   // baseline (some tabs hold their own scroll position).
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
   await page.waitForTimeout(400);
@@ -220,11 +222,17 @@ if (runCompleted) {
 // data-layout="constellation"; clicking it is a pure client-side state
 // flip, no URL change.
 const SIM_SIDE_HOLD_S = 5;
-const SIM_CONSTELLATION_HOLD_S = 8;
-const VIZ_HOLD_S = 9;
-const VIZ_SCROLL_HOLD_S = 4;
-const REPORTS_HOLD_TOP_S = 6;
-const REPORTS_HOLD_SCROLLED_S = 7;
+const SIM_CONSTELLATION_HOLD_S = 7;
+// VIZ tour: cycle through 4 of the 5 grid modes (skipping ecology
+// since the lighter glyph treatment isn't as visually distinct on
+// short clips), holding ~3s on each so the difference between modes
+// reads. Pre-cycle hold lets the LIVING default settle first.
+const VIZ_INTRO_HOLD_S = 4;
+const VIZ_MODE_HOLD_S = 3;
+const VIZ_MODES = ['mood', 'forge', 'divergence', 'living']; // end back on LIVING for handoff
+const REPORTS_HOLD_TOP_S = 5;
+const REPORTS_HOLD_MID_S = 5;
+const REPORTS_HOLD_BOTTOM_S = 5;
 const LIBRARY_HOLD_S = 6;
 const DRAWER_HOLD_S = 8;
 
@@ -254,34 +262,50 @@ const switched = await page.evaluate(() => {
 if (!switched) console.log('[e2e] constellation toggle not found (single actor or layout API moved)');
 await page.waitForTimeout(SIM_CONSTELLATION_HOLD_S * 1000);
 
-console.log(`[e2e] -> VIZ tab (${VIZ_HOLD_S}s top, scroll, ${VIZ_SCROLL_HOLD_S}s scrolled)`);
+// ── 3b. VIZ TAB MODE TOUR ─────────────────────────────────────────────
+// VIZ has 5 grid modes (LIVING / MOOD / FORGE / ECOLOGY / DIVERGENCE)
+// each surfacing a different layer of simulation state. A static hold
+// only shows one mode and feels stale; here we cycle through 4 modes
+// with a brief dwell on each so the demo demonstrates that the panel
+// is interactive and reveals different facets of the same run.
+console.log(`[e2e] -> VIZ tab (${VIZ_INTRO_HOLD_S}s LIVING intro, then cycle ${VIZ_MODES.join(' -> ')} @ ${VIZ_MODE_HOLD_S}s each)`);
 await clickTab('viz');
-await page.waitForTimeout(VIZ_HOLD_S * 1000);
-// Scroll inside the viz panel to expose the lower visualization rows.
-// VIZ uses a column-flex layout where the divergence rail and stats
-// strip sit below the fold on 720p; a single 360px nudge brings them
-// into view.
-await page.evaluate(() => window.scrollBy({ top: 360, behavior: 'smooth' }));
-await page.waitForTimeout(VIZ_SCROLL_HOLD_S * 1000);
-await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-await page.waitForTimeout(300);
+await page.waitForTimeout(VIZ_INTRO_HOLD_S * 1000);
+for (const mode of VIZ_MODES) {
+  // The mode pills carry data-grid-mode={key}; we click the first one
+  // (left actor's pills) since lifted state means clicking either one
+  // toggles both. Falls back silently if the panel layout has changed.
+  const ok = await page.evaluate((m) => {
+    const btn = document.querySelector(`button[data-grid-mode="${m}"]`);
+    if (btn instanceof HTMLElement) { btn.click(); return true; }
+    return false;
+  }, mode);
+  if (!ok) {
+    console.log(`[e2e] viz mode pill data-grid-mode="${mode}" not found`);
+    continue;
+  }
+  await page.waitForTimeout(VIZ_MODE_HOLD_S * 1000);
+}
 
-console.log(`[e2e] -> REPORTS tab (${REPORTS_HOLD_TOP_S}s top, scroll, ${REPORTS_HOLD_SCROLLED_S}s scrolled)`);
+// ── 3c. REPORTS TAB SECTION TOUR ──────────────────────────────────────
+// Reports has multiple stacked sections (verdict, fingerprint diff,
+// decision-tree diff, per-turn rationale). Three-stage scroll sweeps
+// through them so the viewer sees the depth of the breakdown, not
+// just the verdict header.
+console.log(`[e2e] -> REPORTS tab (${REPORTS_HOLD_TOP_S}s top, scroll mid, ${REPORTS_HOLD_MID_S}s, scroll bottom, ${REPORTS_HOLD_BOTTOM_S}s)`);
 await clickTab('reports');
 await page.waitForTimeout(REPORTS_HOLD_TOP_S * 1000);
-// Scroll the Reports content column (not the page) so the lower
-// sections — fingerprint comparison, decision-tree diff, per-turn
-// rationale — enter view. ReportSideNav sits to the right at desktop
-// widths; the content column owns its own overflow.
-await page.evaluate(() => {
-  const content = document.querySelector('.reports-content, [class*="reports-content"]');
-  if (content instanceof HTMLElement) {
-    content.scrollTo({ top: 700, behavior: 'smooth' });
-  } else {
-    window.scrollBy({ top: 600, behavior: 'smooth' });
-  }
-});
-await page.waitForTimeout(REPORTS_HOLD_SCROLLED_S * 1000);
+const scrollReports = (top) =>
+  page.evaluate((t) => {
+    const content = document.querySelector('.reports-content, [class*="reports-content"]');
+    if (content instanceof HTMLElement) content.scrollTo({ top: t, behavior: 'smooth' });
+    else window.scrollTo({ top: t, behavior: 'smooth' });
+  }, top);
+await scrollReports(500);
+await page.waitForTimeout(REPORTS_HOLD_MID_S * 1000);
+await scrollReports(1100);
+await page.waitForTimeout(REPORTS_HOLD_BOTTOM_S * 1000);
+// Snap back so library/compare see a known scroll baseline.
 await page.evaluate(() => {
   const content = document.querySelector('.reports-content, [class*="reports-content"]');
   if (content instanceof HTMLElement) content.scrollTo({ top: 0, behavior: 'instant' });
@@ -390,13 +414,20 @@ execFileSync('ffmpeg', [
 // real-time work into ~30 seconds. Captions stay legible at 10× for
 // dashboard text the size we render.
 const heroOut = path.resolve(ASSETS_DIR, `${OUT_NAME}-hero.mp4`);
+// Skip the first 0.5s of the recording. Playwright's video capture
+// records from context creation, but Chromium's first paint happens a
+// few hundred ms after navigation lands — those leading frames are a
+// white default-body-color flash that reads as a glitch on the landing
+// page. 0.5s is empirically clean across multiple recordings and never
+// crosses into the prompt-typing phase (which starts ~2s in).
+const A_START_S = 0.5;
 const aEnd = ((seg.submitClickedMs || 8000) + 1000) / 1000;
 const bEnd = runCompleted
   ? Math.max(aEnd + 5, (seg.resultsAppearedMs - 500) / 1000)
   : null;
 const SPEED_B = 10.0;
 console.log(`[e2e] ffmpeg -> hero mp4: ${heroOut}`);
-console.log(`  segments: A 0..${aEnd.toFixed(1)}s 1×, B ${aEnd.toFixed(1)}..${bEnd?.toFixed(1) ?? '∞'}s ${SPEED_B}×, C ${bEnd?.toFixed(1) ?? '?'}s..end 1×`);
+console.log(`  segments: A ${A_START_S.toFixed(1)}..${aEnd.toFixed(1)}s 1×, B ${aEnd.toFixed(1)}..${bEnd?.toFixed(1) ?? '∞'}s ${SPEED_B}×, C ${bEnd?.toFixed(1) ?? '?'}s..end 1×`);
 // drawtext caption stays inside the B trim window so it does not bleed
 // into A or C frames after the concat. Box + opaque background so it
 // reads cleanly over both light + dark UI states the dashboard cycles
@@ -414,14 +445,15 @@ const drawtext = (
 );
 const filterGraph = bEnd
   ? (
-    `[0:v]trim=start=0:end=${aEnd.toFixed(3)},setpts=PTS-STARTPTS[a];` +
+    `[0:v]trim=start=${A_START_S.toFixed(3)}:end=${aEnd.toFixed(3)},setpts=PTS-STARTPTS[a];` +
     `[0:v]trim=start=${aEnd.toFixed(3)}:end=${bEnd.toFixed(3)},setpts=(PTS-STARTPTS)/${SPEED_B},${drawtext}[b];` +
     `[0:v]trim=start=${bEnd.toFixed(3)},setpts=PTS-STARTPTS[c];` +
     `[a][b][c]concat=n=3:v=1[out]`
   )
   : (
-    // Fallback: no run completed; whole thing 3× sped-up with caption.
-    `[0:v]setpts=(PTS-STARTPTS)/${SPEED_B},${drawtext}[out]`
+    // Fallback: no run completed; trim leading flash + uniform speedup
+    // + caption over the whole thing.
+    `[0:v]trim=start=${A_START_S.toFixed(3)},setpts=(PTS-STARTPTS)/${SPEED_B},${drawtext}[out]`
   );
 execFileSync('ffmpeg', [
   '-y',

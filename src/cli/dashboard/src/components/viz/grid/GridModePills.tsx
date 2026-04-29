@@ -71,6 +71,7 @@ export function GridModePills({
             type="button"
             role="tab"
             aria-selected={active}
+            data-grid-mode={m.key}
             onClick={() => onChange(m.key)}
             title={resolvedHint}
             style={{
