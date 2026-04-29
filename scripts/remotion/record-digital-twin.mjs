@@ -38,7 +38,7 @@ import { execFileSync } from 'node:child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const OUT_NAME = process.argv[2] || 'digital-twin-atlas-lab';
+const OUT_NAME = process.argv[2] || 'digital-twin-maria';
 const HOST = process.argv[3] || 'https://paracosm.agentos.sh';
 const HEADED = process.env.E2E_HEADED === '1';
 const KEEP_WEBM = process.env.E2E_KEEP_WEBM === '1';
@@ -215,17 +215,16 @@ console.log(`  segments: A ${A_START_S.toFixed(1)}..${aEnd.toFixed(1)}s 1×, B $
 // drawtext rejects unescaped colons in `text=...`, and escaping them is
 // brittle. Use · or commas instead so the captions stay readable.
 //
-// Caption arc tracks the digital-twin pattern: question (what if?) ->
-// the API call answering it -> the typed result. Names a real subject
-// (Atlas Lab) and real cost ($0.057) so the demo reads as concrete
-// rather than aspirational.
-const captionA = 'What if Atlas Lab held Atlas-7 for 90 days of red-team passes?';
+// Caption arc tracks the digital-twin pattern: question (what happens?)
+// -> the API call answering it -> the typed result with the metrics
+// that actually moved. Names a real patient (Maria Chen) and a real
+// clinical intervention so the demo reads as concrete rather than
+// aspirational.
+const captionA = 'What happens to Maria on a 12-week semaglutide + lifestyle protocol?';
 const captionB = `twin.simulateIntervention runs against the live scenario · ${SPEED_B}× speed`;
-// Drop the specific cost figure (was 0.057 USD) since costs vary per
-// run — at maxTurns=2 this run hit $0.275 with 28 LLM calls; at
-// maxTurns=1 the earlier run was $0.057 with 16 calls. The caption
-// stays accurate across both.
-const captionC = 'Answer · subject, intervention, trajectory, delta, cost · all under $1';
+// Cost figure stays generic ("under 1 USD") since per-run cost varies
+// with maxTurns. At maxTurns=2 a typical run hits $0.20-$0.30.
+const captionC = 'Answer · HbA1c, weight, exercise, QoL, mortality risk · under $1';
 
 const drawCaption = (text, color = '#ffd970') => (
   `drawtext=text='${text.replace(/'/g, "\\\\'")}':enable='gte(t,0)':fontsize=20:font='Helvetica-Bold':fontcolor=${color}:shadowcolor=black:shadowx=0:shadowy=2:x=(w-tw)/2:y=h-72:box=1:boxcolor=black@0.95:boxborderw=22`

@@ -34,36 +34,49 @@ export interface InterventionDemoCardProps {
 }
 
 const SUBJECT_PREVIEW = {
-  id: 'frontier-lab-2026',
-  name: 'Atlas Lab',
-  meta: '480 employees · Atlas-7 model · alignmentBench 0.84',
+  id: 'patient-maria-2026',
+  name: 'Maria Chen, 58',
+  meta: 'T2D · A1c 7.8% · BMI 31 · sedentary · family-history CVD',
 };
 
 const INTERVENTION_PREVIEW = {
-  id: 'delay-90d',
-  name: '90-day release delay',
-  meta: '90 days · adherence 1.0',
+  id: 'glp1-12wk-protocol',
+  name: '12-week semaglutide + lifestyle',
+  meta: '84 days · adherence target 0.85',
 };
 
 const SUBJECT_PAYLOAD = {
-  id: 'frontier-lab-2026',
-  name: 'Atlas Lab',
-  profile: { foundedYear: 2018, headcount: 480, modelGen: 'Atlas-7', alignmentBench: 0.84 },
+  id: 'patient-maria-2026',
+  name: 'Maria Chen',
+  profile: {
+    age: 58,
+    yearsWithT2D: 4,
+    bmi: 31,
+    a1cBaseline: 7.8,
+    weightLb: 178,
+    fastingGlucose: 156,
+    sleepHoursBaseline: 6.2,
+    exerciseMinPerWeek: 0,
+    comorbidities: 'hypertension, dyslipidemia',
+  },
   signals: [
-    { label: 'AlignmentBench-2026', value: 0.84, unit: 'score', recordedAt: '2026-11-01T00:00:00Z' },
-    { label: 'spec-gaming-rate', value: 0.042, unit: 'fraction', recordedAt: '2026-11-15T00:00:00Z' },
+    { label: 'HbA1c', value: 7.8, unit: '%', recordedAt: '2026-09-15T00:00:00Z' },
+    { label: 'Fasting glucose', value: 156, unit: 'mg/dL', recordedAt: '2026-09-15T00:00:00Z' },
+    { label: 'Weight', value: 178, unit: 'lb', recordedAt: '2026-09-15T00:00:00Z' },
+    { label: 'BMI', value: 31, unit: 'kg/m²', recordedAt: '2026-09-15T00:00:00Z' },
   ],
   markers: [
-    { id: 'flagship-multimodal', category: 'capability', value: 'true' },
+    { id: 'family-history-cvd', category: 'cardiovascular', value: 'true' },
+    { id: 'metformin-1000mg-bid', category: 'medication', value: 'baseline' },
   ],
 };
 
 const INTERVENTION_PAYLOAD = {
-  id: 'delay-90d',
-  name: '90-day release delay',
-  description: 'Hold Atlas-7 release 90 days for additional red-team and DPO mitigation passes.',
-  duration: { value: 90, unit: 'days' },
-  adherenceProfile: { expected: 1.0 },
+  id: 'glp1-12wk-protocol',
+  name: '12-week semaglutide + lifestyle protocol',
+  description: 'Initiate semaglutide 0.25mg weekly, titrate to 1.0mg by week 4. Pair with dietitian-led nutrition plan and 150min/wk graded exercise. Behavioral health checkpoints biweekly. Monitor for GI side effects, gallbladder, pancreatitis.',
+  duration: { value: 84, unit: 'days' },
+  adherenceProfile: { expected: 0.85 },
 };
 
 export function InterventionDemoCard({ onResult, onError, onRunStart }: InterventionDemoCardProps) {
@@ -132,7 +145,7 @@ export function InterventionDemoCard({ onResult, onError, onRunStart }: Interven
         <span className={styles.eyebrow}>digital twin · single subject</span>
       </div>
       <p className={styles.copy}>
-        Same engine, different shape: hold a subject constant, apply one intervention, watch its trajectory diverge across turns. The example below runs the cookbook&apos;s Atlas Lab + 90-day release delay against a corporate-quarterly scenario at economy cost (~$0.10).
+        Hold a person constant, apply one intervention, watch the trajectory. The example below runs Maria&apos;s 12-week semaglutide + lifestyle protocol against a five-department care-team scenario (endocrinology, nutrition, behavioral health, cardiology, lifestyle coach) at economy cost (~$0.20).
       </p>
       <div className={styles.preview}>
         <div className={styles.previewCell}>

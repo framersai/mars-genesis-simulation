@@ -39,8 +39,23 @@ export interface DigitalTwinPanelProps {
 }
 
 const METRIC_LABELS: Record<string, string> = {
-  // frontier-ai-lab metrics (the digital-twin scenario)
-  population: 'Researchers',
+  // t2d-glp1-protocol metrics (the patient digital-twin scenario)
+  hba1c: 'HbA1c',
+  fastingGlucose: 'Fasting Glucose',
+  weight: 'Weight (lb)',
+  bmi: 'BMI',
+  exerciseAdherence: 'Exercise Adherence',
+  sleepHours: 'Sleep (hrs/night)',
+  qualityOfLife: 'Quality of Life',
+  mortalityRisk: '10-yr Mortality Risk',
+  cardioFitness: 'Cardio Fitness',
+  sideEffectBurden: 'Side-effect Load',
+  patientMotivation: 'Motivation',
+  familySupport: 'Family Support',
+  // legacy / cross-scenario metrics (kept so non-medical scenarios
+  // still get readable labels)
+  population: 'Population',
+  morale: 'Morale',
   alignmentBench: 'AlignmentBench',
   specGamingRate: 'Spec Gaming Rate',
   capabilityIndex: 'Capability Index',
@@ -48,59 +63,54 @@ const METRIC_LABELS: Record<string, string> = {
   redTeamCoverage: 'Red-team Coverage',
   runwayMonths: 'Runway',
   burnRate: 'Burn',
-  boardConfidence: 'Board Confidence',
-  investorPressure: 'Investor Pressure',
-  competitorCapabilityGap: 'Competitor Gap',
-  regulatoryHeat: 'Regulatory Heat',
-  // legacy / cross-scenario metrics (kept so corporate-quarterly +
-  // mars + lunar runs through the same panel still render labels)
-  morale: 'Morale',
   marketShare: 'Market Share',
   revenueArr: 'Revenue ARR',
-  scienceOutput: 'Science',
-  hiringCapacity: 'Hiring',
-  deliveryCapacity: 'Delivery',
 };
 
-// Three signals that move under a 90-day release delay: alignmentBench
-// climbs as red-team passes accumulate, specGamingRate drops as DPO
-// mitigations land, releaseReadiness recovers as both stabilize. These
-// three together tell the intervention story in one chart.
-const CHART_METRICS = ['alignmentBench', 'specGamingRate', 'releaseReadiness'];
+// Three signals that move under a 12-week GLP-1 + lifestyle protocol:
+// HbA1c drops as glycemic control improves, weight drops as the drug
+// + diet take effect, exercise adherence climbs as the lifestyle coach
+// scaffolding holds. Together these tell the patient-twin story in one
+// chart.
+const CHART_METRICS = ['hba1c', 'weight', 'exerciseAdherence'];
 
 const CHART_COLORS: Record<string, string> = {
+  hba1c: '#ef6f5d',
+  weight: '#ffd970',
+  exerciseAdherence: '#34d399',
+  // alternate medical metrics
+  bmi: '#a78bfa',
+  qualityOfLife: '#7cb6ff',
+  mortalityRisk: '#ef6f5d',
+  // legacy fallbacks for non-medical artifacts
   alignmentBench: '#7cb6ff',
   specGamingRate: '#ef6f5d',
   releaseReadiness: '#ffd970',
-  // legacy fallbacks for non-frontier-ai-lab artifacts
   morale: '#ffd970',
   runwayMonths: '#5fd49a',
   marketShare: '#7cb6ff',
 };
 
 // closed_turn_based_settlement engine archetype injects colony defaults
-// (population, powerKw, foodMonthsReserve, waterLitersPerDay,
-// pressurizedVolumeM3, lifeSupportCapacity, infrastructureModules,
-// scienceOutput, morale) on top of every scenario's world.metrics. For
-// the AI-lab digital-twin run those defaults are noise — the panel
-// would render alignmentBench next to lifeSupportCapacity and the
-// reader has to mentally filter. We allow-list the metrics the
-// frontier-ai-lab scenario declares + a couple cross-scenario metrics
-// (boardConfidence, investorPressure) so the grid only shows
-// subject-relevant numbers. Falls back to "show every metric" when
-// the artifact is from a non-AI-lab scenario (no AI-lab metrics
-// present means we are not in digital-twin mode).
-const FRONTIER_AI_LAB_METRICS = new Set([
-  'alignmentBench',
-  'specGamingRate',
-  'capabilityIndex',
-  'releaseReadiness',
-  'redTeamCoverage',
-  'runwayMonths',
-  'burnRate',
-  'population',
-  'boardConfidence',
-  'investorPressure',
+// (powerKw, foodMonthsReserve, waterLitersPerDay, pressurizedVolumeM3,
+// lifeSupportCapacity, infrastructureModules, scienceOutput, morale)
+// on top of every scenario's world.metrics. For a patient digital-twin
+// run those defaults are noise — the panel would render HbA1c next to
+// lifeSupportCapacity. We allow-list the medical metrics the
+// t2d-glp1-protocol scenario declares so the grid only shows
+// subject-relevant numbers. Falls back to "show every metric" when the
+// artifact is from a non-medical scenario.
+const DIGITAL_TWIN_METRICS = new Set([
+  'hba1c',
+  'fastingGlucose',
+  'weight',
+  'bmi',
+  'exerciseAdherence',
+  'sleepHours',
+  'qualityOfLife',
+  'mortalityRisk',
+  'cardioFitness',
+  'sideEffectBurden',
 ]);
 
 function formatNumber(value: number): string {
@@ -198,14 +208,14 @@ export function DigitalTwinPanel({ artifact, state, onDismiss }: DigitalTwinPane
     const keys = new Set<string>();
     Object.keys(finalMetrics).forEach(k => keys.add(k));
     Object.keys(initialMetrics).forEach(k => keys.add(k));
-    // If any frontier-ai-lab metric is present we're in digital-twin
-    // mode; filter the grid to subject-shaped metrics. Otherwise we're
-    // rendering against a non-AI-lab artifact and the unrestricted
-    // first-9 view is the right fallback (Mars / corporate-quarterly /
-    // lunar / submarine).
-    const inDigitalTwinScenario = Array.from(keys).some(k => FRONTIER_AI_LAB_METRICS.has(k));
+    // If any digital-twin medical metric is present we're in
+    // patient-twin mode; filter the grid to subject-shaped metrics.
+    // Otherwise we're rendering against a non-medical artifact and the
+    // unrestricted first-12 view is the right fallback (Mars /
+    // corporate-quarterly / lunar / submarine / frontier-ai-lab).
+    const inDigitalTwinScenario = Array.from(keys).some(k => DIGITAL_TWIN_METRICS.has(k));
     const filtered = inDigitalTwinScenario
-      ? Array.from(keys).filter(k => FRONTIER_AI_LAB_METRICS.has(k))
+      ? Array.from(keys).filter(k => DIGITAL_TWIN_METRICS.has(k))
       : Array.from(keys);
     return filtered.slice(0, 12);
   }, [finalMetrics, initialMetrics]);

@@ -749,61 +749,66 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
 <section class="sec" id="digital-twin">
   <div class="sec-inner">
     <h2 class="sec-title rv">Digital twins are a first-class import path</h2>
-    <p class="sec-desc rv">The same kernel that runs a 100-person Mars colony also models a single subject under a single intervention. <code>paracosm/digital-twin</code> is the curated subpath: supply a <code>SubjectConfig</code> + <code>InterventionConfig</code>, get a typed trajectory back. Same Zod-validated <code>RunArtifact</code> shape, just with <code>artifact.subject</code> and <code>artifact.intervention</code> populated for traceability.</p>
+    <p class="sec-desc rv">The same kernel that runs a 100-person Mars colony also models a single person under a single intervention. <code>paracosm/digital-twin</code> is the curated subpath: supply a <code>SubjectConfig</code> + <code>InterventionConfig</code>, get a typed trajectory back. Same Zod-validated <code>RunArtifact</code> shape, just with <code>artifact.subject</code> and <code>artifact.intervention</code> populated for traceability.</p>
 
     <!-- Full-width recorded demo. The recording IS the proof, so it gets
          the whole sec-inner width (1280×720 source plays at the viewer's
-         viewport width, ~1100px on desktop, full container on mobile).
-         The 50/50 grid we used previously squeezed the video to half the
-         row width, which left the dashboard text unreadable. -->
+         viewport width, ~1100px on desktop, full container on mobile). -->
     <div class="rv" style="margin-top:32px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px">
       <div style="font-family:var(--mono);font-size:11px;color:var(--rust);letter-spacing:1.5px;text-transform:uppercase">Live · /sim?tab=quickstart</div>
 
       <video class="demo-video" autoplay muted loop playsinline controls preload="metadata"
-        poster="/demo/digital-twin-atlas-lab-poster.jpg?v=dt-5"
+        poster="/demo/digital-twin-maria-poster.jpg?v=dt-6"
         style="width:100%;height:auto;border-radius:8px;display:block;background:#000"
-        aria-label="Digital twin demo recorded against paracosm.agentos.sh: clicking 'Run intervention demo' fires twin.simulateIntervention(Atlas Lab, 90-day delay) and returns the trajectory inline in the SIM tab.">
-        <source src="/demo/digital-twin-atlas-lab-hero.mp4?v=dt-5" type="video/mp4">
+        aria-label="Patient digital twin demo recorded against paracosm.agentos.sh: clicking 'Run intervention demo' fires twin.simulateIntervention(Maria Chen, 12-week semaglutide protocol) and returns the trajectory inline in the SIM tab.">
+        <source src="/demo/digital-twin-maria-hero.mp4?v=dt-6" type="video/mp4">
       </video>
 
-      <p style="font-size:12px;color:var(--t3);line-height:1.6;margin:4px 0 0">Recorded end-to-end against <code>paracosm.agentos.sh</code>. The click hits <code>POST /api/quickstart/simulate-intervention</code>, the server runs <code>twin.simulateIntervention(subject, intervention, leader)</code>, and the SIM tab renders the returned <code>RunArtifact</code>: subject + intervention echo, final-state delta, trajectory chart, fingerprint chips. Real cookbook output: <a href="https://github.com/framersai/paracosm/blob/master/output/cookbook/06-output-digital-twin-artifact.json" target="_blank" rel="noopener" style="color:var(--amber)">06-output-digital-twin-artifact.json</a>.</p>
+      <p style="font-size:12px;color:var(--t3);line-height:1.6;margin:4px 0 0">Recorded end-to-end against <code>paracosm.agentos.sh</code>. The click hits <code>POST /api/quickstart/simulate-intervention</code>, the server runs <code>twin.simulateIntervention(subject, intervention, leader)</code>, and the SIM tab renders the returned <code>RunArtifact</code>: HbA1c trajectory, weight loss, exercise adherence climb, side-effect burden, quality-of-life shifts. Real LLM-driven decisions across endocrinology, nutrition, behavioral health, cardiology, and lifestyle coaching.</p>
     </div>
 
     <div class="code-block rv" style="margin:20px 0 0">
-      <div class="code-header"><span>Worked example · 90-day Atlas-7 release delay for red-team + DPO</span></div>
+      <div class="code-header"><span>Worked example · Maria Chen, T2D, 12-week GLP-1 + lifestyle protocol</span></div>
       <div class="code-body"><span class="kw">import</span> { DigitalTwin } <span class="kw">from</span> <span class="str">'paracosm/digital-twin'</span>;
 
 <span class="kw">const</span> twin = <span class="kw">await</span> DigitalTwin.fromJson(scenarioJson);
 
 <span class="kw">const</span> subject = {
-  id: <span class="str">'frontier-lab-2026'</span>,
-  name: <span class="str">'Atlas Lab'</span>,
+  id: <span class="str">'patient-maria-2026'</span>,
+  name: <span class="str">'Maria Chen'</span>,
   profile: {
-    headcount: 480,
-    modelGen: <span class="str">'Atlas-7'</span>,
-    alignmentBench: 0.84,
+    age: 58,
+    yearsWithT2D: 4,
+    bmi: 31,
+    a1cBaseline: 7.8,
+    weightLb: 178,
+    comorbidities: <span class="str">'hypertension, dyslipidemia'</span>,
   },
   signals: [
-    { label: <span class="str">'AlignmentBench-2026'</span>, value: 0.84 },
-    { label: <span class="str">'spec-gaming-rate'</span>, value: 0.042 },
+    { label: <span class="str">'HbA1c'</span>,           value: 7.8, unit: <span class="str">'%'</span> },
+    { label: <span class="str">'Fasting glucose'</span>, value: 156, unit: <span class="str">'mg/dL'</span> },
+    { label: <span class="str">'Weight'</span>,          value: 178, unit: <span class="str">'lb'</span> },
   ],
 };
 
 <span class="kw">const</span> intervention = {
-  id: <span class="str">'delay-90d'</span>,
-  name: <span class="str">'90-day release delay'</span>,
-  description: <span class="str">'Hold Atlas-7 release 90 days for'</span>
-    + <span class="str">' additional red-team + DPO mitigation passes.'</span>,
-  duration: { value: 90, unit: <span class="str">'days'</span> },
+  id: <span class="str">'glp1-12wk-protocol'</span>,
+  name: <span class="str">'12-week semaglutide + lifestyle protocol'</span>,
+  description: <span class="str">'Initiate semaglutide 0.25mg weekly,'</span>
+    + <span class="str">' titrate to 1.0mg by week 4. Pair with'</span>
+    + <span class="str">' dietitian-led nutrition + 150min/wk exercise.'</span>,
+  duration: { value: 84, unit: <span class="str">'days'</span> },
+  adherenceProfile: { expected: 0.85 },
 };
 
 <span class="kw">const</span> artifact = <span class="kw">await</span> twin.simulateIntervention(
-  subject, intervention, leader, { maxTurns: 4, seed: 11 }
+  subject, intervention, endocrinologist, { maxTurns: 6, seed: 11 }
 );
 
 <span class="cm">// artifact.subject + artifact.intervention preserved</span>
 <span class="cm">// artifact.trajectory.timepoints[t].worldSnapshot</span>
-<span class="cm">//   carries per-quarter metrics + politics + env</span></div>
+<span class="cm">//   carries per-week HbA1c, weight, BMI, exercise,</span>
+<span class="cm">//   sleep, QoL, mortality risk, side-effect load</span></div>
     </div>
 
     <p class="sec-desc rv" style="margin-top:24px;font-size:14px;color:var(--t3)">The same shape applies to medical interventions (subject = patient, intervention = treatment), policy modeling (subject = jurisdiction, intervention = ordinance), and product launches (subject = market, intervention = pricing change). The kernel is domain-agnostic — the scenario contract names the world.</p>

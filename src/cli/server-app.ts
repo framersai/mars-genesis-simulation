@@ -427,15 +427,20 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
   const groundingCitationsByScenarioId = new Map<string, unknown>();
 
   // Lazily compiled WorldModel for the Digital Twin tab. Backed by
-  // scenarios/frontier-ai-lab.json (Atlas Lab with subject-shaped
-  // metrics: alignmentBench, specGamingRate, capabilityIndex,
-  // releaseReadiness, redTeamCoverage, runway). Earlier we used
-  // corporate-quarterly here, but that scenario's metrics are colony /
-  // generic-corp metrics — POWERKW, FOODMONTHSRESERVE, etc. — and the
-  // panel rendered AI-lab subject metadata next to colony numbers,
-  // which read like a regular sim with subject labels stapled on. The
-  // frontier-ai-lab scenario's metrics are AI-lab metrics, so the
-  // result panel actually demonstrates the digital-twin pattern.
+  // scenarios/t2d-glp1-protocol.json — a clinical digital-twin scenario
+  // where the subject is a person (Maria Chen, T2D + obesity) and the
+  // intervention is a 12-week semaglutide + lifestyle protocol. Metrics
+  // are subject-shaped: HbA1c, fasting glucose, weight, BMI, exercise
+  // adherence, sleep hours, quality of life, 10-year mortality risk,
+  // cardio fitness, side-effect burden.
+  //
+  // Why patient-twin over org-twin: the canonical "digital twin" most
+  // viewers think of is a person under intervention with concrete,
+  // measurable outcomes. Patient-twin is the use case the landing page
+  // already names (digital-twin medicine), and the metrics — A1c
+  // dropping, weight coming off — are unambiguously person-shaped, so
+  // the result panel reads as a real digital twin rather than a
+  // generic org sim with labels stapled on.
   //
   // The first /api/quickstart/simulate-intervention call compiles and
   // caches; later calls reuse the same WorldModel so a series of
@@ -446,7 +451,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
     if (digitalTwinWorld) return Promise.resolve(digitalTwinWorld);
     if (digitalTwinCompilePromise) return digitalTwinCompilePromise;
     digitalTwinCompilePromise = (async () => {
-      const scenarioPath = resolve(scenarioDir, 'frontier-ai-lab.json');
+      const scenarioPath = resolve(scenarioDir, 't2d-glp1-protocol.json');
       if (!existsSync(scenarioPath)) {
         console.log(`  [digital-twin] Scenario file missing: ${scenarioPath}`);
         digitalTwinCompilePromise = null;
