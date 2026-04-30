@@ -2371,6 +2371,13 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
   .pdh-hamburger{display:flex}
   .pdh-right a,.pdh-right .pdh-search{display:none!important}
 }
+/* Below 600px the AGENTOS tag, separator, and "API Reference vX" text
+ * all squeeze between the brand and the theme/hamburger buttons,
+ * forcing the version label to wrap onto 3 lines. The user is already
+ * on /docs at that point so the breadcrumb is redundant — drop it. */
+@media(max-width:600px){
+  .pdh-tag,.pdh-sep,.pdh-current{display:none!important}
+}
 </style></head>`
             );
             // Inject nav header after <body>
