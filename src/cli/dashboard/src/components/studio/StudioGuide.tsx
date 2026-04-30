@@ -103,7 +103,7 @@ export function StudioGuide(): JSX.Element {
           Open Settings →
         </a>
         <a
-          href="https://github.com/framersai/paracosm/blob/master/docs/cookbook.md"
+          href="https://github.com/framersai/paracosm/blob/master/docs/COOKBOOK.md"
           target="_blank"
           rel="noopener noreferrer"
           className={styles.guideCtaSecondary}
