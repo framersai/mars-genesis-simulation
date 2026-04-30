@@ -481,12 +481,43 @@ const drawtext = (
   `:y=h-72` +
   `:box=1:boxcolor=black@0.95:boxborderw=22`
 );
-const filterGraph = bEnd
+// Segment C: results + tab tour. Played at 2.5× so 200+ seconds of
+// recorded scrolls and tab clicks compress to ~35s. Captioned as plain
+// "Results · Sim · Viz · Reports · Library" — the earlier "· 2.5× speed"
+// suffix advertised acceleration that doesn't add value (the content
+// is just tab navigation, not LLM activity worth signposting).
+//
+// Hard-cap the segment at 86s of source content so the final hero
+// caps near 1:34 wall time and fades out, instead of running on for
+// another minute of dead-air after the Library card hover.
+const SPEED_C = 2.5;
+const C_MAX_SOURCE_SECONDS = 86;
+const captionC = 'Results · Sim · Viz · Reports · Library';
+const drawtextC = (
+  `drawtext=` +
+  `text='${captionC}'` +
+  `:fontcolor=#ffd970` +
+  `:fontsize=20` +
+  `:font='Helvetica-Bold'` +
+  `:shadowcolor=black:shadowx=0:shadowy=2` +
+  `:x=(w-tw)/2` +
+  `:y=h-72` +
+  `:box=1:boxcolor=black@0.95:boxborderw=22`
+);
+// Hero duration heuristic for the fade-out: A at 1×, B at SPEED_B,
+// C at SPEED_C capped at C_MAX_SOURCE_SECONDS. Subtract 1s so the
+// fade actually lands inside the trimmed clip instead of past its end.
+const heroDurationS = bEnd
+  ? (aEnd - A_START_S) + (bEnd - aEnd) / SPEED_B + C_MAX_SOURCE_SECONDS / SPEED_C
+  : (aEnd - A_START_S) + 30; // fallback: just a soft tail
+const fadeStart = Math.max(0, heroDurationS - 1).toFixed(3);
+const cEndSrc = bEnd ? (bEnd + C_MAX_SOURCE_SECONDS).toFixed(3) : null;
+const filterGraph = bEnd && cEndSrc
   ? (
     `[0:v]trim=start=${A_START_S.toFixed(3)}:end=${aEnd.toFixed(3)},setpts=PTS-STARTPTS[a];` +
     `[0:v]trim=start=${aEnd.toFixed(3)}:end=${bEnd.toFixed(3)},setpts=(PTS-STARTPTS)/${SPEED_B},${drawtext}[b];` +
-    `[0:v]trim=start=${bEnd.toFixed(3)},setpts=PTS-STARTPTS[c];` +
-    `[a][b][c]concat=n=3:v=1[out]`
+    `[0:v]trim=start=${bEnd.toFixed(3)}:end=${cEndSrc},setpts=(PTS-STARTPTS)/${SPEED_C},${drawtextC}[c];` +
+    `[a][b][c]concat=n=3:v=1[concat];[concat]fade=t=out:st=${fadeStart}:d=1[out]`
   )
   : (
     // Fallback (run did not finish in time). Preserve segment A at 1×
