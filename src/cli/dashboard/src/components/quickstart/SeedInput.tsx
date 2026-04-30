@@ -73,7 +73,14 @@ export function SeedInput({ onSeedReady, disabled = false }: SeedInputProps) {
       setSourceUrl(data.sourceUrl ?? validation.url.toString());
       setTab('paste');
     } catch (err) {
-      setError(String(err));
+      // Network-level failures (DNS, CORS, TLS) reach this branch.
+      // Server-supplied error messages went through the body.error
+      // path above, so anything here is a transport problem.
+      const raw = (err as Error)?.message ?? String(err);
+      const msg = /Failed to fetch|NetworkError|ERR_/i.test(raw)
+        ? "Couldn't reach the server. Check your connection and try again."
+        : `URL fetch failed: ${raw}`;
+      setError(msg);
     } finally {
       setFetching(false);
     }

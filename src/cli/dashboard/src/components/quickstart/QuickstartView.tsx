@@ -166,7 +166,23 @@ export function QuickstartView({ sse, sessionId, onRunStarted, onInterventionRes
       }
     } catch (err) {
       setPhase({ kind: 'input' });
-      setErrorBanner(String(err));
+      // Map raw fetch / setup exceptions to actionable copy. Network
+      // failures ('Failed to fetch'), origin 502/504s, and JSON parse
+      // errors all stringify to noise the viewer can't act on.
+      const raw = (err as Error)?.message ?? String(err);
+      let msg: string;
+      if (/Failed to fetch|NetworkError|ERR_CONNECTION|ERR_NETWORK/i.test(raw)) {
+        msg = "Couldn't reach the server. Check your connection and try again.";
+      } else if (/HTTP 502|HTTP 503|HTTP 504/.test(raw)) {
+        msg = 'Server is temporarily unavailable (502/503/504). Try again in a moment.';
+      } else if (/HTTP 429|rate.?limit/i.test(raw)) {
+        msg = 'Hosted demo is rate-limited right now. Drop your own API key in Settings or wait a minute.';
+      } else if (/HTTP 401|HTTP 403|unauthor/i.test(raw)) {
+        msg = 'Auth error talking to the LLM provider. Check your API key in Settings.';
+      } else {
+        msg = `Quickstart failed: ${raw}`;
+      }
+      setErrorBanner(msg);
     }
   }, [sse, onRunStarted]);
 
