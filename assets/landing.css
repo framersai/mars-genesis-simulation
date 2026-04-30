@@ -773,25 +773,60 @@ a:hover { text-decoration: underline; }
 .sc-stats b { color: var(--t1); }
 
 /* ── Architecture ─────────────────────────────────────────────────────────── */
+/* Two-column card grid. Each pillar renders as a self-contained vertical
+ * card (icon → label → description → tech pills) so all four read at
+ * uniform width + height regardless of description length. The earlier
+ * single-column horizontal flex (icon | label | desc | tech) collapsed
+ * into uneven rows with the label hugging the left and descriptions of
+ * very different lengths producing visibly mismatched card heights. */
 
-.arch { display: flex; flex-direction: column; gap: 8px; margin-top: 40px; }
+.arch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 40px;
+}
 
 .arch-row {
-  display: flex; align-items: center; gap: 16px;
-  padding: 18px 22px; border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 24px 26px;
+  border-radius: 8px;
   border: 1px solid rgba(48, 42, 34, .6);
   background: rgba(28, 25, 21, .6);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  transition: all .3s;
+  transition: border-color .3s, transform .3s;
   box-shadow: 0 2px 12px rgba(0, 0, 0, .2);
 }
 
 .arch-row:hover { border-color: var(--border-hl); }
 .arch-row svg { width: 28px; height: 28px; flex-shrink: 0; }
-.arch-label { font-family: var(--mono); font-size: 12px; font-weight: 700; min-width: 100px; letter-spacing: .5px; }
-.arch-desc { font-size: 13px; color: var(--t2); flex: 1; }
-.arch-tech { font-family: var(--mono); font-size: 10px; color: var(--t4); flex-shrink: 0; }
+.arch-label {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  line-height: 1.35;
+}
+.arch-desc {
+  font-size: 13px;
+  color: var(--t2);
+  line-height: 1.7;
+  /* Push the tech pill to the bottom so all four cards align there */
+  flex: 1;
+}
+.arch-tech {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--t4);
+  letter-spacing: .3px;
+  padding-top: 4px;
+  border-top: 1px dashed rgba(120, 100, 70, .25);
+  width: 100%;
+}
 
 /* ── Pricing ──────────────────────────────────────────────────────────────── */
 
@@ -1137,12 +1172,18 @@ footer { padding: 28px 24px; border-top: 1px solid var(--border); background: va
   .pricing-tiers { flex-direction: column; align-items: center; }
 }
 
+@media (max-width: 880px) {
+  /* Single-column architecture cards on tablet + phone — two-column
+   * grid would force descriptions through tight wrapping and uneven
+   * card heights. Cards stay in their vertical layout below this. */
+  .arch { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 600px) {
   .feat-grid { grid-template-columns: 1fr; }
   .sec { padding: 64px 16px; }
   .hero { padding: 80px 16px 56px; }
-  .arch-row { flex-direction: column; text-align: center; gap: 8px; }
-  .arch-label { min-width: auto; }
+  .arch-row { padding: 18px 18px; }
 }
 
 /* ── Light Mode Overrides ─────────────────────────────────────────────────── */
