@@ -87,11 +87,18 @@ export async function extractPdfText(
       chunks.push(pageText);
       totalBytes += pageBytes;
     }
-    return {
-      text: chunks.join('\n\n'),
-      pages: pdf.numPages,
-      truncated,
-    };
+    const text = chunks.join('\n\n');
+    // Raise a recognisable error code when pdf.js parsed the document
+    // but every page returned empty text. This usually means the PDF is
+    // a scanned image with no embedded text layer; the caller can map
+    // the code to a friendlier user-facing message instead of showing
+    // "PDF extraction failed: ".
+    if (text.trim().length === 0) {
+      const e = new Error('PDF contains no extractable text. It may be a scanned image without OCR.');
+      (e as Error & { code?: string }).code = 'PDF_NO_TEXT';
+      throw e;
+    }
+    return { text, pages: pdf.numPages, truncated };
   } finally {
     // Release the native PDFDocumentProxy handle even when iteration
     // threw partway through.
