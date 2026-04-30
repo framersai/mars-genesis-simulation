@@ -552,7 +552,40 @@ a:hover { text-decoration: underline; }
 
 .hero-sub { font-size: clamp(15px, 2.2vw, 20px); color: var(--t2); max-width: 640px; line-height: 1.8; margin-bottom: 12px; }
 .hero-mono { font-family: var(--mono); font-size: 12px; color: var(--t4); letter-spacing: 1px; margin-bottom: 40px; }
-.hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-bottom: 56px; }
+.hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-bottom: 32px; }
+
+.hero-prompt-chip {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--t2);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 13px;
+  line-height: 1.4;
+  font-family: var(--sans);
+  text-decoration: none;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+  max-width: 100%;
+}
+.hero-prompt-chip::before {
+  content: "→";
+  color: var(--amber);
+  font-family: var(--mono);
+  margin-right: 8px;
+  opacity: 0.7;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.hero-prompt-chip:hover {
+  border-color: var(--amber);
+  color: var(--t1);
+  background: rgba(232, 180, 74, 0.06);
+}
+.hero-prompt-chip:hover::before {
+  opacity: 1;
+  transform: translateX(2px);
+}
 
 /* ── Sections ─────────────────────────────────────────────────────────────── */
 

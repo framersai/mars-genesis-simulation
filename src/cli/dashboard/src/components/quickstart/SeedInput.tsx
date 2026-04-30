@@ -17,9 +17,25 @@ export interface SeedInputProps {
 
 type Tab = 'paste' | 'url' | 'pdf';
 
+/**
+ * Read the `?prompt=` query param off the current URL, if any. Lets the
+ * marketing landing page hand off a sample question into Quickstart's
+ * paste tab without an extra navigation step. Returns '' off the
+ * happy path so the regular empty-state still renders.
+ */
+function readPromptFromUrl(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    const raw = new URLSearchParams(window.location.search).get('prompt');
+    return raw ? raw.trim() : '';
+  } catch {
+    return '';
+  }
+}
+
 export function SeedInput({ onSeedReady, disabled = false }: SeedInputProps) {
   const [tab, setTab] = useState<Tab>('paste');
-  const [seedText, setSeedText] = useState('');
+  const [seedText, setSeedText] = useState(readPromptFromUrl);
   const [urlInput, setUrlInput] = useState('');
   const [sourceUrl, setSourceUrl] = useState<string | undefined>(undefined);
   const [domainHint, setDomainHint] = useState('');

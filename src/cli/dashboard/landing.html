@@ -196,13 +196,9 @@
   <svg id="hero-icon" class="hero-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="96" height="96" style="display:block" role="img" aria-label="Paracosm"><defs><radialGradient id="hg"><stop offset="0%" stop-color="var(--amber)" stop-opacity=".3"/><stop offset="100%" stop-color="var(--amber)" stop-opacity="0"/></radialGradient></defs><g class="pc-orbit"><line x1="256" y1="256" x2="301.06" y2="87.85" stroke="var(--pc-line)" stroke-width="12.8" opacity=".5"/><line x1="256" y1="256" x2="424.15" y2="210.94" stroke="var(--pc-line)" stroke-width="12.8" opacity=".5"/><line x1="256" y1="256" x2="379.09" y2="379.09" stroke="var(--pc-line)" stroke-width="12.8" opacity=".5"/><line x1="256" y1="256" x2="210.94" y2="424.15" stroke="var(--pc-line)" stroke-width="12.8" opacity=".5"/><line x1="256" y1="256" x2="87.85" y2="301.06" stroke="var(--pc-line)" stroke-width="12.8" opacity=".5"/><line x1="256" y1="256" x2="132.91" y2="132.91" stroke="var(--pc-line)" stroke-width="12.8" opacity=".5"/></g><g class="pc-cross"><line x1="301.06" y1="87.85" x2="379.09" y2="379.09" stroke="var(--pc-line)" stroke-width="9" opacity=".18"/><line x1="424.15" y1="210.94" x2="210.94" y2="424.15" stroke="var(--pc-line)" stroke-width="9" opacity=".18"/><line x1="379.09" y1="379.09" x2="87.85" y2="301.06" stroke="var(--pc-line)" stroke-width="9" opacity=".18"/><line x1="210.94" y1="424.15" x2="132.91" y2="132.91" stroke="var(--pc-line)" stroke-width="9" opacity=".18"/><line x1="87.85" y1="301.06" x2="301.06" y2="87.85" stroke="var(--pc-line)" stroke-width="9" opacity=".18"/><line x1="132.91" y1="132.91" x2="424.15" y2="210.94" stroke="var(--pc-line)" stroke-width="9" opacity=".18"/></g><circle class="pc-hub-glow" cx="256" cy="256" r="73.7" fill="url(#hg)"/><circle class="pc-hub" cx="256" cy="256" r="40.96" fill="var(--amber)"/><g class="pc-orbit"><circle cx="301.06" cy="87.85" r="28.16" fill="var(--rust)"/><circle cx="424.15" cy="210.94" r="28.16" fill="var(--amber)"/><circle cx="379.09" cy="379.09" r="28.16" fill="var(--teal)"/><circle cx="210.94" cy="424.15" r="28.16" fill="var(--rust)"/><circle cx="87.85" cy="301.06" r="28.16" fill="var(--teal)"/><circle cx="132.91" cy="132.91" r="28.16" fill="var(--amber)"/></g></svg>
 
   <h1>PARACOSM</h1>
-  <p class="hero-tagline-line">A structured world model. For actions, not pixels.</p>
-  <p class="hero-positioning" style="max-width:780px;margin:14px auto 0;color:var(--t2);font-size:15px;line-height:1.6">
-    Run <strong>multi-agent LLM simulations</strong> on a deterministic seeded kernel, with HEXACO personality-driven leaders, one-variable counterfactuals, and byte-equal replay of every artifact. While
-    <a href="https://openai.com/sora" target="_blank" rel="noopener" style="color:var(--t1)">Sora</a>,
-    <a href="https://deepmind.google/discover/blog/genie-3/" target="_blank" rel="noopener" style="color:var(--t1)">Genie&nbsp;3</a>, and
-    <a href="https://www.worldlabs.ai/" target="_blank" rel="noopener" style="color:var(--t1)">Marble</a>
-    generate <em>video</em> futures, Paracosm runs the kind <strong>AI agents can decide and act inside</strong>. Built for <a href="#use-cases" style="color:var(--t1)">AI agent benchmarks, alignment evaluation, multi-agent policy what-ifs, and digital twins</a>: where <em>what-if</em> matters more than <em>what-pixels</em>.
+  <p class="hero-tagline-line">Run any what-if. See how it actually plays out.</p>
+  <p class="hero-positioning" style="max-width:780px;margin:14px auto 0;color:var(--t2);font-size:15px;line-height:1.65">
+    Type a scenario in plain English. Paracosm compiles it into a typed world, runs LLM-driven decision-makers with measurable personalities turn by turn, and gives back a trajectory you can replay, fork, and compare. Open source, deterministic, built for AI agents that need to test decisions before making them.
   </p>
   <p class="hero-mono" style="margin-top:18px">OPEN SOURCE &middot; APACHE-2.0 &middot; TYPESCRIPT &middot; BUILT ON AGENTOS</p>
 
@@ -210,6 +206,17 @@
     <a href="/sim" class="cta cta-pulse">Launch Simulation <svg><use href="#i-arrow"/></svg></a>
     <a href="https://github.com/framersai/paracosm" class="btn-ghost" target="_blank" rel="noopener">View Source</a>
     <a href="/docs" class="btn-ghost">Documentation</a>
+  </div>
+
+  <div class="hero-prompts" style="margin:28px auto 0;max-width:880px">
+    <div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;text-align:center">Try a scenario · click to open in Quickstart</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">
+      <a href="/sim?tab=quickstart&amp;prompt=A%20coastal%20metro%20of%20800%2C000%20has%2036%20hours%20before%20a%20Category%204%20hurricane%20landfall.%20The%20mayor%20must%20decide%20a%20phased%20evacuation%20across%20three%20districts%20served%20by%20a%20single%20causeway%20bridge%2C%20with%20a%20regional%20hospital%2C%20a%20fuel%20depot%2C%20and%20an%20aging%20levee%20system%20in%20play.%20Departments%20involved%3A%20emergency%20management%2C%20public%20health%2C%20transportation%2C%20utilities%2C%20communications." class="hero-prompt-chip">What if a coastal mayor has 36 hours to evacuate before a hurricane?</a>
+      <a href="/sim?tab=quickstart&amp;prompt=A%20mid-stage%20SaaS%20with%20180%2C000%20paid%20users%20introduces%20a%20new%20%2414%2Fmonth%20mid-tier%20pricing%20bracket%20between%20Free%20and%20the%20existing%20%2429%20Pro.%20Existing%20Pro%20subs%20get%2090-day%20grandfathering.%20Test%20the%20impact%20on%20Free-to-Paid%20conversion%2C%20Pro%20downgrade%20rate%2C%20net%20ARPU%2C%20and%20churn%20over%20six%20months.%20Departments%3A%20pricing%2C%20growth%2C%20success%2C%20finance%2C%20engineering." class="hero-prompt-chip">What if a SaaS adds a new mid-tier price mid-funnel?</a>
+      <a href="/sim?tab=quickstart&amp;prompt=An%20AI%20lab%20decides%20whether%20to%20release%20a%20frontier%20multimodal%20model%20six%20weeks%20early.%20Two%20evaluators%20flag%20a%204.2%25%20specification-gaming%20rate%20on%20long-horizon%20agentic%20tasks%20and%20early%20mesa-objective%20signals%20under%20DPO.%20A%20rival%20lab%27s%20weaker%20model%20ships%20on%20schedule%2C%20capturing%20%24240M%20ARR%20in%20enterprise%20deals.%20Council%3A%20alignment%2C%20capability%2C%20policy%2C%20infra%2C%20comms." class="hero-prompt-chip">What if an AI lab releases a frontier model six weeks early?</a>
+      <a href="/sim?tab=quickstart&amp;prompt=A%20generation%20ship%20with%202%2C400%20passengers%20at%20year%2018%20of%20a%2040-year%20interstellar%20transit%20discovers%20a%20slow%20fuel%20leak%20on%20the%20main%20reactor.%20Reactor%20crew%20wants%20to%20EVA-repair%20%28non-zero%20fatality%20risk%29%3B%20bridge%20wants%20to%20coast%20at%20reduced%20thrust%20and%20accept%20a%2014-year%20transit%20extension.%20Departments%3A%20engineering%2C%20life%20support%2C%20medical%2C%20psych%2C%20command." class="hero-prompt-chip">What if a generation ship discovers a fuel leak at year 18?</a>
+      <a href="/sim?tab=quickstart&amp;prompt=A%20mid-size%20city%20of%20650%2C000%20pilots%20downtown%20congestion%20pricing%20for%2012%20months.%20%249%20peak%20%2F%20%243%20off-peak%20on%20vehicles%20entering%20the%20central%20business%20district%206am-7pm%20Mon-Fri.%20Revenue%20funds%20two%20BRT%20lines%20and%20a%2030%25%20transit%20fare%20cut%20for%20low-income%20riders.%20Test%20VMT%2C%20transit%20ridership%2C%20small-business%20revenue%2C%20equity%20outcomes." class="hero-prompt-chip">What if a city pilots congestion pricing for 12 months?</a>
+    </div>
   </div>
 
   <video class="hero-video" autoplay muted loop playsinline controls preload="metadata"
@@ -221,6 +228,34 @@
 
   <p class="hero-sub" style="max-width:740px;margin:24px auto 0">Same world, three actors — see how each one's traits drive identical state to different futures. Seven entry points, one engine: brief, JSON contract, granular client, fork-and-replay counterfactuals, pluggable trait models, HTTP, CLI. Every path returns the same Zod-validated RunArtifact.</p>
 
+  <div class="world-model-explainer" id="world-models" style="max-width:960px;margin:64px auto 0;padding:24px 28px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);text-align:left;scroll-margin-top:80px">
+    <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--rust);text-transform:uppercase;margin-bottom:12px;text-align:center">What's a world model?</div>
+    <p style="color:var(--t2);font-size:15px;line-height:1.7;margin:0 0 14px">A world model is software that represents how some slice of reality changes over time. AI agents need them to test decisions before making them: rehearse the move, watch what unfolds, decide whether to commit.</p>
+    <p style="color:var(--t2);font-size:15px;line-height:1.7;margin:0 0 18px">Two paths to that. <a href="https://openai.com/sora" target="_blank" rel="noopener" style="color:var(--t1)">Sora</a>, <a href="https://deepmind.google/discover/blog/genie-3/" target="_blank" rel="noopener" style="color:var(--t1)">Genie&nbsp;3</a>, and <a href="https://www.worldlabs.ai/" target="_blank" rel="noopener" style="color:var(--t1)">Marble</a> generate <em>pixels</em> of how a future looks. Paracosm is the structured kind. The output is a typed JSON RunArtifact: each turn's metrics, decisions, specialist analyses, citations, forged tools. Pixels are what humans watch. State is what agents reason inside.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px">
+      <div style="border:1px solid var(--border);border-radius:8px;padding:14px 16px;background:var(--bg)">
+        <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:10px">Visual world model</div>
+        <ul style="list-style:none;padding:0;margin:0;color:var(--t2);font-size:13px;line-height:1.7">
+          <li><strong style="color:var(--t1)">Output:</strong> pixels (video / 3D scene)</li>
+          <li><strong style="color:var(--t1)">Audience:</strong> humans watching</li>
+          <li><strong style="color:var(--t1)">Replay:</strong> rerun the model, get a new sample</li>
+          <li><strong style="color:var(--t1)">For agents:</strong> hard. Hard to act inside a 4-second clip.</li>
+        </ul>
+      </div>
+      <div style="border:1px solid var(--amber);border-radius:8px;padding:14px 16px;background:rgba(232,180,74,0.04)">
+        <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--amber);margin-bottom:10px">Structured world model · paracosm</div>
+        <ul style="list-style:none;padding:0;margin:0;color:var(--t2);font-size:13px;line-height:1.7">
+          <li><strong style="color:var(--t1)">Output:</strong> typed JSON state, decisions, citations</li>
+          <li><strong style="color:var(--t1)">Audience:</strong> AI agents deciding and measuring</li>
+          <li><strong style="color:var(--t1)">Replay:</strong> deterministic kernel, byte-equal output</li>
+          <li><strong style="color:var(--t1)">For agents:</strong> direct. Each turn is a state transition the agent can reason over.</li>
+        </ul>
+      </div>
+    </div>
+
+    <p style="color:var(--t3);font-size:13px;line-height:1.65;margin:18px 0 0">The category is named in <a href="https://arxiv.org/abs/2507.05169" target="_blank" rel="noopener" style="color:var(--amber)">Xing&nbsp;2025</a> and surveyed in the <a href="https://dl.acm.org/doi/full/10.1145/3746449" target="_blank" rel="noopener" style="color:var(--amber)">ACM&nbsp;CSUR&nbsp;2025</a> world-model survey. The closest LLM-world-model implementation anchor is <a href="https://openreview.net/forum?id=XmYCERErcD" target="_blank" rel="noopener" style="color:var(--amber)">Yang&nbsp;et&nbsp;al,&nbsp;2026</a>, which evaluates LLM-based world models through policy verification, action proposal, and policy planning.</p>
+  </div>
 
   <div class="code-sec">
     <div class="code-block" style="margin-bottom:14px">
