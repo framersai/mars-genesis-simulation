@@ -12,7 +12,7 @@
   border: none;
   padding: 3px 14px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 700;
   cursor: pointer;
   font-family: var(--mono);
@@ -32,7 +32,7 @@
 }
 
 .triggerCaret {
-  font-size: 9px;
+  font-size: var(--font-3xs);
   opacity: 0.8;
 }
 
@@ -60,7 +60,7 @@
   gap: 10px;
   padding: 10px 12px;
   margin-bottom: 6px;
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-family: var(--mono);
   border-radius: 4px;
   cursor: pointer;
@@ -79,7 +79,7 @@
 }
 
 .menuButtonIcon {
-  font-size: 13px;
+  font-size: var(--font-md);
 }
 
 // Run New Simulation (primary)
@@ -97,7 +97,7 @@
 }
 
 .runNewBadge {
-  font-size: 9px;
+  font-size: var(--font-3xs);
   font-weight: 800;
   padding: 2px 7px;
   border-radius: 3px;
@@ -136,7 +136,7 @@
 }
 
 .runSavedBadge {
-  font-size: 9px;
+  font-size: var(--font-3xs);
   font-weight: 800;
   padding: 2px 7px;
   border-radius: 3px;
@@ -159,7 +159,7 @@
 
 .savedStatus {
   padding: 10px;
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--text-3);
   font-family: var(--mono);
 }
@@ -183,7 +183,7 @@
 }
 
 .loadFileBadge {
-  font-size: 9px;
+  font-size: var(--font-3xs);
   font-weight: 700;
   color: var(--text-3);
   letter-spacing: 0.08em;
@@ -200,7 +200,7 @@
   width: 100%;
   padding: 10px 12px;
   margin-bottom: 6px;
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-family: var(--sans);
   color: var(--text-1);
   background: var(--bg-canvas);
@@ -225,20 +225,20 @@
 }
 
 .sessionCardLine2 {
-  font-size: 10px;
+  font-size: var(--font-2xs);
   color: var(--text-2);
   margin-bottom: 4px;
 }
 
 .sessionCardLine3 {
-  font-size: 10px;
+  font-size: var(--font-2xs);
   font-family: var(--mono);
   color: var(--text-3);
 }
 
 // Tooltip heading inside the trigger's Tooltip component
 .tooltipHeading {
-  font-size: 13px;
+  font-size: var(--font-md);
   font-weight: 800;
   color: var(--amber);
   margin-bottom: 6px;
@@ -255,7 +255,7 @@
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-family: var(--mono);
   font-weight: 700;
   color: var(--text-1);
@@ -282,7 +282,7 @@
 }
 
 .historyRowBadge {
-  font-size: 9px;
+  font-size: var(--font-3xs);
   font-weight: 700;
   color: var(--text-3);
   letter-spacing: 0.08em;
@@ -329,20 +329,20 @@
 }
 
 .historyCardTitle {
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--text-1);
   margin-bottom: 2px;
 }
 
 .historyCardLine2 {
-  font-size: 10px;
+  font-size: var(--font-2xs);
   color: var(--text-2);
   margin-bottom: 2px;
 }
 
 .historyCardLine3 {
-  font-size: 10px;
+  font-size: var(--font-2xs);
   color: var(--text-3);
 }
 
@@ -354,7 +354,7 @@
   height: 22px;
   padding: 0;
   line-height: 1;
-  font-size: 14px;
+  font-size: var(--font-lg);
   background: transparent;
   border: none;
   color: var(--text-3);
@@ -379,7 +379,7 @@
   border: 1px dashed var(--border);
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--font-2xs);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   border-radius: 4px;

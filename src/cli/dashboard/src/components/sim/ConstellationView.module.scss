@@ -16,7 +16,7 @@
 
 .empty {
   color: var(--text-dim, #888);
-  font-size: 0.875rem;
+  font-size: var(--font-lg);
   font-family: var(--mono);
   text-align: center;
   padding: 4rem 2rem;
@@ -40,7 +40,7 @@
 }
 
 .label {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-family: var(--mono);
   font-weight: 600;
   fill: var(--text-2);

@@ -21,7 +21,7 @@
   gap: 10px;
   color: var(--amber);
   font-family: var(--mono);
-  font-size: 16px;
+  font-size: var(--font-xl);
   letter-spacing: 1px;
   text-transform: uppercase;
   margin: 0;
@@ -39,7 +39,7 @@
 .timer {
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: var(--font-sm);
 }
 
 .cardsRow {
@@ -74,7 +74,7 @@
 .cardLabel {
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--font-2xs);
   letter-spacing: 1.2px;
   text-transform: uppercase;
 }
@@ -82,13 +82,13 @@
 .cardId {
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--font-2xs);
 }
 
 .cardName {
   color: var(--amber);
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: var(--font-md);
   font-weight: 700;
 }
 
@@ -96,7 +96,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 12px;
+  font-size: var(--font-sm);
 }
 
 .kv {
@@ -107,7 +107,7 @@
   > span:first-child {
     color: var(--text-3);
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: var(--font-2xs);
     letter-spacing: 0.5px;
     text-transform: uppercase;
   }
@@ -121,7 +121,7 @@
 
 .description {
   color: var(--text-2);
-  font-size: 12px;
+  font-size: var(--font-sm);
   line-height: 1.55;
   font-family: var(--sans);
   margin: 0;
@@ -146,7 +146,7 @@
 .statLabel {
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--font-2xs);
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
@@ -154,7 +154,7 @@
 .statValue {
   color: var(--amber);
   font-family: var(--mono);
-  font-size: 16px;
+  font-size: var(--font-xl);
   font-weight: 700;
 }
 
@@ -195,7 +195,7 @@
 .eventLogTitle {
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--font-xs);
   letter-spacing: 1.2px;
   text-transform: uppercase;
 }
@@ -206,7 +206,7 @@
   gap: 4px;
   overflow-y: auto;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--font-xs);
   line-height: 1.5;
 
   &::-webkit-scrollbar {
@@ -233,13 +233,13 @@
 
 .eventTurn {
   color: var(--text-3);
-  font-size: 10px;
+  font-size: var(--font-2xs);
   letter-spacing: 0.5px;
 }
 
 .eventType {
   color: var(--amber);
-  font-size: 10px;
+  font-size: var(--font-2xs);
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;

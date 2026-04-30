@@ -150,7 +150,7 @@ export function ClickPopover(props: ClickPopoverProps) {
           borderRadius: 6,
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)',
           fontFamily: 'var(--mono)',
-          fontSize: 10,
+          fontSize: 'var(--font-2xs)',
           color: 'var(--text-2)',
           zIndex: 11,
         }}
@@ -170,7 +170,7 @@ export function ClickPopover(props: ClickPopoverProps) {
               style={{
                 color: sideColor,
                 fontWeight: 800,
-                fontSize: 13,
+                fontSize: 'var(--font-md)',
                 fontFamily: 'var(--sans)',
                 letterSpacing: '0.02em',
               }}
@@ -180,7 +180,7 @@ export function ClickPopover(props: ClickPopoverProps) {
             <div
               style={{
                 color: 'var(--text-3)',
-                fontSize: 9,
+                fontSize: 'var(--font-3xs)',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
               }}
@@ -194,7 +194,7 @@ export function ClickPopover(props: ClickPopoverProps) {
                     background: `${sideColor}33`,
                     color: sideColor,
                     borderRadius: 2,
-                    fontSize: 8,
+                    fontSize: 'var(--font-3xs)',
                     letterSpacing: '0.1em',
                   }}
                 >
@@ -215,7 +215,7 @@ export function ClickPopover(props: ClickPopoverProps) {
               cursor: 'pointer',
               width: 22,
               height: 22,
-              fontSize: 11,
+              fontSize: 'var(--font-xs)',
               lineHeight: 1,
               padding: 0,
             }}
@@ -230,7 +230,7 @@ export function ClickPopover(props: ClickPopoverProps) {
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               gap: '4px 12px',
-              fontSize: 10,
+              fontSize: 'var(--font-2xs)',
             }}
           >
             <span style={{ color: 'var(--text-3)' }}>DEPT</span>
@@ -263,7 +263,7 @@ export function ClickPopover(props: ClickPopoverProps) {
             <div
               style={{
                 color: 'var(--text-3)',
-                fontSize: 9,
+                fontSize: 'var(--font-3xs)',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
                 marginBottom: 6,
@@ -276,7 +276,7 @@ export function ClickPopover(props: ClickPopoverProps) {
               <div style={{ flexShrink: 0 }}>
                 <HexacoRadar profile={hexaco} size={120} />
               </div>
-              <div style={{ fontSize: 9, color: 'var(--text-3)', lineHeight: 1.5 }}>
+              <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-3)', lineHeight: 1.5 }}>
                 {topHexacoAxes(hexaco)}
               </div>
             </div>
@@ -288,7 +288,7 @@ export function ClickPopover(props: ClickPopoverProps) {
             <div
               style={{
                 color: 'var(--text-3)',
-                fontSize: 9,
+                fontSize: 'var(--font-3xs)',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
                 marginBottom: 6,
@@ -304,7 +304,7 @@ export function ClickPopover(props: ClickPopoverProps) {
                   style={{
                     padding: '3px 0',
                     color: 'var(--text-2)',
-                    fontSize: 10,
+                    fontSize: 'var(--font-2xs)',
                     fontStyle: 'italic',
                     fontFamily: 'var(--sans)',
                     borderLeft: `2px solid ${sideColor}44`,
@@ -333,7 +333,7 @@ export function ClickPopover(props: ClickPopoverProps) {
                 borderRadius: 3,
                 cursor: 'pointer',
                 fontFamily: 'var(--mono)',
-                fontSize: 10,
+                fontSize: 'var(--font-2xs)',
                 fontWeight: 800,
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',

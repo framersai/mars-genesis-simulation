@@ -41,7 +41,7 @@ export function ReferencesSection({ registry, title = 'References', collapsible 
             id={`cite-${entry.n}`}
             style={{
               display: 'grid', gridTemplateColumns: '28px 1fr', gap: 8,
-              fontSize: 12, lineHeight: 1.55,
+              fontSize: 'var(--font-sm)', lineHeight: 1.55,
               padding: '6px 8px', borderRadius: 4,
               background: 'var(--bg-card)', border: '1px solid var(--border)',
             }}
@@ -65,7 +65,7 @@ export function ReferencesSection({ registry, title = 'References', collapsible 
               ) : (
                 <span style={{ color: 'var(--text-1)' }}>{entry.text}</span>
               )}
-              <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)', marginTop: 2 }}>
+              <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginTop: 2 }}>
                 {entry.doi && <>DOI:{entry.doi} · </>}
                 {depts && <>cited by {depts} · </>}
                 <span title="Which leader's run referenced this source">leader {sidesLabel}</span>
@@ -79,7 +79,7 @@ export function ReferencesSection({ registry, title = 'References', collapsible 
 
   const header = (
     <h3 style={{
-      fontSize: 13, fontFamily: 'var(--mono)', fontWeight: 800,
+      fontSize: 'var(--font-md)', fontFamily: 'var(--mono)', fontWeight: 800,
       color: 'var(--amber)', letterSpacing: '0.06em',
       margin: '0 0 8px', textTransform: 'uppercase',
     }}>
@@ -95,7 +95,7 @@ export function ReferencesSection({ registry, title = 'References', collapsible 
         style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', background: 'var(--bg-deep)' }}
       >
         <summary style={{
-          fontSize: 13, fontFamily: 'var(--mono)', fontWeight: 800,
+          fontSize: 'var(--font-md)', fontFamily: 'var(--mono)', fontWeight: 800,
           color: 'var(--amber)', letterSpacing: '0.06em',
           cursor: 'pointer', textTransform: 'uppercase', marginBottom: 8,
         }}>
@@ -133,7 +133,7 @@ export function ReferencesList({ registry }: { registry: CitationRegistry }) {
             id={`cite-${entry.n}`}
             style={{
               display: 'grid', gridTemplateColumns: '28px 1fr', gap: 8,
-              fontSize: 12, lineHeight: 1.55,
+              fontSize: 'var(--font-sm)', lineHeight: 1.55,
               padding: '6px 8px', borderRadius: 4,
               background: 'var(--bg-card)', border: '1px solid var(--border)',
             }}
@@ -152,7 +152,7 @@ export function ReferencesList({ registry }: { registry: CitationRegistry }) {
               ) : (
                 <span style={{ color: 'var(--text-1)' }}>{entry.text}</span>
               )}
-              <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)', marginTop: 2 }}>
+              <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginTop: 2 }}>
                 {entry.doi && <>DOI:{entry.doi} · </>}
                 {depts && <>cited by {depts} · </>}
                 <span>leader {sidesLabel}</span>

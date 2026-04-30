@@ -26,7 +26,7 @@
 .title {
   color: var(--amber);
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: var(--font-md);
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -36,14 +36,14 @@
 .eyebrow {
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--font-xs);
   letter-spacing: 1px;
   text-transform: uppercase;
 }
 
 .copy {
   color: var(--text-2);
-  font-size: 13px;
+  font-size: var(--font-md);
   line-height: 1.6;
   margin: 0;
 }
@@ -62,7 +62,7 @@
 .presetLabel {
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--font-xs);
   letter-spacing: 1px;
   text-transform: uppercase;
   margin-right: 4px;
@@ -75,7 +75,7 @@
   border-radius: var(--radius-sm);
   padding: 6px 12px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--font-xs);
   cursor: pointer;
   transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 
@@ -103,7 +103,7 @@
   border-radius: var(--radius-sm);
   padding: 6px 12px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--font-xs);
   cursor: pointer;
   margin-left: auto;
   transition: color 0.15s ease, border-color 0.15s ease;
@@ -121,7 +121,7 @@
 
 .presetBlurb {
   color: var(--text-3);
-  font-size: 12px;
+  font-size: var(--font-sm);
   line-height: 1.55;
   margin: -4px 0 0;
   font-style: italic;
@@ -158,7 +158,7 @@
 .formLegend {
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-weight: 700;
   letter-spacing: 1.2px;
   text-transform: uppercase;
@@ -186,7 +186,7 @@
 .fieldLabel {
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--font-xs);
   letter-spacing: 0.8px;
   text-transform: uppercase;
 }
@@ -199,7 +199,7 @@
   padding: 9px 11px;
   color: var(--text-1);
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: var(--font-md);
   line-height: 1.4;
   outline: none;
   transition: border-color 0.15s ease;
@@ -222,7 +222,7 @@
   padding: 9px 11px;
   color: var(--text-1);
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: var(--font-md);
   line-height: 1.55;
   resize: vertical;
   min-height: 64px;
@@ -241,7 +241,7 @@
 
 .mono {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: var(--font-sm);
 }
 
 .actions {
@@ -256,7 +256,7 @@
   background: var(--amber);
   color: var(--text-contrast);
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-weight: 700;
   letter-spacing: 1.2px;
   text-transform: uppercase;
@@ -279,7 +279,7 @@
 .helper {
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--font-xs);
 }
 
 .spinner {
@@ -297,7 +297,7 @@
 .timer {
   color: var(--amber);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--font-xs);
 }
 
 @keyframes idc-spin {

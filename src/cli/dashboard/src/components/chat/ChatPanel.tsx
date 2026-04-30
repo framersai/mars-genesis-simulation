@@ -79,13 +79,13 @@ function EventContext({ memory, events, scenario }: { memory: AgentMemoryInfo; e
 
   return (
     <div style={{
-      padding: '8px 14px', borderRadius: 6, fontSize: 10, lineHeight: 1.5,
+      padding: '8px 14px', borderRadius: 6, fontSize: 'var(--font-2xs)', lineHeight: 1.5,
       background: 'var(--bg-card)', border: '1px solid var(--border)',
       marginBottom: 4,
     }}>
       {eventTimeline.length > 0 && (
         <div style={{ marginBottom: hasMemories ? 8 : 0 }}>
-          <div style={{ fontWeight: 700, color: 'var(--rust)', fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '.08em', marginBottom: 4 }}>
+          <div style={{ fontWeight: 700, color: 'var(--rust)', fontFamily: 'var(--mono)', fontSize: 'var(--font-3xs)', letterSpacing: '.08em', marginBottom: 4 }}>
             {eventNoun.toUpperCase()} EXPERIENCED
           </div>
           {eventTimeline.map(e => (
@@ -99,7 +99,7 @@ function EventContext({ memory, events, scenario }: { memory: AgentMemoryInfo; e
       )}
       {hasMemories && (
         <div style={{ marginBottom: hasRelationships ? 6 : 0 }}>
-          <div style={{ fontWeight: 700, color: 'var(--amber)', fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '.08em', marginBottom: 3 }}>
+          <div style={{ fontWeight: 700, color: 'var(--amber)', fontFamily: 'var(--mono)', fontSize: 'var(--font-3xs)', letterSpacing: '.08em', marginBottom: 3 }}>
             RECENT MEMORIES
           </div>
           {memory.recentMemories.slice(0, 3).map((m, i) => (
@@ -111,7 +111,7 @@ function EventContext({ memory, events, scenario }: { memory: AgentMemoryInfo; e
       )}
       {hasRelationships && (
         <div>
-          <div style={{ fontWeight: 700, color: 'var(--teal)', fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '.08em', marginBottom: 3 }}>
+          <div style={{ fontWeight: 700, color: 'var(--teal)', fontFamily: 'var(--mono)', fontSize: 'var(--font-3xs)', letterSpacing: '.08em', marginBottom: 3 }}>
             RELATIONSHIPS
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -305,10 +305,10 @@ export function ChatPanel({ state, onChatUsage }: ChatPanelProps) {
     <div className="chat-layout" role="region" aria-label="Agent chat" style={{ display: 'flex', height: '100%', gap: '1px', background: 'var(--border)' }}>
       {/* Sidebar */}
       <div className="chat-sidebar" style={{ width: '240px', background: 'var(--bg-panel)', overflowY: 'auto', padding: '12px', flexShrink: 0 }}>
-        <h3 style={{ fontSize: '14px', color: 'var(--amber)', fontFamily: 'var(--mono)', margin: '0 0 6px 0' }}>
+        <h3 style={{ fontSize: 'var(--font-lg)', color: 'var(--amber)', fontFamily: 'var(--mono)', margin: '0 0 6px 0' }}>
           {agents.length ? `${agents.length} Agents` : 'Agent Chat'}
         </h3>
-        <p style={{ fontSize: '10px', color: 'var(--text-3)', marginBottom: '10px', lineHeight: 1.5 }}>
+        <p style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', marginBottom: '10px', lineHeight: 1.5 }}>
           {agents.length
             ? `Talk to any ${scenario.labels.populationNoun.replace(/s$/, '')} from the simulation. Each agent has persistent memory, personality, and relationships shaped by the crises they experienced.`
             : `Chat becomes available after the first turn completes. Start a simulation and come back once agents have reacted to the first crisis. Each agent has persistent memory, personality, and relationships shaped by the crises they experience.`
@@ -320,15 +320,15 @@ export function ChatPanel({ state, onChatUsage }: ChatPanelProps) {
             onClick={() => selectAgent(c.name)}
             style={{
               width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: '6px',
-              cursor: 'pointer', marginBottom: '4px', fontSize: '12px',
+              cursor: 'pointer', marginBottom: '4px', fontSize: 'var(--font-sm)',
               border: selectedId === c.name ? '1px solid var(--amber)' : '1px solid transparent',
               background: selectedId === c.name ? 'var(--bg-card)' : 'transparent',
               color: 'var(--text-1)', display: 'block',
             }}
           >
             <span style={{ fontWeight: 700 }}>{c.name}</span>
-            <div style={{ color: 'var(--text-3)', fontSize: '10px' }}>{c.role} {c.department}</div>
-            <div style={{ fontSize: '10px', fontWeight: 700, marginTop: '2px', color: moodColors[c.mood] || 'var(--text-3)' }}>
+            <div style={{ color: 'var(--text-3)', fontSize: 'var(--font-2xs)' }}>{c.role} {c.department}</div>
+            <div style={{ fontSize: 'var(--font-2xs)', fontWeight: 700, marginTop: '2px', color: moodColors[c.mood] || 'var(--text-3)' }}>
               {c.mood.toUpperCase()}
             </div>
           </button>
@@ -339,7 +339,7 @@ export function ChatPanel({ state, onChatUsage }: ChatPanelProps) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg-deep)' }}>
         {/* Memory bar */}
         {selected?.memory && (selected.memory.beliefs?.length > 0 || selected.memory.stances?.length > 0) && (
-          <div style={{ padding: '6px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-panel)', fontSize: '10px' }}>
+          <div style={{ padding: '6px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-panel)', fontSize: 'var(--font-2xs)' }}>
             <span style={{ fontWeight: 700, color: 'var(--text-3)', fontFamily: 'var(--mono)', letterSpacing: '0.5px' }}>MEMORY </span>
             {selected.memory.beliefs?.slice(0, 2).map((b, i) => <span key={i} style={{ color: 'var(--text-2)', marginRight: '8px' }}>{b}</span>)}
             {selected.memory.stances?.map((s, i) => (
@@ -359,7 +359,7 @@ export function ChatPanel({ state, onChatUsage }: ChatPanelProps) {
             padding: '6px 16px', borderBottom: '1px solid var(--border)',
             background: 'var(--bg-panel)',
             display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
-            fontFamily: 'var(--mono)', fontSize: 10,
+            fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)',
           }}>
             <span style={{ fontWeight: 700, color: 'var(--text-3)', letterSpacing: '0.5px' }}>HEXACO</span>
             {(['O', 'C', 'E', 'A', 'Em', 'HH'] as const).map(k => {
@@ -393,10 +393,10 @@ export function ChatPanel({ state, onChatUsage }: ChatPanelProps) {
         <div ref={messagesRef} onScroll={onMessagesScroll} style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {!selectedId && (
             <div style={{ color: 'var(--text-3)', textAlign: 'center', padding: '30px 20px' }}>
-              <div style={{ fontSize: '14px', marginBottom: '10px' }}>
+              <div style={{ fontSize: 'var(--font-lg)', marginBottom: '10px' }}>
                 {agents.length ? `Select an agent to start chatting.` : 'No agents available yet.'}
               </div>
-              <div style={{ fontSize: '11px', lineHeight: 1.6, maxWidth: '400px', margin: '0 auto' }}>
+              <div style={{ fontSize: 'var(--font-xs)', lineHeight: 1.6, maxWidth: '400px', margin: '0 auto' }}>
                 {agents.length
                   ? `Each agent is a simulated ${scenario.labels.populationNoun.replace(/s$/, '')} with a unique HEXACO personality, persistent memory of events they survived, evolving stances on topics, and relationships with other agents. Their responses reflect their actual simulation experience.`
                   : `Run a simulation from the Settings tab. Once the first turn completes, agents become available for conversation. The chat system uses each agent's personality profile, memory, and event history to generate authentic in-character responses.`
@@ -411,9 +411,9 @@ export function ChatPanel({ state, onChatUsage }: ChatPanelProps) {
           )}
           {messages.map((msg, i) => (
             <div key={i} style={{ maxWidth: '80%', alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
-              {msg.name && <div style={{ fontSize: '10px', color: 'var(--amber)', fontWeight: 700, marginBottom: '4px' }}>{msg.name}</div>}
+              {msg.name && <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--amber)', fontWeight: 700, marginBottom: '4px' }}>{msg.name}</div>}
               <div style={{
-                padding: '10px 14px', borderRadius: '8px', fontSize: '13px', lineHeight: 1.6,
+                padding: '10px 14px', borderRadius: '8px', fontSize: 'var(--font-md)', lineHeight: 1.6,
                 background: msg.role === 'user' ? 'rgba(232,180,74,.12)' : 'var(--bg-card)',
                 border: msg.role === 'user' ? '1px solid var(--amber-dim)' : '1px solid var(--border)',
                 color: 'var(--text-1)',
@@ -427,7 +427,7 @@ export function ChatPanel({ state, onChatUsage }: ChatPanelProps) {
           {/* Typing indicator while waiting on agent response */}
           {sending && selectedId && (
             <div style={{ maxWidth: '80%', alignSelf: 'flex-start' }} aria-live="polite" aria-label={`${selected?.name || 'Agent'} is typing`}>
-              <div style={{ fontSize: '10px', color: 'var(--amber)', fontWeight: 700, marginBottom: '4px' }}>
+              <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--amber)', fontWeight: 700, marginBottom: '4px' }}>
                 {selected?.name || selectedId}
               </div>
               <div style={{
@@ -436,7 +436,7 @@ export function ChatPanel({ state, onChatUsage }: ChatPanelProps) {
                 color: 'var(--text-3)', display: 'inline-flex', alignItems: 'center', gap: 6,
                 boxShadow: 'var(--card-shadow)',
               }}>
-                <span style={{ fontSize: 11, fontStyle: 'italic' }}>typing</span>
+                <span style={{ fontSize: 'var(--font-xs)', fontStyle: 'italic' }}>typing</span>
                 <span className="chat-dot" style={{ animationDelay: '0ms' }}>.</span>
                 <span className="chat-dot" style={{ animationDelay: '160ms' }}>.</span>
                 <span className="chat-dot" style={{ animationDelay: '320ms' }}>.</span>
@@ -449,7 +449,7 @@ export function ChatPanel({ state, onChatUsage }: ChatPanelProps) {
                 .chat-dot {
                   display: inline-block;
                   font-weight: 800;
-                  font-size: 14px;
+                  font-size: var(--font-lg);
                   line-height: 1;
                   color: var(--amber);
                   animation: chat-dot-bounce 1s ease-in-out infinite;
@@ -474,7 +474,7 @@ export function ChatPanel({ state, onChatUsage }: ChatPanelProps) {
             style={{
               flex: 1, background: 'var(--bg-card)', color: 'var(--text-1)',
               border: '1px solid var(--border)', padding: '10px 14px', borderRadius: '6px',
-              fontSize: '14px', fontFamily: 'var(--sans)', opacity: !selectedId ? 0.5 : 1,
+              fontSize: 'var(--font-lg)', fontFamily: 'var(--sans)', opacity: !selectedId ? 0.5 : 1,
             }}
           />
           <button
@@ -483,7 +483,7 @@ export function ChatPanel({ state, onChatUsage }: ChatPanelProps) {
             style={{
               background: 'linear-gradient(135deg, var(--rust), #c44a1e)', color: 'white',
               border: 'none', padding: '10px 20px', borderRadius: '6px',
-              fontSize: '13px', fontWeight: 700, cursor: 'pointer',
+              fontSize: 'var(--font-md)', fontWeight: 700, cursor: 'pointer',
               opacity: (!selectedId || sending || !input.trim()) ? 0.4 : 1,
             }}
           >

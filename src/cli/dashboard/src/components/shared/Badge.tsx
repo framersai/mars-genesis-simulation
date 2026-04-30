@@ -14,7 +14,7 @@ export function Badge({ outcome }: BadgeProps) {
 
   return (
     <span style={{
-      padding: '3px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 800,
+      padding: '3px 10px', borderRadius: '4px', fontSize: 'var(--font-xs)', fontWeight: 800,
       fontFamily: 'var(--mono)', display: 'inline-block', whiteSpace: 'nowrap',
       background: s.bg, color: s.color, border: `1px solid ${s.border}`,
     }}>

@@ -39,30 +39,30 @@ export function DivergenceRail({ state }: DivergenceRailProps) {
       padding: '6px 16px',
       background: 'linear-gradient(90deg, rgba(232,180,74,.08), rgba(76,168,168,.08))',
       borderBottom: '1px solid var(--border)',
-      fontSize: '12px',
+      fontSize: 'var(--font-sm)',
     }}>
       <div style={{
-        fontWeight: 800, color: 'var(--text-1)', fontSize: '12px', marginBottom: '4px',
+        fontWeight: 800, color: 'var(--text-1)', fontSize: 'var(--font-sm)', marginBottom: '4px',
         fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.5px',
       }}>
         DIVERGENCE T{a.event.turn} {sameEvent ? '(same event, different outcome)' : '(different events)'}
       </div>
       <div className="diverge-sides" style={{ display: 'flex', gap: '12px' }}>
         <div style={{ flex: 1, minWidth: 0, padding: '6px 10px', borderRadius: '4px', background: 'rgba(232,180,74,.08)', border: '1px solid rgba(232,180,74,.2)' }}>
-          <b style={{ fontSize: '13px', color: 'var(--vis)', display: 'block', marginBottom: '2px', overflowWrap: 'break-word' }}>{a.event.title}</b>
-          <span style={{ color: 'var(--text-1)', fontSize: '12px', display: 'block', overflowWrap: 'break-word' }}>
+          <b style={{ fontSize: 'var(--font-md)', color: 'var(--vis)', display: 'block', marginBottom: '2px', overflowWrap: 'break-word' }}>{a.event.title}</b>
+          <span style={{ color: 'var(--text-1)', fontSize: 'var(--font-sm)', display: 'block', overflowWrap: 'break-word' }}>
             {decisionA}
           </span>
-          <div style={{ marginTop: '4px', fontSize: '12px', fontWeight: 800, fontFamily: 'var(--mono)', color: a.outcome.includes('success') ? 'var(--green)' : 'var(--rust)' }}>
+          <div style={{ marginTop: '4px', fontSize: 'var(--font-sm)', fontWeight: 800, fontFamily: 'var(--mono)', color: a.outcome.includes('success') ? 'var(--green)' : 'var(--rust)' }}>
             {fmtOutcome(a.outcome)}
           </div>
         </div>
         <div style={{ flex: 1, minWidth: 0, padding: '6px 10px', borderRadius: '4px', background: 'rgba(76,168,168,.08)', border: '1px solid rgba(76,168,168,.2)' }}>
-          <b style={{ fontSize: '13px', color: 'var(--eng)', display: 'block', marginBottom: '2px', overflowWrap: 'break-word' }}>{b.event.title}</b>
-          <span style={{ color: 'var(--text-1)', fontSize: '12px', display: 'block', overflowWrap: 'break-word' }}>
+          <b style={{ fontSize: 'var(--font-md)', color: 'var(--eng)', display: 'block', marginBottom: '2px', overflowWrap: 'break-word' }}>{b.event.title}</b>
+          <span style={{ color: 'var(--text-1)', fontSize: 'var(--font-sm)', display: 'block', overflowWrap: 'break-word' }}>
             {decisionB}
           </span>
-          <div style={{ marginTop: '4px', fontSize: '12px', fontWeight: 800, fontFamily: 'var(--mono)', color: b.outcome.includes('success') ? 'var(--green)' : 'var(--rust)' }}>
+          <div style={{ marginTop: '4px', fontSize: 'var(--font-sm)', fontWeight: 800, fontFamily: 'var(--mono)', color: b.outcome.includes('success') ? 'var(--green)' : 'var(--rust)' }}>
             {fmtOutcome(b.outcome)}
           </div>
         </div>

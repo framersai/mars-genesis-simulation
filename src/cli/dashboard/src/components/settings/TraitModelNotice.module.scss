@@ -12,7 +12,7 @@
   border-left: 3px solid var(--amber);
   border-radius: 6px;
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: var(--font-sm);
   color: var(--text-2);
 }
 
@@ -23,7 +23,7 @@
   color: var(--bg-deep);
   // Decorative badge (aria-hidden in TSX) so the small font is OK
   // for assistive tech; bumped 9px -> 11px for sighted readability.
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 800;
   letter-spacing: 0.08em;
   border-radius: 3px;
@@ -39,7 +39,7 @@
   font-weight: 700;
   color: var(--text-1);
   margin-bottom: 4px;
-  font-size: 12px;
+  font-size: var(--font-sm);
   letter-spacing: 0.02em;
 }
 
@@ -52,7 +52,7 @@
     background: var(--bg-deep);
     padding: 1px 5px;
     border-radius: 3px;
-    font-size: 11px;
+    font-size: var(--font-xs);
     color: var(--amber);
   }
 }
@@ -67,7 +67,7 @@
   color: var(--rust);
   text-decoration: none;
   font-weight: 600;
-  font-size: 11px;
+  font-size: var(--font-xs);
 
   &:hover {
     text-decoration: underline;

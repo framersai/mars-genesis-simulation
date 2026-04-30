@@ -87,7 +87,7 @@ export function LoadPriorRunsCTA({ hideWhenUnavailable = true }: LoadPriorRunsCT
         <div>
           <div
             style={{
-              fontSize: 10,
+              fontSize: 'var(--font-2xs)',
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
               color: isEmpty ? 'var(--text-3)' : 'var(--amber)',
@@ -101,7 +101,7 @@ export function LoadPriorRunsCTA({ hideWhenUnavailable = true }: LoadPriorRunsCT
           {isEmpty ? (
             <div
               style={{
-                fontSize: 13,
+                fontSize: 'var(--font-md)',
                 color: 'var(--text-2)',
                 fontFamily: 'var(--sans)',
               }}
@@ -116,7 +116,7 @@ export function LoadPriorRunsCTA({ hideWhenUnavailable = true }: LoadPriorRunsCT
           ) : (
             <div
               style={{
-                fontSize: 13,
+                fontSize: 'var(--font-md)',
                 color: 'var(--text-1)',
                 fontFamily: 'var(--sans)',
               }}
@@ -143,7 +143,7 @@ export function LoadPriorRunsCTA({ hideWhenUnavailable = true }: LoadPriorRunsCT
             borderRadius: 3,
             cursor: 'pointer',
             fontFamily: 'var(--mono)',
-            fontSize: 9,
+            fontSize: 'var(--font-3xs)',
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
             fontWeight: 800,
@@ -177,7 +177,7 @@ export function LoadPriorRunsCTA({ hideWhenUnavailable = true }: LoadPriorRunsCT
               borderRadius: 4,
               cursor: 'pointer',
               fontFamily: 'var(--mono)',
-              fontSize: 11,
+              fontSize: 'var(--font-xs)',
               textAlign: 'left',
               transition: 'border-color 120ms, background 120ms',
             }}
@@ -194,7 +194,7 @@ export function LoadPriorRunsCTA({ hideWhenUnavailable = true }: LoadPriorRunsCT
           >
             <span
               style={{
-                fontSize: 12,
+                fontSize: 'var(--font-sm)',
                 fontWeight: 700,
                 color: 'var(--text-1)',
                 fontFamily: 'var(--sans)',
@@ -202,21 +202,21 @@ export function LoadPriorRunsCTA({ hideWhenUnavailable = true }: LoadPriorRunsCT
             >
               {s.title || s.scenarioName || s.scenarioId || 'Simulation'}
             </span>
-            <span style={{ fontSize: 9, color: 'var(--text-3)', marginTop: 3 }}>
+            <span style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-3)', marginTop: 3 }}>
               {s.title && s.scenarioName ? `${s.scenarioName} · ` : ''}
               {typeof s.turnCount === 'number' ? `${s.turnCount} turns · ` : ''}
               {s.leaderA && s.leaderB ? `${s.leaderA} vs ${s.leaderB} · ` : ''}
               {formatCreatedAt(s.createdAt)}
             </span>
             {typeof s.totalCostUSD === 'number' && s.totalCostUSD > 0 && (
-              <span style={{ fontSize: 9, color: 'var(--text-4)', marginTop: 1 }}>
+              <span style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-4)', marginTop: 1 }}>
                 ${s.totalCostUSD.toFixed(2)}
               </span>
             )}
             <span
               style={{
                 marginTop: 6,
-                fontSize: 9,
+                fontSize: 'var(--font-3xs)',
                 color: 'var(--amber)',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
@@ -230,7 +230,7 @@ export function LoadPriorRunsCTA({ hideWhenUnavailable = true }: LoadPriorRunsCT
       </div>
       )}
       {!isEmpty && sessions.length > 3 && (
-        <div style={{ fontSize: 10, color: 'var(--text-4)', fontStyle: 'italic' }}>
+        <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-4)', fontStyle: 'italic' }}>
           + {sessions.length - 3} more — use the <strong>LOAD</strong> button in the top bar to
           browse the full list.
         </div>

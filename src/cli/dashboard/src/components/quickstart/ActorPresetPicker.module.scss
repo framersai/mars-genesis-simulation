@@ -29,14 +29,14 @@
     margin: 0;
     color: var(--amber);
     font-family: var(--mono);
-    font-size: 14px;
+    font-size: var(--font-lg);
   }
 
   button {
     background: none;
     border: 0;
     color: var(--text-3);
-    font-size: 22px;
+    font-size: var(--font-2xl);
     cursor: pointer;
   }
 }
@@ -76,18 +76,18 @@
   strong {
     font-family: var(--mono);
     color: var(--text-1);
-    font-size: 13px;
+    font-size: var(--font-md);
   }
 
   .archetype {
     font-family: var(--mono);
     color: var(--amber);
-    font-size: 11px;
+    font-size: var(--font-xs);
   }
 
   .description {
     grid-column: 1 / -1;
     color: var(--text-3);
-    font-size: 12px;
+    font-size: var(--font-sm);
   }
 }

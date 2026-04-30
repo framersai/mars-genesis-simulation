@@ -19,7 +19,7 @@ interface MoodChartProps {
 export function MoodChart({ points, onJumpToTurn, width = 380, height = 120 }: MoodChartProps) {
   if (points.length === 0) {
     return (
-      <div style={{ fontSize: 10, color: 'var(--text-3)' }}>No mood history yet.</div>
+      <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)' }}>No mood history yet.</div>
     );
   }
 

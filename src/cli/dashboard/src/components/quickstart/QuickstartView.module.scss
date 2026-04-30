@@ -18,14 +18,14 @@
     color: var(--amber);
     font-family: var(--mono);
     margin: 0 0 8px;
-    font-size: 18px;
+    font-size: var(--font-2xl);
     letter-spacing: 0.5px;
   }
 
   p {
     color: var(--text-3);
     margin: 0;
-    font-size: 13px;
+    font-size: var(--font-md);
     line-height: 1.6;
   }
 }
@@ -39,7 +39,7 @@
   border-radius: var(--radius-sm);
   color: var(--rust);
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: var(--font-sm);
 }
 
 .compareCta {
@@ -50,7 +50,7 @@
   padding: 12px 20px;
   font-family: var(--mono);
   font-weight: 700;
-  font-size: 13px;
+  font-size: var(--font-md);
   letter-spacing: 0.04em;
   cursor: pointer;
   transition: transform 200ms ease, box-shadow 200ms ease;

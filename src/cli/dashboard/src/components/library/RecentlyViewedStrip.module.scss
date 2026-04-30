@@ -13,7 +13,7 @@
 }
 
 .title {
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
   color: var(--text-3);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -24,7 +24,7 @@
   background: transparent;
   border: 0;
   color: var(--text-3);
-  font-size: 1rem;
+  font-size: var(--font-xl);
   cursor: pointer;
   font-family: var(--mono);
   padding: 0 0.25rem;
@@ -56,18 +56,18 @@
 }
 
 .cardScenario {
-  font-size: 0.85rem;
+  font-size: var(--font-md);
   color: var(--text-1);
   font-weight: 600;
 }
 
 .cardLeader {
-  font-size: 0.75rem;
+  font-size: var(--font-sm);
   color: var(--text-2);
 }
 
 .cardMode {
-  font-size: 0.65rem;
+  font-size: var(--font-2xs);
   font-family: var(--mono);
   text-transform: uppercase;
   letter-spacing: 0.04em;

@@ -5,7 +5,7 @@
 }
 
 .empty {
-  font-size: 0.85rem;
+  font-size: var(--font-md);
   color: var(--paracosm-text-muted, #888);
   font-style: italic;
 }
@@ -13,7 +13,7 @@
 .flag {
   padding: 0.35rem 0.6rem;
   border-radius: 4px;
-  font-size: 0.85rem;
+  font-size: var(--font-md);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -27,6 +27,6 @@
 .detail {
   margin-top: 0.25rem;
   margin-left: 1.25rem;
-  font-size: 0.8rem;
+  font-size: var(--font-sm);
   color: var(--paracosm-text-muted, #888);
 }

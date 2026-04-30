@@ -29,7 +29,7 @@
 
 .name {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--font-md);
   font-weight: 700;
   color: var(--text-1);
   font-family: var(--mono);
@@ -37,7 +37,7 @@
 
 .archetype {
   margin: 2px 0 0;
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
   color: var(--text-3);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -47,7 +47,7 @@
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  font-size: 1rem;
+  font-size: var(--font-xl);
   color: var(--text-3);
   user-select: none;
 }
@@ -84,7 +84,7 @@
   justify-content: center;
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
 }
 
 .foot {
@@ -92,7 +92,7 @@
   align-items: center;
   gap: 0.5rem;
   font-family: var(--mono);
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
   color: var(--text-3);
 }
 
@@ -108,7 +108,7 @@
   border: 1px solid var(--glass-border);
   color: var(--text-2);
   font-family: var(--mono);
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
   padding: 4px 8px;
   border-radius: 4px;
   cursor: pointer;

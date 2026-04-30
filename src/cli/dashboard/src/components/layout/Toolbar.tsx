@@ -14,7 +14,7 @@ const btnStyle = {
   border: '1px solid var(--border)',
   padding: '3px 12px',
   borderRadius: '3px',
-  fontSize: '10px',
+  fontSize: 'var(--font-2xs)',
   cursor: 'pointer',
   fontWeight: 600,
   fontFamily: 'var(--sans)',
@@ -36,7 +36,7 @@ export function Toolbar({ state, onSave, onLoad, onClear }: ToolbarProps) {
         padding: '3px 16px',
         background: 'var(--bg-panel)',
         borderBottom: '1px solid var(--border)',
-        fontSize: '10px',
+        fontSize: 'var(--font-2xs)',
       }}
     >
       <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, color: 'var(--amber)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>

@@ -36,7 +36,7 @@ function Kbd({ k, v }: { k: string; v: string }) {
           border: '1px solid var(--border)',
           borderRadius: 2,
           fontFamily: 'var(--mono)',
-          fontSize: 8,
+          fontSize: 'var(--font-3xs)',
           color: 'var(--text-3)',
         }}
       >
@@ -841,7 +841,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
     return (
       <div className="viz-content" style={{
         flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: 'var(--text-3)', fontSize: 13,
+        color: 'var(--text-3)', fontSize: 'var(--font-md)',
       }}>
         Run a simulation to see the {scenarioLabels.place} visualization.
       </div>
@@ -916,7 +916,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
                 borderRadius: 3,
                 cursor: 'pointer',
                 fontFamily: 'var(--mono)',
-                fontSize: 14,
+                fontSize: 'var(--font-lg)',
                 fontWeight: 800,
                 letterSpacing: '0.08em',
                 lineHeight: 1,
@@ -937,7 +937,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
                 borderRadius: 4,
                 cursor: 'pointer',
                 fontFamily: 'var(--mono)',
-                fontSize: 12,
+                fontSize: 'var(--font-sm)',
                 fontWeight: 800,
                 letterSpacing: '0.04em',
                 display: 'inline-flex',
@@ -978,7 +978,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
                     borderRadius: 3,
                     cursor: 'pointer',
                     fontFamily: 'var(--mono)',
-                    fontSize: 10,
+                    fontSize: 'var(--font-2xs)',
                     fontWeight: 800,
                     letterSpacing: '0.08em',
                     textTransform: 'uppercase',
@@ -999,7 +999,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
                     borderRadius: 3,
                     cursor: 'pointer',
                     fontFamily: 'var(--mono)',
-                    fontSize: 10,
+                    fontSize: 'var(--font-2xs)',
                     fontWeight: 800,
                     letterSpacing: '0.08em',
                   }}
@@ -1026,7 +1026,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
                     borderRadius: 3,
                     cursor: 'pointer',
                     fontFamily: 'var(--mono)',
-                    fontSize: 14,
+                    fontSize: 'var(--font-lg)',
                     fontWeight: 800,
                     lineHeight: 1,
                   }}
@@ -1038,7 +1038,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
           </div>
           <div
             style={{
-              fontSize: 9,
+              fontSize: 'var(--font-3xs)',
               color: 'var(--text-4)',
               fontFamily: 'var(--mono)',
               letterSpacing: '0.04em',
@@ -1093,7 +1093,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
         />
         {diffLine && (
           <div style={{
-            padding: '4px 12px', fontSize: 10, fontFamily: 'var(--mono)',
+            padding: '4px 12px', fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)',
             color: 'var(--text-3)', background: 'var(--bg-panel)',
             borderBottom: '1px solid var(--border)',
           }}>
@@ -1132,7 +1132,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
                     borderRadius: 3,
                     cursor: 'pointer',
                     fontFamily: 'var(--mono)',
-                    fontSize: 11,
+                    fontSize: 'var(--font-xs)',
                     fontWeight: 800,
                     letterSpacing: '0.04em',
                     textTransform: 'uppercase',
@@ -1265,7 +1265,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
             padding: '2px 10px 4px',
             background: 'var(--bg-deep)',
             borderTop: '1px solid var(--border)',
-            fontSize: 8,
+            fontSize: 'var(--font-3xs)',
             fontFamily: 'var(--mono)',
             color: 'var(--text-4)',
             letterSpacing: '0.08em',
@@ -1319,7 +1319,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
               borderRadius: 999,
               cursor: 'pointer',
               fontFamily: 'var(--mono)',
-              fontSize: 10,
+              fontSize: 'var(--font-2xs)',
               fontWeight: 800,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
@@ -1332,7 +1332,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
             }}
           >
             \u2193 Latest · T{maxTurn}
-            <span style={{ fontSize: 9, opacity: 0.7 }}>
+            <span style={{ fontSize: 'var(--font-3xs)', opacity: 0.7 }}>
               ({maxTurn - 1 - currentTurn} turn{maxTurn - 1 - currentTurn === 1 ? '' : 's'} behind)
             </span>
           </button>
@@ -1393,7 +1393,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
                   : '3px solid var(--amber)',
               borderRadius: 4,
               fontFamily: 'var(--sans)',
-              fontSize: 12,
+              fontSize: 'var(--font-sm)',
               color: 'var(--text-1)',
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.6)',
               zIndex: 30,
@@ -1407,7 +1407,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
-                fontSize: 9,
+                fontSize: 'var(--font-3xs)',
                 fontFamily: 'var(--mono)',
                 letterSpacing: '0.12em',
                 color:
@@ -1423,7 +1423,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
                 {alertToast.side.toUpperCase()} · T{alertToast.turn}
               </span>
             </div>
-            <div style={{ fontSize: 12, lineHeight: 1.3 }}>{alertToast.message}</div>
+            <div style={{ fontSize: 'var(--font-sm)', lineHeight: 1.3 }}>{alertToast.message}</div>
           </div>
         )}
         {crisisToast && (
@@ -1445,7 +1445,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
               borderLeft: '3px solid var(--rust)',
               borderRadius: 4,
               fontFamily: 'var(--sans)',
-              fontSize: 12,
+              fontSize: 'var(--font-sm)',
               color: 'var(--text-1)',
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.6)',
               zIndex: 30,
@@ -1459,7 +1459,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
-                fontSize: 9,
+                fontSize: 'var(--font-3xs)',
                 fontFamily: 'var(--mono)',
                 letterSpacing: '0.12em',
                 color: 'var(--rust)',
@@ -1472,7 +1472,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
                 {crisisToast.side.toUpperCase()} · T{crisisToast.turn} · {crisisToast.category}
               </span>
             </div>
-            <div style={{ fontSize: 13, lineHeight: 1.3 }}>
+            <div style={{ fontSize: 'var(--font-md)', lineHeight: 1.3 }}>
               {crisisToast.title || `${crisisToast.category} crisis unfolding`}
             </div>
           </div>

@@ -104,7 +104,7 @@ export function TimelineSparkline({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'baseline',
-          fontSize: 8,
+          fontSize: 'var(--font-3xs)',
           fontFamily: 'var(--mono)',
           color: 'var(--text-4)',
           letterSpacing: '0.08em',
@@ -230,7 +230,7 @@ export function TimelineSparkline({
               border: '1px solid var(--border)',
               borderRadius: 3,
               fontFamily: 'var(--mono)',
-              fontSize: 9,
+              fontSize: 'var(--font-3xs)',
               color: 'var(--text-2)',
               pointerEvents: 'none',
               boxShadow: '0 4px 14px rgba(0, 0, 0, 0.35)',
@@ -240,7 +240,7 @@ export function TimelineSparkline({
           >
             <div
               style={{
-                fontSize: 9,
+                fontSize: 'var(--font-3xs)',
                 fontWeight: 800,
                 color: 'var(--amber)',
                 letterSpacing: '0.08em',

@@ -47,17 +47,17 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
       if (total <= 1) return null;
       return (
         <div style={{
-          padding: '6px 12px', fontSize: '11px',
+          padding: '6px 12px', fontSize: 'var(--font-xs)',
           borderTop: idx > 0 ? '2px solid var(--border)' : undefined,
           marginTop: idx > 0 ? '6px' : undefined,
           display: 'flex', alignItems: 'center', gap: '8px',
         }}>
-          <span style={{ fontWeight: 800, color: 'var(--rust)', fontFamily: 'var(--mono)', fontSize: '10px' }}>
+          <span style={{ fontWeight: 800, color: 'var(--rust)', fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)' }}>
             EVENT {idx + 1}/{total}
           </span>
           <span style={{ fontWeight: 700, color: 'var(--text-1)' }}>{title}</span>
           {category && (
-            <span style={{ fontSize: '9px', padding: '1px 5px', borderRadius: '2px', background: 'var(--bg-deep)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
+            <span style={{ fontSize: 'var(--font-3xs)', padding: '1px 5px', borderRadius: '2px', background: 'var(--bg-deep)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
               {category}
             </span>
           )}
@@ -72,12 +72,12 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
       return (
         <Tooltip content={
           <div>
-            <b style={{ color: sideColor, fontSize: '14px', display: 'block', marginBottom: '6px' }}>Promotion: {role}</b>
+            <b style={{ color: sideColor, fontSize: 'var(--font-lg)', display: 'block', marginBottom: '6px' }}>Promotion: {role}</b>
             {name && <div style={{ marginBottom: '4px' }}><span style={{ color: 'var(--text-2)' }}>Agent:</span> <span style={{ color: 'var(--text-1)', fontWeight: 600 }}>{name}</span></div>}
             {reason && <div style={{ color: 'var(--text-2)', lineHeight: 1.6 }}>{reason}</div>}
           </div>
         }>
-          <div style={{ padding: '1px 10px', fontSize: '11px', lineHeight: 1.3, display: 'flex', gap: '6px', cursor: 'pointer', minWidth: 0 }}>
+          <div style={{ padding: '1px 10px', fontSize: 'var(--font-xs)', lineHeight: 1.3, display: 'flex', gap: '6px', cursor: 'pointer', minWidth: 0 }}>
             <span style={{ color: 'var(--text-3)', flexShrink: 0 }}>&rarr;</span>
             <span style={{ fontWeight: 700, color: sideColor, flexShrink: 0 }}>{role}</span>
             <span style={{ color: 'var(--text-3)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{reason}</span>
@@ -121,7 +121,7 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
             display: 'block', width: 'auto', alignSelf: 'stretch', textAlign: 'left',
             margin: '0 8px 4px',
             padding: '6px 10px',
-            fontSize: 11, lineHeight: 1.5,
+            fontSize: 'var(--font-xs)', lineHeight: 1.5,
             background: approved
               ? `color-mix(in srgb, ${sideColor} 7%, transparent)`
               : 'rgba(224,101,48,0.04)',
@@ -139,7 +139,7 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <span style={{
-              fontSize: 9, fontWeight: 900, fontFamily: 'var(--mono)',
+              fontSize: 'var(--font-3xs)', fontWeight: 900, fontFamily: 'var(--mono)',
               padding: '2px 6px', borderRadius: 3,
               letterSpacing: '0.12em', textTransform: 'uppercase',
               color: approved ? 'var(--bg-deep)' : '#fff',
@@ -148,13 +148,13 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
             }}>
               {approved ? '✦ FORGED TOOL' : '✗ FORGED TOOL'}
             </span>
-            <span style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
+            <span style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
               {dept}
             </span>
             <span style={{ fontWeight: 700, color: 'var(--text-1)' }}>
               {description}
             </span>
-            <span style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
+            <span style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
               {name} ({mode})
             </span>
             {/* Static PASS/FAIL pill. Full judge reasoning lives in the
@@ -166,7 +166,7 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
                 touch + keeps visual rhythm consistent with the toolbox. */}
             <span style={{
               marginLeft: 'auto',
-              fontSize: 9, fontWeight: 800, fontFamily: 'var(--mono)',
+              fontSize: 'var(--font-3xs)', fontWeight: 800, fontFamily: 'var(--mono)',
               padding: '1px 6px', borderRadius: 3,
               color: approved ? 'var(--green)' : 'var(--rust)',
               background: approved ? 'rgba(106,173,72,0.12)' : 'rgba(224,101,48,0.1)',
@@ -176,7 +176,7 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
             </span>
           </div>
           {(inputFields.length > 0 || outputFields.length > 0) && (
-            <div style={{ marginTop: 4, fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ marginTop: 4, fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               {inputFields.length > 0 && (
                 <span><span style={{ color: 'var(--teal)' }}>in:</span> {inputFields.join(', ')}</span>
               )}
@@ -186,7 +186,7 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
             </div>
           )}
           {!approved && errorReason && (
-            <div style={{ marginTop: 3, fontSize: 10, color: 'var(--rust)', fontStyle: 'italic' }}>
+            <div style={{ marginTop: 3, fontSize: 'var(--font-2xs)', color: 'var(--rust)', fontStyle: 'italic' }}>
               {errorReason}
             </div>
           )}
@@ -233,24 +233,24 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
         <>
         <div style={{ margin: '0 8px 4px' }}>
           <div style={{
-            padding: '8px 10px', borderRadius: '6px', fontSize: '11px',
+            padding: '8px 10px', borderRadius: '6px', fontSize: 'var(--font-xs)',
             background: severity === 'critical' ? 'rgba(224,101,48,.08)' : severity === 'high' ? 'rgba(232,180,74,.06)' : 'var(--bg-card)',
             border: `1px solid ${severity === 'critical' ? 'rgba(224,101,48,.25)' : severity === 'high' ? 'rgba(232,180,74,.2)' : 'var(--border)'}`,
             borderLeft: `3px solid ${severity === 'critical' ? 'var(--rust)' : severity === 'high' ? 'var(--amber)' : 'var(--teal)'}`,
           }}>
             {/* Header: dept name, tool count, severity badge, inline citation pills */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
-              <span style={{ fontWeight: 800, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--teal)' }}>
+              <span style={{ fontWeight: 800, fontSize: 'var(--font-2xs)', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--teal)' }}>
                 {scenario.ui.departmentIcons[dept] || ''} {dept}
               </span>
               {allTools.length > 0 && (
-                <span style={{ fontSize: '10px', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
+                <span style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
                   +{allTools.length} tool{allTools.length === 1 ? '' : 's'}
                   {tools.length < allTools.length && ` (${tools.length} reused)`}
                 </span>
               )}
               {severity && (
-                <span style={{ fontSize: '9px', fontWeight: 800, fontFamily: 'var(--mono)', padding: '1px 5px', borderRadius: '2px', background: severity === 'critical' ? 'rgba(224,101,48,.15)' : 'rgba(232,180,74,.1)', color: severity === 'critical' ? 'var(--rust)' : 'var(--amber)' }}>
+                <span style={{ fontSize: 'var(--font-3xs)', fontWeight: 800, fontFamily: 'var(--mono)', padding: '1px 5px', borderRadius: '2px', background: severity === 'critical' ? 'rgba(224,101,48,.15)' : 'rgba(232,180,74,.1)', color: severity === 'critical' ? 'var(--rust)' : 'var(--amber)' }}>
                   {severity.toUpperCase()} RISK
                 </span>
               )}
@@ -266,11 +266,11 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
             {/* Summary — falls back to a compact inventory line when the
                 LLM returned a sparse report so the card never looks empty. */}
             {summary ? (
-              <div style={{ fontSize: '12px', color: 'var(--text-1)', lineHeight: 1.5, marginBottom: '6px' }}>
+              <div style={{ fontSize: 'var(--font-sm)', color: 'var(--text-1)', lineHeight: 1.5, marginBottom: '6px' }}>
                 {summary}
               </div>
             ) : (risks.length === 0 && recs.length === 0) && (citeCount > 0 || allTools.length > 0) ? (
-              <div style={{ fontSize: '11px', color: 'var(--text-3)', fontStyle: 'italic', lineHeight: 1.5, marginBottom: '6px' }}>
+              <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-3)', fontStyle: 'italic', lineHeight: 1.5, marginBottom: '6px' }}>
                 Department analysis complete &mdash; no narrative summary returned, but
                 {citeCount > 0 && ` ${citeCount} source${citeCount === 1 ? '' : 's'} surveyed`}
                 {citeCount > 0 && allTools.length > 0 && ' and '}
@@ -282,10 +282,10 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
             {/* Risks */}
             {risks.length > 0 && (
               <div style={{ marginBottom: '6px' }}>
-                <div style={{ fontSize: '9px', fontWeight: 800, color: 'var(--rust)', letterSpacing: '0.5px', fontFamily: 'var(--mono)', marginBottom: '2px' }}>RISKS</div>
+                <div style={{ fontSize: 'var(--font-3xs)', fontWeight: 800, color: 'var(--rust)', letterSpacing: '0.5px', fontFamily: 'var(--mono)', marginBottom: '2px' }}>RISKS</div>
                 {risks.slice(0, 3).map((r: any, i: number) => (
-                  <div key={i} style={{ fontSize: '11px', color: 'var(--text-2)', lineHeight: 1.4, display: 'flex', gap: '4px', marginBottom: '1px' }}>
-                    <span style={{ color: (r.severity === 'critical' || r.severity === 'high') ? 'var(--rust)' : 'var(--amber)', fontFamily: 'var(--mono)', fontSize: '9px', fontWeight: 700, flexShrink: 0, marginTop: '1px' }}>
+                  <div key={i} style={{ fontSize: 'var(--font-xs)', color: 'var(--text-2)', lineHeight: 1.4, display: 'flex', gap: '4px', marginBottom: '1px' }}>
+                    <span style={{ color: (r.severity === 'critical' || r.severity === 'high') ? 'var(--rust)' : 'var(--amber)', fontFamily: 'var(--mono)', fontSize: 'var(--font-3xs)', fontWeight: 700, flexShrink: 0, marginTop: '1px' }}>
                       {String(r.severity || 'med').toUpperCase()}
                     </span>
                     <span>{String(r.description || '')}</span>
@@ -297,9 +297,9 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
             {/* Recommended Actions */}
             {recs.length > 0 && (
               <div style={{ marginBottom: '4px' }}>
-                <div style={{ fontSize: '9px', fontWeight: 800, color: 'var(--green)', letterSpacing: '0.5px', fontFamily: 'var(--mono)', marginBottom: '2px' }}>RECOMMENDATIONS</div>
+                <div style={{ fontSize: 'var(--font-3xs)', fontWeight: 800, color: 'var(--green)', letterSpacing: '0.5px', fontFamily: 'var(--mono)', marginBottom: '2px' }}>RECOMMENDATIONS</div>
                 {recs.slice(0, 3).map((rec, i) => (
-                  <div key={i} style={{ fontSize: '11px', color: 'var(--text-2)', lineHeight: 1.4, paddingLeft: '8px', borderLeft: '2px solid var(--border)', marginBottom: '2px' }}>
+                  <div key={i} style={{ fontSize: 'var(--font-xs)', color: 'var(--text-2)', lineHeight: 1.4, paddingLeft: '8px', borderLeft: '2px solid var(--border)', marginBottom: '2px' }}>
                     {rec}
                   </div>
                 ))}
@@ -340,7 +340,7 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
 
             return (
               <details key={i} style={{
-                margin: '0 8px 4px', borderRadius: '4px', fontSize: '12px',
+                margin: '0 8px 4px', borderRadius: '4px', fontSize: 'var(--font-sm)',
                 animation: isNew
                   ? 'forgeSlide 0.4s ease both, forgeGlow 2.4s ease both'
                   : 'forgeSlide 0.3s ease both',
@@ -357,7 +357,7 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                       {isNew ? (
                         <span style={{
-                          fontSize: 9, color: 'var(--bg-deep)', background: sideColor,
+                          fontSize: 'var(--font-3xs)', color: 'var(--bg-deep)', background: sideColor,
                           textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: 900,
                           fontFamily: 'var(--mono)', padding: '2px 6px', borderRadius: 3,
                           boxShadow: `0 0 8px color-mix(in srgb, ${sideColor} 40%, transparent)`,
@@ -366,7 +366,7 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
                         </span>
                       ) : (
                         <span style={{
-                          fontSize: 9, color: 'var(--green)', background: 'rgba(106,173,72,.12)',
+                          fontSize: 'var(--font-3xs)', color: 'var(--green)', background: 'rgba(106,173,72,.12)',
                           textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 800,
                           fontFamily: 'var(--mono)', padding: '1px 6px', borderRadius: 3,
                           border: '1px solid rgba(106,173,72,.3)',
@@ -375,7 +375,7 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
                         </span>
                       )}
                       {!isNew && t.firstForgedTurn != null && (
-                        <span style={{ fontSize: 9, color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
+                        <span style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
                           first forged T{t.firstForgedTurn}
                           {t.firstForgedDepartment && t.firstForgedDepartment !== t.department
                             ? ` · ${t.firstForgedDepartment}`
@@ -384,7 +384,7 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
                       )}
                       {hasFullSchema && (
                         <span style={{
-                          fontSize: 8, color: 'var(--teal)', fontFamily: 'var(--mono)',
+                          fontSize: 'var(--font-3xs)', color: 'var(--teal)', fontFamily: 'var(--mono)',
                           padding: '1px 5px', borderRadius: 2,
                           background: 'rgba(76,168,168,.1)', border: '1px solid rgba(76,168,168,.25)',
                         }}>
@@ -392,15 +392,15 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
                         </span>
                       )}
                     </div>
-                    <span style={{ fontSize: '13px', color: 'var(--text-1)', fontWeight: 600, lineHeight: 1.3 }}>
+                    <span style={{ fontSize: 'var(--font-md)', color: 'var(--text-1)', fontWeight: 600, lineHeight: 1.3 }}>
                       {String(t.description || t.name || '')}
                     </span>
-                    <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginTop: '2px' }}>
+                    <span style={{ display: 'block', fontSize: 'var(--font-xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginTop: '2px' }}>
                       {t.name} {t.mode ? `(${t.mode})` : ''}
                     </span>
                   </div>
                   <span style={{
-                    padding: '2px 6px', borderRadius: '3px', fontSize: '9px', fontWeight: 800,
+                    padding: '2px 6px', borderRadius: '3px', fontSize: 'var(--font-3xs)', fontWeight: 800,
                     fontFamily: 'var(--mono)', whiteSpace: 'nowrap', flexShrink: 0,
                     background: approved ? 'rgba(106,173,72,.15)' : 'rgba(224,101,48,.1)',
                     color: approved ? 'var(--green)' : 'var(--rust)',
@@ -417,7 +417,7 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); setInspectingTool(t.name || ''); }}
                     aria-label={`Inspect tool ${t.name || ''}`}
                     style={{
-                      fontSize: 9, fontFamily: 'var(--mono)', fontWeight: 700,
+                      fontSize: 'var(--font-3xs)', fontFamily: 'var(--mono)', fontWeight: 700,
                       padding: '2px 6px', borderRadius: 3,
                       border: '1px solid rgba(232,180,74,0.35)',
                       background: 'rgba(232,180,74,0.06)',
@@ -428,16 +428,16 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
                     INSPECT
                   </button>
                 </summary>
-                <div style={{ padding: '0 12px 8px', fontSize: '11px' }}>
+                <div style={{ padding: '0 12px 8px', fontSize: 'var(--font-xs)' }}>
                   {t.crisis && (
                     <div style={{ color: 'var(--text-3)', marginBottom: '4px' }}>
-                      <span style={{ fontWeight: 700, fontFamily: 'var(--mono)', fontSize: '9px', letterSpacing: '0.5px' }}>CRISIS: </span>
+                      <span style={{ fontWeight: 700, fontFamily: 'var(--mono)', fontSize: 'var(--font-3xs)', letterSpacing: '0.5px' }}>CRISIS: </span>
                       {String(t.crisis)}
                     </div>
                   )}
                   {t.department && (
                     <div style={{ color: 'var(--text-3)', marginBottom: '4px' }}>
-                      <span style={{ fontWeight: 700, fontFamily: 'var(--mono)', fontSize: '9px', letterSpacing: '0.5px' }}>DEPT: </span>
+                      <span style={{ fontWeight: 700, fontFamily: 'var(--mono)', fontSize: 'var(--font-3xs)', letterSpacing: '0.5px' }}>DEPT: </span>
                       {String(t.department)}
                     </div>
                   )}
@@ -454,8 +454,8 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
 
                   {t.output && (
                     <details style={{ marginTop: '4px' }}>
-                      <summary style={{ fontSize: '10px', fontWeight: 600, cursor: 'pointer', color: sideColor, fontFamily: 'var(--mono)' }}>Raw Output</summary>
-                      <pre style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)', borderRadius: '4px', padding: '8px', overflow: 'auto', maxHeight: '200px', fontSize: '10px', fontFamily: 'var(--mono)', color: 'var(--text-2)', lineHeight: 1.5, whiteSpace: 'pre-wrap', marginTop: '4px' }}>
+                      <summary style={{ fontSize: 'var(--font-2xs)', fontWeight: 600, cursor: 'pointer', color: sideColor, fontFamily: 'var(--mono)' }}>Raw Output</summary>
+                      <pre style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)', borderRadius: '4px', padding: '8px', overflow: 'auto', maxHeight: '200px', fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', color: 'var(--text-2)', lineHeight: 1.5, whiteSpace: 'pre-wrap', marginTop: '4px' }}>
                         {typeof t.output === 'object' ? JSON.stringify(t.output, null, 2) : String(t.output)}
                       </pre>
                     </details>
@@ -502,22 +502,22 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
           {/* Header: DECISION #N  tools · citations  BADGE */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
             <span>
-              <span style={{ fontWeight: 800, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', color: sideColor }}>
+              <span style={{ fontWeight: 800, fontSize: 'var(--font-xs)', textTransform: 'uppercase', letterSpacing: '0.5px', color: sideColor }}>
                 DECISION #{turnNum}
               </span>
-              <span style={{ fontSize: '11px', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginLeft: '8px' }}>
+              <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginLeft: '8px' }}>
                 {toolCount} tools &middot; {citeCount} citations
               </span>
             </span>
             <Badge outcome={outcome} />
           </div>
           {/* Decision text */}
-          <div style={{ color: 'var(--text-1)', lineHeight: 1.5, fontSize: '13px' }}>
+          <div style={{ color: 'var(--text-1)', lineHeight: 1.5, fontSize: 'var(--font-md)' }}>
             {decision}
           </div>
           {/* System deltas in teal mono */}
           {systemDeltas && Object.keys(systemDeltas).length > 0 && (
-            <div style={{ marginTop: '4px', fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--teal)' }}>
+            <div style={{ marginTop: '4px', fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)', color: 'var(--teal)' }}>
               {Object.entries(systemDeltas).map(([k, v]) => (
                 <span key={k} style={{ marginRight: '4px' }}>
                   {k} {v > 0 ? '+' : ''}{typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : v}
@@ -534,12 +534,12 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
               then rationale, then policies. */}
           {(rationale || reasoning || policies.length > 0) && (
             <details style={{ marginTop: '4px' }}>
-              <summary style={{ fontSize: '12px', color: sideColor, fontWeight: 600, cursor: 'pointer' }}>
+              <summary style={{ fontSize: 'var(--font-sm)', color: sideColor, fontWeight: 600, cursor: 'pointer' }}>
                 Full reasoning &amp; policies
               </summary>
-              <div style={{ marginTop: '4px', fontSize: '11px', color: 'var(--text-2)', lineHeight: 1.5 }}>
+              <div style={{ marginTop: '4px', fontSize: 'var(--font-xs)', color: 'var(--text-2)', lineHeight: 1.5 }}>
                 {reasoning && (
-                  <div style={{ marginBottom: '6px', whiteSpace: 'pre-wrap', fontFamily: 'var(--mono)', fontSize: '10.5px', color: 'var(--text-1)', background: 'var(--bg-card)', padding: '6px 8px', borderRadius: '3px', border: '1px solid var(--border)' }}>
+                  <div style={{ marginBottom: '6px', whiteSpace: 'pre-wrap', fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)', color: 'var(--text-1)', background: 'var(--bg-card)', padding: '6px 8px', borderRadius: '3px', border: '1px solid var(--border)' }}>
                     {reasoning}
                   </div>
                 )}
@@ -557,8 +557,8 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
       const entries = Object.values(dd.agents as Record<string, any> || {});
       if (!entries.length) return null;
       return (
-        <div style={{ padding: '3px 10px', fontSize: '11px', fontFamily: 'var(--mono)', color: 'var(--text-2)', lineHeight: 1.4 }}>
-          <span style={{ color: 'var(--text-3)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>DRIFT </span>
+        <div style={{ padding: '3px 10px', fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)', color: 'var(--text-2)', lineHeight: 1.4 }}>
+          <span style={{ color: 'var(--text-3)', fontSize: 'var(--font-2xs)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>DRIFT </span>
           {entries.slice(0, 3).map((c: any, i: number) => (
             <span key={i}>
               <span style={{ color: sideColor }}>{c.name?.split(' ')[0]}</span>
@@ -588,14 +588,14 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
       return (
         <div style={{ ...cardBase, margin: '0 8px 4px', padding: '6px 10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', fontFamily: 'var(--mono)', color: sideColor }}>
+            <span style={{ fontSize: 'var(--font-2xs)', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', fontFamily: 'var(--mono)', color: sideColor }}>
               {total} VOICES
             </span>
             <div style={{ flex: 1, display: 'flex', height: '10px', borderRadius: '2px', overflow: 'hidden', gap: '1px' }}>
               {segments.map(m => <div key={m.mood} style={{ flex: m.pct, background: m.bg }} title={`${m.pct}% ${m.mood}`} />)}
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '10px', fontSize: '11px', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', gap: '10px', fontSize: 'var(--font-xs)', marginBottom: '4px' }}>
             {segments.slice(0, 3).map(m => (
               <span key={m.mood} style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', display: 'inline-block', background: m.bg }} />
@@ -604,27 +604,27 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
             ))}
           </div>
           <details>
-            <summary style={{ fontSize: '10px', fontWeight: 600, cursor: 'pointer', color: sideColor, fontFamily: 'var(--mono)' }}>quotes ({reactions.length})</summary>
+            <summary style={{ fontSize: 'var(--font-2xs)', fontWeight: 600, cursor: 'pointer', color: sideColor, fontFamily: 'var(--mono)' }}>quotes ({reactions.length})</summary>
             <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {reactions.slice(0, 4).map((r, i) => (
                 <Tooltip key={i} dot content={
                   <div>
                     <b style={{ color: sideColor, display: 'block', marginBottom: '4px' }}>{r.name}</b>
-                    <div style={{ fontSize: '11px', color: 'var(--text-2)' }}>{r.role} in {r.department} {r.age ? `· Age ${r.age}` : ''}</div>
-                    <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', marginTop: '6px', color: 'var(--text-1)' }}>O:{r.hexaco?.O} C:{r.hexaco?.C} E:{r.hexaco?.E} A:{r.hexaco?.A} Em:{r.hexaco?.Em} HH:{r.hexaco?.HH}</div>
-                    <div style={{ fontSize: '11px', marginTop: '4px' }}>Bone: {r.boneDensity}% · Radiation: {r.radiation}mSv · Psych: {r.psychScore}</div>
+                    <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-2)' }}>{r.role} in {r.department} {r.age ? `· Age ${r.age}` : ''}</div>
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)', marginTop: '6px', color: 'var(--text-1)' }}>O:{r.hexaco?.O} C:{r.hexaco?.C} E:{r.hexaco?.E} A:{r.hexaco?.A} Em:{r.hexaco?.Em} HH:{r.hexaco?.HH}</div>
+                    <div style={{ fontSize: 'var(--font-xs)', marginTop: '4px' }}>Bone: {r.boneDensity}% · Radiation: {r.radiation}mSv · Psych: {r.psychScore}</div>
                     <div style={{ fontStyle: 'italic', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--border)', lineHeight: 1.5 }}>&ldquo;{r.quote}&rdquo;</div>
-                    <div style={{ fontSize: '11px', fontWeight: 700, marginTop: '4px', color: moodColors[r.mood] || 'var(--text-3)' }}>{String(r.mood || '').toUpperCase()} · intensity {r.intensity?.toFixed?.(2) || '?'}</div>
-                    {r.memory?.beliefs?.length > 0 && <div style={{ fontSize: '10px', marginTop: '6px', color: 'var(--text-3)' }}>Beliefs: {r.memory.beliefs.slice(0, 2).join('; ')}</div>}
+                    <div style={{ fontSize: 'var(--font-xs)', fontWeight: 700, marginTop: '4px', color: moodColors[r.mood] || 'var(--text-3)' }}>{String(r.mood || '').toUpperCase()} · intensity {r.intensity?.toFixed?.(2) || '?'}</div>
+                    {r.memory?.beliefs?.length > 0 && <div style={{ fontSize: 'var(--font-2xs)', marginTop: '6px', color: 'var(--text-3)' }}>Beliefs: {r.memory.beliefs.slice(0, 2).join('; ')}</div>}
                   </div>
                 }>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', fontSize: '11px', padding: '3px 0', cursor: 'pointer', borderBottom: i < Math.min(reactions.length, 4) - 1 ? '1px solid rgba(48,42,34,.3)' : 'none' }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', fontSize: 'var(--font-xs)', padding: '3px 0', cursor: 'pointer', borderBottom: i < Math.min(reactions.length, 4) - 1 ? '1px solid rgba(48,42,34,.3)' : 'none' }}>
                     <span style={{ fontWeight: 700, color: sideColor, flexShrink: 0, minWidth: '90px' }}>{r.name}</span>
                     <span style={{ flex: 1, color: 'var(--text-2)', fontStyle: 'italic', lineHeight: 1.4, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       &ldquo;{String(r.quote || '')}&rdquo;
                     </span>
                     <span style={{
-                      fontSize: '9px', fontWeight: 800, flexShrink: 0, fontFamily: 'var(--mono)',
+                      fontSize: 'var(--font-3xs)', fontWeight: 800, flexShrink: 0, fontFamily: 'var(--mono)',
                       padding: '1px 5px', borderRadius: '3px', whiteSpace: 'nowrap',
                       color: moodColors[r.mood] || 'var(--text-3)',
                       background: `color-mix(in srgb, ${moodColors[r.mood] || 'var(--text-3)'} 12%, transparent)`,
@@ -649,15 +649,15 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
           {posts.slice(0, 3).map((p, i) => (
             <Tooltip key={i} dot content={
               <div>
-                <b style={{ color: sideColor }}>{p.name}</b> <span style={{ color: 'var(--text-3)', fontSize: '11px' }}>{p.role} {p.department}</span>
+                <b style={{ color: sideColor }}>{p.name}</b> <span style={{ color: 'var(--text-3)', fontSize: 'var(--font-xs)' }}>{p.role} {p.department}</span>
                 <div style={{ marginTop: '6px', lineHeight: 1.6, color: 'var(--text-1)' }}>{p.post}</div>
-                <div style={{ marginTop: '4px', fontSize: '11px', color: moodColors[p.mood] || 'var(--text-3)' }}>{String(p.mood || '').toUpperCase()} · {p.likes || 0} likes · {p.replies || 0} replies</div>
+                <div style={{ marginTop: '4px', fontSize: 'var(--font-xs)', color: moodColors[p.mood] || 'var(--text-3)' }}>{String(p.mood || '').toUpperCase()} · {p.likes || 0} likes · {p.replies || 0} replies</div>
               </div>
             }>
-              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', fontSize: '11px', padding: '2px 0', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', fontSize: 'var(--font-xs)', padding: '2px 0', cursor: 'pointer' }}>
                 <span style={{ fontWeight: 700, color: sideColor, flexShrink: 0 }}>{p.name}</span>
                 <span style={{ flex: 1, color: 'var(--text-2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{String(p.post || '')}</span>
-                <span style={{ fontSize: '9px', color: 'var(--text-3)', flexShrink: 0 }}>&hearts;{p.likes || 0}</span>
+                <span style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-3)', flexShrink: 0 }}>&hearts;{p.likes || 0}</span>
               </div>
             </Tooltip>
           ))}
@@ -668,7 +668,7 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
     case 'turn_done':
       return (
         <div style={{
-          textAlign: 'center', padding: '5px 0', fontSize: '11px', color: 'var(--text-3)',
+          textAlign: 'center', padding: '5px 0', fontSize: 'var(--font-xs)', color: 'var(--text-3)',
           fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px',
           borderTop: '1px solid var(--border)', marginTop: '3px',
           fontFamily: 'var(--mono)',
@@ -690,7 +690,7 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
             background: 'rgba(232, 180, 74, 0.08)',
             border: '1px solid var(--amber-dim, #8a6a2a)',
             borderLeft: `3px solid ${sideColor}`,
-            fontSize: '11px',
+            fontSize: 'var(--font-xs)',
             color: 'var(--text-2)',
             fontFamily: 'var(--mono)',
           }}
@@ -700,18 +700,18 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
           <div style={{ fontWeight: 700, color: 'var(--amber)', marginBottom: '2px' }}>
             ⚠ SCHEMA FALLBACK — {schemaName}
           </div>
-          <div style={{ color: 'var(--text-3)', fontSize: '10px' }}>
+          <div style={{ color: 'var(--text-3)', fontSize: 'var(--font-2xs)' }}>
             site: {site || 'n/a'}
           </div>
           {preview && (
             <details style={{ marginTop: '3px' }}>
-              <summary style={{ fontSize: '10px', color: 'var(--text-3)', cursor: 'pointer' }}>
+              <summary style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', cursor: 'pointer' }}>
                 Raw output preview
               </summary>
               <pre style={{
                 margin: '3px 0 0', padding: '4px 6px',
                 background: 'var(--bg-card)', border: '1px solid var(--border)',
-                borderRadius: '3px', fontSize: '10px', whiteSpace: 'pre-wrap',
+                borderRadius: '3px', fontSize: 'var(--font-2xs)', whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
               }}>
                 {preview}
@@ -773,14 +773,14 @@ function ToolDetailModal({ entry, fallbackName, onClose }: {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 9, fontFamily: 'var(--mono)', fontWeight: 800, letterSpacing: '0.12em', color: 'var(--amber)', textTransform: 'uppercase', marginBottom: 4 }}>
+            <div style={{ fontSize: 'var(--font-3xs)', fontFamily: 'var(--mono)', fontWeight: 800, letterSpacing: '0.12em', color: 'var(--amber)', textTransform: 'uppercase', marginBottom: 4 }}>
               FORGED TOOL [{entry?.n ?? '?'}]
             </div>
-            <div style={{ fontSize: 16, fontWeight: 800, fontFamily: 'var(--mono)', color: 'var(--text-1)', marginBottom: 4 }}>
+            <div style={{ fontSize: 'var(--font-xl)', fontWeight: 800, fontFamily: 'var(--mono)', color: 'var(--text-1)', marginBottom: 4 }}>
               {entry?.name || fallbackName}
             </div>
             {entry?.description && entry.description !== entry.name && (
-              <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.5 }}>
+              <div style={{ fontSize: 'var(--font-md)', color: 'var(--text-2)', lineHeight: 1.5 }}>
                 {entry.description}
               </div>
             )}
@@ -788,7 +788,7 @@ function ToolDetailModal({ entry, fallbackName, onClose }: {
           <button
             onClick={onClose}
             aria-label="Close"
-            style={{ background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: 4, marginLeft: 12 }}
+            style={{ background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer', fontSize: 'var(--font-2xl)', lineHeight: 1, padding: 4, marginLeft: 12 }}
           >
             ×
           </button>
@@ -797,7 +797,7 @@ function ToolDetailModal({ entry, fallbackName, onClose }: {
         <div style={{ overflowY: 'auto', flex: 1, padding: '4px 2px' }}>
           {entry ? (
             <>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12, fontSize: 11, fontFamily: 'var(--mono)' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12, fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)' }}>
                 <Pill label={`${entry.mode}`} color="var(--text-3)" />
                 <Pill label={entry.approved ? `PASS ${entry.confidence.toFixed(2)}` : 'FAIL'} color={entry.approved ? 'var(--green)' : 'var(--rust)'} />
                 <Pill label={`first forged T${entry.firstForgedTurn} · ${entry.firstForgedDepartment}`} color="var(--amber)" />
@@ -817,7 +817,7 @@ function ToolDetailModal({ entry, fallbackName, onClose }: {
               )}
               {!entry.inputSchema && !entry.outputSchema && (entry.inputFields.length > 0 || entry.outputFields.length > 0) && (
                 <ModalSection title="FIELDS (DERIVED)">
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'var(--mono)', fontSize: 11 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)' }}>
                     {entry.inputFields.length > 0 && <div><span style={{ color: 'var(--teal)' }}>in:</span> {entry.inputFields.join(', ')}</div>}
                     {entry.outputFields.length > 0 && <div><span style={{ color: 'var(--green)' }}>out:</span> {entry.outputFields.join(', ')}</div>}
                   </div>
@@ -840,7 +840,7 @@ function ToolDetailModal({ entry, fallbackName, onClose }: {
                           borderLeft: `3px solid ${
                             h.rejected ? 'var(--rust)' : h.isReforge ? 'var(--amber)' : 'var(--green)'
                           }`,
-                          fontFamily: 'var(--mono)', fontSize: 11, lineHeight: 1.5,
+                          fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)', lineHeight: 1.5,
                         }}
                       >
                         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
@@ -850,19 +850,19 @@ function ToolDetailModal({ entry, fallbackName, onClose }: {
                           <span style={{ color: 'var(--text-3)' }}>· {h.eventTitle}</span>
                           <span style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
                             <span style={{
-                              padding: '1px 6px', borderRadius: 2, fontSize: 9, fontWeight: 800,
+                              padding: '1px 6px', borderRadius: 2, fontSize: 'var(--font-3xs)', fontWeight: 800,
                               color: h.rejected ? 'var(--rust)' : h.isReforge ? 'var(--amber)' : 'var(--green)',
                               background: 'color-mix(in srgb, ' + (h.rejected ? 'var(--rust)' : h.isReforge ? 'var(--amber)' : 'var(--green)') + ' 12%, transparent)',
                             }}>
                               {h.rejected ? 'JUDGE REJECTED' : h.isReforge ? 'RE-FORGE' : i === 0 ? 'FORGE' : 'REUSE'}
                             </span>
                             {typeof h.confidence === 'number' && (
-                              <span style={{ color: 'var(--text-3)', fontSize: 9 }}>conf {h.confidence.toFixed(2)}</span>
+                              <span style={{ color: 'var(--text-3)', fontSize: 'var(--font-3xs)' }}>conf {h.confidence.toFixed(2)}</span>
                             )}
                           </span>
                         </div>
                         {h.output && (
-                          <div style={{ color: 'var(--text-2)', marginTop: 3, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 10 }}>
+                          <div style={{ color: 'var(--text-2)', marginTop: 3, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 'var(--font-2xs)' }}>
                             {h.output.length > 200 ? h.output.slice(0, 200) + '…' : h.output}
                           </div>
                         )}
@@ -879,7 +879,7 @@ function ToolDetailModal({ entry, fallbackName, onClose }: {
               )}
             </>
           ) : (
-            <div style={{ fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic' }}>
+            <div style={{ fontSize: 'var(--font-sm)', color: 'var(--text-3)', fontStyle: 'italic' }}>
               Tool entry not yet in the registry — the specialist_done summary
               for this forge hasn't arrived yet. Try again in a moment.
             </div>
@@ -891,7 +891,7 @@ function ToolDetailModal({ entry, fallbackName, onClose }: {
 }
 
 const preStyle: React.CSSProperties = {
-  margin: '4px 0 0', padding: 10, fontSize: 11, lineHeight: 1.5,
+  margin: '4px 0 0', padding: 10, fontSize: 'var(--font-xs)', lineHeight: 1.5,
   fontFamily: 'var(--mono)', color: 'var(--text-2)',
   background: 'var(--bg-deep)', border: '1px solid var(--border)', borderRadius: 4,
   whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 280, overflow: 'auto',
@@ -903,7 +903,7 @@ function Pill({ label, color }: { label: string; color: string }) {
       padding: '2px 8px', borderRadius: 3,
       color, background: `color-mix(in srgb, ${color} 12%, transparent)`,
       border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`,
-      fontWeight: 700, fontSize: 10, letterSpacing: '0.04em',
+      fontWeight: 700, fontSize: 'var(--font-2xs)', letterSpacing: '0.04em',
     }}>
       {label}
     </span>
@@ -914,7 +914,7 @@ function ModalSection({ title, children }: { title: string; children: React.Reac
   return (
     <div style={{ marginBottom: 14 }}>
       <div style={{
-        fontSize: 9, fontFamily: 'var(--mono)', fontWeight: 800,
+        fontSize: 'var(--font-3xs)', fontFamily: 'var(--mono)', fontWeight: 800,
         color: 'var(--amber)', letterSpacing: '0.08em',
         textTransform: 'uppercase', marginBottom: 6,
       }}>
@@ -948,7 +948,7 @@ function SchemaBlock({ label, color, schema, fields }: {
     if (!fields || fields.length === 0) return null;
     return (
       <div style={{ marginBottom: 4 }}>
-        <span style={{ fontWeight: 700, color, fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.5px' }}>
+        <span style={{ fontWeight: 700, color, fontFamily: 'var(--mono)', fontSize: 'var(--font-3xs)', letterSpacing: '0.5px' }}>
           {label} FIELDS:{' '}
         </span>
         <span style={{ color: 'var(--text-2)', fontFamily: 'var(--mono)' }}>
@@ -962,13 +962,13 @@ function SchemaBlock({ label, color, schema, fields }: {
   return (
     <div style={{ marginBottom: 4 }}>
       <div style={{
-        fontWeight: 700, color, fontFamily: 'var(--mono)', fontSize: 9,
+        fontWeight: 700, color, fontFamily: 'var(--mono)', fontSize: 'var(--font-3xs)',
         letterSpacing: '0.5px', marginBottom: 2,
       }}>
         {label} SCHEMA
       </div>
       <table style={{
-        borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 10,
+        borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)',
         width: '100%', tableLayout: 'fixed',
       }}>
         <tbody>

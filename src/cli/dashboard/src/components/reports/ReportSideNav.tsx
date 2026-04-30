@@ -61,7 +61,7 @@ export function ReportSideNav(props: ReportSideNavProps) {
   }, [items, scrollRoot]);
 
   const linkStyle = useMemo((): React.CSSProperties => ({
-    display: 'block', padding: '4px 10px', fontSize: 11, fontFamily: 'var(--mono)',
+    display: 'block', padding: '4px 10px', fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)',
     fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
     color: 'var(--text-3)', textDecoration: 'none', borderRadius: 3,
   }), []);

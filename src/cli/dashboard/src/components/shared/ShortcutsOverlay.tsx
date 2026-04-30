@@ -76,7 +76,7 @@ export function ShortcutsOverlay() {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <h2 style={{
-            fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 800,
+            fontFamily: 'var(--mono)', fontSize: 'var(--font-lg)', fontWeight: 800,
             color: 'var(--amber)', letterSpacing: '0.06em',
             textTransform: 'uppercase', margin: 0,
           }}>
@@ -87,7 +87,7 @@ export function ShortcutsOverlay() {
             aria-label="Close shortcuts"
             style={{
               background: 'none', border: 'none', color: 'var(--text-3)',
-              cursor: 'pointer', fontSize: 18, lineHeight: 1,
+              cursor: 'pointer', fontSize: 'var(--font-2xl)', lineHeight: 1,
               padding: 4,
             }}
           >
@@ -101,7 +101,7 @@ export function ShortcutsOverlay() {
           return (
             <section key={scope} style={{ marginBottom: 16 }}>
               <h3 style={{
-                fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 700,
+                fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)', fontWeight: 700,
                 color: 'var(--text-3)', letterSpacing: '0.08em',
                 textTransform: 'uppercase', margin: '0 0 6px',
               }}>
@@ -114,7 +114,7 @@ export function ShortcutsOverlay() {
                     style={{
                       display: 'grid', gridTemplateColumns: '110px 1fr', gap: 12,
                       padding: '5px 0', borderTop: '1px solid var(--border)',
-                      fontSize: 13,
+                      fontSize: 'var(--font-md)',
                     }}
                   >
                     <span style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
@@ -126,7 +126,7 @@ export function ShortcutsOverlay() {
                             padding: '2px 7px', borderRadius: 4,
                             background: 'var(--bg-deep)',
                             border: '1px solid var(--border)',
-                            fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 700,
+                            fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)', fontWeight: 700,
                             color: 'var(--amber)', minWidth: 18, textAlign: 'center',
                           }}
                         >
@@ -146,7 +146,7 @@ export function ShortcutsOverlay() {
 
         <div style={{
           borderTop: '1px solid var(--border)', paddingTop: 10, marginTop: 4,
-          fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--mono)',
+          fontSize: 'var(--font-xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)',
           textAlign: 'center',
         }}>
           press <kbd style={{

@@ -62,7 +62,7 @@ const toolBtnStyle: React.CSSProperties = {
   border: '1px solid var(--border)',
   padding: '2px 10px',
   borderRadius: '3px',
-  fontSize: '10px',
+  fontSize: 'var(--font-2xs)',
   cursor: 'pointer',
   fontWeight: 600,
   fontFamily: 'var(--mono)',
@@ -175,14 +175,14 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
         <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Paracosm home">
           <ParacosmLogo size={20} />
         </a>
-        <a href="/" style={{ fontFamily: 'var(--mono)', fontSize: '13px', fontWeight: 700, color: 'var(--text-1)', textDecoration: 'none', letterSpacing: '.08em' }}>
+        <a href="/" style={{ fontFamily: 'var(--mono)', fontSize: 'var(--font-md)', fontWeight: 700, color: 'var(--text-1)', textDecoration: 'none', letterSpacing: '.08em' }}>
           PARA<span style={{ color: 'var(--amber)' }}>COSM</span>
         </a>
-        <a href="https://agentos.sh" target="_blank" rel="noopener" className="topbar-agentos" style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '1px', color: 'var(--rust)', fontFamily: 'var(--mono)', textDecoration: 'none' }} title="AgentOS Runtime">
+        <a href="https://agentos.sh" target="_blank" rel="noopener" className="topbar-agentos" style={{ fontSize: 'var(--font-3xs)', fontWeight: 700, letterSpacing: '1px', color: 'var(--rust)', fontFamily: 'var(--mono)', textDecoration: 'none' }} title="AgentOS Runtime">
           AGENTOS
         </a>
-        <span className="topbar-agentos" style={{ color: 'var(--border)', fontSize: '12px' }} aria-hidden="true">|</span>
-        <span className="topbar-scenario" style={{ fontSize: '12px', fontWeight: 700, color: 'var(--amber)', fontFamily: 'var(--mono)' }}>
+        <span className="topbar-agentos" style={{ color: 'var(--border)', fontSize: 'var(--font-sm)' }} aria-hidden="true">|</span>
+        <span className="topbar-scenario" style={{ fontSize: 'var(--font-sm)', fontWeight: 700, color: 'var(--amber)', fontFamily: 'var(--mono)' }}>
           {scenario.labels.name}
         </span>
       </div>
@@ -190,7 +190,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
       {/* Center: Turn info + progress */}
       <div className="flex items-center gap-3 flex-1 justify-center" style={{ minWidth: 0 }}>
         {gameState.turn > 0 && (
-          <div className="topbar-meta flex items-center gap-2 shrink-0" style={{ fontSize: '11px', fontFamily: 'var(--mono)', color: 'var(--text-2)', minWidth: 0 }}>
+          <div className="topbar-meta flex items-center gap-2 shrink-0" style={{ fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)', color: 'var(--text-2)', minWidth: 0 }}>
             {/* Compact T / Y / S tokens wrapped in Tooltip portal so
                 viewers can hover for the full meaning. The token stays
                 short so the whole topbar meta row fits at mid-laptop
@@ -199,7 +199,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
             <Tooltip
               content={
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--amber)', marginBottom: 6 }}>
+                  <div style={{ fontSize: 'var(--font-md)', fontWeight: 800, color: 'var(--amber)', marginBottom: 6 }}>
                     Turn {gameState.turn} / {gameState.maxTurns}
                   </div>
                   <div>
@@ -221,7 +221,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
             <Tooltip
               content={
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--amber)', marginBottom: 6 }}>
+                  <div style={{ fontSize: 'var(--font-md)', fontWeight: 800, color: 'var(--amber)', marginBottom: 6 }}>
                     In-sim time {gameState.time}
                   </div>
                   <div>
@@ -242,7 +242,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
             <Tooltip
               content={
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--amber)', marginBottom: 6 }}>
+                  <div style={{ fontSize: 'var(--font-md)', fontWeight: 800, color: 'var(--amber)', marginBottom: 6 }}>
                     Random seed {gameState.seed}
                   </div>
                   <div>
@@ -270,7 +270,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
                 <Tooltip
                   content={
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--amber)', marginBottom: 6 }}>
+                      <div style={{ fontSize: 'var(--font-md)', fontWeight: 800, color: 'var(--amber)', marginBottom: 6 }}>
                         ⚠ {total} validation fallback{total === 1 ? '' : 's'}
                       </div>
                       <div style={{ marginBottom: 8 }}>
@@ -283,7 +283,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
                       <div style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid var(--border)' }}>
                         {sse.validationFallbacks.map(b => (
                           <div key={b.schemaName} style={{
-                            fontFamily: 'var(--mono)', fontSize: 11,
+                            fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)',
                             color: 'var(--text-2)',
                             display: 'flex', justifyContent: 'space-between', gap: 12,
                           }}>
@@ -305,7 +305,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
                       background: 'rgba(232, 180, 74, 0.14)',
                       border: '1px solid var(--amber, #e8b44a)',
                       color: 'var(--amber, #e8b44a)',
-                      fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 700,
+                      fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)', fontWeight: 700,
                     }}
                   >
                     <span aria-hidden="true">⚠</span>
@@ -316,7 +316,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
             })()}
           </div>
         )}
-        <div className="topbar-center hidden md:block truncate" style={{ color: 'var(--text-3)', fontFamily: 'var(--mono)', fontSize: '10px' }}>
+        <div className="topbar-center hidden md:block truncate" style={{ color: 'var(--text-3)', fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)' }}>
           {gameState.turn === 0 ? 'Same input. Different decisions. Emergent divergence.' : ''}
         </div>
       </div>
@@ -338,7 +338,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
             color: 'var(--text-2)',
-            fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 700,
+            fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)', fontWeight: 700,
             letterSpacing: '0.5px', textDecoration: 'none',
             transition: 'border-color 0.15s, color 0.15s, background 0.15s',
           }}
@@ -368,7 +368,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
               background: 'var(--bg-card)', color: 'var(--amber)',
               border: '1px solid var(--amber-dim, var(--border))',
               padding: '2px 10px', borderRadius: '3px',
-              fontSize: '10px', cursor: 'pointer', fontWeight: 600,
+              fontSize: 'var(--font-2xs)', cursor: 'pointer', fontWeight: 600,
               fontFamily: 'var(--mono)', letterSpacing: '0.3px',
             }}
             title="Interactive guided tour with sample data"
@@ -399,7 +399,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
               padding: '3px 14px', borderRadius: '4px',
               background: 'var(--bg-card)', color: 'var(--text-3)',
               border: '1px solid var(--border)',
-              fontSize: '11px', fontWeight: 700, fontFamily: 'var(--mono)',
+              fontSize: 'var(--font-xs)', fontWeight: 700, fontFamily: 'var(--mono)',
               letterSpacing: '0.5px',
               cursor: 'wait',
             }}
@@ -432,7 +432,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
                 width: 28,
                 padding: '2px 0',
                 lineHeight: 1,
-                fontSize: 14,
+                fontSize: 'var(--font-lg)',
                 fontWeight: 800,
                 letterSpacing: '0.08em',
               }}
@@ -474,7 +474,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
                       border: 'none',
                       cursor: 'pointer',
                       fontFamily: 'var(--mono)',
-                      fontSize: 11,
+                      fontSize: 'var(--font-xs)',
                       fontWeight: 600,
                       borderRadius: 3,
                     }}
@@ -496,7 +496,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
                       border: 'none',
                       cursor: 'pointer',
                       fontFamily: 'var(--mono)',
-                      fontSize: 11,
+                      fontSize: 'var(--font-xs)',
                       fontWeight: 600,
                       borderRadius: 3,
                     }}
@@ -518,7 +518,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
                       border: 'none',
                       cursor: 'pointer',
                       fontFamily: 'var(--mono)',
-                      fontSize: 11,
+                      fontSize: 'var(--font-xs)',
                       fontWeight: 600,
                       borderRadius: 3,
                     }}
@@ -532,7 +532,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
           </div>
         )}
 
-        <span style={{ color: 'var(--border)', fontSize: '12px' }} aria-hidden="true">|</span>
+        <span style={{ color: 'var(--border)', fontSize: 'var(--font-sm)' }} aria-hidden="true">|</span>
 
         {/* Status. The text label hides under .topbar-status-text at
             narrow viewports (<640px) so the colored dot alone signals
@@ -540,7 +540,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
             carries the full explanation for hover, and the aria-label
             keeps screen-reader semantics intact. */}
         <span
-          style={{ fontSize: '10px', fontFamily: 'var(--mono)', color: statusColor, fontWeight: 700, cursor: 'help', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+          style={{ fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', color: statusColor, fontWeight: 700, cursor: 'help', display: 'inline-flex', alignItems: 'center', gap: 4 }}
           role="status"
           aria-live="polite"
           aria-label={`${statusText}. ${statusTitle}`}
@@ -554,7 +554,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
         <button
           onClick={() => setTheme(resolved === 'dark' ? 'light' : 'dark')}
           className="px-2 py-0.5 rounded cursor-pointer transition-colors"
-          style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)', fontSize: '11px' }}
+          style={{ background: 'var(--bg-card)', color: 'var(--text-3)', border: '1px solid var(--border)', fontSize: 'var(--font-xs)' }}
           title={`Switch to ${resolved === 'dark' ? 'light' : 'dark'} mode`}
           aria-label={`Switch to ${resolved === 'dark' ? 'light' : 'dark'} mode`}
         >

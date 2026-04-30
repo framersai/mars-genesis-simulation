@@ -13,7 +13,7 @@
 }
 
 .heading {
-  font-size: 16px;
+  font-size: var(--font-xl);
   font-family: var(--mono);
   margin-bottom: 12px;
   color: var(--side-color);
@@ -31,7 +31,7 @@
 
 .label {
   display: block;
-  font-size: 12px;
+  font-size: var(--font-sm);
   color: var(--text-3);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -47,7 +47,7 @@
   padding: 8px 12px;
   border-radius: 6px;
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: var(--font-lg);
   box-sizing: border-box;
   min-width: 0;
 
@@ -65,7 +65,7 @@
   @extend .input;
   min-height: 60px;
   resize: vertical;
-  font-size: 13px;
+  font-size: var(--font-md);
   line-height: 1.5;
 }
 
@@ -86,7 +86,7 @@
   @extend .input;
   width: auto;
   flex: 1;
-  font-size: 12px;
+  font-size: var(--font-sm);
   padding: 4px 8px;
 }
 

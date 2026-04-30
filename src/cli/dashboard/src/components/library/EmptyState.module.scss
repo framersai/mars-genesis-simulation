@@ -19,7 +19,7 @@
 .empty h2 {
   color: var(--text-1);
   margin: 0;
-  font-size: 1.1rem;
+  font-size: var(--font-xl);
 }
 
 .empty p {
@@ -40,7 +40,7 @@
     color: var(--amber);
     text-decoration: none;
     font-family: var(--mono);
-    font-size: 0.9rem;
+    font-size: var(--font-lg);
 
     &:hover { text-decoration: underline; }
   }
@@ -53,7 +53,7 @@
   padding: 0.5rem 1rem;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: var(--font-lg);
   font-family: var(--sans);
 
   &:hover {

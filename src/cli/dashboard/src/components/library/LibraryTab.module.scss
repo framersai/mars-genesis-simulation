@@ -17,7 +17,7 @@
 
 .title {
   font-family: var(--mono);
-  font-size: 1.4rem;
+  font-size: var(--font-2xl);
   color: var(--amber);
   margin: 0;
   letter-spacing: 0.04em;
@@ -41,7 +41,7 @@
   border-radius: 6px;
   cursor: pointer;
   color: var(--text-3);
-  font-size: 0.85rem;
+  font-size: var(--font-md);
   font-family: var(--sans);
   transition: color 200ms ease, background 200ms ease;
 }
@@ -61,5 +61,5 @@
   border-radius: 8px;
   padding: 1rem;
   color: var(--rust);
-  font-size: 0.9rem;
+  font-size: var(--font-lg);
 }

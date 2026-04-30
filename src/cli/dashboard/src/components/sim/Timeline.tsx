@@ -73,7 +73,7 @@ function outcomeBadge(outcome?: string) {
   const isSuccess = outcome.includes('success');
   const short = outcome.includes('risky') ? (isSuccess ? 'RS' : 'RF') : (isSuccess ? 'CS' : 'CF');
   return (
-    <span style={{ fontSize: '9px', fontWeight: 800, fontFamily: 'var(--mono)', padding: '1px 4px', borderRadius: '2px', background: `${isSuccess ? 'rgba(106,173,72,.15)' : 'rgba(224,101,48,.15)'}`, color, border: `1px solid ${color}` }}>
+    <span style={{ fontSize: 'var(--font-3xs)', fontWeight: 800, fontFamily: 'var(--mono)', padding: '1px 4px', borderRadius: '2px', background: `${isSuccess ? 'rgba(106,173,72,.15)' : 'rgba(224,101,48,.15)'}`, color, border: `1px solid ${color}` }}>
       {short}
     </span>
   );
@@ -84,33 +84,33 @@ function TurnTooltipContent({ t, sideColor }: { t: TurnEntry; sideColor: string 
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-        <b style={{ color: sideColor, fontSize: '15px' }}>Turn {t.turn}</b>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--text-2)' }}>Y{t.time}</span>
+        <b style={{ color: sideColor, fontSize: 'var(--font-lg)' }}>Turn {t.turn}</b>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 'var(--font-sm)', color: 'var(--text-2)' }}>Y{t.time}</span>
         {t.category && (
-          <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '3px', background: 'var(--bg-deep)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
+          <span style={{ fontSize: 'var(--font-2xs)', padding: '1px 6px', borderRadius: '3px', background: 'var(--bg-deep)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
             {t.category}
           </span>
         )}
         {t.emergent && (
-          <span style={{ fontSize: '9px', fontWeight: 800, color: 'var(--rust)', fontFamily: 'var(--mono)' }}>EMERGENT</span>
+          <span style={{ fontSize: 'var(--font-3xs)', fontWeight: 800, color: 'var(--rust)', fontFamily: 'var(--mono)' }}>EMERGENT</span>
         )}
       </div>
-      <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-1)', marginBottom: '6px' }}>
+      <div style={{ fontSize: 'var(--font-lg)', fontWeight: 700, color: 'var(--text-1)', marginBottom: '6px' }}>
         {t.title}
       </div>
       {t.summary && (
-        <div style={{ fontSize: '12px', color: 'var(--text-2)', lineHeight: 1.6, marginBottom: '8px' }}>
+        <div style={{ fontSize: 'var(--font-sm)', color: 'var(--text-2)', lineHeight: 1.6, marginBottom: '8px' }}>
           {t.summary}
         </div>
       )}
       {t.decision && (
-        <div style={{ fontSize: '12px', color: 'var(--text-2)', lineHeight: 1.6, marginBottom: '8px', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
-          <span style={{ fontWeight: 700, color: sideColor, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Decision: </span>
+        <div style={{ fontSize: 'var(--font-sm)', color: 'var(--text-2)', lineHeight: 1.6, marginBottom: '8px', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
+          <span style={{ fontWeight: 700, color: sideColor, fontSize: 'var(--font-2xs)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Decision: </span>
           {t.decision}
         </div>
       )}
       {t.outcome && (
-        <div style={{ fontSize: '12px', fontWeight: 800, fontFamily: 'var(--mono)', color, marginTop: '4px' }}>
+        <div style={{ fontSize: 'var(--font-sm)', fontWeight: 800, fontFamily: 'var(--mono)', color, marginTop: '4px' }}>
           {label}
         </div>
       )}
@@ -145,30 +145,30 @@ function SideTimeline({ turns, actorIndex }: { turns: TurnEntry[]; actorIndex: n
             borderLeft: `3px solid ${sideColor}`,
             animation: t.current ? 'glow 2s infinite' : undefined,
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', minWidth: 0 }}>
-              <span style={{ fontWeight: 800, fontFamily: 'var(--mono)', color: sideColor, flexShrink: 0, fontSize: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-xs)', minWidth: 0 }}>
+              <span style={{ fontWeight: 800, fontFamily: 'var(--mono)', color: sideColor, flexShrink: 0, fontSize: 'var(--font-2xs)' }}>
                 T{t.turn} {t.time}
               </span>
               <span style={{ flex: 1, color: 'var(--text-1)', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
                 {t.title}
               </span>
               {t.category && (
-                <span style={{ fontSize: '9px', padding: '0 4px', borderRadius: '2px', background: 'var(--bg-deep)', color: 'var(--text-3)', fontFamily: 'var(--mono)', flexShrink: 0 }}>
+                <span style={{ fontSize: 'var(--font-3xs)', padding: '0 4px', borderRadius: '2px', background: 'var(--bg-deep)', color: 'var(--text-3)', fontFamily: 'var(--mono)', flexShrink: 0 }}>
                   {t.category}
                 </span>
               )}
               {t.emergent && (
-                <span style={{ fontSize: '8px', fontWeight: 800, color: 'var(--rust)', fontFamily: 'var(--mono)', flexShrink: 0 }}>EMERGENT</span>
+                <span style={{ fontSize: 'var(--font-3xs)', fontWeight: 800, color: 'var(--rust)', fontFamily: 'var(--mono)', flexShrink: 0 }}>EMERGENT</span>
               )}
               {outcomeBadge(t.outcome)}
             </div>
             {t.summary && (
-              <div style={{ fontSize: '10px', color: 'var(--text-3)', marginTop: '2px', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, fontStyle: 'italic' }}>
+              <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', marginTop: '2px', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, fontStyle: 'italic' }}>
                 {t.summary}
               </div>
             )}
             {t.subEvents && t.subEvents.length > 1 && (
-              <div style={{ fontSize: '9px', color: 'var(--text-3)', marginTop: '2px', lineHeight: 1.3 }}>
+              <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-3)', marginTop: '2px', lineHeight: 1.3 }}>
                 {t.subEvents.map((se, i) => (
                   <div key={i} style={{ display: 'flex', gap: '4px' }}>
                     <span style={{ color: 'var(--rust)', fontFamily: 'var(--mono)', fontWeight: 700, flexShrink: 0 }}>{se.index + 1}.</span>
@@ -178,7 +178,7 @@ function SideTimeline({ turns, actorIndex }: { turns: TurnEntry[]; actorIndex: n
               </div>
             )}
             {t.decision && !t.subEvents?.length && (
-              <div style={{ fontSize: '10px', color: 'var(--text-2)', marginTop: '2px', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>
+              <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-2)', marginTop: '2px', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>
                 {t.decision}
               </div>
             )}

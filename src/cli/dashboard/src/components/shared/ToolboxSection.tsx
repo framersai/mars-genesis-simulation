@@ -58,7 +58,7 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
             id={`tool-${entry.n}`}
             style={{
               display: 'grid', gridTemplateColumns: '32px 1fr', gap: 8,
-              fontSize: 12, lineHeight: 1.55,
+              fontSize: 'var(--font-sm)', lineHeight: 1.55,
               padding: '8px 10px', borderRadius: 4,
               background: 'var(--bg-card)', border: '1px solid var(--border)',
               borderLeft: `3px solid ${entry.approved ? 'var(--green)' : 'var(--rust)'}`,
@@ -76,7 +76,7 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
                   {entry.name}
                 </span>
                 <span style={{
-                  fontSize: 9, fontFamily: 'var(--mono)', padding: '1px 5px', borderRadius: 2,
+                  fontSize: 'var(--font-3xs)', fontFamily: 'var(--mono)', padding: '1px 5px', borderRadius: 2,
                   color: entry.approved ? 'var(--green)' : 'var(--rust)',
                   background: entry.approved ? 'rgba(106,173,72,.10)' : 'rgba(224,101,48,.08)',
                   border: `1px solid ${entry.approved ? 'rgba(106,173,72,.3)' : 'rgba(224,101,48,.2)'}`,
@@ -84,13 +84,13 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
                 }}>
                   {entry.approved ? `PASS ${entry.confidence.toFixed(2)}` : 'FAIL'}
                 </span>
-                <span style={{ fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--text-3)' }}>
+                <span style={{ fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', color: 'var(--text-3)' }}>
                   {entry.mode}
                 </span>
                 <Tooltip
                   content={
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--amber)', marginBottom: 6 }}>
+                      <div style={{ fontSize: 'var(--font-md)', fontWeight: 800, color: 'var(--amber)', marginBottom: 6 }}>
                         Open in sim log
                       </div>
                       <div>
@@ -116,7 +116,7 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
                       color: 'var(--amber)',
                       border: '1px solid var(--amber-dim, var(--border))',
                       cursor: 'pointer',
-                      fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 800,
+                      fontFamily: 'var(--mono)', fontSize: 'var(--font-3xs)', fontWeight: 800,
                       letterSpacing: '0.06em', textTransform: 'uppercase',
                     }}
                   >
@@ -130,7 +130,7 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
                   {entry.description}
                 </div>
               )}
-              <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)', display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+              <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', display: 'flex', flexWrap: 'wrap', gap: 12 }}>
                 <span>first forged T{entry.firstForgedTurn} · {entry.firstForgedDepartment}</span>
                 {entry.reuseCount > 0 && <span style={{ color: 'var(--green)' }}>reused {entry.reuseCount}×</span>}
                 {entry.reforgeCount > 0 && (
@@ -151,7 +151,7 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
                   long as the user wants and is accessible on touch. */}
               <details style={{ marginTop: 6 }}>
                 <summary style={{
-                  fontSize: 10, fontFamily: 'var(--mono)',
+                  fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)',
                   color: entry.approved ? 'var(--green)' : 'var(--rust)',
                   cursor: 'pointer', fontWeight: 700, letterSpacing: '0.05em',
                 }}>
@@ -160,7 +160,7 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
                 <div style={{
                   marginTop: 6, padding: '8px 10px', borderRadius: 4,
                   background: 'var(--bg-deep)', border: '1px solid var(--border)',
-                  fontSize: 11, lineHeight: 1.55, color: 'var(--text-2)',
+                  fontSize: 'var(--font-xs)', lineHeight: 1.55, color: 'var(--text-2)',
                 }}>
                   <ForgeVerdictBody entry={entry} />
                 </div>
@@ -170,11 +170,11 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
                   across multiple turns instead of getting abandoned. */}
               {entry.history.length > 0 && (
                 <details style={{ marginTop: 4 }}>
-                  <summary style={{ fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--teal)', cursor: 'pointer', fontWeight: 700, letterSpacing: '0.05em' }}>
+                  <summary style={{ fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', color: 'var(--teal)', cursor: 'pointer', fontWeight: 700, letterSpacing: '0.05em' }}>
                     USE HISTORY · {entry.history.length}
                   </summary>
                   <ol style={{
-                    margin: '6px 0 0', padding: '0 0 0 20px', fontSize: 10, lineHeight: 1.5,
+                    margin: '6px 0 0', padding: '0 0 0 20px', fontSize: 'var(--font-2xs)', lineHeight: 1.5,
                     fontFamily: 'var(--mono)', color: 'var(--text-2)',
                   }}>
                     {entry.history.map((h, i) => (
@@ -193,11 +193,11 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
               )}
               {Boolean(entry.inputSchema || entry.outputSchema) && (
                 <details style={{ marginTop: 4 }}>
-                  <summary style={{ fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--amber)', cursor: 'pointer', fontWeight: 700, letterSpacing: '0.05em' }}>
+                  <summary style={{ fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', color: 'var(--amber)', cursor: 'pointer', fontWeight: 700, letterSpacing: '0.05em' }}>
                     SCHEMA
                   </summary>
                   <pre style={{
-                    margin: '4px 0 0', padding: 8, fontSize: 10, lineHeight: 1.45,
+                    margin: '4px 0 0', padding: 8, fontSize: 'var(--font-2xs)', lineHeight: 1.45,
                     fontFamily: 'var(--mono)', color: 'var(--text-2)',
                     background: 'var(--bg-deep)', border: '1px solid var(--border)', borderRadius: 4,
                     whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 240, overflow: 'auto',
@@ -208,11 +208,11 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
               )}
               {entry.sampleOutput && (
                 <details style={{ marginTop: 4 }}>
-                  <summary style={{ fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--green)', cursor: 'pointer', fontWeight: 700, letterSpacing: '0.05em' }}>
+                  <summary style={{ fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', color: 'var(--green)', cursor: 'pointer', fontWeight: 700, letterSpacing: '0.05em' }}>
                     LATEST OUTPUT
                   </summary>
                   <pre style={{
-                    margin: '4px 0 0', padding: 8, fontSize: 10, lineHeight: 1.45,
+                    margin: '4px 0 0', padding: 8, fontSize: 'var(--font-2xs)', lineHeight: 1.45,
                     fontFamily: 'var(--mono)', color: 'var(--text-2)',
                     background: 'var(--bg-deep)', border: '1px solid var(--border)', borderRadius: 4,
                     whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 200, overflow: 'auto',
@@ -236,7 +236,7 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
         style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', background: 'var(--bg-deep)' }}
       >
         <summary style={{
-          fontSize: 13, fontFamily: 'var(--mono)', fontWeight: 800,
+          fontSize: 'var(--font-md)', fontFamily: 'var(--mono)', fontWeight: 800,
           color: 'var(--amber)', letterSpacing: '0.06em',
           cursor: 'pointer', textTransform: 'uppercase', marginBottom: 8,
         }}>
@@ -250,7 +250,7 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
   return (
     <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', background: 'var(--bg-deep)' }}>
       <h3 style={{
-        fontSize: 13, fontFamily: 'var(--mono)', fontWeight: 800,
+        fontSize: 'var(--font-md)', fontFamily: 'var(--mono)', fontWeight: 800,
         color: 'var(--amber)', letterSpacing: '0.06em',
         margin: '0 0 8px', textTransform: 'uppercase',
       }}>
@@ -291,7 +291,7 @@ export function ForgeVerdictBody({ entry }: { entry: ToolEntry }) {
   if (entry.approved) {
     return (
       <div style={{ fontFamily: 'var(--sans)' }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--green)', fontWeight: 800, marginBottom: 6 }}>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)', color: 'var(--green)', fontWeight: 800, marginBottom: 6 }}>
           ✓ judge confidence {entry.confidence.toFixed(2)}
         </div>
         <div>
@@ -308,12 +308,12 @@ export function ForgeVerdictBody({ entry }: { entry: ToolEntry }) {
   }
   return (
     <div style={{ fontFamily: 'var(--sans)' }}>
-      <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--rust)', fontWeight: 800, marginBottom: 6 }}>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)', color: 'var(--rust)', fontWeight: 800, marginBottom: 6 }}>
         ✗ judge rejected
       </div>
       {entry.errorReason ? (
         <div style={{
-          fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-1)',
+          fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)', color: 'var(--text-1)',
           padding: 8, background: 'rgba(224,101,48,.08)', borderRadius: 4,
           border: '1px solid rgba(224,101,48,.2)',
           whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.5,

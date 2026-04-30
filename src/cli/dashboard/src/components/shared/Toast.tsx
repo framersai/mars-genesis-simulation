@@ -87,7 +87,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               pointerEvents: 'auto',
               padding: '10px 14px',
               borderRadius: 8,
-              fontSize: 12,
+              fontSize: 'var(--font-sm)',
               background: BG_TINTS[t.type],
               border: `1px solid ${BORDER_COLORS[t.type]}`,
               borderLeft: `3px solid ${BORDER_COLORS[t.type]}`,
@@ -104,17 +104,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               style={{
                 position: 'absolute', top: 4, right: 8,
                 background: 'none', border: 'none', color: 'var(--text-3)',
-                cursor: 'pointer', fontSize: 14, lineHeight: 1,
+                cursor: 'pointer', fontSize: 'var(--font-lg)', lineHeight: 1,
               }}
               aria-label="Dismiss"
             >
               x
             </button>
-            <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 2, color: TITLE_COLORS[t.type], paddingRight: 16 }}>
+            <div style={{ fontWeight: 700, fontSize: 'var(--font-sm)', marginBottom: 2, color: TITLE_COLORS[t.type], paddingRight: 16 }}>
               {t.title}
             </div>
             {t.message && (
-              <div style={{ fontSize: 11, color: 'var(--text-2)', lineHeight: 1.5 }}>
+              <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-2)', lineHeight: 1.5 }}>
                 {t.message}
               </div>
             )}

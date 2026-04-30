@@ -457,7 +457,7 @@ function DigitalTwinPlayback({ state }: { state?: GameState }) {
           style={{
             background: 'var(--amber)', color: '#1a1a1a', border: 'none',
             borderRadius: 6, padding: '6px 14px', fontFamily: 'var(--mono)',
-            fontSize: 11, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase',
+            fontSize: 'var(--font-xs)', fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase',
             cursor: 'pointer',
           }}
         >
@@ -468,7 +468,7 @@ function DigitalTwinPlayback({ state }: { state?: GameState }) {
           style={{
             background: 'var(--bg-card)', color: 'var(--text-2)',
             border: '1px solid var(--border-soft)', borderRadius: 6,
-            padding: '6px 12px', fontFamily: 'var(--mono)', fontSize: 11,
+            padding: '6px 12px', fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)',
             letterSpacing: 0.5, textTransform: 'uppercase', cursor: 'pointer',
           }}
         >
@@ -487,7 +487,7 @@ function DigitalTwinPlayback({ state }: { state?: GameState }) {
         style={{
           background: 'var(--bg-card)', border: '1px solid var(--border-soft)',
           borderRadius: 6, padding: 10, maxHeight: 240, overflowY: 'auto',
-          fontFamily: 'var(--mono)', fontSize: 11, lineHeight: 1.5,
+          fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)', lineHeight: 1.5,
           display: 'flex', flexDirection: 'column', gap: 4,
         }}
       >
@@ -504,10 +504,10 @@ function DigitalTwinPlayback({ state }: { state?: GameState }) {
                 gap: 8, padding: '4px 6px', alignItems: 'baseline',
               }}
             >
-              <span style={{ color: 'var(--text-3)', fontSize: 10 }}>
+              <span style={{ color: 'var(--text-3)', fontSize: 'var(--font-2xs)' }}>
                 {event.turn != null ? `T${event.turn}` : ''}
               </span>
-              <span style={{ color: 'var(--amber)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>
+              <span style={{ color: 'var(--amber)', fontSize: 'var(--font-2xs)', fontWeight: 700, textTransform: 'uppercase' }}>
                 {EVENT_LABELS[event.type] ?? event.type}
               </span>
               <span style={{ color: 'var(--text-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

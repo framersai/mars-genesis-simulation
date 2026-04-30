@@ -17,7 +17,7 @@
 }
 
 .statLabel {
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
   color: var(--text-3);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -25,7 +25,7 @@
 
 .statValue {
   font-family: var(--mono);
-  font-size: 1.5rem;
+  font-size: var(--font-3xl);
   font-weight: 600;
   color: var(--text-1);
 }
@@ -51,7 +51,7 @@
   border-radius: 8px;
   padding: 1rem;
   color: var(--rust);
-  font-size: 0.85rem;
+  font-size: var(--font-md);
 }
 
 @media (max-width: 768px) {

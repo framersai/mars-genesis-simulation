@@ -34,7 +34,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
   color: var(--text-3);
   gap: 0.5rem;
 }
@@ -43,7 +43,7 @@
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
   font-family: var(--mono);
-  font-size: 0.65rem;
+  font-size: var(--font-2xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   white-space: nowrap;
@@ -61,11 +61,11 @@
 
 .time {
   color: var(--text-3);
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
 }
 
 .scenario {
-  font-size: 0.95rem;
+  font-size: var(--font-lg);
   font-weight: 600;
   color: var(--text-1);
   margin: 0;
@@ -73,7 +73,7 @@
 }
 
 .leader {
-  font-size: 0.8rem;
+  font-size: var(--font-sm);
   color: var(--text-2);
   margin: 0;
 }
@@ -91,7 +91,7 @@
   padding: 0.25rem 0.6rem;
   cursor: pointer;
   color: var(--text-2);
-  font-size: 0.75rem;
+  font-size: var(--font-sm);
   font-family: var(--sans);
 
   &:hover:not(:disabled) {

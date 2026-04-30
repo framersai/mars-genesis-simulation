@@ -60,14 +60,14 @@ export function GridMetricsStrip({
         border: '1px solid var(--border)',
         borderRadius: 6,
         fontFamily: 'var(--mono)',
-        fontSize: 10,
+        fontSize: 'var(--font-2xs)',
         color: 'var(--text-3)',
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 90 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <span style={{ letterSpacing: '0.5px', fontWeight: 700 }}>MORALE</span>
-          <span style={{ color: moraleColor, fontWeight: 800, fontSize: 13 }}>{morale}%</span>
+          <span style={{ color: moraleColor, fontWeight: 800, fontSize: 'var(--font-md)' }}>{morale}%</span>
         </div>
         <div
           style={{
@@ -101,7 +101,7 @@ export function GridMetricsStrip({
           <span style={{ color: 'var(--text-2)' }}>{alive.length} alive</span>
         </div>
         {alive.length === 0 ? (
-          <div style={{ fontSize: 9, color: 'var(--text-4)' }}>no survivors</div>
+          <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-4)' }}>no survivors</div>
         ) : (
           <>
             <div
@@ -133,7 +133,7 @@ export function GridMetricsStrip({
             </div>
             <div
               style={{
-                fontSize: 9,
+                fontSize: 'var(--font-3xs)',
                 color: 'var(--text-3)',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -183,7 +183,7 @@ export function GridMetricsStrip({
           style={{
             display: 'flex',
             justifyContent: 'space-between',
-            fontSize: 8,
+            fontSize: 'var(--font-3xs)',
             color: 'var(--text-4)',
           }}
         >
@@ -225,7 +225,7 @@ export function GridMetricsStrip({
           <DeptDonut cells={snapshot.cells} size={44} />
           <span
             style={{
-              fontSize: 8,
+              fontSize: 'var(--font-3xs)',
               color: 'var(--text-4)',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',

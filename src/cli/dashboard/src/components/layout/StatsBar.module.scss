@@ -24,7 +24,7 @@
 
 .crisis {
   flex-shrink: 1;
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-weight: 700;
   color: var(--rust);
   white-space: nowrap;
@@ -44,7 +44,7 @@
 }
 
 .label {
-  font-size: 9px;
+  font-size: var(--font-3xs);
   color: var(--text-1);
   letter-spacing: 0.6px;
   font-weight: 800;
@@ -53,7 +53,7 @@
 }
 
 .value {
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-weight: 800;
 }
 
@@ -68,7 +68,7 @@
 }
 
 .delta {
-  font-size: 8px;
+  font-size: var(--font-3xs);
 }
 
 .deltaPositive {
@@ -88,11 +88,11 @@
 
 .sep {
   color: var(--text-3);
-  font-size: 9px;
+  font-size: var(--font-3xs);
 }
 
 .causesChip {
-  font-size: 8px;
+  font-size: var(--font-3xs);
   color: var(--text-3);
   font-style: italic;
   margin-left: 4px;

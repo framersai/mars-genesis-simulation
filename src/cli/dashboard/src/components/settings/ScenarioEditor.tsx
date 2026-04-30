@@ -241,10 +241,10 @@ export function ScenarioEditor() {
         borderBottom: '1px solid var(--border)', flexWrap: 'wrap', gap: '8px',
       }}>
         <div>
-          <h3 style={{ fontFamily: 'var(--mono)', fontSize: '14px', fontWeight: 700, color: 'var(--text-1)', margin: 0 }}>
+          <h3 style={{ fontFamily: 'var(--mono)', fontSize: 'var(--font-lg)', fontWeight: 700, color: 'var(--text-1)', margin: 0 }}>
             Scenario Editor
           </h3>
-          <p style={{ fontSize: '11px', color: 'var(--text-3)', margin: '4px 0 0' }}>
+          <p style={{ fontSize: 'var(--font-xs)', color: 'var(--text-3)', margin: '4px 0 0' }}>
             Write or import a scenario JSON draft. Add seed text or a URL to ground it, then compile or export.
             {!adminConfig.adminWrite && ' Disk saves are disabled on this instance.'}
           </p>
@@ -271,14 +271,14 @@ export function ScenarioEditor() {
             width: '100%', minHeight: '240px', maxHeight: '500px', resize: 'vertical',
             padding: '14px 16px', margin: 0, border: 'none', borderBottom: '1px solid var(--border)',
             background: 'var(--bg-deep)', color: 'var(--text-1)',
-            fontFamily: 'var(--mono)', fontSize: '12px', lineHeight: 1.6,
+            fontFamily: 'var(--mono)', fontSize: 'var(--font-sm)', lineHeight: 1.6,
             outline: 'none',
           }}
         />
         {/* Status bar */}
         <div style={{
           display: 'flex', justifyContent: 'space-between', padding: '6px 16px',
-          background: 'var(--bg-elevated)', fontSize: '10px', fontFamily: 'var(--mono)',
+          background: 'var(--bg-elevated)', fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)',
           color: parseError ? 'var(--rust)' : 'var(--text-3)',
         }}>
           <span>{parseError || (jsonText.trim() ? 'Valid JSON' : 'Empty')}</span>
@@ -288,7 +288,7 @@ export function ScenarioEditor() {
 
       {/* Seed enrichment */}
       <details style={{ borderBottom: '1px solid var(--border)' }}>
-        <summary style={{ padding: '10px 16px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>
+        <summary style={{ padding: '10px 16px', fontSize: 'var(--font-sm)', fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>
           Seed Enrichment (optional)
         </summary>
         <div style={{ padding: '0 16px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -333,11 +333,11 @@ export function ScenarioEditor() {
               style={inputStyle}
             />
           </div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-2)' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-sm)', color: 'var(--text-2)' }}>
             <input type="checkbox" checked={webSearch} onChange={e => setWebSearch(e.target.checked)} />
             Web search enrichment (requires Serper/Tavily/Firecrawl API keys)
           </label>
-          <p style={{ fontSize: '11px', color: 'var(--text-3)', margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 'var(--font-xs)', color: 'var(--text-3)', margin: 0, lineHeight: 1.6 }}>
             If both seed text and a seed URL are provided, the URL takes precedence and the compiler ingests the fetched page.
           </p>
         </div>
@@ -347,7 +347,7 @@ export function ScenarioEditor() {
       {progress.length > 0 && (
         <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
           {progress.map(p => (
-            <div key={p.hook} style={{ fontSize: '11px', fontFamily: 'var(--mono)', display: 'flex', gap: '8px', padding: '2px 0', color: 'var(--text-2)' }}>
+            <div key={p.hook} style={{ fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)', display: 'flex', gap: '8px', padding: '2px 0', color: 'var(--text-2)' }}>
               <span>{p.status === 'done' ? '\u2714' : p.status === 'generating' ? '\u23F3' : p.status === 'cached' ? '\u2714' : '\u2022'}</span>
               <span>{p.hook}</span>
               <span style={{ color: 'var(--text-3)' }}>{p.status}</span>
@@ -359,7 +359,7 @@ export function ScenarioEditor() {
       {/* Result message */}
       {result && (
         <div style={{
-          padding: '10px 16px', fontSize: '12px', borderBottom: '1px solid var(--border)',
+          padding: '10px 16px', fontSize: 'var(--font-sm)', borderBottom: '1px solid var(--border)',
           color: result.success ? 'var(--green)' : 'var(--rust)',
           background: result.success ? 'rgba(106,173,72,.06)' : 'rgba(224,101,48,.06)',
         }}>
@@ -397,7 +397,7 @@ export function ScenarioEditor() {
         )}
         <span style={{ flex: 1 }} />
         {adminConfig.memoryScenarios.length > 0 && (
-          <span style={{ fontSize: '10px', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
+          <span style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
             {adminConfig.memoryScenarios.length} in memory
           </span>
         )}
@@ -408,12 +408,12 @@ export function ScenarioEditor() {
 
 const btnStyle: React.CSSProperties = {
   background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border)',
-  padding: '4px 12px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer',
+  padding: '4px 12px', borderRadius: '4px', fontSize: 'var(--font-xs)', cursor: 'pointer',
   fontWeight: 600, fontFamily: 'var(--mono)', transition: 'all .2s',
 };
 
 const actionBtnStyle: React.CSSProperties = {
-  padding: '8px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
+  padding: '8px 20px', borderRadius: '6px', fontSize: 'var(--font-md)', fontWeight: 700,
   cursor: 'pointer', fontFamily: 'var(--sans)', transition: 'all .2s',
   opacity: 1,
 };
@@ -421,5 +421,5 @@ const actionBtnStyle: React.CSSProperties = {
 const inputStyle: React.CSSProperties = {
   width: '100%', background: 'var(--bg-card)', color: 'var(--text-1)',
   border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px',
-  fontFamily: 'var(--sans)', fontSize: '12px',
+  fontFamily: 'var(--sans)', fontSize: 'var(--font-sm)',
 };

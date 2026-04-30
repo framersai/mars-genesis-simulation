@@ -51,7 +51,7 @@ export function ExportMenu({
     textAlign: 'left',
     cursor: 'pointer',
     fontFamily: 'var(--mono)',
-    fontSize: 10,
+    fontSize: 'var(--font-2xs)',
     color: 'var(--text-2)',
     letterSpacing: '0.05em',
   };
@@ -73,7 +73,7 @@ export function ExportMenu({
           borderRadius: 3,
           cursor: 'pointer',
           fontFamily: 'var(--mono)',
-          fontSize: 10,
+          fontSize: 'var(--font-2xs)',
           fontWeight: 800,
           letterSpacing: '0.08em',
           display: 'flex',
@@ -127,7 +127,7 @@ export function ExportMenu({
             onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = 'transparent')}
           >
             <span style={{ color: 'var(--amber)', fontWeight: 800, minWidth: 32 }}>PNG</span>
-            <span style={{ color: 'var(--text-3)', fontSize: 9 }}>Current frame</span>
+            <span style={{ color: 'var(--text-3)', fontSize: 'var(--font-3xs)' }}>Current frame</span>
           </button>
           <button
             type="button"
@@ -152,7 +152,7 @@ export function ExportMenu({
             >
               {recording ? 'STOP' : 'REC'}
             </span>
-            <span style={{ color: 'var(--text-3)', fontSize: 9 }}>
+            <span style={{ color: 'var(--text-3)', fontSize: 'var(--font-3xs)' }}>
               {recording ? 'End recording & download' : 'Timelapse to webm'}
             </span>
           </button>
@@ -168,7 +168,7 @@ export function ExportMenu({
             onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = 'transparent')}
           >
             <span style={{ color: 'var(--amber)', fontWeight: 800, minWidth: 32 }}>JSON</span>
-            <span style={{ color: 'var(--text-3)', fontSize: 9 }}>Replay snapshot</span>
+            <span style={{ color: 'var(--text-3)', fontSize: 'var(--font-3xs)' }}>Replay snapshot</span>
           </button>
         </div>
       )}

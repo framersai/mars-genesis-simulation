@@ -10,14 +10,14 @@
 }
 
 .label {
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
   color: var(--paracosm-text-muted, #888);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .value {
-  font-size: 0.95rem;
+  font-size: var(--font-lg);
   font-weight: 600;
   color: var(--paracosm-text, #eee);
 }

@@ -929,7 +929,7 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
             borderRadius: 3,
             cursor: 'pointer',
             fontFamily: 'var(--mono)',
-            fontSize: 11,
+            fontSize: 'var(--font-xs)',
             fontWeight: 800,
             lineHeight: 1,
             zIndex: 6,
@@ -959,7 +959,7 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
               borderRadius: 3,
               cursor: 'pointer',
               fontFamily: 'var(--mono)',
-              fontSize: 12,
+              fontSize: 'var(--font-sm)',
               lineHeight: 1,
               zIndex: 6,
             }}
@@ -1022,7 +1022,7 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
                 border: '1px solid var(--border)',
                 borderRadius: 4,
                 fontFamily: 'var(--mono)',
-                fontSize: 10,
+                fontSize: 'var(--font-2xs)',
                 color: 'var(--text-3)',
                 letterSpacing: '0.06em',
                 textTransform: 'uppercase',
@@ -1060,7 +1060,7 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
                 borderLeft: `3px solid ${kindColor}`,
                 borderRadius: 4,
                 fontFamily: 'var(--mono)',
-                fontSize: 10,
+                fontSize: 'var(--font-2xs)',
                 color: 'var(--text-2)',
                 pointerEvents: 'none',
                 zIndex: 5,
@@ -1071,11 +1071,11 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
             >
               <div style={{
                 color: kindColor, fontWeight: 800,
-                letterSpacing: '0.08em', fontSize: 9, marginBottom: 3,
+                letterSpacing: '0.08em', fontSize: 'var(--font-3xs)', marginBottom: 3,
               }}>
                 {kindLabel}
               </div>
-              <div style={{ fontSize: 9, color: 'var(--text-3)', marginBottom: 4 }}>
+              <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-3)', marginBottom: 4 }}>
                 tile ({hoveredTile.col}, {hoveredTile.row})
               </div>
               {hoveredTile.nearest ? (
@@ -1083,19 +1083,19 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
                   <div style={{ color: 'var(--text-1)', fontWeight: 700 }}>
                     {hoveredTile.nearest.name}
                   </div>
-                  <div style={{ fontSize: 9, color: 'var(--text-3)', marginTop: 2 }}>
+                  <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-3)', marginTop: 2 }}>
                     {hoveredTile.nearest.role} · {hoveredTile.nearest.department.toUpperCase()}
                   </div>
                   {hoveredTile.kind === 'death' ? (
-                    <div style={{ fontSize: 9, color: 'var(--rust)', marginTop: 3 }}>
+                    <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--rust)', marginTop: 3 }}>
                       deceased · mood at death: {hoveredTile.nearest.mood}
                     </div>
                   ) : hoveredTile.kind === 'birth' ? (
-                    <div style={{ fontSize: 9, color: 'var(--green)', marginTop: 3 }}>
+                    <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--green)', marginTop: 3 }}>
                       native-born · generation {hoveredTile.nearest.generation ?? 0}
                     </div>
                   ) : (
-                    <div style={{ fontSize: 9, color: 'var(--text-3)', marginTop: 3 }}>
+                    <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-3)', marginTop: 3 }}>
                       pattern seeded by nearest colonist's mood: {hoveredTile.nearest.mood}
                     </div>
                   )}
@@ -1129,7 +1129,7 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
               border: `1px solid ${sideColor}66`,
               borderRadius: 4,
               fontFamily: 'var(--mono)',
-              fontSize: 10,
+              fontSize: 'var(--font-2xs)',
               color: 'var(--text-2)',
               pointerEvents: 'none',
               zIndex: 5,
@@ -1138,13 +1138,13 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
               maxWidth: ttW,
             }}
           >
-            <div style={{ color: sideColor, fontWeight: 700, fontSize: 11 }}>
+            <div style={{ color: sideColor, fontWeight: 700, fontSize: 'var(--font-xs)' }}>
               {hovered.cell.name}
               {hovered.cell.featured && (
                 <span
                   style={{
                     marginLeft: 6,
-                    fontSize: 8,
+                    fontSize: 'var(--font-3xs)',
                     padding: '1px 4px',
                     borderRadius: 2,
                     background: `${sideColor}33`,
@@ -1187,7 +1187,7 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
                 .join(' ');
               return (
                 <div style={{ marginTop: 4 }}>
-                  <div style={{ fontSize: 7, color: 'var(--text-4)', letterSpacing: '0.1em' }}>
+                  <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-4)', letterSpacing: '0.1em' }}>
                     PSYCH TRAJECTORY
                   </div>
                   <svg
@@ -1222,7 +1222,7 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
                 </div>
               );
             })()}
-            <div style={{ marginTop: 3, fontSize: 8, color: 'var(--text-4)' }}>
+            <div style={{ marginTop: 3, fontSize: 'var(--font-3xs)', color: 'var(--text-4)' }}>
               click for drilldown
             </div>
           </div>

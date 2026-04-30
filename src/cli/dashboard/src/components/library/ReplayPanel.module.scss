@@ -13,7 +13,7 @@
   color: var(--text-1);
   cursor: pointer;
   font-family: var(--sans);
-  font-size: 0.85rem;
+  font-size: var(--font-md);
 
   &:disabled { opacity: 0.5; cursor: not-allowed; }
   &:hover:not(:disabled) {
@@ -23,7 +23,7 @@
 }
 
 .result {
-  font-size: 0.8rem;
+  font-size: var(--font-sm);
   padding: 0.25rem 0.6rem;
   border-radius: 4px;
   font-family: var(--mono);

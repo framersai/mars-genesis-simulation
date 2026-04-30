@@ -18,7 +18,7 @@ export interface SimLayoutToggleProps {
 
 const buttonStyle: React.CSSProperties = {
   padding: '4px 10px',
-  fontSize: 11,
+  fontSize: 'var(--font-xs)',
   fontFamily: 'var(--mono)',
   fontWeight: 600,
   background: 'transparent',

@@ -55,7 +55,7 @@ const closeBtnStyle: React.CSSProperties = {
   background: 'transparent',
   color: 'var(--text-2)',
   border: 'none',
-  fontSize: 22,
+  fontSize: 'var(--font-2xl)',
   lineHeight: 1,
   cursor: 'pointer',
   padding: '0 0.5rem',
@@ -123,7 +123,7 @@ export function ActorDrillInModal({ actorName, actorIndex, state, onClose }: Act
 
           {decisions.length > 0 && (
             <section style={{ marginTop: '1rem' }}>
-              <h3 style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-3)' }}>
+              <h3 style={{ fontFamily: 'var(--mono)', fontSize: 'var(--font-sm)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-3)' }}>
                 Decisions ({decisions.length})
               </h3>
               <ul style={{ listStyle: 'none', padding: 0, margin: '0.5rem 0' }}>
@@ -133,7 +133,7 @@ export function ActorDrillInModal({ actorName, actorIndex, state, onClose }: Act
                   return (
                     <li key={d.id} style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--border)' }}>
                       <div style={{ fontWeight: 600 }}>T{d.turn ?? '?'}: {choice}</div>
-                      {rationale && <div style={{ color: 'var(--text-3)', fontSize: 13 }}>{rationale}</div>}
+                      {rationale && <div style={{ color: 'var(--text-3)', fontSize: 'var(--font-md)' }}>{rationale}</div>}
                     </li>
                   );
                 })}
@@ -142,7 +142,7 @@ export function ActorDrillInModal({ actorName, actorIndex, state, onClose }: Act
           )}
 
           <section style={{ marginTop: '1rem' }}>
-            <h3 style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-3)' }}>
+            <h3 style={{ fontFamily: 'var(--mono)', fontSize: 'var(--font-sm)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-3)' }}>
               Timeline ({events.length} events)
             </h3>
             {turnNumbers.length === 0 && (
@@ -153,7 +153,7 @@ export function ActorDrillInModal({ actorName, actorIndex, state, onClose }: Act
                 <header style={{ fontWeight: 600, fontFamily: 'var(--mono)' }}>Turn {turn}</header>
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0.25rem 0 0' }}>
                   {(grouped.get(turn) ?? []).map((e) => (
-                    <li key={e.id} style={{ fontSize: 13, padding: '0.15rem 0' }}>
+                    <li key={e.id} style={{ fontSize: 'var(--font-md)', padding: '0.15rem 0' }}>
                       <span style={{ color: 'var(--text-3)' }}>{e.type}</span>
                       {' '}
                       {eventTitle(e)}

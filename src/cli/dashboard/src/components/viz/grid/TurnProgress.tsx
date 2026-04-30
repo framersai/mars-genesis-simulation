@@ -76,7 +76,7 @@ export function TurnProgress({
           gap: 6,
           flex: 1,
           minWidth: 0,
-          fontSize: 9,
+          fontSize: 'var(--font-3xs)',
           fontFamily: 'var(--mono)',
           color: 'var(--text-3)',
           letterSpacing: '0.06em',

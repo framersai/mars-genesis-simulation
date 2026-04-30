@@ -30,7 +30,7 @@ export function VizControls({
     borderRadius: 4,
     padding: '4px 10px',
     fontFamily: 'var(--mono)',
-    fontSize: 11,
+    fontSize: 'var(--font-xs)',
     cursor: 'pointer',
   };
   return (
@@ -59,14 +59,14 @@ export function VizControls({
         style={{ flex: 1 }}
         aria-label="Scrub timeline"
       />
-      <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)', whiteSpace: 'nowrap' }}>
+      <span style={{ fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)', color: 'var(--text-3)', whiteSpace: 'nowrap' }}>
         T{currentTurn + 1}/{maxTurn} {time ? `\u00b7 ${time}` : ''}
       </span>
       <select
         aria-label="Playback speed"
         value={speed}
         onChange={e => onSpeedChange(Number(e.target.value))}
-        style={{ fontFamily: 'var(--mono)', fontSize: 10, background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border)', borderRadius: 4, padding: '2px 6px' }}
+        style={{ fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)', background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border)', borderRadius: 4, padding: '2px 6px' }}
       >
         {SPEEDS.map(s => (
           <option key={s} value={s}>{s}x</option>

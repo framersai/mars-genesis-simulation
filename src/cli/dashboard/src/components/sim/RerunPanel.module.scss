@@ -10,7 +10,7 @@
   background: var(--bg-panel);
   border-top: 1px solid var(--border);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--font-xs);
 }
 
 .label {
@@ -27,7 +27,7 @@
 .button {
   margin-left: auto;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 700;
   padding: 4px 12px;
   border-radius: 4px;

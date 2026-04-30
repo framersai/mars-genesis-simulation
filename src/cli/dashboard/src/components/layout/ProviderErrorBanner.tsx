@@ -71,7 +71,7 @@ export function ProviderErrorBanner({
         background: colors.bg,
         borderBottom: `2px solid ${colors.border}`,
         fontFamily: 'var(--mono)',
-        fontSize: '13px',
+        fontSize: 'var(--font-md)',
         color: colors.text,
         position: 'sticky',
         top: 0,
@@ -90,7 +90,7 @@ export function ProviderErrorBanner({
           borderRadius: '50%',
           border: `2px solid ${colors.border}`,
           fontWeight: 700,
-          fontSize: '14px',
+          fontSize: 'var(--font-lg)',
           flexShrink: 0,
         }}
       >
@@ -98,7 +98,7 @@ export function ProviderErrorBanner({
       </span>
       <div style={{ flex: 1, minWidth: '260px' }}>
         <div style={{ fontWeight: 700, marginBottom: '2px' }}>{heading}</div>
-        <div style={{ color: 'var(--text-2)', fontSize: '12px', fontFamily: 'var(--sans)' }}>
+        <div style={{ color: 'var(--text-2)', fontSize: 'var(--font-sm)', fontFamily: 'var(--sans)' }}>
           {providerError.message}
           {providerError.leader ? (
             <span style={{ color: 'var(--text-3)' }}> (hit by {providerError.leader})</span>
@@ -117,7 +117,7 @@ export function ProviderErrorBanner({
             padding: '6px 12px',
             borderRadius: '4px',
             fontWeight: 700,
-            fontSize: '12px',
+            fontSize: 'var(--font-sm)',
             whiteSpace: 'nowrap',
           }}
         >
@@ -134,7 +134,7 @@ export function ProviderErrorBanner({
             border: `1px solid ${colors.border}`,
             padding: '4px 10px',
             borderRadius: '4px',
-            fontSize: '12px',
+            fontSize: 'var(--font-sm)',
             cursor: 'pointer',
             fontFamily: 'var(--mono)',
           }}

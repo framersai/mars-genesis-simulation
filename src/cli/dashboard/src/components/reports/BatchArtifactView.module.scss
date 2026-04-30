@@ -27,7 +27,7 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-size: 0.85rem;
+  font-size: var(--font-md);
   color: var(--paracosm-text-muted, #888);
   text-transform: uppercase;
   letter-spacing: 0.06em;

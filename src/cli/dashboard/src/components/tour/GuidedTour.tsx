@@ -437,13 +437,13 @@ export function GuidedTour({ activeTab, chatEnabled = true, onTabChange, onClose
       {/* Tour card */}
       <div data-tour-overlay style={card} onClick={e => e.stopPropagation()} role="dialog" aria-label="Guided tour">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap: 8 }}>
-          <span style={{ fontSize: '10px', fontFamily: 'var(--mono)', color: 'var(--text-3)', letterSpacing: '1px' }}>
+          <span style={{ fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', color: 'var(--text-3)', letterSpacing: '1px' }}>
             {step + 1} / {steps.length}
           </span>
           <span
             aria-label={`Active tab: ${current.tab}`}
             style={{
-              fontSize: '9px',
+              fontSize: 'var(--font-3xs)',
               fontFamily: 'var(--mono)',
               fontWeight: 700,
               color: 'var(--amber)',
@@ -459,7 +459,7 @@ export function GuidedTour({ activeTab, chatEnabled = true, onTabChange, onClose
           </span>
           <button
             onClick={handleClose}
-            style={{ background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer', fontSize: '18px', padding: '0 2px', lineHeight: 1, marginLeft: 'auto' }}
+            style={{ background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer', fontSize: 'var(--font-2xl)', padding: '0 2px', lineHeight: 1, marginLeft: 'auto' }}
             aria-label="Close tour"
           >&times;</button>
         </div>
@@ -490,7 +490,7 @@ export function GuidedTour({ activeTab, chatEnabled = true, onTabChange, onClose
               }}
               style={isMobile
                 ? compactPrimaryBtn
-                : step === steps.length - 1 ? { ...primaryBtn, padding: '6px 22px', fontSize: '12px' } : primaryBtn}
+                : step === steps.length - 1 ? { ...primaryBtn, padding: '6px 22px', fontSize: 'var(--font-sm)' } : primaryBtn}
             >
               {step < steps.length - 1 ? 'Next' : isMobile ? 'Start →' : 'Start Your Simulation'}
             </button>
@@ -533,7 +533,7 @@ export function GuidedTour({ activeTab, chatEnabled = true, onTabChange, onClose
         )}
 
         {!isMobile && (
-          <div style={{ textAlign: 'center', marginTop: '6px', fontSize: '9px', color: 'var(--text-3)', fontFamily: 'var(--mono)', opacity: 0.7 }}>
+          <div style={{ textAlign: 'center', marginTop: '6px', fontSize: 'var(--font-3xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', opacity: 0.7 }}>
             Arrow keys / Esc
           </div>
         )}
@@ -544,22 +544,22 @@ export function GuidedTour({ activeTab, chatEnabled = true, onTabChange, onClose
 
 const skipBtn: React.CSSProperties = {
   background: 'none', border: '1px solid var(--border)', color: 'var(--text-3)',
-  padding: '5px 14px', borderRadius: '5px', fontSize: '11px', cursor: 'pointer',
+  padding: '5px 14px', borderRadius: '5px', fontSize: 'var(--font-xs)', cursor: 'pointer',
   fontFamily: 'var(--sans)', fontWeight: 600,
 };
 const navBtn: React.CSSProperties = {
   background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-2)',
-  padding: '5px 14px', borderRadius: '5px', fontSize: '11px', cursor: 'pointer',
+  padding: '5px 14px', borderRadius: '5px', fontSize: 'var(--font-xs)', cursor: 'pointer',
   fontFamily: 'var(--sans)', fontWeight: 600,
 };
 const primaryBtn: React.CSSProperties = {
   background: 'linear-gradient(135deg, var(--rust), #c44a1e)', color: '#fff',
-  border: 'none', padding: '5px 18px', borderRadius: '5px', fontSize: '11px',
+  border: 'none', padding: '5px 18px', borderRadius: '5px', fontSize: 'var(--font-xs)',
   cursor: 'pointer', fontFamily: 'var(--sans)', fontWeight: 700,
 };
 // Compact button variants for the mobile card. Slightly smaller padding
 // and font keep the three-button row on a single line at viewports as
 // narrow as ~340px without forcing wrap.
-const compactSkipBtn: React.CSSProperties = { ...skipBtn, padding: '4px 10px', fontSize: '10px' };
-const compactNavBtn: React.CSSProperties = { ...navBtn, padding: '4px 10px', fontSize: '10px' };
-const compactPrimaryBtn: React.CSSProperties = { ...primaryBtn, padding: '4px 12px', fontSize: '10px' };
+const compactSkipBtn: React.CSSProperties = { ...skipBtn, padding: '4px 10px', fontSize: 'var(--font-2xs)' };
+const compactNavBtn: React.CSSProperties = { ...navBtn, padding: '4px 10px', fontSize: 'var(--font-2xs)' };
+const compactPrimaryBtn: React.CSSProperties = { ...primaryBtn, padding: '4px 12px', fontSize: 'var(--font-2xs)' };

@@ -167,7 +167,7 @@ export function EventChronicle({
     >
       <span
         style={{
-          fontSize: 10,
+          fontSize: 'var(--font-2xs)',
           fontFamily: 'var(--mono)',
           color: 'var(--text-3)',
           letterSpacing: '0.1em',
@@ -196,7 +196,7 @@ export function EventChronicle({
               // obvious at a glance.
               style={{
                 padding: '4px 10px',
-                fontSize: 11,
+                fontSize: 'var(--font-xs)',
                 fontFamily: 'var(--mono)',
                 fontWeight: 800,
                 letterSpacing: '0.08em',
@@ -274,7 +274,7 @@ export function EventChronicle({
                 width: 16,
                 height: 16,
                 padding: 0,
-                fontSize: 9,
+                fontSize: 'var(--font-3xs)',
                 fontFamily: 'var(--mono)',
                 fontWeight: 800,
                 background: isHovered ? 'rgba(232, 180, 74, 0.18)' : 'transparent',

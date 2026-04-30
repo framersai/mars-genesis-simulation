@@ -107,7 +107,7 @@ function StatusChip({ s }: { s: NonNullable<FooterProps['simStatus']> }) {
     <span
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 4,
-        color, fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 700,
+        color, fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)', fontWeight: 700,
         cursor: 'help',
       }}
       role="status"
@@ -161,7 +161,7 @@ export function Footer({ cost, costBreakdown, simStatus }: FooterProps) {
         alignItems: 'center',
         flexWrap: 'wrap',
         gap: '8px',
-        fontSize: '10px',
+        fontSize: 'var(--font-2xs)',
         color: 'var(--text-3)',
       }}
     >
@@ -179,10 +179,10 @@ export function Footer({ cost, costBreakdown, simStatus }: FooterProps) {
 
       {cost && (cost.totalTokens > 0 || cost.llmCalls > 0) && (
         <span
-          style={{ display: 'flex', alignItems: 'baseline', gap: '6px', fontFamily: 'var(--mono)', fontSize: '10px', cursor: 'help' }}
+          style={{ display: 'flex', alignItems: 'baseline', gap: '6px', fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)', cursor: 'help' }}
           title={buildCostTooltip(cost, costBreakdown)}
         >
-          <span style={{ color: 'var(--green)', fontWeight: 800, fontSize: '11px' }}>
+          <span style={{ color: 'var(--green)', fontWeight: 800, fontSize: 'var(--font-xs)' }}>
             ${cost.totalCostUSD < 0.01 ? cost.totalCostUSD.toFixed(4) : cost.totalCostUSD.toFixed(2)}
           </span>
           <span style={{ color: 'var(--text-3)' }}>
@@ -198,7 +198,7 @@ export function Footer({ cost, costBreakdown, simStatus }: FooterProps) {
 
       {!isPhone && (
         <span>
-          <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, letterSpacing: '.08em', fontSize: '10px' }}>PARA<span style={{ color: 'var(--amber)' }}>COSM</span></span>
+          <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, letterSpacing: '.08em', fontSize: 'var(--font-2xs)' }}>PARA<span style={{ color: 'var(--amber)' }}>COSM</span></span>
           {' '}&middot; Apache-2.0 &middot; <a href="https://manic.agency" target="_blank" rel="noopener" style={{ color: 'var(--text-3)' }}>Manic Agency</a> / <a href="https://frame.dev" target="_blank" rel="noopener" style={{ color: 'var(--text-3)' }}>Frame.dev</a>
         </span>
       )}

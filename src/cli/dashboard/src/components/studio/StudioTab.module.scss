@@ -29,7 +29,7 @@
 
 .dropZoneHint {
   color: var(--text-dim, #888);
-  font-size: 0.875rem;
+  font-size: var(--font-lg);
   margin-top: 0.5rem;
 }
 
@@ -46,7 +46,7 @@
 }
 
 .errorHint {
-  font-size: 0.875rem;
+  font-size: var(--font-lg);
   color: var(--text-dim, #888);
   margin-top: 0.25rem;
 }
@@ -58,7 +58,7 @@
   padding: 0.5rem 0.75rem;
   border-radius: 4px;
   background: var(--surface-2);
-  font-size: 0.875rem;
+  font-size: var(--font-lg);
 }
 
 .artifactView {
@@ -75,11 +75,11 @@
 
 .artifactScenario {
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: var(--font-xl);
 }
 
 .artifactActor {
-  font-size: 0.875rem;
+  font-size: var(--font-lg);
   color: var(--text-dim, #888);
 }
 
@@ -131,7 +131,7 @@
 }
 
 .bundleCardMeta {
-  font-size: 0.85rem;
+  font-size: var(--font-md);
   color: var(--text-dim);
   margin-top: 0.25rem;
 }
@@ -139,7 +139,7 @@
 .bundleIdChip {
   display: inline-block;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--font-2xs);
   color: var(--text-3);
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -182,13 +182,13 @@
 
 .guideTitle {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--font-xl);
   font-weight: 600;
 }
 
 .guideSub {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--font-lg);
   color: var(--text-dim, #888);
   line-height: 1.5;
 
@@ -207,7 +207,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  font-size: 0.9rem;
+  font-size: var(--font-lg);
   line-height: 1.55;
 
   code {
@@ -236,7 +236,7 @@
   background: var(--accent, #4fb1ff);
   color: var(--accent-foreground, #000);
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: var(--font-lg);
   text-decoration: none;
   transition: opacity 0.15s ease;
 
@@ -253,7 +253,7 @@
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: inherit;
-  font-size: 0.875rem;
+  font-size: var(--font-lg);
   text-decoration: none;
   transition: border-color 0.15s ease;
 
@@ -268,7 +268,7 @@
 
   summary {
     cursor: pointer;
-    font-size: 0.875rem;
+    font-size: var(--font-lg);
     font-weight: 600;
     user-select: none;
     list-style: revert;
@@ -286,7 +286,7 @@
   background: var(--bg-card, rgba(0, 0, 0, 0.25));
   border: 1px solid var(--border, #2a2a2a);
   font-family: var(--mono, ui-monospace, monospace);
-  font-size: 0.8rem;
+  font-size: var(--font-sm);
   line-height: 1.5;
   overflow-x: auto;
   max-height: 320px;
@@ -300,7 +300,7 @@
 
 .guideExampleNote {
   margin: 0.5rem 0 0;
-  font-size: 0.8rem;
+  font-size: var(--font-sm);
   color: var(--text-dim, #888);
   line-height: 1.5;
 

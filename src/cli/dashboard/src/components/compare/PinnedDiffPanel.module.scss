@@ -11,7 +11,7 @@
   text-align: center;
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 0.8rem;
+  font-size: var(--font-sm);
   border: 1px dashed var(--glass-border);
   border-radius: 8px;
 }
@@ -30,12 +30,12 @@
 .column h4 {
   margin: 0;
   font-family: var(--mono);
-  font-size: 0.85rem;
+  font-size: var(--font-md);
   color: var(--text-1);
 }
 
 .archetype {
-  font-size: 0.65rem;
+  font-size: var(--font-2xs);
   color: var(--text-3);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -45,7 +45,7 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
 }
 
 .loading {

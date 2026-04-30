@@ -80,7 +80,7 @@ export function RunStrip(props: RunStripProps) {
       }}
     >
       <div style={{
-        fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
+        fontSize: 'var(--font-xs)', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
         color: 'var(--amber)', fontFamily: 'var(--mono)', marginBottom: 8,
       }}>
         Run Strip
@@ -113,7 +113,7 @@ export function RunStrip(props: RunStripProps) {
               overflow: 'hidden',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-3)', gap: 2 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-2xs)', color: 'var(--text-3)', gap: 2 }}>
               <span style={{ fontWeight: 700 }}>T{cell.turn}</span>
               {cell.time && !isPhone && <span>Y{cell.time}</span>}
             </div>
@@ -122,7 +122,7 @@ export function RunStrip(props: RunStripProps) {
           </button>
         ))}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
         <span>{leaderAName}</span>
         <span>{leaderBName}</span>
       </div>

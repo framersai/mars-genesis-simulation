@@ -1,7 +1,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.85rem;
+  font-size: var(--font-md);
   font-family: var(--mono);
 
   th {
@@ -9,7 +9,7 @@
     color: var(--text-3);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    font-size: 0.7rem;
+    font-size: var(--font-xs);
     padding: 0.5rem;
     border-bottom: 1px solid var(--glass-border);
     font-weight: 600;
@@ -35,7 +35,7 @@
 }
 
 .modeCell {
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
   letter-spacing: 0.04em;
 
   &[data-mode="turn-loop"]        { color: var(--teal); }
@@ -54,7 +54,7 @@
     color: var(--text-2);
     padding: 0.2rem 0.5rem;
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: var(--font-sm);
     font-family: var(--sans);
 
     &:hover {

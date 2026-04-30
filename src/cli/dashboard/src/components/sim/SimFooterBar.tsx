@@ -49,7 +49,7 @@ export function SimFooterBar({ citationRegistry, toolRegistry }: SimFooterBarPro
         }}
       >
         <span style={{
-          fontSize: 9, fontFamily: 'var(--mono)', fontWeight: 800,
+          fontSize: 'var(--font-3xs)', fontFamily: 'var(--mono)', fontWeight: 800,
           color: 'var(--text-3)', letterSpacing: '0.08em',
           textTransform: 'uppercase',
         }}>
@@ -73,7 +73,7 @@ export function SimFooterBar({ citationRegistry, toolRegistry }: SimFooterBarPro
         )}
         <span style={{ flex: 1 }} />
         <span style={{
-          fontSize: 9, fontFamily: 'var(--mono)', color: 'var(--text-3)', fontStyle: 'italic',
+          fontSize: 'var(--font-3xs)', fontFamily: 'var(--mono)', color: 'var(--text-3)', fontStyle: 'italic',
         }}>
           Click any inline [N] pill to jump to its source.
         </span>
@@ -149,7 +149,7 @@ function ExportButton({ label, filename, data }: { label: string; filename: stri
         URL.revokeObjectURL(a.href);
       }}
       style={{
-        fontSize: 10, fontFamily: 'var(--mono)', fontWeight: 700,
+        fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', fontWeight: 700,
         padding: '4px 10px', borderRadius: 4,
         border: '1px solid var(--border)',
         background: 'var(--bg-card)',
@@ -173,7 +173,7 @@ function FooterCta({ label, count, onClick, ariaLabel }: { label: string; count:
         background: 'var(--bg-card)',
         border: '1px solid var(--border)',
         color: 'var(--text-2)',
-        fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 700,
+        fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)', fontWeight: 700,
         letterSpacing: '0.05em', cursor: 'pointer',
         transition: 'border-color 0.15s, color 0.15s, background 0.15s',
       }}
@@ -192,7 +192,7 @@ function FooterCta({ label, count, onClick, ariaLabel }: { label: string; count:
       <span style={{
         padding: '0 6px', borderRadius: 8,
         background: 'rgba(232,180,74,0.12)', color: 'var(--amber)',
-        fontSize: 10, fontWeight: 800,
+        fontSize: 'var(--font-2xs)', fontWeight: 800,
       }}>
         {count}
       </span>
@@ -234,7 +234,7 @@ function Modal({ title, onClose, children, extraActions }: { title: string; onCl
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexShrink: 0, gap: 8 }}>
           <h2 style={{
-            fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 800,
+            fontFamily: 'var(--mono)', fontSize: 'var(--font-lg)', fontWeight: 800,
             color: 'var(--amber)', letterSpacing: '0.06em',
             textTransform: 'uppercase', margin: 0, flex: 1, minWidth: 0,
           }}>
@@ -246,7 +246,7 @@ function Modal({ title, onClose, children, extraActions }: { title: string; onCl
             aria-label="Close"
             style={{
               background: 'none', border: 'none', color: 'var(--text-3)',
-              cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 4,
+              cursor: 'pointer', fontSize: 'var(--font-2xl)', lineHeight: 1, padding: 4,
             }}
           >
             ×

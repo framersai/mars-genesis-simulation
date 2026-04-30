@@ -56,7 +56,7 @@ export function ColonistSearch({ value, onChange, matches, onPick }: ColonistSea
       <span
         aria-hidden="true"
         style={{
-          fontSize: 14,
+          fontSize: 'var(--font-lg)',
           color: 'var(--text-3)',
           display: 'inline-flex',
           alignItems: 'center',
@@ -74,7 +74,7 @@ export function ColonistSearch({ value, onChange, matches, onPick }: ColonistSea
       </span>
       <span
         style={{
-          fontSize: 9,
+          fontSize: 'var(--font-3xs)',
           fontFamily: 'var(--mono)',
           color: 'var(--text-4)',
           letterSpacing: '0.1em',
@@ -100,7 +100,7 @@ export function ColonistSearch({ value, onChange, matches, onPick }: ColonistSea
           border: '1px solid var(--border)',
           borderRadius: 3,
           fontFamily: 'var(--mono)',
-          fontSize: 10,
+          fontSize: 'var(--font-2xs)',
           color: 'var(--text-1)',
           outline: 'none',
         }}
@@ -145,7 +145,7 @@ export function ColonistSearch({ value, onChange, matches, onPick }: ColonistSea
                 borderBottom: '1px solid var(--border)',
                 cursor: 'pointer',
                 fontFamily: 'var(--mono)',
-                fontSize: 10,
+                fontSize: 'var(--font-2xs)',
                 color: 'var(--text-2)',
                 textAlign: 'left',
               }}
@@ -162,7 +162,7 @@ export function ColonistSearch({ value, onChange, matches, onPick }: ColonistSea
                   borderRadius: 2,
                   background: `${m.sideColor}33`,
                   color: m.sideColor,
-                  fontSize: 8,
+                  fontSize: 'var(--font-3xs)',
                   fontWeight: 800,
                   letterSpacing: '0.1em',
                 }}
@@ -178,7 +178,7 @@ export function ColonistSearch({ value, onChange, matches, onPick }: ColonistSea
                 <span
                   style={{
                     marginLeft: 'auto',
-                    fontSize: 8,
+                    fontSize: 'var(--font-3xs)',
                     padding: '1px 4px',
                     borderRadius: 2,
                     background: `${m.sideColor}33`,
@@ -194,7 +194,7 @@ export function ColonistSearch({ value, onChange, matches, onPick }: ColonistSea
             <div
               style={{
                 padding: '4px 10px',
-                fontSize: 8,
+                fontSize: 'var(--font-3xs)',
                 color: 'var(--text-4)',
                 fontStyle: 'italic',
                 fontFamily: 'var(--mono)',
@@ -209,7 +209,7 @@ export function ColonistSearch({ value, onChange, matches, onPick }: ColonistSea
         <>
           <span
             style={{
-              fontSize: 9,
+              fontSize: 'var(--font-3xs)',
               fontFamily: 'var(--mono)',
               color: matchCount > 0 ? 'var(--amber)' : 'var(--rust)',
               letterSpacing: '0.05em',
@@ -230,7 +230,7 @@ export function ColonistSearch({ value, onChange, matches, onPick }: ColonistSea
               borderRadius: 3,
               cursor: 'pointer',
               fontFamily: 'var(--mono)',
-              fontSize: 9,
+              fontSize: 'var(--font-3xs)',
             }}
           >
             clear

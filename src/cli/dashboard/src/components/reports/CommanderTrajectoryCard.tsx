@@ -152,7 +152,7 @@ export function CommanderTrajectoryCard({
         border: '1px solid var(--border)',
         borderRadius: '4px',
         fontFamily: 'var(--mono)',
-        fontSize: '10px',
+        fontSize: 'var(--font-2xs)',
         color: 'var(--text-2)',
       }}
       aria-label={`HEXACO trajectory for ${actorName}`}

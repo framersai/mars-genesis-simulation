@@ -26,7 +26,7 @@ function ScoreBar({ label, a, b }: { label: string; a: number; b: number }) {
   const max = Math.max(a, b, 1);
   return (
     <div style={{ marginBottom: '6px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontFamily: 'var(--mono)', color: 'var(--text-3)', marginBottom: '2px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', color: 'var(--text-3)', marginBottom: '2px' }}>
         <span>{a.toFixed(0)}</span>
         <span style={{ fontWeight: 700, color: 'var(--text-2)' }}>{label}</span>
         <span>{b.toFixed(0)}</span>
@@ -57,9 +57,9 @@ function StatRow({ label, a, b, format }: { label: string; a: number; b: number;
   };
   const better = a > b ? 'a' : b > a ? 'b' : null;
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 0', fontSize: '12px', fontFamily: 'var(--mono)' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 0', fontSize: 'var(--font-sm)', fontFamily: 'var(--mono)' }}>
       <span style={{ color: better === 'a' ? 'var(--vis)' : 'var(--text-2)', fontWeight: better === 'a' ? 700 : 400 }}>{fmt(a)}</span>
-      <span style={{ color: 'var(--text-3)', fontSize: '10px' }}>{label}</span>
+      <span style={{ color: 'var(--text-3)', fontSize: 'var(--font-2xs)' }}>{label}</span>
       <span style={{ color: better === 'b' ? 'var(--eng)' : 'var(--text-2)', fontWeight: better === 'b' ? 700 : 400 }}>{fmt(b)}</span>
     </div>
   );
@@ -124,13 +124,13 @@ export function VerdictDetails({ v, onExport, copied }: { v: VerdictData; onExpo
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '10px', fontFamily: 'var(--mono)', fontWeight: 800, letterSpacing: '2px', color: 'var(--text-3)', marginBottom: '6px' }}>
+          <div style={{ fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', fontWeight: 800, letterSpacing: '2px', color: 'var(--text-3)', marginBottom: '6px' }}>
             SIMULATION VERDICT
           </div>
-          <div style={{ fontSize: '20px', fontFamily: 'var(--mono)', fontWeight: 800, color: winColor, marginBottom: '4px' }}>
+          <div style={{ fontSize: 'var(--font-2xl)', fontFamily: 'var(--mono)', fontWeight: 800, color: winColor, marginBottom: '4px' }}>
             {v.winner === 'tie' ? 'TIE' : `${v.winnerName} WINS`}
           </div>
-          <div style={{ fontSize: '14px', color: 'var(--text-1)', fontWeight: 600 }}>
+          <div style={{ fontSize: 'var(--font-lg)', color: 'var(--text-1)', fontWeight: 600 }}>
             {v.headline}
           </div>
         </div>
@@ -140,7 +140,7 @@ export function VerdictDetails({ v, onExport, copied }: { v: VerdictData; onExpo
               onClick={onExport}
               aria-label="Copy verdict as markdown"
               style={{
-                fontSize: 10, fontFamily: 'var(--mono)', fontWeight: 700,
+                fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', fontWeight: 700,
                 padding: '4px 10px', borderRadius: 4,
                 border: '1px solid var(--border)',
                 background: copied ? 'rgba(106,173,72,0.18)' : 'var(--bg-card)',
@@ -154,27 +154,27 @@ export function VerdictDetails({ v, onExport, copied }: { v: VerdictData; onExpo
         )}
       </div>
 
-      <div style={{ fontSize: '13px', color: 'var(--text-2)', lineHeight: 1.7, marginBottom: '16px' }}>
+      <div style={{ fontSize: 'var(--font-md)', color: 'var(--text-2)', lineHeight: 1.7, marginBottom: '16px' }}>
         {v.summary}
       </div>
 
       <div style={{
         background: 'var(--bg-deep)', border: '1px solid var(--border)', borderRadius: '6px',
-        padding: '10px 14px', marginBottom: '16px', fontSize: '12px',
+        padding: '10px 14px', marginBottom: '16px', fontSize: 'var(--font-sm)',
       }}>
-        <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, color: 'var(--amber)', fontSize: '10px', letterSpacing: '1px' }}>KEY DIVERGENCE</span>
+        <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, color: 'var(--amber)', fontSize: 'var(--font-2xs)', letterSpacing: '1px' }}>KEY DIVERGENCE</span>
         <div style={{ color: 'var(--text-2)', marginTop: '4px', lineHeight: 1.6 }}>{v.keyDivergence}</div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '16px', marginBottom: '16px' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '12px', fontFamily: 'var(--mono)', fontWeight: 800, color: 'var(--vis)' }}>{v.leaderA?.name || 'Leader A'}</div>
-          <div style={{ fontSize: '10px', color: 'var(--text-3)' }}>{v.leaderA?.archetype}</div>
+          <div style={{ fontSize: 'var(--font-sm)', fontFamily: 'var(--mono)', fontWeight: 800, color: 'var(--vis)' }}>{v.leaderA?.name || 'Leader A'}</div>
+          <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)' }}>{v.leaderA?.archetype}</div>
         </div>
-        <div style={{ fontSize: '10px', fontFamily: 'var(--mono)', color: 'var(--text-3)', alignSelf: 'center' }}>vs</div>
+        <div style={{ fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', color: 'var(--text-3)', alignSelf: 'center' }}>vs</div>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '12px', fontFamily: 'var(--mono)', fontWeight: 800, color: 'var(--eng)' }}>{v.leaderB?.name || 'Leader B'}</div>
-          <div style={{ fontSize: '10px', color: 'var(--text-3)' }}>{v.leaderB?.archetype}</div>
+          <div style={{ fontSize: 'var(--font-sm)', fontFamily: 'var(--mono)', fontWeight: 800, color: 'var(--eng)' }}>{v.leaderB?.name || 'Leader B'}</div>
+          <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)' }}>{v.leaderB?.archetype}</div>
         </div>
       </div>
 
@@ -187,7 +187,7 @@ export function VerdictDetails({ v, onExport, copied }: { v: VerdictData; onExpo
 
       {v.finalStats && (
         <div style={{ maxWidth: '400px', margin: '0 auto', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
-          <div style={{ fontSize: '10px', fontFamily: 'var(--mono)', fontWeight: 700, letterSpacing: '1px', color: 'var(--text-3)', marginBottom: '8px', textAlign: 'center' }}>FINAL COLONY STATS</div>
+          <div style={{ fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', fontWeight: 700, letterSpacing: '1px', color: 'var(--text-3)', marginBottom: '8px', textAlign: 'center' }}>FINAL COLONY STATS</div>
           <StatRow label="Population" a={v.finalStats.a?.population ?? 0} b={v.finalStats.b?.population ?? 0} />
           <StatRow label="Morale" a={v.finalStats.a?.morale ?? 0} b={v.finalStats.b?.morale ?? 0} format="percent" />
           <StatRow label="Food (mo)" a={v.finalStats.a?.food ?? 0} b={v.finalStats.b?.food ?? 0} format="decimal" />
@@ -288,24 +288,24 @@ export function VerdictCard({ verdict: raw }: VerdictCardProps) {
         }}
       >
         <span style={{
-          fontSize: 9, fontFamily: 'var(--mono)', fontWeight: 800,
+          fontSize: 'var(--font-3xs)', fontFamily: 'var(--mono)', fontWeight: 800,
           letterSpacing: '0.12em', color: 'var(--text-3)',
           textTransform: 'uppercase',
         }}>
           Verdict
         </span>
-        <span style={{ fontSize: 13, fontWeight: 800, color: winColor }}>
+        <span style={{ fontSize: 'var(--font-md)', fontWeight: 800, color: winColor }}>
           {winnerLabel}
         </span>
         <span style={{
-          fontSize: 12, color: 'var(--text-2)',
+          fontSize: 'var(--font-sm)', color: 'var(--text-2)',
           flex: 1, minWidth: 0,
           overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
         }}>
           {v.headline}
         </span>
         <span style={{
-          fontSize: 10, fontFamily: 'var(--mono)', fontWeight: 700,
+          fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', fontWeight: 700,
           color: 'var(--amber)', letterSpacing: '0.06em',
           padding: '3px 10px', borderRadius: 3,
           border: '1px solid var(--amber)',
@@ -348,7 +348,7 @@ export function VerdictCard({ verdict: raw }: VerdictCardProps) {
                 style={{
                   position: 'absolute', top: -4, right: -4,
                   background: 'none', border: 'none', color: 'var(--text-3)',
-                  cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: 4,
+                  cursor: 'pointer', fontSize: 'var(--font-2xl)', lineHeight: 1, padding: 4,
                   zIndex: 1,
                 }}
               >

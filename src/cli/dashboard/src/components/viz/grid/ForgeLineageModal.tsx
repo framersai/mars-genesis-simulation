@@ -100,10 +100,10 @@ export function ForgeLineageModal({
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <div>
-            <div style={{ fontSize: 9, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
               Forge Lineage · {payload.side.toUpperCase()}
             </div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: payload.sideColor, fontFamily: 'var(--sans)' }}>
+            <div style={{ fontSize: 'var(--font-xl)', fontWeight: 800, color: payload.sideColor, fontFamily: 'var(--sans)' }}>
               {payload.toolName}
             </div>
           </div>
@@ -120,7 +120,7 @@ export function ForgeLineageModal({
               border: '1px solid var(--border)',
               borderRadius: 3,
               cursor: 'pointer',
-              fontSize: 12,
+              fontSize: 'var(--font-sm)',
               lineHeight: 1,
             }}
           >
@@ -136,7 +136,7 @@ export function ForgeLineageModal({
               border: '1px solid var(--border)',
               borderRadius: 3,
               marginBottom: 12,
-              fontSize: 11,
+              fontSize: 'var(--font-xs)',
             }}
           >
             First forged in{' '}
@@ -153,7 +153,7 @@ export function ForgeLineageModal({
         <div style={{ marginBottom: 12 }}>
           <div
             style={{
-              fontSize: 9,
+              fontSize: 'var(--font-3xs)',
               letterSpacing: '0.1em',
               color: 'var(--text-4)',
               textTransform: 'uppercase',
@@ -164,7 +164,7 @@ export function ForgeLineageModal({
             Attempts ({data.mine.length})
           </div>
           {data.mine.length === 0 ? (
-            <div style={{ fontSize: 10, color: 'var(--text-4)', fontStyle: 'italic' }}>
+            <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-4)', fontStyle: 'italic' }}>
               no forge records
             </div>
           ) : (
@@ -180,12 +180,12 @@ export function ForgeLineageModal({
                     background: 'var(--bg-card)',
                     borderLeft: `2px solid ${att.approved ? 'var(--green)' : 'var(--rust)'}`,
                     borderRadius: 2,
-                    fontSize: 10,
+                    fontSize: 'var(--font-2xs)',
                   }}
                 >
                   <span
                     style={{
-                      fontSize: 8,
+                      fontSize: 'var(--font-3xs)',
                       fontWeight: 800,
                       letterSpacing: '0.08em',
                       color: att.approved ? 'var(--green)' : 'var(--rust)',
@@ -203,7 +203,7 @@ export function ForgeLineageModal({
                       border: 'none',
                       color: 'var(--amber)',
                       fontFamily: 'var(--mono)',
-                      fontSize: 10,
+                      fontSize: 'var(--font-2xs)',
                       cursor: onJumpToTurn ? 'pointer' : 'default',
                       padding: 0,
                       textDecoration: onJumpToTurn ? 'underline dotted' : 'none',
@@ -212,11 +212,11 @@ export function ForgeLineageModal({
                   >
                     T{att.turn}
                   </button>
-                  <span style={{ color: 'var(--text-3)', textTransform: 'uppercase', fontSize: 9 }}>
+                  <span style={{ color: 'var(--text-3)', textTransform: 'uppercase', fontSize: 'var(--font-3xs)' }}>
                     {att.department}
                   </span>
                   {typeof att.confidence === 'number' && (
-                    <span style={{ color: 'var(--text-3)', marginLeft: 'auto', fontSize: 9 }}>
+                    <span style={{ color: 'var(--text-3)', marginLeft: 'auto', fontSize: 'var(--font-3xs)' }}>
                       conf {att.confidence.toFixed(2)}
                     </span>
                   )}
@@ -229,7 +229,7 @@ export function ForgeLineageModal({
         <div>
           <div
             style={{
-              fontSize: 9,
+              fontSize: 'var(--font-3xs)',
               letterSpacing: '0.1em',
               color: 'var(--text-4)',
               textTransform: 'uppercase',
@@ -240,7 +240,7 @@ export function ForgeLineageModal({
             Cross-dept reuses ({data.mineReuses.length})
           </div>
           {data.mineReuses.length === 0 ? (
-            <div style={{ fontSize: 10, color: 'var(--text-4)', fontStyle: 'italic' }}>
+            <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-4)', fontStyle: 'italic' }}>
               never reused across departments
             </div>
           ) : (
@@ -256,7 +256,7 @@ export function ForgeLineageModal({
                     background: 'var(--bg-card)',
                     borderLeft: '2px solid var(--amber)',
                     borderRadius: 2,
-                    fontSize: 10,
+                    fontSize: 'var(--font-2xs)',
                   }}
                 >
                   <button
@@ -267,7 +267,7 @@ export function ForgeLineageModal({
                       border: 'none',
                       color: 'var(--amber)',
                       fontFamily: 'var(--mono)',
-                      fontSize: 10,
+                      fontSize: 'var(--font-2xs)',
                       cursor: onJumpToTurn ? 'pointer' : 'default',
                       padding: 0,
                       textDecoration: onJumpToTurn ? 'underline dotted' : 'none',
@@ -275,7 +275,7 @@ export function ForgeLineageModal({
                   >
                     T{r.turn}
                   </button>
-                  <span style={{ color: 'var(--text-3)', textTransform: 'uppercase', fontSize: 9 }}>
+                  <span style={{ color: 'var(--text-3)', textTransform: 'uppercase', fontSize: 'var(--font-3xs)' }}>
                     {r.originDept} → {r.callingDept}
                   </span>
                 </li>

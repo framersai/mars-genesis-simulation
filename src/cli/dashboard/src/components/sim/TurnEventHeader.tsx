@@ -25,27 +25,27 @@ export function TurnEventHeader({ actorIndex, event }: TurnEventHeaderProps) {
 
   const popover = (
     <div>
-      <b style={{ color: 'var(--rust)', fontSize: '15px', display: 'block', marginBottom: '4px' }}>
+      <b style={{ color: 'var(--rust)', fontSize: 'var(--font-lg)', display: 'block', marginBottom: '4px' }}>
         T{event.turn}: {event.title}
       </b>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
         <span style={{
-          fontSize: '10px', padding: '1px 6px', borderRadius: '3px',
+          fontSize: 'var(--font-2xs)', padding: '1px 6px', borderRadius: '3px',
           background: 'var(--bg-deep)', color: 'var(--text-3)', fontFamily: 'var(--mono)',
         }}>
           {event.category}
         </span>
         {event.emergent && (
-          <span style={{ fontSize: '9px', fontWeight: 800, color: 'var(--rust)', fontFamily: 'var(--mono)' }}>
+          <span style={{ fontSize: 'var(--font-3xs)', fontWeight: 800, color: 'var(--rust)', fontFamily: 'var(--mono)' }}>
             EMERGENT
           </span>
         )}
-        <span style={{ fontSize: '11px', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
+        <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
           {labels.Time} {event.time} &middot; Leader {String.fromCharCode(65 + actorIndex)}
         </span>
       </div>
       {fullText && (
-        <div style={{ fontSize: '13px', color: 'var(--text-1)', lineHeight: 1.7 }}>
+        <div style={{ fontSize: 'var(--font-md)', color: 'var(--text-1)', lineHeight: 1.7 }}>
           {fullText}
         </div>
       )}
@@ -55,31 +55,31 @@ export function TurnEventHeader({ actorIndex, event }: TurnEventHeaderProps) {
   return (
     <Tooltip content={popover} block>
       <div style={{
-        padding: '6px 12px', lineHeight: 1.4, fontSize: '13px', color: 'var(--text-1)',
+        padding: '6px 12px', lineHeight: 1.4, fontSize: 'var(--font-md)', color: 'var(--text-1)',
         background: 'linear-gradient(135deg, rgba(224,101,48,.1), transparent)',
         borderBottom: '1px solid var(--border)',
         display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, width: '100%',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', minWidth: 0 }}>
-          <span style={{ fontWeight: 800, color: 'var(--rust)', fontSize: '14px', flexShrink: 0 }}>
+          <span style={{ fontWeight: 800, color: 'var(--rust)', fontSize: 'var(--font-lg)', flexShrink: 0 }}>
             T{event.turn}: {event.title}
           </span>
           <span style={{
-            fontSize: '10px', color: 'var(--text-3)', background: 'var(--bg-deep)',
+            fontSize: 'var(--font-2xs)', color: 'var(--text-3)', background: 'var(--bg-deep)',
             padding: '1px 6px', borderRadius: '3px',
             fontFamily: 'var(--mono)', flexShrink: 0,
           }}>
             {event.category}
           </span>
           {event.emergent && (
-            <span style={{ fontSize: '9px', fontWeight: 800, color: 'var(--rust)', fontFamily: 'var(--mono)', flexShrink: 0 }}>
+            <span style={{ fontSize: 'var(--font-3xs)', fontWeight: 800, color: 'var(--rust)', fontFamily: 'var(--mono)', flexShrink: 0 }}>
               EMERGENT
             </span>
           )}
         </div>
         {fullText && (
           <span style={{
-            fontSize: '12px', color: 'var(--text-2)', fontStyle: 'italic',
+            fontSize: 'var(--font-sm)', color: 'var(--text-2)', fontStyle: 'italic',
             minWidth: 0,
             display: '-webkit-box',
             WebkitBoxOrient: 'vertical',

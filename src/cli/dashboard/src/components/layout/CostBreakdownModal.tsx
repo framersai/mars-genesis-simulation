@@ -101,7 +101,7 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
         }}
       >
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
-          <h3 style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 800, letterSpacing: '.05em', margin: 0, color: 'var(--amber)' }}>
+          <h3 style={{ fontFamily: 'var(--mono)', fontSize: 'var(--font-lg)', fontWeight: 800, letterSpacing: '.05em', margin: 0, color: 'var(--amber)' }}>
             COST BREAKDOWN
           </h3>
           <button
@@ -110,14 +110,14 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
             style={{
               background: 'transparent', color: 'var(--text-3)',
               border: '1px solid var(--border)', borderRadius: 4,
-              padding: '2px 10px', fontSize: 11, cursor: 'pointer',
+              padding: '2px 10px', fontSize: 'var(--font-xs)', cursor: 'pointer',
               fontFamily: 'var(--mono)',
             }}
           >
             ESC
           </button>
         </div>
-        <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 16 }}>
+        <div style={{ fontSize: 'var(--font-sm)', color: 'var(--text-3)', marginBottom: 16 }}>
           Total: <span style={{ color: 'var(--green)', fontFamily: 'var(--mono)', fontWeight: 800 }}>{fmtUsd(total)}</span>
           {' · '}
           {combined.llmCalls.toLocaleString()} calls
@@ -168,21 +168,21 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
               border: '1px solid rgba(106,173,72,0.2)',
             }}>
               <div style={{
-                color: 'var(--green)', fontWeight: 800, fontSize: 10,
+                color: 'var(--green)', fontWeight: 800, fontSize: 'var(--font-2xs)',
                 letterSpacing: '.08em', fontFamily: 'var(--mono)', marginBottom: 6,
               }}>
                 PROMPT CACHING
               </div>
               <div style={{
-                fontSize: 15, fontWeight: 700, color: verdictColor,
+                fontSize: 'var(--font-lg)', fontWeight: 700, color: verdictColor,
                 marginBottom: 4, fontFamily: 'var(--sans)',
               }}>
                 {verdictLine}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text-2)', fontFamily: 'var(--sans)', marginBottom: 6 }}>
+              <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-2)', fontFamily: 'var(--sans)', marginBottom: 6 }}>
                 {Math.round(hitRate * 100)}% hit rate on cached input ({fmtTokens(reads)} reused / {fmtTokens(total)} cache tokens)
               </div>
-              <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <span>reads {fmtTokens(reads)} <span style={{ opacity: 0.7 }}>@0.10×</span></span>
                 <span>creates {fmtTokens(creates)} <span style={{ opacity: 0.7 }}>@1.25×</span></span>
               </div>
@@ -191,13 +191,13 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
         })() : null}
 
         {rows.length === 0 ? (
-          <div style={{ padding: '24px 8px', color: 'var(--text-3)', fontSize: 13, textAlign: 'center' }}>
+          <div style={{ padding: '24px 8px', color: 'var(--text-3)', fontSize: 'var(--font-md)', textAlign: 'center' }}>
             No LLM calls have been billed yet. Start a simulation to see spend by pipeline stage.
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, fontFamily: 'var(--mono)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-sm)', fontFamily: 'var(--mono)' }}>
             <thead>
-              <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 10, letterSpacing: '.08em' }}>
+              <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 'var(--font-2xs)', letterSpacing: '.08em' }}>
                 <th style={{ padding: '4px 0', fontWeight: 700 }}>STAGE</th>
                 <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>CALLS</th>
                 <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>TOKENS</th>
@@ -213,8 +213,8 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
                 return (
                   <tr key={r.site} style={{ borderTop: '1px solid var(--border)' }}>
                     <td style={{ padding: '8px 0' }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-1)' }}>{info.label}</div>
-                      <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--sans)', marginTop: 1 }}>{info.description}</div>
+                      <div style={{ fontSize: 'var(--font-sm)', fontWeight: 700, color: 'var(--text-1)' }}>{info.label}</div>
+                      <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--sans)', marginTop: 1 }}>{info.description}</div>
                       {/* Proportional bar. Width maps to % of the largest
                           stage so you can eyeball relative scale at a glance. */}
                       <div aria-hidden="true" style={{
@@ -245,12 +245,12 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
             and the turn ran with an empty skeleton. */}
         {combined.schemaRetries && Object.keys(combined.schemaRetries).length > 0 && (
           <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
-            <div style={{ fontSize: 10, color: 'var(--text-3)', letterSpacing: '.08em', fontFamily: 'var(--mono)', marginBottom: 8 }}>
+            <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', letterSpacing: '.08em', fontFamily: 'var(--mono)', marginBottom: 8 }}>
               SCHEMA RELIABILITY
             </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--mono)' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)' }}>
               <thead>
-                <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 10, letterSpacing: '.08em' }}>
+                <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 'var(--font-2xs)', letterSpacing: '.08em' }}>
                   <th style={{ padding: '4px 0', fontWeight: 700 }}>SCHEMA</th>
                   <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>CALLS</th>
                   <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>AVG ATTEMPTS</th>
@@ -277,7 +277,7 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
                   })}
               </tbody>
             </table>
-            <div style={{ marginTop: 6, fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--sans)' }}>
+            <div style={{ marginTop: 6, fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--sans)' }}>
               1.00 = first-try success. Higher = model retrying on validation failures. Tune <code style={{ fontFamily: 'var(--mono)' }}>maxRetries</code> or tighten schema if a row stays above 1.3.
             </div>
           </div>
@@ -290,7 +290,7 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
             marginal quality. */}
         {combined.forgeStats && combined.forgeStats.attempts > 0 && (
           <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
-            <div style={{ fontSize: 10, color: 'var(--text-3)', letterSpacing: '.08em', fontFamily: 'var(--mono)', marginBottom: 8 }}>
+            <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', letterSpacing: '.08em', fontFamily: 'var(--mono)', marginBottom: 8 }}>
               FORGE RELIABILITY
             </div>
             {(() => {
@@ -300,9 +300,9 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
               const rateColor = approvalRate < 0.5 ? 'var(--rust)' : approvalRate < 0.75 ? 'var(--amber)' : 'var(--green)';
               const confColor = avgConf > 0 && avgConf < 0.6 ? 'var(--amber)' : 'var(--text-1)';
               return (
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--mono)' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)' }}>
                   <thead>
-                    <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 10, letterSpacing: '.08em' }}>
+                    <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 'var(--font-2xs)', letterSpacing: '.08em' }}>
                       <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>ATTEMPTS</th>
                       <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>APPROVED</th>
                       <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>REJECTED</th>
@@ -322,7 +322,7 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
                 </table>
               );
             })()}
-            <div style={{ marginTop: 6, fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--sans)' }}>
+            <div style={{ marginTop: 6, fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--sans)' }}>
               Rejections come from shape check OR judge verdict. Retry-with-feedback usually recovers; persistent low approval rate suggests the department model is weak at writing schema-compliant code.
             </div>
           </div>
@@ -336,14 +336,14 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
           const rs = retryStats.data;
           if (retryStats.loading && !rs) {
             return (
-              <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)', fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
+              <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)', fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
                 RECENT RUNS — loading…
               </div>
             );
           }
           if (retryStats.error) {
             return (
-              <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)', fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
+              <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)', fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
                 RECENT RUNS — <span style={{ color: 'var(--rust)' }}>fetch failed ({retryStats.error})</span>
               </div>
             );
@@ -375,16 +375,16 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
 
           return (
             <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
-              <div style={{ fontSize: 10, color: 'var(--text-3)', letterSpacing: '.08em', fontFamily: 'var(--mono)', marginBottom: 8 }}>
+              <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', letterSpacing: '.08em', fontFamily: 'var(--mono)', marginBottom: 8 }}>
                 RECENT RUNS (last {rs.runCount})
               </div>
 
               {runtimeSchemas.length > 0 && (
                 <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>RUNTIME SCHEMAS</div>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--mono)' }}>
+                  <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>RUNTIME SCHEMAS</div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)' }}>
                     <thead>
-                      <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 10, letterSpacing: '.08em' }}>
+                      <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 'var(--font-2xs)', letterSpacing: '.08em' }}>
                         <th style={{ padding: '4px 0', fontWeight: 700 }}>SCHEMA</th>
                         <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>CALLS</th>
                         <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>AVG ATT</th>
@@ -400,10 +400,10 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
 
               {compileSchemas.length > 0 && (
                 <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>COMPILE HOOKS</div>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--mono)' }}>
+                  <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>COMPILE HOOKS</div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)' }}>
                     <thead>
-                      <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 10, letterSpacing: '.08em' }}>
+                      <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 'var(--font-2xs)', letterSpacing: '.08em' }}>
                         <th style={{ padding: '4px 0', fontWeight: 700 }}>HOOK</th>
                         <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>CALLS</th>
                         <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>AVG ATT</th>
@@ -419,10 +419,10 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
 
               {forges && forges.runsPresent > 0 && (
                 <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>FORGES</div>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--mono)' }}>
+                  <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>FORGES</div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)' }}>
                     <thead>
-                      <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 10, letterSpacing: '.08em' }}>
+                      <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 'var(--font-2xs)', letterSpacing: '.08em' }}>
                         <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>RUNS</th>
                         <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>ATTEMPTS</th>
                         <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>ATTEMPT RATE</th>
@@ -452,7 +452,7 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
                       </tr>
                     </tbody>
                   </table>
-                  <div style={{ marginTop: 4, fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--sans)' }}>
+                  <div style={{ marginTop: 4, fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--sans)' }}>
                     ATTEMPT RATE counts every forge call including retries. EVENTUALLY APPROVED is the real quality signal — tools that landed in the toolbox. TERMINAL FAILS are tools the retry loop never recovered.
                   </div>
                   {(() => {
@@ -462,12 +462,12 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
                     const pct = (n: number) => totalCategorized > 0 ? Math.round((n / totalCategorized) * 100) : 0;
                     return (
                       <div style={{ marginTop: 10 }}>
-                        <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>
+                        <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>
                           REJECTION REASONS (last {forges.runsPresent} run{forges.runsPresent === 1 ? '' : 's'})
                         </div>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--mono)' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)' }}>
                           <thead>
-                            <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 10, letterSpacing: '.08em' }}>
+                            <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 'var(--font-2xs)', letterSpacing: '.08em' }}>
                               <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>SCHEMA EXTRA FIELD</th>
                               <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>SHAPE CHECK</th>
                               <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>PARSE ERROR</th>
@@ -495,7 +495,7 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
                             </tr>
                           </tbody>
                         </table>
-                        <div style={{ marginTop: 4, fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--sans)' }}>
+                        <div style={{ marginTop: 4, fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--sans)' }}>
                           SCHEMA EXTRA FIELD dominating means the LLM's return-keys don't match its declared outputSchema.properties — the target of the 2026-04-18 forge-guidance prompt fix. JUDGE CORRECTNESS = real logic bugs the judge caught.
                         </div>
                       </div>
@@ -506,10 +506,10 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
 
               {providerErrors && providerErrors.runsPresent > 0 && (
                 <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>PROVIDER ERRORS</div>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--mono)' }}>
+                  <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>PROVIDER ERRORS</div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)' }}>
                     <thead>
-                      <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 10, letterSpacing: '.08em' }}>
+                      <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 'var(--font-2xs)', letterSpacing: '.08em' }}>
                         <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>RUNS W/ ERRORS</th>
                         <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>TOTAL</th>
                         <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>AUTH</th>
@@ -531,7 +531,7 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
                       </tr>
                     </tbody>
                   </table>
-                  <div style={{ marginTop: 4, fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--sans)' }}>
+                  <div style={{ marginTop: 4, fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--sans)' }}>
                     AUTH/QUOTA are terminal (run aborts). RATE/NET/OTHER are non-terminal — the retry layer handles them.
                   </div>
                 </div>
@@ -539,10 +539,10 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
 
               {caches && caches.runsPresent > 0 && (
                 <div>
-                  <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>PROMPT CACHE</div>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--mono)' }}>
+                  <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>PROMPT CACHE</div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)' }}>
                     <thead>
-                      <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 10, letterSpacing: '.08em' }}>
+                      <tr style={{ color: 'var(--text-3)', textAlign: 'left', fontSize: 'var(--font-2xs)', letterSpacing: '.08em' }}>
                         <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>RUNS WITH CACHE</th>
                         <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>READ TOKENS</th>
                         <th style={{ padding: '4px 0', fontWeight: 700, textAlign: 'right' }}>CREATE TOKENS</th>
@@ -564,7 +564,7 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
                       </tr>
                     </tbody>
                   </table>
-                  <div style={{ marginTop: 4, fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--sans)' }}>
+                  <div style={{ marginTop: 4, fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--sans)' }}>
                     Read ratio &gt;= 70% is healthy. Lower ratios mean the cache keeps getting invalidated.
                   </div>
                 </div>
@@ -578,19 +578,19 @@ export function CostBreakdownModal({ combined, leaderA, leaderB, leaderAName, le
             runaway tool-call loop on one side). */}
         {leaderA && leaderB && (leaderA.totalCostUSD > 0 || leaderB.totalCostUSD > 0) && (
           <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
-            <div style={{ fontSize: 10, color: 'var(--text-3)', letterSpacing: '.08em', fontFamily: 'var(--mono)', marginBottom: 8 }}>
+            <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', letterSpacing: '.08em', fontFamily: 'var(--mono)', marginBottom: 8 }}>
               PER LEADER
             </div>
-            <div style={{ display: 'flex', gap: 12, fontFamily: 'var(--mono)', fontSize: 12 }}>
+            <div style={{ display: 'flex', gap: 12, fontFamily: 'var(--mono)', fontSize: 'var(--font-sm)' }}>
               <div style={{ flex: 1, padding: 12, background: 'var(--bg-deep)', borderRadius: 4, border: '1px solid var(--border)' }}>
                 <div style={{ color: 'var(--vis)', fontWeight: 800, marginBottom: 4 }}>{leaderAName || 'Leader A'}</div>
-                <div style={{ color: 'var(--green)', fontSize: 14, fontWeight: 800 }}>{fmtUsd(leaderA.totalCostUSD)}</div>
-                <div style={{ color: 'var(--text-3)', fontSize: 10, marginTop: 2 }}>{leaderA.llmCalls} calls · {fmtTokens(leaderA.totalTokens)} tok</div>
+                <div style={{ color: 'var(--green)', fontSize: 'var(--font-lg)', fontWeight: 800 }}>{fmtUsd(leaderA.totalCostUSD)}</div>
+                <div style={{ color: 'var(--text-3)', fontSize: 'var(--font-2xs)', marginTop: 2 }}>{leaderA.llmCalls} calls · {fmtTokens(leaderA.totalTokens)} tok</div>
               </div>
               <div style={{ flex: 1, padding: 12, background: 'var(--bg-deep)', borderRadius: 4, border: '1px solid var(--border)' }}>
                 <div style={{ color: 'var(--eng)', fontWeight: 800, marginBottom: 4 }}>{leaderBName || 'Leader B'}</div>
-                <div style={{ color: 'var(--green)', fontSize: 14, fontWeight: 800 }}>{fmtUsd(leaderB.totalCostUSD)}</div>
-                <div style={{ color: 'var(--text-3)', fontSize: 10, marginTop: 2 }}>{leaderB.llmCalls} calls · {fmtTokens(leaderB.totalTokens)} tok</div>
+                <div style={{ color: 'var(--green)', fontSize: 'var(--font-lg)', fontWeight: 800 }}>{fmtUsd(leaderB.totalCostUSD)}</div>
+                <div style={{ color: 'var(--text-3)', fontSize: 'var(--font-2xs)', marginTop: 2 }}>{leaderB.llmCalls} calls · {fmtTokens(leaderB.totalTokens)} tok</div>
               </div>
             </div>
           </div>

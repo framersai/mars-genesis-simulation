@@ -219,10 +219,10 @@ export function AboutPage() {
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header */}
         <header style={{ marginBottom: '24px' }}>
-          <h1 style={{ fontSize: '22px', color: 'var(--text-1)', fontFamily: 'var(--mono)', marginBottom: '8px', letterSpacing: '.12em', fontWeight: 700 }}>
+          <h1 style={{ fontSize: 'var(--font-2xl)', color: 'var(--text-1)', fontFamily: 'var(--mono)', marginBottom: '8px', letterSpacing: '.12em', fontWeight: 700 }}>
             PARA<span style={{ color: 'var(--amber)' }}>COSM</span>
           </h1>
-          <p style={{ color: 'var(--text-2)', lineHeight: 1.8, fontSize: '14px' }}>
+          <p style={{ color: 'var(--text-2)', lineHeight: 1.8, fontSize: 'var(--font-lg)' }}>
             Structured world model for AI agents. Start from a prompt, brief, URL, or scenario JSON draft,
             compile or ground it into a typed world contract, then assign AI leaders with distinct personalities.
             Watch their decisions compound into divergent outcomes from identical starting
@@ -230,19 +230,19 @@ export function AboutPage() {
             decision maker. The engine handles event generation, department analysis, tool forging, personality
             drift, and state transitions. Currently running: <strong style={{ color: 'var(--amber)' }}>{scenario.labels.name}</strong>.
           </p>
-          <p style={{ color: 'var(--text-3)', lineHeight: 1.8, fontSize: '12px', marginTop: '10px' }}>
+          <p style={{ color: 'var(--text-3)', lineHeight: 1.8, fontSize: 'var(--font-sm)', marginTop: '10px' }}>
             Availability note: the open-source engine is available now. Hosted Pro, Enterprise, and Platform offerings shown below are roadmap tiers and early-access packaging, not generally available SaaS products yet.
           </p>
         </header>
 
         <section style={{ marginBottom: '24px' }} aria-labelledby="surface-heading">
-          <h2 id="surface-heading" style={{ fontSize: '20px', color: 'var(--amber)', fontFamily: 'var(--mono)', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>
+          <h2 id="surface-heading" style={{ fontSize: 'var(--font-2xl)', color: 'var(--amber)', fontFamily: 'var(--mono)', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>
             Product Surface
           </h2>
           <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
             {[{ title: 'Use Today', items: availableSurfaces }, { title: 'Roadmap', items: roadmapSurfaces }].map(group => (
               <div key={group.title} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', padding: '14px 16px', boxShadow: 'var(--card-shadow)' }}>
-                <div style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--amber)', fontFamily: 'var(--mono)', marginBottom: '10px' }}>
+                <div style={{ fontSize: 'var(--font-xs)', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--amber)', fontFamily: 'var(--mono)', marginBottom: '10px' }}>
                   {group.title}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -251,9 +251,9 @@ export function AboutPage() {
                     return (
                       <article key={item.title} style={{ padding: '10px 12px', borderRadius: '6px', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
-                          <h3 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-1)' }}>{item.title}</h3>
+                          <h3 style={{ fontSize: 'var(--font-md)', fontWeight: 700, color: 'var(--text-1)' }}>{item.title}</h3>
                           <span style={{
-                            fontSize: '9px',
+                            fontSize: 'var(--font-3xs)',
                             fontWeight: 800,
                             letterSpacing: '1px',
                             textTransform: 'uppercase',
@@ -266,8 +266,8 @@ export function AboutPage() {
                             {item.status.label}
                           </span>
                         </div>
-                        <p style={{ fontSize: '12px', color: 'var(--text-2)', lineHeight: 1.6, marginBottom: '4px' }}>{item.description}</p>
-                        <p style={{ fontSize: '11px', color: 'var(--text-3)', lineHeight: 1.6 }}>{item.status.detail}</p>
+                        <p style={{ fontSize: 'var(--font-sm)', color: 'var(--text-2)', lineHeight: 1.6, marginBottom: '4px' }}>{item.description}</p>
+                        <p style={{ fontSize: 'var(--font-xs)', color: 'var(--text-3)', lineHeight: 1.6 }}>{item.status.detail}</p>
                       </article>
                     );
                   })}
@@ -279,7 +279,7 @@ export function AboutPage() {
 
         {/* How it works */}
         <section style={{ marginBottom: '24px' }} aria-labelledby="how-heading">
-          <h2 id="how-heading" style={{ fontSize: '20px', color: 'var(--amber)', fontFamily: 'var(--mono)', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>
+          <h2 id="how-heading" style={{ fontSize: 'var(--font-2xl)', color: 'var(--amber)', fontFamily: 'var(--mono)', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>
             How It Works
           </h2>
           <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -292,8 +292,8 @@ export function AboutPage() {
               { title: 'Any Domain', desc: 'Space colonies, corporate strategy, military wargaming, policy simulation, game worlds. Define departments, metrics, and events in JSON. The engine handles the rest.' },
             ].map(item => (
               <div key={item.title} className="hover-glow" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px 16px', boxShadow: 'var(--card-shadow)' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-1)', fontFamily: 'var(--mono)', marginBottom: '4px' }}>{item.title}</h3>
-                <p style={{ fontSize: '13px', color: 'var(--text-2)', lineHeight: 1.6 }}>{item.desc}</p>
+                <h3 style={{ fontSize: 'var(--font-lg)', fontWeight: 700, color: 'var(--text-1)', fontFamily: 'var(--mono)', marginBottom: '4px' }}>{item.title}</h3>
+                <p style={{ fontSize: 'var(--font-md)', color: 'var(--text-2)', lineHeight: 1.6 }}>{item.desc}</p>
               </div>
             ))}
           </div>
@@ -307,22 +307,22 @@ export function AboutPage() {
             borderRadius: '8px', padding: '20px 24px',
             boxShadow: 'var(--raised-shadow), 0 0 30px var(--amber-glow)',
           }}>
-            <div style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '8px', color: 'var(--amber)', fontFamily: 'var(--mono)' }}>
+            <div style={{ fontSize: 'var(--font-2xs)', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '8px', color: 'var(--amber)', fontFamily: 'var(--mono)' }}>
               Open Core + Hosted Roadmap
             </div>
-            <h3 id="hosted-heading" style={{ fontSize: '18px', fontWeight: 700, marginBottom: '10px', color: 'var(--text-1)', fontFamily: 'var(--mono)' }}>
+            <h3 id="hosted-heading" style={{ fontSize: 'var(--font-2xl)', fontWeight: 700, marginBottom: '10px', color: 'var(--text-1)', fontFamily: 'var(--mono)' }}>
               Planned Hosted Packaging
             </h3>
-            <p style={{ color: 'var(--text-2)', lineHeight: 1.8, fontSize: '14px', marginBottom: '12px' }}>
+            <p style={{ color: 'var(--text-2)', lineHeight: 1.8, fontSize: 'var(--font-lg)', marginBottom: '12px' }}>
               The open-source engine supports unlimited leaders and simulations via the API today. The dashboard demo runs two leaders
               side-by-side. The planned hosted product targets organizations that need to run dozens or hundreds of simulations in parallel.
             </p>
-            <p style={{ color: 'var(--text-2)', lineHeight: 1.8, fontSize: '14px', marginBottom: '12px' }}>
+            <p style={{ color: 'var(--text-2)', lineHeight: 1.8, fontSize: 'var(--font-lg)', marginBottom: '12px' }}>
               Defense agencies stress-testing doctrine across leadership profiles. Corporations modeling executive decision-making
               under different market scenarios. Game studios generating divergent NPC civilizations at scale. Government agencies
               simulating policy outcomes before implementation.
             </p>
-            <p style={{ color: 'var(--text-2)', lineHeight: 1.8, fontSize: '14px', marginBottom: '16px' }}>
+            <p style={{ color: 'var(--text-2)', lineHeight: 1.8, fontSize: 'var(--font-lg)', marginBottom: '16px' }}>
               Fleet orchestration, distributed parallelization, team workspaces, persistent agent memory, private deployment,
               and enterprise auth are on the roadmap. The open-source engine and Apache-2.0 license are the permanent foundation.
             </p>
@@ -335,7 +335,7 @@ export function AboutPage() {
                   gap: '8px',
                   padding: '10px 20px',
                   borderRadius: '6px',
-                  fontSize: '13px',
+                  fontSize: 'var(--font-md)',
                   fontWeight: 700,
                   background: 'var(--amber)',
                   color: 'var(--bg-deep)',
@@ -351,7 +351,7 @@ export function AboutPage() {
                   gap: '8px',
                   padding: '10px 20px',
                   borderRadius: '6px',
-                  fontSize: '13px',
+                  fontSize: 'var(--font-md)',
                   fontWeight: 700,
                   background: 'var(--bg-elevated)',
                   color: 'var(--amber)',
@@ -366,8 +366,8 @@ export function AboutPage() {
 
         {/* Pricing */}
         <section style={{ marginBottom: '24px' }} aria-labelledby="pricing-heading">
-          <h2 id="pricing-heading" style={{ fontSize: '20px', color: 'var(--amber)', fontFamily: 'var(--mono)', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '10px' }}>Pricing</h2>
-          <p style={{ fontSize: '13px', color: 'var(--text-3)', marginBottom: '14px' }}>
+          <h2 id="pricing-heading" style={{ fontSize: 'var(--font-2xl)', color: 'var(--amber)', fontFamily: 'var(--mono)', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '10px' }}>Pricing</h2>
+          <p style={{ fontSize: 'var(--font-md)', color: 'var(--text-3)', marginBottom: '14px' }}>
             Open-core model: the simulation engine is free and open source (Apache-2.0) forever. The paid tiers below are planned hosted
             packaging for infrastructure, persistence, governance, and zero-code workflows. No vendor lock-in.
           </p>
@@ -390,9 +390,9 @@ export function AboutPage() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                    <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-1)' }}>{tier.name}</h3>
+                    <h3 style={{ fontSize: 'var(--font-lg)', fontWeight: 700, color: 'var(--text-1)' }}>{tier.name}</h3>
                     <span style={{
-                      fontSize: '9px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase',
+                      fontSize: 'var(--font-3xs)', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase',
                       padding: '2px 8px', borderRadius: '12px',
                       color: tone.color, background: tone.background, border: `1px solid ${tone.border}`,
                     }}>
@@ -400,12 +400,12 @@ export function AboutPage() {
                     </span>
                   </div>
                 <div style={{ marginBottom: '8px' }}>
-                  <span style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-1)' }}>{tier.price}</span>
-                  <span style={{ fontSize: '12px', marginLeft: '4px', color: 'var(--text-3)' }}>{tier.period}</span>
+                  <span style={{ fontSize: 'var(--font-2xl)', fontWeight: 800, color: 'var(--text-1)' }}>{tier.price}</span>
+                  <span style={{ fontSize: 'var(--font-sm)', marginLeft: '4px', color: 'var(--text-3)' }}>{tier.period}</span>
                 </div>
-                <p style={{ fontSize: '12px', marginBottom: '12px', color: 'var(--text-2)' }}>{tier.description}</p>
-                <p style={{ fontSize: '11px', marginBottom: '12px', color: 'var(--text-3)', lineHeight: 1.6 }}>{status.detail}</p>
-                <ul style={{ fontSize: '12px', listStyle: 'none', padding: 0, marginBottom: '16px', flex: 1, color: 'var(--text-3)' }}>
+                <p style={{ fontSize: 'var(--font-sm)', marginBottom: '12px', color: 'var(--text-2)' }}>{tier.description}</p>
+                <p style={{ fontSize: 'var(--font-xs)', marginBottom: '12px', color: 'var(--text-3)', lineHeight: 1.6 }}>{status.detail}</p>
+                <ul style={{ fontSize: 'var(--font-sm)', listStyle: 'none', padding: 0, marginBottom: '16px', flex: 1, color: 'var(--text-3)' }}>
                   {tier.features.map(f => (
                     <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', marginBottom: '6px' }}>
                       <span style={{ color: 'var(--green)', flexShrink: 0 }}>&#10003;</span>
@@ -421,7 +421,7 @@ export function AboutPage() {
                     textAlign: 'center',
                     padding: '8px 16px',
                     borderRadius: '4px',
-                    fontSize: '12px',
+                    fontSize: 'var(--font-sm)',
                     fontWeight: 700,
                     display: 'block',
                     textDecoration: 'none',
@@ -440,14 +440,14 @@ export function AboutPage() {
 
         {/* FAQ */}
         <section style={{ marginBottom: '24px' }} aria-labelledby="faq-heading">
-          <h2 id="faq-heading" style={{ fontSize: '20px', color: 'var(--amber)', fontFamily: 'var(--mono)', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>Frequently Asked Questions</h2>
+          <h2 id="faq-heading" style={{ fontSize: 'var(--font-2xl)', color: 'var(--amber)', fontFamily: 'var(--mono)', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>Frequently Asked Questions</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {FAQ.map((item, i) => (
               <details key={i} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px' }}>
-                <summary style={{ padding: '12px 16px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', color: 'var(--text-1)' }}>
+                <summary style={{ padding: '12px 16px', fontSize: 'var(--font-lg)', fontWeight: 600, cursor: 'pointer', color: 'var(--text-1)' }}>
                   {item.q}
                 </summary>
-                <div style={{ padding: '0 16px 12px', fontSize: '12px', lineHeight: 1.7, color: 'var(--text-2)' }}>
+                <div style={{ padding: '0 16px 12px', fontSize: 'var(--font-sm)', lineHeight: 1.7, color: 'var(--text-2)' }}>
                   {item.a}
                 </div>
               </details>
@@ -457,8 +457,8 @@ export function AboutPage() {
 
         {/* Tech stack */}
         <section style={{ marginBottom: '24px' }} aria-labelledby="tech-heading">
-          <h2 id="tech-heading" style={{ fontSize: '20px', color: 'var(--amber)', fontFamily: 'var(--mono)', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>Technology</h2>
-          <div className="responsive-grid-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', fontSize: '12px' }}>
+          <h2 id="tech-heading" style={{ fontSize: 'var(--font-2xl)', color: 'var(--amber)', fontFamily: 'var(--mono)', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>Technology</h2>
+          <div className="responsive-grid-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', fontSize: 'var(--font-sm)' }}>
             {[
               { label: 'Runtime', value: 'AgentOS (TypeScript)' },
               { label: 'Package', value: 'npm: paracosm' },
@@ -474,7 +474,7 @@ export function AboutPage() {
               { label: 'Batch Runner', value: 'Multi-scenario experiments' },
             ].map(item => (
               <div key={item.label} style={{ padding: '8px 12px', borderRadius: '4px', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                <div style={{ fontWeight: 700, color: 'var(--text-3)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{item.label}</div>
+                <div style={{ fontWeight: 700, color: 'var(--text-3)', fontSize: 'var(--font-2xs)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{item.label}</div>
                 <div style={{ color: 'var(--text-1)', marginTop: '2px' }}>{item.value}</div>
               </div>
             ))}
@@ -483,7 +483,7 @@ export function AboutPage() {
 
         {/* Links */}
         <section style={{ marginBottom: '16px' }} aria-labelledby="links-heading">
-          <h2 id="links-heading" style={{ fontSize: '20px', color: 'var(--amber)', fontFamily: 'var(--mono)', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>Links</h2>
+          <h2 id="links-heading" style={{ fontSize: 'var(--font-2xl)', color: 'var(--amber)', fontFamily: 'var(--mono)', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>Links</h2>
           <nav aria-label="External links" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
             <a href="https://agentos.sh" target="_blank" rel="noopener" style={{ color: 'var(--amber)' }}>agentos.sh</a>
             <a href="https://docs.agentos.sh" target="_blank" rel="noopener" style={{ color: 'var(--amber)' }}>Documentation</a>

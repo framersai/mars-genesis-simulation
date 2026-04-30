@@ -91,7 +91,7 @@ export function GridModePills({
               // viewports rather than squishing pills into letter-stacks.
               flex: '1 0 auto',
               padding: '5px 8px',
-              fontSize: 9,
+              fontSize: 'var(--font-3xs)',
               fontFamily: 'var(--mono)',
               fontWeight: 800,
               letterSpacing: '0.1em',
@@ -123,7 +123,7 @@ export function GridModePills({
                   borderRadius: 2,
                   background: active ? 'rgba(10, 8, 6, 0.25)' : 'var(--bg-deep)',
                   color: active ? 'var(--bg-deep)' : 'var(--amber)',
-                  fontSize: 8,
+                  fontSize: 'var(--font-3xs)',
                   fontWeight: 700,
                   letterSpacing: '0.05em',
                   minWidth: 14,

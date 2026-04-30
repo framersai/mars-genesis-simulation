@@ -32,7 +32,7 @@ export function HexacoSlider({ label, shortLabel, value, onChange, sideColor }: 
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-      <label style={{ fontSize: '12px', color: 'var(--text-2)', minWidth: '32px', fontWeight: 700 }}>
+      <label style={{ fontSize: 'var(--font-sm)', color: 'var(--text-2)', minWidth: '32px', fontWeight: 700 }}>
         {shortLabel}
       </label>
       <input
@@ -43,13 +43,13 @@ export function HexacoSlider({ label, shortLabel, value, onChange, sideColor }: 
         aria-label={label}
         aria-valuetext={value.toFixed(2)}
       />
-      <span style={{ fontSize: '13px', fontFamily: 'var(--mono)', minWidth: '36px', textAlign: 'right', color: 'var(--text-1)', fontWeight: 600 }}>
+      <span style={{ fontSize: 'var(--font-md)', fontFamily: 'var(--mono)', minWidth: '36px', textAlign: 'right', color: 'var(--text-1)', fontWeight: 600 }}>
         {value.toFixed(2)}
       </span>
       {/* Always render the descriptor slot so the flex row does not resize
           as value crosses the 0.3 / 0.7 thresholds. Empty string still
           reserves the minWidth. */}
-      <span style={{ fontSize: '9px', color: 'var(--text-3)', minWidth: '55px', fontFamily: 'var(--mono)' }}>
+      <span style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-3)', minWidth: '55px', fontFamily: 'var(--mono)' }}>
         {desc}
       </span>
     </div>

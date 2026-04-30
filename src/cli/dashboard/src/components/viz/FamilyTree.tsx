@@ -20,7 +20,7 @@ function Thumb({ cell, onSelect, relation }: { cell: CellSnapshot; onSelect: (id
         background: 'var(--bg-card)',
         border: `1px solid var(--border)`,
         borderRadius: 6, cursor: 'pointer',
-        fontFamily: 'var(--mono)', fontSize: 10,
+        fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)',
         color: cell.alive ? 'var(--text-1)' : 'var(--text-3)',
         textDecoration: cell.alive ? undefined : 'line-through',
       }}
@@ -41,7 +41,7 @@ export function FamilyTree({ center, byId, onSelect }: FamilyTreeProps) {
   const partner = center.partnerId ? byId.get(center.partnerId) : null;
   const children = center.childrenIds.map(id => byId.get(id)).filter((c): c is CellSnapshot => !!c);
   if (!partner && children.length === 0) {
-    return <div style={{ fontSize: 10, color: 'var(--text-3)' }}>No listed family.</div>;
+    return <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)' }}>No listed family.</div>;
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -50,7 +50,7 @@ export function FamilyTree({ center, byId, onSelect }: FamilyTreeProps) {
         <Thumb key={c.agentId} cell={c} onSelect={onSelect} relation="child" />
       ))}
       {children.length > 4 && (
-        <div style={{ fontSize: 10, color: 'var(--text-3)' }}>+{children.length - 4} more children</div>
+        <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)' }}>+{children.length - 4} more children</div>
       )}
     </div>
   );

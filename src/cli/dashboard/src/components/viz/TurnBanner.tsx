@@ -79,7 +79,7 @@ export function TurnBanner({ state, currentTurn }: TurnBannerProps) {
       aria-label="Current turn narrative"
       style={{
         display: 'flex', flexDirection: 'column', gap: 4,
-        padding: '8px 12px', fontSize: 11, fontFamily: 'var(--mono)',
+        padding: '8px 12px', fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)',
         background: 'var(--bg-panel)', borderBottom: '1px solid var(--border)',
       }}
     >
@@ -88,7 +88,7 @@ export function TurnBanner({ state, currentTurn }: TurnBannerProps) {
         <span style={{ fontWeight: 700, color: 'var(--text-1)' }}>{headline}</span>
         {category && (
           <span style={{
-            padding: '2px 6px', borderRadius: 4, fontSize: 9,
+            padding: '2px 6px', borderRadius: 4, fontSize: 'var(--font-3xs)',
             background: 'var(--bg-card)', color: 'var(--text-3)',
             textTransform: 'uppercase', letterSpacing: '0.04em',
           }}>

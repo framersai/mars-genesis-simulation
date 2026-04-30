@@ -61,7 +61,7 @@ function SparkCard({ metric, sideAColor, sideBColor }: CardProps) {
         borderRadius: 4,
         padding: '8px 10px',
         fontFamily: 'var(--mono)',
-        fontSize: 10,
+        fontSize: 'var(--font-2xs)',
         color: 'var(--text-2)',
       }}
     >
@@ -78,7 +78,7 @@ function SparkCard({ metric, sideAColor, sideBColor }: CardProps) {
           <polyline points={bPoints} fill="none" stroke={sideBColor} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" opacity={0.9} />
         )}
       </svg>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 'var(--font-2xs)' }}>
         <span style={{ color: sideAColor, fontWeight: 700 }}>
           {aLast != null ? formatValue(aLast, metric.unit) : '·'}
         </span>
@@ -111,12 +111,12 @@ export function MetricSparklines(props: MetricSparklinesProps) {
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
         <span style={{
-          fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
+          fontSize: 'var(--font-xs)', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
           color: 'var(--amber)', fontFamily: 'var(--mono)',
         }}>
           Metric Trajectories
         </span>
-        <span style={{ fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--text-3)' }}>
+        <span style={{ fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', color: 'var(--text-3)' }}>
           <span style={{ color: sideAColor, fontWeight: 700 }}>{leaderAName}</span>
           {' · '}
           <span style={{ color: sideBColor, fontWeight: 700 }}>{leaderBName}</span>

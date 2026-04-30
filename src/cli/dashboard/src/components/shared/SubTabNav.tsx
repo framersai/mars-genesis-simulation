@@ -45,7 +45,7 @@ export function SubTabNav<T extends string>({ options, active, onChange, ariaLab
             style={{
               padding: '6px 14px',
               fontFamily: 'var(--mono)',
-              fontSize: 11,
+              fontSize: 'var(--font-xs)',
               fontWeight: 700,
               letterSpacing: 0.5,
               textTransform: 'uppercase',

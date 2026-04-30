@@ -87,31 +87,31 @@ function TileImpl(props: TileProps) {
         <span aria-hidden="true" style={{
           position: 'absolute', inset: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 20, color: 'var(--text-3)',
+          fontSize: 'var(--font-2xl)', color: 'var(--text-3)',
         }}>
           X
         </span>
       )}
       {!isGhost && tile.tierInfo.size === 'xl' && (
         <>
-          <div style={{ fontWeight: 700, fontSize: 11, lineHeight: 1.2, color: 'var(--text-1)' }}>
+          <div style={{ fontWeight: 700, fontSize: 'var(--font-xs)', lineHeight: 1.2, color: 'var(--text-1)' }}>
             {tile.name}
           </div>
-          <div style={{ fontSize: 9, color: 'var(--text-3)', marginTop: 2 }}>
+          <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-3)', marginTop: 2 }}>
             {tile.role || ''}
           </div>
           <div style={{ flex: 1 }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 'var(--font-sm)' }}>
             <span aria-hidden="true">{mood}</span>
-            <span style={{ fontSize: 9, color: 'var(--text-3)' }}>{tile.age ?? ''}</span>
+            <span style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-3)' }}>{tile.age ?? ''}</span>
           </div>
         </>
       )}
       {!isGhost && tile.tierInfo.size === 'md' && (
         <>
-          <div style={{ fontWeight: 600, fontSize: 9, lineHeight: 1.2 }}>{firstName}</div>
+          <div style={{ fontWeight: 600, fontSize: 'var(--font-3xs)', lineHeight: 1.2 }}>{firstName}</div>
           <div style={{ flex: 1 }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-2xs)' }}>
             <span aria-hidden="true">{mood}</span>
             <span style={{ color: 'var(--text-3)' }}>{tile.age ?? ''}</span>
           </div>
@@ -120,7 +120,7 @@ function TileImpl(props: TileProps) {
       {!isGhost && tile.tierInfo.size === 'sm' && (
         <div style={{
           flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 10, fontWeight: 700, color: deptColor,
+          fontSize: 'var(--font-2xs)', fontWeight: 700, color: deptColor,
         }}>
           {initial}
         </div>

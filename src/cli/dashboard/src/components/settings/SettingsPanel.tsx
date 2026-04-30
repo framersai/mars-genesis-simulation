@@ -95,7 +95,7 @@ function defaultLeader(idx: number): ActorFormData {
 const inputStyle = {
   width: '100%', background: 'var(--bg-card)', color: 'var(--text-1)',
   border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px',
-  fontFamily: 'var(--sans)', fontSize: '14px', boxSizing: 'border-box' as const,
+  fontFamily: 'var(--sans)', fontSize: 'var(--font-lg)', boxSizing: 'border-box' as const,
 };
 
 export interface SettingsPanelProps {
@@ -378,7 +378,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
             onChange={e => switchScenario(e.target.value)}
             style={{
               background: 'var(--bg-card)', color: 'var(--text-1)', border: '1px solid var(--border)',
-              padding: '8px 12px', borderRadius: '6px', fontSize: '14px', fontFamily: 'var(--sans)', flex: 1,
+              padding: '8px 12px', borderRadius: '6px', fontSize: 'var(--font-lg)', fontFamily: 'var(--sans)', flex: 1,
             }}
           >
             {scenarios.map(s => {
@@ -396,19 +396,19 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
               );
             })}
           </select>
-          <span style={{ fontSize: '10px', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
+          <span style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
             Active: <strong style={{ color: 'var(--amber)' }}>{activeId}</strong>
           </span>
         </div>
       )}
 
-      <h2 style={{ fontSize: '20px', color: 'var(--amber)', fontFamily: 'var(--mono)', marginBottom: '12px' }}>
+      <h2 style={{ fontSize: 'var(--font-2xl)', color: 'var(--amber)', fontFamily: 'var(--mono)', marginBottom: '12px' }}>
         {scenario.labels.name}
       </h2>
-      <p style={{ fontSize: '13px', color: 'var(--text-2)', marginBottom: '16px' }}>
+      <p style={{ fontSize: 'var(--font-md)', color: 'var(--text-2)', marginBottom: '16px' }}>
         Configure two leaders and launch. {scenario.departments.length} departments: {scenario.departments.map(d => d.label).join(', ')}.
       </p>
-      <p style={{ fontSize: '12px', color: 'var(--text-3)', marginBottom: '16px', lineHeight: 1.6 }}>
+      <p style={{ fontSize: 'var(--font-sm)', color: 'var(--text-3)', marginBottom: '16px', lineHeight: 1.6 }}>
         Server mode: <strong style={{ color: 'var(--text-1)' }}>{serverModeInfo.label}</strong>. {serverModeInfo.description}
       </p>
 
@@ -434,7 +434,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
           <div style={{
             marginBottom: 12, padding: '8px 10px', borderRadius: 4,
             background: 'rgba(232,180,74,.08)', border: '1px solid var(--amber-dim)',
-            fontSize: 11, color: 'var(--text-2)', lineHeight: 1.5,
+            fontSize: 'var(--font-xs)', color: 'var(--text-2)', lineHeight: 1.5,
           }}>
             <strong style={{ color: 'var(--amber)' }}>Demo caps will apply:</strong>{' '}
             turns clamped to {demoCaps.maxTurns}, population to {demoCaps.maxPopulation}, active departments to {demoCaps.maxActiveDepartments}.
@@ -447,7 +447,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
             <label htmlFor="turns-input" style={SETTINGS_LABEL_STYLE}>
               Turns
               {hostedDemo && !hasSessionLlmKey && (
-                <span style={{ color: 'var(--amber)', fontSize: 9, fontWeight: 400, marginLeft: 4 }} title={`Hosted demo caps turns at ${demoCaps.maxTurns}. Add a session API key to unlock.`}>
+                <span style={{ color: 'var(--amber)', fontSize: 'var(--font-3xs)', fontWeight: 400, marginLeft: 4 }} title={`Hosted demo caps turns at ${demoCaps.maxTurns}. Add a session API key to unlock.`}>
                   {'\u{1F512}'} demo:{demoCaps.maxTurns}
                 </span>
               )}
@@ -494,7 +494,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
             <label htmlFor="pop-input" style={SETTINGS_LABEL_STYLE}>
               Population
               {hostedDemo && !hasSessionLlmKey && (
-                <span style={{ color: 'var(--amber)', fontSize: 9, fontWeight: 400, marginLeft: 4 }} title="Hosted demo caps population at 30. Add a session API key to unlock.">
+                <span style={{ color: 'var(--amber)', fontSize: 'var(--font-3xs)', fontWeight: 400, marginLeft: 4 }} title="Hosted demo caps population at 30. Add a session API key to unlock.">
                   {'\u{1F512}'} demo:30
                 </span>
               )}
@@ -533,7 +533,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
             <label htmlFor="economics-select" style={SETTINGS_LABEL_STYLE}>
               Economics
               {hostedDemo && !hasSessionLlmKey && (
-                <span style={{ color: 'var(--amber)', fontSize: 9, fontWeight: 400, marginLeft: 4 }}>
+                <span style={{ color: 'var(--amber)', fontSize: 'var(--font-3xs)', fontWeight: 400, marginLeft: 4 }}>
                   {'\u{1F512}'} forced:economy
                 </span>
               )}
@@ -557,7 +557,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
                 </option>
               ))}
             </select>
-            <div style={{ fontSize: '10px', color: 'var(--text-3)', marginTop: '3px', lineHeight: 1.4 }}>
+            <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', marginTop: '3px', lineHeight: 1.4 }}>
               {ECONOMICS_PROFILE_OPTIONS.find(option => option.value === effectiveEconomicsProfile)?.description}
             </div>
           </div>
@@ -572,7 +572,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
         <legend style={{ ...SETTINGS_SECTION_HEADER_STYLE, padding: '0 8px' }}>
           API Keys
         </legend>
-        <div style={{ fontSize: '11px', color: 'var(--text-2)', marginBottom: '12px', lineHeight: 1.7 }}>
+        <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-2)', marginBottom: '12px', lineHeight: 1.7 }}>
           <p style={{ marginBottom: '6px' }}>
             <strong style={{ color: 'var(--text-1)' }}>How key resolution works:</strong> The server checks for keys in this order:
             your session overrides below, then the server .env file. If a key exists in either place, it's used. Values entered here are never displayed back.
@@ -619,7 +619,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
                 placeholder={envKeys[key] ? 'Using .env value' : 'Not configured'}
                 style={inputStyle}
               />
-              <div style={{ fontSize: '10px', color: 'var(--text-3)', marginTop: '3px', lineHeight: 1.4 }}>{desc}</div>
+              <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', marginTop: '3px', lineHeight: 1.4 }}>{desc}</div>
             </div>
           ))}
         </div>
@@ -638,7 +638,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
           <legend style={{ ...SETTINGS_SECTION_HEADER_STYLE, padding: '0 8px' }}>
             Model Tiers
           </legend>
-          <div style={{ fontSize: '11px', color: 'var(--text-2)', marginBottom: '12px', lineHeight: 1.6 }}>
+          <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-2)', marginBottom: '12px', lineHeight: 1.6 }}>
             Assign a model to each agent tier. Departments do the forging and benefit most from the flagship class.
             Agent reactions fan out to hundreds of parallel calls per turn and should be the cheapest class available.
             These overrides are only used when you run against your own API key.
@@ -660,7 +660,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
-                <div style={{ fontSize: '10px', color: 'var(--text-3)', marginTop: '3px', lineHeight: 1.4 }}>
+                <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', marginTop: '3px', lineHeight: 1.4 }}>
                   {TIER_LABELS[tier].help}
                 </div>
               </div>
@@ -672,7 +672,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
       {!canPickModels && (
         <div style={{
           background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: '8px',
-          padding: '12px 16px', marginBottom: '16px', fontSize: '12px', color: 'var(--text-2)',
+          padding: '12px 16px', marginBottom: '16px', fontSize: 'var(--font-sm)', color: 'var(--text-2)',
         }}>
           <strong style={{ color: 'var(--amber)' }}>Demo mode.</strong>{' '}
           {hostedDemo
@@ -693,7 +693,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
           style={{
             background: 'linear-gradient(135deg, var(--rust), #c44a1e)',
             color: 'white', border: 'none', padding: '12px 36px', borderRadius: '6px',
-            fontSize: '16px', fontWeight: 800, cursor: 'pointer', fontFamily: 'var(--sans)',
+            fontSize: 'var(--font-xl)', fontWeight: 800, cursor: 'pointer', fontFamily: 'var(--sans)',
             opacity: launching ? 0.5 : 1,
             boxShadow: '0 4px 16px rgba(224, 101, 48, 0.3)',
             transition: 'transform 0.15s ease, box-shadow 0.15s ease',
@@ -701,7 +701,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
         >
           {launching ? 'Running...' : 'Launch Simulation'}
         </button>
-        {status && <span role="status" style={{ fontSize: '13px', color: 'var(--text-3)' }}>{status}</span>}
+        {status && <span role="status" style={{ fontSize: 'var(--font-md)', color: 'var(--text-3)' }}>{status}</span>}
       </div>
     </div>
       )}

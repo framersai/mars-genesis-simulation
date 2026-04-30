@@ -44,7 +44,7 @@ export function GridHelpOverlay({ open, onClose }: GridHelpOverlayProps) {
           maxHeight: '90vh',
           overflow: 'auto',
           fontFamily: 'var(--mono)',
-          fontSize: 11,
+          fontSize: 'var(--font-xs)',
           color: 'var(--text-2)',
           boxShadow: '0 12px 48px rgba(0, 0, 0, 0.7)',
         }}
@@ -60,7 +60,7 @@ export function GridHelpOverlay({ open, onClose }: GridHelpOverlayProps) {
           <h2
             style={{
               margin: 0,
-              fontSize: 14,
+              fontSize: 'var(--font-lg)',
               fontWeight: 800,
               color: 'var(--amber)',
               letterSpacing: '0.08em',
@@ -82,7 +82,7 @@ export function GridHelpOverlay({ open, onClose }: GridHelpOverlayProps) {
               cursor: 'pointer',
               width: 26,
               height: 26,
-              fontSize: 13,
+              fontSize: 'var(--font-md)',
               lineHeight: 1,
               padding: 0,
             }}
@@ -155,7 +155,7 @@ export function GridHelpOverlay({ open, onClose }: GridHelpOverlayProps) {
           <Row k="click glyph" v={`Open ${labels.person} drilldown (HEXACO radar, memory, chat)`} />
         </Section>
 
-        <div style={{ fontSize: 9, color: 'var(--text-4)', marginTop: 12 }}>
+        <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-4)', marginTop: 12 }}>
           Press{' '}
           <kbd
             style={{
@@ -180,7 +180,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     <div style={{ marginBottom: 16 }}>
       <div
         style={{
-          fontSize: 9,
+          fontSize: 'var(--font-3xs)',
           fontWeight: 800,
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
@@ -205,14 +205,14 @@ function Row({ k, v }: { k: React.ReactNode; v: React.ReactNode }) {
         gridTemplateColumns: 'minmax(110px, 160px) 1fr',
         gap: 12,
         alignItems: 'baseline',
-        fontSize: 11,
+        fontSize: 'var(--font-xs)',
       }}
     >
       <span
         style={{
           color: 'var(--text-3)',
           fontFamily: 'var(--mono)',
-          fontSize: 10,
+          fontSize: 'var(--font-2xs)',
           letterSpacing: '0.05em',
         }}
       >

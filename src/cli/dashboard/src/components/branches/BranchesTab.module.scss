@@ -17,14 +17,14 @@
   h2 {
     color: var(--text-2);
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: var(--font-lg);
     margin-bottom: 12px;
     letter-spacing: 0.5px;
   }
   p {
     max-width: 520px;
     margin: 0 auto;
-    font-size: 13px;
+    font-size: var(--font-md);
     line-height: 1.6;
 
     strong {
@@ -36,7 +36,7 @@
       border-radius: var(--radius-sm);
       color: var(--amber);
       font-family: var(--mono);
-      font-size: 12px;
+      font-size: var(--font-sm);
     }
   }
 }
@@ -97,7 +97,7 @@
   margin: 0;
   color: var(--text-1);
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: var(--font-md);
   font-weight: 600;
   letter-spacing: 0.3px;
 }
@@ -105,11 +105,11 @@
 .archetype {
   color: var(--text-3);
   font-weight: 400;
-  font-size: 12px;
+  font-size: var(--font-sm);
 }
 
 .meta {
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--text-3);
   font-family: var(--mono);
 
@@ -123,7 +123,7 @@
 
 .badge {
   display: inline-block;
-  font-size: 10px;
+  font-size: var(--font-2xs);
   font-family: var(--mono);
   color: var(--amber);
   background: var(--amber-glow);
@@ -136,7 +136,7 @@
 }
 
 .status {
-  font-size: 10px;
+  font-size: var(--font-2xs);
   font-family: var(--mono);
   letter-spacing: 0.4px;
   text-transform: uppercase;
@@ -181,14 +181,14 @@
     border: 1px solid var(--border-subtle);
   }
   dt {
-    font-size: 9px;
+    font-size: var(--font-3xs);
     color: var(--text-3);
     text-transform: uppercase;
     letter-spacing: 0.6px;
     font-family: var(--mono);
   }
   dd {
-    font-size: 14px;
+    font-size: var(--font-lg);
     color: var(--text-1);
     margin: 4px 0 0;
     font-family: var(--mono);
@@ -206,7 +206,7 @@
 }
 
 .delta {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-family: var(--mono);
   padding: 2px 8px;
   border-radius: var(--radius-sm);
@@ -228,7 +228,7 @@
 }
 
 .more {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-family: var(--mono);
   color: var(--text-3);
   padding: 2px 8px;
@@ -236,7 +236,7 @@
 
 .identical {
   margin: 10px 0 0;
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--text-3);
   font-family: var(--mono);
   font-style: italic;
@@ -245,7 +245,7 @@
 .error {
   margin: 10px 0 0;
   color: var(--rust);
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-family: var(--mono);
   padding: 8px 10px;
   background: var(--rust-glow);

@@ -87,7 +87,7 @@ export function RunSummaryDrawer(props: RunSummaryDrawerProps) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <span
         style={{
-          fontSize: 8,
+          fontSize: 'var(--font-3xs)',
           color: 'var(--text-4)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
@@ -98,7 +98,7 @@ export function RunSummaryDrawer(props: RunSummaryDrawerProps) {
       </span>
       <span
         style={{
-          fontSize: 14,
+          fontSize: 'var(--font-lg)',
           fontWeight: 800,
           fontFamily: 'var(--mono)',
           color: valColor || 'var(--text-1)',
@@ -129,7 +129,7 @@ export function RunSummaryDrawer(props: RunSummaryDrawerProps) {
     >
       <div
         style={{
-          fontSize: 11,
+          fontSize: 'var(--font-xs)',
           fontWeight: 800,
           color,
           letterSpacing: '0.08em',
@@ -160,7 +160,7 @@ export function RunSummaryDrawer(props: RunSummaryDrawerProps) {
           {cell('Tool reuses', `${reuseCount}`, 'var(--amber)')}
         </div>
       ) : (
-        <div style={{ color: 'var(--text-4)', fontSize: 11 }}>No snapshots yet.</div>
+        <div style={{ color: 'var(--text-4)', fontSize: 'var(--font-xs)' }}>No snapshots yet.</div>
       )}
     </div>
   );
@@ -207,7 +207,7 @@ export function RunSummaryDrawer(props: RunSummaryDrawerProps) {
           <h2
             style={{
               margin: 0,
-              fontSize: 14,
+              fontSize: 'var(--font-lg)',
               fontWeight: 800,
               color: 'var(--amber)',
               letterSpacing: '0.1em',
@@ -229,7 +229,7 @@ export function RunSummaryDrawer(props: RunSummaryDrawerProps) {
               border: '1px solid var(--border)',
               borderRadius: 3,
               cursor: 'pointer',
-              fontSize: 13,
+              fontSize: 'var(--font-md)',
               lineHeight: 1,
               padding: 0,
             }}
@@ -259,7 +259,7 @@ export function RunSummaryDrawer(props: RunSummaryDrawerProps) {
           <div>
             <div
               style={{
-                fontSize: 8,
+                fontSize: 'var(--font-3xs)',
                 color: 'var(--text-4)',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
@@ -267,11 +267,11 @@ export function RunSummaryDrawer(props: RunSummaryDrawerProps) {
             >
               Divergence
             </div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--amber)' }}>
+            <div style={{ fontSize: 'var(--font-2xl)', fontWeight: 800, color: 'var(--amber)' }}>
               {props.divergedCount}
             </div>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-3)', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-3)', lineHeight: 1.5 }}>
             {labels.People} alive on one side but dead on the other at the final snapshot — a measure
             of how much the two leaders' decisions diverged the outcomes.
           </div>

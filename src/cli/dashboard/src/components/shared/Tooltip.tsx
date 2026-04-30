@@ -75,7 +75,7 @@ export function Tooltip({ content, children, dot, block }: TooltipProps) {
       style={{
         position: 'fixed', left: pos.x, top: pos.y, zIndex: 99999,
         background: 'var(--bg-card)', border: '2px solid var(--amber)', borderRadius: '8px',
-        padding: '14px 18px', fontSize: '12px', color: 'var(--text-1)', lineHeight: 1.6,
+        padding: '14px 18px', fontSize: 'var(--font-sm)', color: 'var(--text-1)', lineHeight: 1.6,
         width: `${TOOLTIP_WIDTH}px`, maxWidth: '90vw',
         // Cap height so an overflowing tooltip scrolls internally rather
         // than overflowing the viewport. Previously the no-scroll policy

@@ -28,7 +28,7 @@
 }
 
 .kicker {
-  font-size: 9px;
+  font-size: var(--font-3xs);
   font-weight: 800;
   color: var(--text-3);
   letter-spacing: 0.15em;
@@ -38,7 +38,7 @@
 }
 
 .winnerName {
-  font-size: 20px;
+  font-size: var(--font-2xl);
   font-weight: 800;
   color: var(--win-color, var(--amber));
   line-height: 1.1;
@@ -58,7 +58,7 @@
   border: none;
   padding: 0;
   margin: 0 0 4px;
-  font-size: 13px;
+  font-size: var(--font-md);
   color: var(--text-1);
   cursor: pointer;
   text-align: left;
@@ -72,14 +72,14 @@
 }
 
 .turnLabel {
-  font-size: 10px;
+  font-size: var(--font-2xs);
   color: var(--text-3);
   font-family: var(--mono);
   letter-spacing: 0.04em;
 }
 
 .viewButton {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-family: var(--mono);
   font-weight: 800;
   color: var(--bg-deep);
@@ -96,7 +96,7 @@
 }
 
 .reportsChip {
-  font-size: 10px;
+  font-size: var(--font-2xs);
   font-family: var(--mono);
   font-weight: 700;
   color: var(--text-2);
@@ -116,7 +116,7 @@
   border: none;
   color: var(--text-3);
   cursor: pointer;
-  font-size: 18px;
+  font-size: var(--font-2xl);
   line-height: 1;
   padding: 4px;
   flex-shrink: 0;
@@ -147,7 +147,7 @@
   }
 
   .winnerName {
-    font-size: 17px;
+    font-size: var(--font-xl);
     white-space: normal;
     word-break: break-word;
   }
@@ -160,14 +160,14 @@
   }
 
   .headlineButton {
-    font-size: 12px;
+    font-size: var(--font-sm);
   }
 
   .viewButton {
     width: 100%;
     text-align: center;
     padding: 9px 12px;
-    font-size: 10px;
+    font-size: var(--font-2xs);
     margin-top: 2px;
   }
 
@@ -175,7 +175,7 @@
     width: 100%;
     text-align: center;
     padding: 9px 12px;
-    font-size: 10px;
+    font-size: var(--font-2xs);
   }
 
   .dismissButton {

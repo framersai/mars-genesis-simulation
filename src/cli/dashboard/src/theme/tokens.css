@@ -53,6 +53,31 @@
     --sans: 'Inter', system-ui, -apple-system, sans-serif;
     --mono: 'JetBrains Mono', 'SF Mono', Menlo, 'Cascadia Code', monospace;
 
+    /* === TYPE SCALE — nine canonical sizes ===
+       Use the token, not the px value, so the dashboard reads at one
+       coherent rhythm across tabs. The mapping that retired the prior
+       drift (8/9.5/10.5/11.5/15/17/22/32 etc.):
+         3xs  9px   badge text, super-tight chrome
+         2xs  10px  micro-labels, sparkline captions
+         xs   11px  uppercase labels, chip buttons
+         sm   12px  small body, secondary copy, dense tables
+         md   13px  body, inputs, default reading surface
+         lg   14px  larger body, primary buttons
+         xl   16px  section heads, callouts
+         2xl  20px  page heads
+         3xl  24px  display titles
+       Anything bigger than 3xl is a one-off; reach for inline
+       font-size: clamp(...) on the specific element. */
+    --font-3xs: 9px;
+    --font-2xs: 10px;
+    --font-xs: 11px;
+    --font-sm: 12px;
+    --font-md: 13px;
+    --font-lg: 14px;
+    --font-xl: 16px;
+    --font-2xl: 20px;
+    --font-3xl: 24px;
+
     /* === BACKGROUNDS — warm deep blacks === */
     --bg-deep: #0a0806;
     --bg-panel: #14110e;

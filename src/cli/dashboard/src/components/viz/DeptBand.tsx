@@ -25,7 +25,7 @@ export function DeptBand({ label, tiles, selectedId, divergedIds, onSelect }: De
     >
       <div style={{
         fontFamily: 'var(--mono)',
-        fontSize: 10,
+        fontSize: 'var(--font-2xs)',
         color: 'var(--text-3)',
         minWidth: 60,
       }}>

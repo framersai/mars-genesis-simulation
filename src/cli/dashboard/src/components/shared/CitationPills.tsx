@@ -52,7 +52,7 @@ export function CitationPills({ citations, label = 'sources', inline = false }: 
     }}>
       {label && (
         <span style={{
-          fontSize: 9, fontWeight: 800, fontFamily: 'var(--mono)',
+          fontSize: 'var(--font-3xs)', fontWeight: 800, fontFamily: 'var(--mono)',
           color: 'var(--text-3)', letterSpacing: '0.06em',
           textTransform: 'uppercase', marginRight: 4,
         }}>
@@ -82,16 +82,16 @@ function CitationPill({ n, entry }: { n: number; entry: CitationEntry | { text: 
   const popover = (
     <div style={{ minWidth: 0 }}>
       <div style={{
-        fontSize: 10, fontFamily: 'var(--mono)', fontWeight: 800,
+        fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', fontWeight: 800,
         color: 'var(--amber)', letterSpacing: '0.06em', marginBottom: 4,
       }}>
         REFERENCE [{n}]
       </div>
-      <div style={{ fontSize: 13, color: 'var(--text-1)', lineHeight: 1.5, marginBottom: 6 }}>
+      <div style={{ fontSize: 'var(--font-md)', color: 'var(--text-1)', lineHeight: 1.5, marginBottom: 6 }}>
         {text}
       </div>
       {url && (
-        <div style={{ fontSize: 11, marginBottom: 4 }}>
+        <div style={{ fontSize: 'var(--font-xs)', marginBottom: 4 }}>
           <a
             href={url}
             target="_blank"
@@ -103,17 +103,17 @@ function CitationPill({ n, entry }: { n: number; entry: CitationEntry | { text: 
         </div>
       )}
       {doi && (
-        <div style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text-3)' }}>
+        <div style={{ fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)', color: 'var(--text-3)' }}>
           DOI:{doi}
         </div>
       )}
       {(departments.length > 0 || actorNames.length > 0) && (
-        <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--mono)', marginTop: 6, paddingTop: 6, borderTop: '1px solid var(--border)' }}>
+        <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginTop: 6, paddingTop: 6, borderTop: '1px solid var(--border)' }}>
           {departments.length > 0 && <>cited by {departments.join(', ')} · </>}
           {actorNames.length > 0 && <>leader {actorNames.join(' · ')}</>}
         </div>
       )}
-      <div style={{ fontSize: 9, color: 'var(--text-3)', fontFamily: 'var(--mono)', marginTop: 6, fontStyle: 'italic' }}>
+      <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginTop: 6, fontStyle: 'italic' }}>
         Click to open source · or scroll to References below
       </div>
     </div>
@@ -138,7 +138,7 @@ function CitationPill({ n, entry }: { n: number; entry: CitationEntry | { text: 
           }
         }}
         style={{
-          fontSize: 10, fontFamily: 'var(--mono)', fontWeight: 700,
+          fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', fontWeight: 700,
           color: 'var(--amber)', textDecoration: 'none',
           padding: '1px 6px', borderRadius: 3,
           border: '1px solid rgba(232,180,74,0.35)',

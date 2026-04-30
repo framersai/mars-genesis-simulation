@@ -109,7 +109,7 @@ export function RosterDrawer({
     padding: '3px 6px',
     cursor: 'pointer',
     fontFamily: 'var(--mono)',
-    fontSize: 10,
+    fontSize: 'var(--font-2xs)',
     color: dimmed ? 'var(--text-4)' : 'var(--text-2)',
     background: isHovered
       ? 'var(--bg-card)'
@@ -155,7 +155,7 @@ export function RosterDrawer({
         <span
           style={{
             color: sideColor,
-            fontSize: 9,
+            fontSize: 'var(--font-3xs)',
             fontWeight: 800,
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
@@ -176,7 +176,7 @@ export function RosterDrawer({
             borderRadius: 2,
             color: 'var(--text-3)',
             cursor: 'pointer',
-            fontSize: 11,
+            fontSize: 'var(--font-xs)',
             lineHeight: 1,
           }}
         >
@@ -202,7 +202,7 @@ export function RosterDrawer({
               style={{
                 flex: 1,
                 padding: '2px 0',
-                fontSize: 8,
+                fontSize: 'var(--font-3xs)',
                 fontFamily: 'var(--mono)',
                 fontWeight: 800,
                 letterSpacing: '0.08em',
@@ -221,7 +221,7 @@ export function RosterDrawer({
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
         {grouped.length === 0 && (
-          <div style={{ padding: '8px 10px', color: 'var(--text-4)', fontSize: 10 }}>
+          <div style={{ padding: '8px 10px', color: 'var(--text-4)', fontSize: 'var(--font-2xs)' }}>
             No living {labels.people}.
           </div>
         )}
@@ -231,7 +231,7 @@ export function RosterDrawer({
               <div
                 style={{
                   padding: '3px 8px',
-                  fontSize: 8,
+                  fontSize: 'var(--font-3xs)',
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
                   color: 'var(--text-4)',
@@ -279,7 +279,7 @@ export function RosterDrawer({
                   {c.featured && (
                     <span
                       style={{
-                        fontSize: 7,
+                        fontSize: 'var(--font-3xs)',
                         padding: '0px 3px',
                         borderRadius: 2,
                         background: `${sideColor}33`,
@@ -308,7 +308,7 @@ export function RosterDrawer({
                 background: 'transparent',
                 color: 'var(--text-4)',
                 textAlign: 'left',
-                fontSize: 8,
+                fontSize: 'var(--font-3xs)',
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
                 cursor: 'pointer',

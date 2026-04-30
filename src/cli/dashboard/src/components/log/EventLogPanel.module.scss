@@ -16,7 +16,7 @@
 
 .heading {
   color: var(--text-1);
-  font-size: 14px;
+  font-size: var(--font-lg);
   font-weight: 700;
 }
 
@@ -25,7 +25,7 @@
   align-items: center;
   gap: 6px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--font-xs);
 }
 
 .filterLabel { color: var(--text-3); }
@@ -42,7 +42,7 @@
   border: 1px solid var(--border);
   cursor: pointer;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--font-2xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -108,7 +108,7 @@
   border: 1px solid var(--border);
   overflow: auto;
   max-height: 400px;
-  font-size: 11px;
+  font-size: var(--font-xs);
   line-height: 1.5;
   color: var(--text-2);
   white-space: pre-wrap;

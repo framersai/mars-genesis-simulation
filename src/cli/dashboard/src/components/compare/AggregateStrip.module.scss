@@ -19,7 +19,7 @@
 
 .tileLabel {
   font-family: var(--mono);
-  font-size: 0.65rem;
+  font-size: var(--font-2xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   color: var(--text-3);
@@ -28,14 +28,14 @@
 
 .tileValue {
   font-family: var(--mono);
-  font-size: 1.2rem;
+  font-size: var(--font-2xl);
   font-weight: 700;
   color: var(--amber);
 }
 
 .tileEmpty {
   font-family: var(--mono);
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
   color: var(--text-3);
 }
 

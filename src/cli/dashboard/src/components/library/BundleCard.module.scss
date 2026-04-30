@@ -30,7 +30,7 @@
   align-items: center;
   gap: 0.5rem;
   font-family: var(--mono);
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
   color: var(--text-3);
 }
 
@@ -42,7 +42,7 @@
   border: 1px solid rgba(232, 180, 74, 0.35);
   border-radius: 4px;
   padding: 0.15rem 0.5rem;
-  font-size: 0.65rem;
+  font-size: var(--font-2xs);
 }
 
 .count { font-weight: 600; color: var(--text-2); }
@@ -51,7 +51,7 @@
 
 .scenario {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--font-lg);
   font-weight: 600;
   color: var(--text-1);
   word-break: break-word;
@@ -67,7 +67,7 @@
 }
 
 .actor {
-  font-size: 0.8rem;
+  font-size: var(--font-sm);
   color: var(--text-2);
 }
 
@@ -76,7 +76,7 @@
 }
 
 .more {
-  font-size: 0.75rem;
+  font-size: var(--font-sm);
   color: var(--text-3);
   font-style: italic;
 }
@@ -94,7 +94,7 @@
   padding: 0.3rem 0.7rem;
   cursor: pointer;
   color: var(--amber);
-  font-size: 0.75rem;
+  font-size: var(--font-sm);
   font-family: var(--mono);
   font-weight: 700;
   letter-spacing: 0.04em;

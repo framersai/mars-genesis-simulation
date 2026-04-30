@@ -18,7 +18,7 @@
 }
 
 .archetypeChip {
-  font-size: 9px;
+  font-size: var(--font-3xs);
   padding: 2px 8px;
   border-radius: 3px;
   font-weight: 800;
@@ -31,7 +31,7 @@
 }
 
 .verdictChip {
-  font-size: 9px;
+  font-size: var(--font-3xs);
   padding: 2px 8px;
   border-radius: 3px;
   font-weight: 800;
@@ -59,14 +59,14 @@
 }
 
 .name {
-  font-size: 14px;
+  font-size: var(--font-lg);
   font-weight: 800;
   color: var(--actor-color);
   white-space: nowrap;
 }
 
 .unitTag {
-  font-size: 10px;
+  font-size: var(--font-2xs);
   color: var(--text-3);
   white-space: nowrap;
   margin-left: 6px;
@@ -85,7 +85,7 @@
 
 .traitsLine {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: var(--font-3xs);
   color: var(--actor-color);
   letter-spacing: 0;
   opacity: 0.9;
@@ -101,7 +101,7 @@
 
 .quote {
   font-style: italic;
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--text-2);
   flex: 1;
   overflow: hidden;
@@ -111,7 +111,7 @@
 
 .sparklines {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--font-2xs);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -119,13 +119,13 @@
 // Tooltip inner chrome
 .tooltipHeading {
   color: var(--actor-color);
-  font-size: 14px;
+  font-size: var(--font-lg);
   display: block;
   margin-bottom: 6px;
 }
 
 .tooltipInstructions {
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--text-2);
   margin-top: 6px;
   font-style: italic;
@@ -133,7 +133,7 @@
 
 .tooltipTraitBlock {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--font-xs);
   margin-top: 8px;
   line-height: 1.8;
 }

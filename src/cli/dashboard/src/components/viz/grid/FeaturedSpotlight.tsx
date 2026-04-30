@@ -92,7 +92,7 @@ export function FeaturedSpotlight({
             borderLeft: `3px solid ${sideColor}`,
             borderRadius: 3,
             fontFamily: 'var(--mono)',
-            fontSize: 11,
+            fontSize: 'var(--font-xs)',
             color: 'var(--text-2)',
             textAlign: 'left',
             cursor: 'pointer',
@@ -104,11 +104,11 @@ export function FeaturedSpotlight({
             maxWidth: '100%',
           }}
         >
-          <span style={{ color: sideColor, fontSize: 10, flexShrink: 0 }} aria-hidden="true">★</span>
+          <span style={{ color: sideColor, fontSize: 'var(--font-2xs)', flexShrink: 0 }} aria-hidden="true">★</span>
           <span style={{ color: 'var(--text-1)', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {sp.cell.name}
           </span>
-          <span style={{ color: 'var(--text-3)', fontSize: 10, flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <span style={{ color: 'var(--text-3)', fontSize: 'var(--font-2xs)', flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             {sp.cell.department}
           </span>
         </button>

@@ -35,7 +35,7 @@
 }
 
 .errorTitle {
-  font-size: 14px;
+  font-size: var(--font-lg);
   font-weight: 700;
   color: #e06530;
   margin-bottom: 12px;
@@ -43,7 +43,7 @@
 }
 
 .errorMessage {
-  font-size: 12px;
+  font-size: var(--font-sm);
   color: #a89878;
   max-width: 500px;
   line-height: 1.7;
@@ -56,7 +56,7 @@
   border: none;
   padding: 10px 24px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: var(--font-md);
   font-weight: 700;
   cursor: pointer;
 

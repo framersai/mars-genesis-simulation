@@ -108,21 +108,21 @@ export function HeroScoreboard(props: HeroScoreboardProps) {
         background: 'linear-gradient(90deg, rgba(232,180,74,0.18), rgba(232,180,74,0.04))',
         borderBottom: '1px solid var(--border)',
       }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--amber)', fontFamily: 'var(--mono)' }}>
+        <div style={{ fontSize: 'var(--font-xs)', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--amber)', fontFamily: 'var(--mono)' }}>
           Run Summary
         </div>
         {winnerName && (
-          <div style={{ marginTop: 4, fontSize: 20, fontWeight: 800, color: 'var(--text-1)', fontFamily: 'var(--mono)' }}>
+          <div style={{ marginTop: 4, fontSize: 'var(--font-2xl)', fontWeight: 800, color: 'var(--text-1)', fontFamily: 'var(--mono)' }}>
             {winnerName} wins
           </div>
         )}
         {headline && (
-          <div style={{ marginTop: 4, fontSize: 13, color: 'var(--text-2)', lineHeight: 1.5 }}>
+          <div style={{ marginTop: 4, fontSize: 'var(--font-md)', color: 'var(--text-2)', lineHeight: 1.5 }}>
             {headline}
           </div>
         )}
         {keyDivergence && (
-          <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic', lineHeight: 1.5 }}>
+          <div style={{ marginTop: 6, fontSize: 'var(--font-sm)', color: 'var(--text-3)', fontStyle: 'italic', lineHeight: 1.5 }}>
             {keyDivergence}
           </div>
         )}
@@ -132,7 +132,7 @@ export function HeroScoreboard(props: HeroScoreboardProps) {
         <div style={{ padding: '14px 18px' }}>
           <div style={{
             display: 'flex', justifyContent: 'space-between', marginBottom: 10,
-            fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
+            fontSize: 'var(--font-xs)', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
             color: 'var(--text-3)', fontFamily: 'var(--mono)',
           }}>
             <span style={{ color: 'var(--vis)' }}>{props.leaderAName}</span>
@@ -147,7 +147,7 @@ export function HeroScoreboard(props: HeroScoreboardProps) {
               <div key={row.key} style={{ marginBottom: 8 }}>
                 <div style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
-                  fontSize: 11, fontFamily: 'var(--mono)', marginBottom: 2,
+                  fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)', marginBottom: 2,
                 }}>
                   <span style={{ color: winner === 'a' ? 'var(--vis)' : 'var(--text-2)', fontWeight: winner === 'a' ? 700 : 500 }}>
                     {fmt(a, row.format)}
@@ -167,7 +167,7 @@ export function HeroScoreboard(props: HeroScoreboardProps) {
               onClick={scroll}
               style={{
                 background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 700,
+                fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)', fontWeight: 700,
                 color: 'var(--amber)', letterSpacing: '0.04em', textTransform: 'uppercase',
               }}
             >
@@ -176,7 +176,7 @@ export function HeroScoreboard(props: HeroScoreboardProps) {
           </div>
         </div>
       ) : (
-        <div style={{ padding: '14px 18px', fontSize: 12, color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
+        <div style={{ padding: '14px 18px', fontSize: 'var(--font-sm)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
           Simulation in progress. Scoreboard will populate when the verdict arrives.
         </div>
       )}

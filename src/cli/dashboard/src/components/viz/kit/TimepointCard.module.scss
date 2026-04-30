@@ -9,7 +9,7 @@
 }
 
 .label {
-  font-size: 0.85rem;
+  font-size: var(--font-md);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--paracosm-accent, #e8b44a);
@@ -24,7 +24,7 @@
 .highlights {
   margin: 0;
   padding-left: 1.25rem;
-  font-size: 0.85rem;
+  font-size: var(--font-md);
   color: var(--paracosm-text, #eee);
 
   li { margin: 0.15rem 0; }

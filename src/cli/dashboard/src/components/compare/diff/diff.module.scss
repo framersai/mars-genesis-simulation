@@ -17,7 +17,7 @@
 .diffTitle {
   margin: 0;
   font-family: var(--mono);
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   color: var(--text-3);
@@ -26,7 +26,7 @@
 
 .diffEmpty {
   color: var(--text-3);
-  font-size: 0.75rem;
+  font-size: var(--font-sm);
   font-style: italic;
   margin: 0;
 }
@@ -42,7 +42,7 @@
 }
 
 .fingerprintLabel {
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
   color: var(--text-2);
   word-break: break-word;
 }
@@ -75,13 +75,13 @@
 }
 .timelineTurn {
   font-family: var(--mono);
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
   color: var(--text-3);
   padding: 0.4rem 0;
   border-top: 1px solid var(--glass-border);
 }
 .timelineCell {
-  font-size: 0.75rem;
+  font-size: var(--font-sm);
   color: var(--text-2);
   padding: 0.4rem 0.5rem;
   border-top: 1px solid var(--glass-border);
@@ -99,7 +99,7 @@
   background: var(--bg-deep);
   border-radius: 4px;
   padding: 0.6rem 0.7rem;
-  font-size: 0.75rem;
+  font-size: var(--font-sm);
   color: var(--text-2);
   max-height: 320px;
   overflow-y: auto;
@@ -108,7 +108,7 @@
 .rationaleEntry:last-child { margin-bottom: 0; }
 .rationaleTurn {
   font-family: var(--mono);
-  font-size: 0.6rem;
+  font-size: var(--font-3xs);
   color: var(--amber);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -141,7 +141,7 @@
 }
 .metricLabel {
   font-family: var(--mono);
-  font-size: 0.6rem;
+  font-size: var(--font-3xs);
   color: var(--text-3);
   text-transform: uppercase;
   letter-spacing: 0.05em;
