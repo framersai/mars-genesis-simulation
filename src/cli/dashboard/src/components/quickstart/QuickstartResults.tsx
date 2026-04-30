@@ -1,5 +1,5 @@
 /**
- * Three-column Quickstart result grid. Each card: leader name /
+ * Three-column Quickstart result grid. Each card: actor name /
  * archetype / HEXACO bars / fingerprint / median deltas / Download +
  * Share + Fork-at-N + Swap controls.
  *
@@ -15,25 +15,25 @@ import {
   downloadArtifactJson,
 } from './QuickstartView.helpers';
 import { formatDelta } from '../branches/BranchesTab.helpers';
-import { LeaderPresetPicker } from './LeaderPresetPicker';
+import { ActorPresetPicker } from './ActorPresetPicker';
 import type { RunArtifact } from '../../../../../engine/schema/index.js';
-import type { LeaderConfig } from '../../../../../engine/types.js';
+import type { ActorConfig } from '../../../../../engine/types.js';
 import type { LeaderPreset } from '../../../../../engine/leader-presets.js';
 import styles from './QuickstartResults.module.scss';
 
 export interface QuickstartResultsProps {
-  leaders: LeaderConfig[];
+  actors: ActorConfig[];
   artifacts: RunArtifact[];
   sessionId?: string;
-  onSwap: (leaderIndex: number, preset: LeaderPreset) => void;
+  onSwap: (actorIndex: number, preset: LeaderPreset) => void;
 }
 
-const HEXACO_TRAITS: Array<keyof LeaderConfig['hexaco']> = [
+const HEXACO_TRAITS: Array<keyof ActorConfig['hexaco']> = [
   'openness', 'conscientiousness', 'extraversion',
   'agreeableness', 'emotionality', 'honestyHumility',
 ];
 
-export function QuickstartResults({ leaders, artifacts, sessionId, onSwap }: QuickstartResultsProps) {
+export function QuickstartResults({ actors, artifacts, sessionId, onSwap }: QuickstartResultsProps) {
   const { dispatch } = useBranchesContext();
   const navigate = useDashboardNavigation();
   const labels = useScenarioLabels();
@@ -42,7 +42,11 @@ export function QuickstartResults({ leaders, artifacts, sessionId, onSwap }: Qui
 
   const handleFork = (i: number) => {
     dispatch({ type: 'SET_PARENT', artifact: artifacts[i] });
-    navigate('branches');
+    // Branches is a sub-tab inside Studio after the merge. Land on
+    // Studio; the user clicks Branches in Studio's sub-nav. Future
+    // polish: thread the sub-tab through so this lands directly on
+    // Branches without the manual click.
+    navigate('studio');
   };
 
   const handleShare = async (i: number) => {
@@ -59,23 +63,77 @@ export function QuickstartResults({ leaders, artifacts, sessionId, onSwap }: Qui
 
   const handleDownload = (i: number) => {
     const artifact = artifacts[i];
-    const slug = leaders[i].archetype.toLowerCase().replace(/\s+/g, '-');
+    const slug = actors[i].archetype.toLowerCase().replace(/\s+/g, '-');
     downloadArtifactJson(artifact, `paracosm-quickstart-${slug}.json`);
   };
 
+  // Run-wide aggregate stats surfaced as a small summary strip above
+  // the side-by-side actor cards. Makes the result region show the
+  // simulation's depth — tools forged in the AgentOS sandbox, citations
+  // pulled by the deep-research grounding pass, total turns, total LLM
+  // spend — at a glance, instead of forcing the viewer to dig into each
+  // actor's detail to count.
+  const summary = useMemo(() => {
+    const totalTools = artifacts.reduce(
+      (n, a) => n + (a?.forgedTools?.length ?? 0),
+      0,
+    );
+    const totalCitations = artifacts.reduce(
+      (n, a) => n + (a?.citations?.length ?? 0),
+      0,
+    );
+    const totalDecisions = artifacts.reduce(
+      (n, a) => n + (a?.decisions?.length ?? 0),
+      0,
+    );
+    const totalTurns = artifacts.reduce(
+      (n, a) => n + (a?.trajectory?.timepoints?.length ?? 0),
+      0,
+    );
+    const totalCostUSD = artifacts.reduce(
+      (n, a) => n + (a?.cost?.totalUSD ?? 0),
+      0,
+    );
+    return { totalTools, totalCitations, totalDecisions, totalTurns, totalCostUSD };
+  }, [artifacts]);
+
   return (
     <div className={styles.results} role="region" aria-label="Quickstart results">
+      <div className={styles.runSummary} role="region" aria-label="Run summary">
+        <div className={styles.summaryStat} title="Web sources Paracosm pulled via Serper + Tavily and attached to the scenario before generating actors. Grounds the sim in real-world knowledge instead of pure LLM imagination.">
+          <span className={styles.summaryNum}>{summary.totalCitations}</span>
+          <span className={styles.summaryLabel}>citations · web research</span>
+        </div>
+        <div className={styles.summaryStat} title="AgentOS tool forging: when a department needed a calculation the codebase didn't provide, it wrote one in a sandboxed node:vm at runtime. The judge reviewed each for safety + correctness before letting it enter the decision pipeline.">
+          <span className={styles.summaryNum}>{summary.totalTools}</span>
+          <span className={styles.summaryLabel}>tools forged · AgentOS sandbox</span>
+        </div>
+        <div className={styles.summaryStat} title="Commander decisions across all 3 actors. Each one went through the full propose / judge / execute cycle.">
+          <span className={styles.summaryNum}>{summary.totalDecisions}</span>
+          <span className={styles.summaryLabel}>commander decisions</span>
+        </div>
+        <div className={styles.summaryStat} title="Total simulation turns across all 3 parallel actors. Each turn = one decision cycle: department analysis, commander decision, kernel advance, agent reactions.">
+          <span className={styles.summaryNum}>{summary.totalTurns}</span>
+          <span className={styles.summaryLabel}>turns simulated</span>
+        </div>
+        {summary.totalCostUSD > 0 && (
+          <div className={styles.summaryStat} title="Total LLM spend across all 3 actors. Provider: gpt-5.4-mini for sims, gpt-4o for verdict.">
+            <span className={styles.summaryNum}>${summary.totalCostUSD.toFixed(2)}</span>
+            <span className={styles.summaryLabel}>LLM cost</span>
+          </div>
+        )}
+      </div>
       <div className={styles.grid}>
-        {leaders.map((leader, i) => {
+        {actors.map((actor, i) => {
           const artifact = artifacts[i];
           // Defensive: skip cards whose artifact dropped out of the
-          // trio (e.g., a mid-run error that cleared one leader's
+          // trio (e.g., a mid-run error that cleared one actor's
           // result). Downstream helpers assume artifact is defined.
           if (!artifact) return null;
           return (
-            <LeaderResultCard
+            <ActorResultCard
               key={i}
-              leader={leader}
+              actor={actor}
               artifact={artifact}
               peers={artifacts.filter((a, j) => j !== i && !!a)}
               timeLabel={labels.time}
@@ -91,7 +149,7 @@ export function QuickstartResults({ leaders, artifacts, sessionId, onSwap }: Qui
         })}
       </div>
       {swapTargetIndex !== null && (
-        <LeaderPresetPicker
+        <ActorPresetPicker
           onSelect={preset => {
             onSwap(swapTargetIndex, preset);
             setSwapTargetIndex(null);
@@ -103,8 +161,8 @@ export function QuickstartResults({ leaders, artifacts, sessionId, onSwap }: Qui
   );
 }
 
-interface LeaderResultCardProps {
-  leader: LeaderConfig;
+interface ActorResultCardProps {
+  actor: ActorConfig;
   artifact: RunArtifact;
   peers: RunArtifact[];
   timeLabel: string;
@@ -117,22 +175,22 @@ interface LeaderResultCardProps {
   onRequestSwap: () => void;
 }
 
-function LeaderResultCard({
-  leader, artifact, peers, timeLabel, timeLabelCap,
+function ActorResultCard({
+  actor, artifact, peers, timeLabel, timeLabelCap,
   copiedHere, shareEnabled, onDownload, onShare, onFork, onRequestSwap,
-}: LeaderResultCardProps) {
+}: ActorResultCardProps) {
   const deltas = useMemo(() => computeMedianDeltas(artifact, peers), [artifact, peers]);
   const turnsCompleted = artifact.trajectory?.timepoints?.length ?? 0;
   return (
     <article className={styles.card}>
       <header className={styles.cardHeader}>
-        <h4 className={styles.leaderName}>{leader.name}</h4>
-        <span className={styles.archetype}>{leader.archetype}</span>
+        <h4 className={styles.actorName}>{actor.name}</h4>
+        <span className={styles.archetype}>{actor.archetype}</span>
         <button
           type="button"
           className={styles.swap}
           onClick={onRequestSwap}
-          aria-label={`Swap ${leader.name}`}
+          aria-label={`Swap ${actor.name}`}
         >
           Swap
         </button>
@@ -144,7 +202,7 @@ function LeaderResultCard({
             <div className={styles.traitBarOuter}>
               <div
                 className={styles.traitBarInner}
-                style={{ width: `${Math.round(leader.hexaco[trait] * 100)}%` }}
+                style={{ width: `${Math.round(actor.hexaco[trait] * 100)}%` }}
               />
             </div>
           </div>

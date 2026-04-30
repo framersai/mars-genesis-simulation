@@ -1,0 +1,67 @@
+{
+  "fingerprint": {
+    "resilience": "stable",
+    "innovation": "experimental",
+    "riskStyle": "opportunistic",
+    "decisionDiscipline": "mixed",
+    "summary": "riskBehavior:bold · outcomeStability:mixed · financialRobustness:fragile · cashStress:severe · marketMomentum:mixed · operationalCapacityFit:scaling · leadershipStyle:balanced · funding:series-b · timeline:within,1q · tools:narrow",
+    "totalTools": "2",
+    "successRate": "0.50",
+    "survivalRate": "1.00",
+    "riskRate": "0.50",
+    "riskBehavior": "bold",
+    "outcomeStability": "mixed",
+    "financialRobustness": "fragile",
+    "cashStress": "severe",
+    "marketMomentum": "mixed",
+    "operationalCapacityFit": "scaling",
+    "leadershipStyle": "balanced"
+  },
+  "metadata": {
+    "runId": "corp-aggressive-ai-release-optimizer-1777221955594",
+    "scenario": {
+      "id": "corporate-quarterly",
+      "name": "Q-Scope Corp"
+    },
+    "seed": 42,
+    "mode": "turn-loop",
+    "startedAt": "2026-04-26T16:45:01.222Z",
+    "completedAt": "2026-04-26T16:45:55.594Z"
+  },
+  "finalState": {
+    "metrics": {
+      "population": 102,
+      "powerKw": 398.8,
+      "foodMonthsReserve": 18.4,
+      "waterLitersPerDay": 800,
+      "pressurizedVolumeM3": 3000,
+      "lifeSupportCapacity": 120,
+      "infrastructureModules": 3,
+      "scienceOutput": 1,
+      "morale": 0.6901999999999999,
+      "revenueArr": 6000000,
+      "burnRate": 850000,
+      "runwayMonths": 14,
+      "marketShare": 0.08,
+      "hiringCapacity": 8,
+      "deliveryCapacity": 6
+    }
+  },
+  "decisionCount": 2,
+  "sampleDecision": {
+    "time": 1,
+    "actor": "Atlas-Bot Release Director",
+    "choice": "Adopt the risky scaling approach (option_b) for Q-Scope’s 12-quarter cadence, launching multiple product tracks in parallel while using the forged delivery capacity calculator to control morale/quality-debt parameters.",
+    "rationale": "I’m choosing option_b because my leadership style favors rapid execution and strategic learning over slow, tightly scoped discovery. Engineering’s forged delivery capacity calculator is the key control lever: we’ll integrate it into planning to validate and tune inputs around engineer headcount, morale, and quality debt, turning the main risk (inaccurate capacity predictions) into a managed forecasting step rather than a reason to delay. The trade I accept is higher coordination overhead and greater quality-debt exposure in exchange for substantially faster time-to-market learning and compounding advantage.",
+    "reasoning": "1) My personality pushes me toward option_b via results-first (impatient with slow discovery), high risk tolerance, and execution-forward alignment (build momentum/learning surface immediately). 2) Engineering’s report supports integrating the forged tool but doesn’t require a narrow MVP; the only conflict is the calculator’s warning about parameter validation. Given my profile, I trust Engineering’s capability and planning discipline while accepting that risk must be bounded via validation—not avoided. 3) The forged delivery capacity calculator directly informs the decision by estimating how engineer headcount, morale, and quality debt affect delivery efficiency; the report provides no numeric output, so we’ll operationalize it with our tuned input assumptions. 4) Accepted risk: higher coordination overhead and increased quality-debt exposure for faster strategic learning (option_b trade). Refused risk: slowing time-to-market by waiting for an internal platform or narrower MVP cadence. 5) Final choice: option_b—scale immediately with parallel teams and use the capacity calculator to keep the forecast-driven execution risk under control.",
+    "outcome": "risky_failure"
+  },
+  "forgedToolCount": 1,
+  "citationCount": 2,
+  "cost": {
+    "totalUSD": 0.1174,
+    "llmCalls": 22
+  },
+  "aborted": false,
+  "providerError": null
+}

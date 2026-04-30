@@ -9,9 +9,9 @@ import type { TurnSnapshot, CellSnapshot } from './viz-types';
  * per turn. Population, morale, food and birth/death deltas come from
  * the snapshot payload.
  *
- * Return shape is `Record<leaderName, TurnSnapshot[]>` — F1 (arena-
+ * Return shape is `Record<actorName, TurnSnapshot[]>` — F1 (arena-
  * ready refactor) generalized this away from the old `{ a, b }` pair.
- * Consumers read `snaps[leaderIds[0]]` / `snaps[leaderIds[1]]` for
+ * Consumers read `snaps[actorIds[0]]` / `snaps[actorIds[1]]` for
  * the current 2-column dashboard; P2's N-column mode uses the full
  * map.
  */
@@ -19,10 +19,10 @@ export function useVizSnapshots(state: GameState): Record<string, TurnSnapshot[]
   return useMemo(() => {
     const result: Record<string, TurnSnapshot[]> = {};
 
-    for (const leaderName of state.leaderIds) {
-      const s = state.leaders[leaderName];
+    for (const actorName of state.actorIds) {
+      const s = state.actors[actorName];
       if (!s) continue;
-      result[leaderName] = [];
+      result[actorName] = [];
 
       const categoriesByTurn = new Map<number, string[]>();
       for (const e of s.events) {
@@ -62,7 +62,7 @@ export function useVizSnapshots(state: GameState): Record<string, TurnSnapshot[]
           shortTermMemory: a.shortTermMemory || [],
         }));
 
-        result[leaderName].push({
+        result[actorName].push({
           turn: turnNum,
           time: (dd.time as number) || 0,
           cells,

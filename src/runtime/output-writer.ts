@@ -55,8 +55,8 @@ function resolveOutputDir(): string {
 export function writeRunOutput(
   output: RunArtifact,
   args: {
-    leaderName: string;
-    leaderArchetype: string;
+    actorName: string;
+    actorArchetype: string;
     turns: number;
     toolRegs: Record<string, string[]>;
   },
@@ -64,7 +64,7 @@ export function writeRunOutput(
   const outDir = resolveOutputDir();
   mkdirSync(outDir, { recursive: true });
   const ts = new Date().toISOString().replace(/[:.]/g, '-');
-  const tag = args.leaderArchetype.toLowerCase().replace(/\s+/g, '-');
+  const tag = args.actorArchetype.toLowerCase().replace(/\s+/g, '-');
   const path = resolve(outDir, `v3-${tag}-${ts}.json`);
   writeFileSync(path, JSON.stringify(output, null, 2));
 
@@ -77,7 +77,7 @@ export function writeRunOutput(
       : 0;
 
   console.log(`\n${'═'.repeat(60)}`);
-  console.log(`  COMPLETE — ${args.leaderName}`);
+  console.log(`  COMPLETE — ${args.actorName}`);
   console.log(`  Output: ${path}`);
   console.log(`  Turns: ${args.turns} | Citations: ${citations} | Tools: ${tools}`);
   console.log(`  Final: Pop ${pop} | Morale ${moralePct}%`);

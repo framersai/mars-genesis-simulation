@@ -5,6 +5,7 @@
  */
 
 import type { HexacoProfile, Agent, SimulationState } from './core/state.js';
+import type { TraitProfile } from './trait-models/index.js';
 
 // ---------------------------------------------------------------------------
 // Primitive value types
@@ -37,6 +38,18 @@ export interface ScenarioLabels {
   timeUnitNoun?: string;
   /** Plural form of `timeUnitNoun` (e.g., "years", "hours", "quarters", "ticks"). Default when absent: "ticks". */
   timeUnitNounPlural?: string;
+  /**
+   * Singular display word for the swappable decision-making entity that
+   * runs each parallel counterfactual. Defaults to "actor" — the universal
+   * abstract type. Scenarios specialize it: Mars Genesis sets "commander",
+   * a hurricane scenario sets "incident commander", an AI release sets
+   * "release director", a quantum-game scenario sets "player". The
+   * engine type stays `ActorConfig` for SDK back-compat; this label is
+   * for UI / copy / button text rendering only.
+   */
+  actorNoun?: string;
+  /** Plural form of `actorNoun`. Defaults to "actors". */
+  actorNounPlural?: string;
 }
 
 /** Visual theme for a scenario. Applied to the dashboard via CSS custom properties. */
@@ -61,7 +74,7 @@ export interface ScenarioSetupSchema {
   /** Maximum events the Event Director can generate per turn. Default: 3 */
   maxEventsPerTurn?: number;
   /** Which setup form sections to expose in the dashboard */
-  configurableSections: Array<'leaders' | 'personnel' | 'resources' | 'departments' | 'events' | 'models' | 'advanced'>;
+  configurableSections: Array<'actors' | 'personnel' | 'resources' | 'departments' | 'events' | 'models' | 'advanced'>;
 }
 
 // ---------------------------------------------------------------------------
@@ -175,7 +188,7 @@ export interface ScenarioUiDefinition {
   reportSections: Array<'crisis' | 'departments' | 'decision' | 'outcome' | 'quotes' | 'causality'>;
   departmentIcons: Record<string, string>;
   eventRenderers: Record<string, { icon: string; color: string }>;
-  setupSections: Array<'leaders' | 'personnel' | 'resources' | 'departments' | 'events' | 'models' | 'advanced'>;
+  setupSections: Array<'actors' | 'personnel' | 'resources' | 'departments' | 'events' | 'models' | 'advanced'>;
 }
 
 // ---------------------------------------------------------------------------
@@ -273,7 +286,7 @@ export interface ScenarioHooks {
   /** Returns location/identity/health phrasing for agent reaction prompts */
   reactionContextHook?: (colonist: Agent, ctx: { time: number; turn: number }) => string;
   /** Computes a timeline fingerprint classification from final simulation state */
-  fingerprintHook?: (finalState: SimulationState, outcomeLog: Array<{ turn: number; time: number; outcome: string }>, leader: LeaderConfig, toolRegs: Record<string, string[]>, maxTurns: number) => Record<string, string>;
+  fingerprintHook?: (finalState: SimulationState, outcomeLog: Array<{ turn: number; time: number; outcome: string }>, leader: ActorConfig, toolRegs: Record<string, string[]>, maxTurns: number) => Record<string, string>;
   /** Returns a milestone event for narrative anchor turns (turn 1, final turn) */
   getMilestoneEvent?: (turn: number, maxTurns: number) => MilestoneEventDef | null;
   /** Returns politics deltas for political/social events, null if not applicable */
@@ -321,11 +334,20 @@ export interface Scenario {
 }
 
 // ---------------------------------------------------------------------------
-// Leader config
+// Actor config (decision-making entity per parallel run)
 // ---------------------------------------------------------------------------
 
-/** Configuration for a simulation leader/commander. */
-export interface LeaderConfig {
+/**
+ * Configuration for a simulation actor — the swappable decision-making
+ * entity that runs each parallel counterfactual. Was `ActorConfig` in
+ * 0.7.x; renamed in 0.8.0 to match the user-facing terminology
+ * (`scenario.labels.actorNoun` selects the per-domain label like
+ * "commander" / "mayor" / "release director").
+ *
+ * The legacy `ActorConfig` name is exported below as a `@deprecated`
+ * type alias so 0.7.x callers compile unchanged. Drop in 1.0.
+ */
+export interface ActorConfig {
   name: string;
   archetype: string;
   /**
@@ -336,7 +358,28 @@ export interface LeaderConfig {
    * naturally instead of being named after a Mars heritage concept.
    */
   unit: string;
+  /**
+   * Six-axis HEXACO personality profile. Required for back-compat with
+   * v0.7 callers; for non-HEXACO trait models (e.g. `ai-agent`), supply
+   * a representative HEXACO snapshot AND set `traitProfile` to the
+   * canonical model + traits the runtime should use. The
+   * `normalizeActorConfig` helper at runtime synthesizes a
+   * `traitProfile` from this field when `traitProfile` is omitted, so
+   * existing leader configs continue to work unchanged.
+   *
+   * @deprecated since 0.8.0: prefer `traitProfile` for new code.
+   *   Removal scheduled for 0.9.0.
+   */
   hexaco: HexacoProfile;
+  /**
+   * Pluggable trait profile naming a registered TraitModel and its
+   * per-axis values. When set, this overrides the legacy `hexaco`
+   * field for cue translation, drift, and prompt generation. When
+   * omitted, the runtime synthesizes a profile from `hexaco` with
+   * `modelId: 'hexaco'`. See
+   * `docs/superpowers/specs/2026-04-26-trait-model-generalization-design.md`.
+   */
+  traitProfile?: TraitProfile;
   instructions: string;
 }
 

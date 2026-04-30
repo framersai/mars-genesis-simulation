@@ -1,5 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import Database from 'better-sqlite3';
 import { createSqliteRunHistoryStore } from '../../src/cli/server/sqlite-run-history-store.js';
 import type { RunRecord } from '../../src/cli/server/run-record.js';
 
@@ -9,7 +13,7 @@ function makeRun(overrides: Partial<RunRecord> = {}): RunRecord {
     createdAt: new Date().toISOString(),
     scenarioId: 'mars-genesis',
     scenarioVersion: '0.4.88',
-    leaderConfigHash: 'leaders:abc',
+    actorConfigHash: 'leaders:abc',
     economicsProfile: 'balanced',
     sourceMode: 'local_demo',
     createdBy: 'anonymous',
@@ -59,21 +63,21 @@ test('listRuns filters by sourceMode', async () => {
   assert.equal(rows[0].runId, 'r2');
 });
 
-test('listRuns filters by leaderConfigHash', async () => {
+test('listRuns filters by actorConfigHash', async () => {
   const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
-  await store.insertRun(makeRun({ runId: 'r1', leaderConfigHash: 'leaders:abc' }));
-  await store.insertRun(makeRun({ runId: 'r2', leaderConfigHash: 'leaders:def' }));
-  const rows = await store.listRuns({ leaderConfigHash: 'leaders:def' });
+  await store.insertRun(makeRun({ runId: 'r1', actorConfigHash: 'leaders:abc' }));
+  await store.insertRun(makeRun({ runId: 'r2', actorConfigHash: 'leaders:def' }));
+  const rows = await store.listRuns({ actorConfigHash: 'leaders:def' });
   assert.equal(rows.length, 1);
   assert.equal(rows[0].runId, 'r2');
 });
 
 test('listRuns combines all three filters with AND semantics', async () => {
   const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
-  await store.insertRun(makeRun({ runId: 'match', scenarioId: 'mars-genesis', sourceMode: 'platform_api', leaderConfigHash: 'leaders:abc' }));
-  await store.insertRun(makeRun({ runId: 'wrong-scenario', scenarioId: 'lunar-outpost', sourceMode: 'platform_api', leaderConfigHash: 'leaders:abc' }));
-  await store.insertRun(makeRun({ runId: 'wrong-mode', scenarioId: 'mars-genesis', sourceMode: 'local_demo', leaderConfigHash: 'leaders:abc' }));
-  const rows = await store.listRuns({ scenarioId: 'mars-genesis', sourceMode: 'platform_api', leaderConfigHash: 'leaders:abc' });
+  await store.insertRun(makeRun({ runId: 'match', scenarioId: 'mars-genesis', sourceMode: 'platform_api', actorConfigHash: 'leaders:abc' }));
+  await store.insertRun(makeRun({ runId: 'wrong-scenario', scenarioId: 'lunar-outpost', sourceMode: 'platform_api', actorConfigHash: 'leaders:abc' }));
+  await store.insertRun(makeRun({ runId: 'wrong-mode', scenarioId: 'mars-genesis', sourceMode: 'local_demo', actorConfigHash: 'leaders:abc' }));
+  const rows = await store.listRuns({ scenarioId: 'mars-genesis', sourceMode: 'platform_api', actorConfigHash: 'leaders:abc' });
   assert.equal(rows.length, 1);
   assert.equal(rows[0].runId, 'match');
 });
@@ -156,7 +160,7 @@ test('SqliteRunHistoryStore round-trips Library-tab denormalized fields', async 
     createdAt: new Date().toISOString(),
     scenarioId: 'mars-genesis',
     scenarioVersion: '0.7.0',
-    leaderConfigHash: 'leaders:abc123',
+    actorConfigHash: 'leaders:abc123',
     economicsProfile: 'balanced',
     sourceMode: 'local_demo',
     createdBy: 'anonymous',
@@ -164,8 +168,8 @@ test('SqliteRunHistoryStore round-trips Library-tab denormalized fields', async 
     costUSD: 0.42,
     durationMs: 12345,
     mode: 'batch-trajectory',
-    leaderName: 'Marcus Reinhardt',
-    leaderArchetype: 'pragmatist',
+    actorName: 'Marcus Reinhardt',
+    actorArchetype: 'pragmatist',
   };
   await store.insertRun(record);
   const fetched = await store.getRun(record.runId);
@@ -187,8 +191,8 @@ test('listRuns filters by simulation mode (turn-loop vs batch-trajectory)', asyn
 
 test('listRuns filters by free-text q across scenario, leader, archetype', async () => {
   const store = createSqliteRunHistoryStore({ dbPath: ':memory:' });
-  await store.insertRun(makeRun({ runId: 'mars-1', scenarioId: 'mars-genesis', leaderName: 'Ada', leaderArchetype: 'visionary' }));
-  await store.insertRun(makeRun({ runId: 'lunar-1', scenarioId: 'lunar-outpost', leaderName: 'Marcus', leaderArchetype: 'pragmatist' }));
+  await store.insertRun(makeRun({ runId: 'mars-1', scenarioId: 'mars-genesis', actorName: 'Ada', actorArchetype: 'visionary' }));
+  await store.insertRun(makeRun({ runId: 'lunar-1', scenarioId: 'lunar-outpost', actorName: 'Marcus', actorArchetype: 'pragmatist' }));
   const lunar = await store.listRuns({ q: 'lunar' });
   assert.equal(lunar.length, 1);
   assert.equal(lunar[0].runId, 'lunar-1');
@@ -232,3 +236,46 @@ test('recordReplayResult increments replay_attempts always and replay_matches co
   assert.equal(agg.replaysAttempted, 3);
   assert.equal(agg.replaysMatched, 2);
 });
+
+test('migrates a v0.7 schema (leader_config_hash) to v0.8 (actor_config_hash) on boot', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'paracosm-sqlite-migrate-'));
+  const dbPath = join(dir, 'runs.db');
+  // Build a legacy-shaped table the way v0.7 wrote it.
+  const seed = new Database(dbPath);
+  seed.exec(`
+    CREATE TABLE runs (
+      run_id              TEXT PRIMARY KEY NOT NULL,
+      created_at          TEXT NOT NULL,
+      scenario_id         TEXT NOT NULL,
+      scenario_version    TEXT NOT NULL,
+      leader_config_hash  TEXT NOT NULL,
+      economics_profile   TEXT NOT NULL,
+      source_mode         TEXT NOT NULL,
+      created_by          TEXT NOT NULL
+    );
+    CREATE INDEX idx_runs_leader_created ON runs (leader_config_hash, created_at DESC);
+  `);
+  seed.prepare(`
+    INSERT INTO runs
+      (run_id, created_at, scenario_id, scenario_version, leader_config_hash, economics_profile, source_mode, created_by)
+    VALUES
+      ('legacy-1', '2026-04-20T00:00:00Z', 'mars-genesis', '0.4.88', 'leaders:legacy-hash', 'balanced', 'local_demo', 'anonymous')
+  `).run();
+  seed.close();
+
+  // Boot the store against the legacy DB. Without the migration, this
+  // throws on db.prepare() because the prepared INSERT references
+  // actor_config_hash, which doesn't exist in the legacy schema.
+  const store = createSqliteRunHistoryStore({ dbPath });
+  const loaded = await store.getRun('legacy-1');
+  assert.ok(loaded, 'legacy row preserved through column rename');
+  assert.equal(loaded!.actorConfigHash, 'leaders:legacy-hash');
+
+  // Subsequent inserts work on the migrated schema.
+  await store.insertRun(makeRun({ runId: 'modern-1' }));
+  const fresh = await store.getRun('modern-1');
+  assert.ok(fresh);
+
+  rmSync(dir, { recursive: true, force: true });
+});
+

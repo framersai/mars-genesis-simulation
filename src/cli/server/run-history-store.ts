@@ -10,9 +10,11 @@ export interface ListRunsFilters {
    *  free up that name for the more user-relevant simulation mode. */
   sourceMode?: ParacosmServerMode;
   scenarioId?: string;
-  leaderConfigHash?: string;
+  actorConfigHash?: string;
   /** Free-text search across scenario, leader name, leader archetype. */
   q?: string;
+  /** Filter to runs sharing a bundle (one Quickstart submission). */
+  bundleId?: string;
   limit?: number;
   offset?: number;
 }
@@ -29,20 +31,32 @@ export interface RunHistoryStore {
   insertRun(run: RunRecord): Promise<void>;
   listRuns(filters?: ListRunsFilters): Promise<RunRecord[]>;
   getRun(runId: string): Promise<RunRecord | null>;
-  countRuns?(filters?: Pick<ListRunsFilters, 'mode' | 'sourceMode' | 'scenarioId' | 'leaderConfigHash' | 'q'>): Promise<number>;
-  aggregateStats?(filters?: Pick<ListRunsFilters, 'mode' | 'sourceMode' | 'scenarioId' | 'leaderConfigHash'>): Promise<RunsAggregate>;
+  /** Optional: list all runs sharing a bundleId. Used by the Compare
+   *  view to fetch a Quickstart bundle's members in one query. Returns
+   *  members ordered by `created_at ASC` so the first leader is first. */
+  listRunsByBundleId?(bundleId: string): Promise<RunRecord[]>;
+  countRuns?(filters?: Pick<ListRunsFilters, 'mode' | 'sourceMode' | 'scenarioId' | 'actorConfigHash' | 'q'>): Promise<number>;
+  aggregateStats?(filters?: Pick<ListRunsFilters, 'mode' | 'sourceMode' | 'scenarioId' | 'actorConfigHash'>): Promise<RunsAggregate>;
   recordReplayResult?(runId: string, matches: boolean): Promise<void>;
+  /**
+   * Destructive: delete every row in the runs table. Used by the
+   * `/admin/data/wipe` endpoint and CLI `paracosm wipe-data` for
+   * one-shot cleanups. Returns the count of deleted rows.
+   */
+  wipeAll?(): Promise<number>;
 }
 
 export function createNoopRunHistoryStore(): RunHistoryStore {
   return {
     async insertRun() {},
     async listRuns() { return []; },
+    async listRunsByBundleId() { return []; },
     async getRun() { return null; },
     async countRuns() { return 0; },
     async aggregateStats() {
       return { totalRuns: 0, totalCostUSD: 0, totalDurationMs: 0, replaysAttempted: 0, replaysMatched: 0 };
     },
     async recordReplayResult() {},
+    async wipeAll() { return 0; },
   };
 }

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { GameState, LeaderSideState } from '../../hooks/useGameState.js';
+import type { GameState, ActorSideState } from '../../hooks/useGameState.js';
 import { humanizeOutcome } from './humanize-outcome.js';
 
 interface TurnBannerProps {
@@ -8,7 +8,7 @@ interface TurnBannerProps {
 }
 
 interface LeaderTurnSummary {
-  leaderName: string;
+  actorName: string;
   decision: string;
   outcome: string;
   deaths: number;
@@ -19,9 +19,9 @@ interface LeaderTurnSummary {
   time: number;
 }
 
-function summarize(side: LeaderSideState, turn: number): LeaderTurnSummary | null {
-  const leaderName = side.leader?.name ?? '';
-  if (!leaderName) return null;
+function summarize(side: ActorSideState, turn: number): LeaderTurnSummary | null {
+  const actorName = side.leader?.name ?? '';
+  if (!actorName) return null;
 
   let decision = '';
   let outcome = '';
@@ -51,7 +51,7 @@ function summarize(side: LeaderSideState, turn: number): LeaderTurnSummary | nul
     }
   }
 
-  return { leaderName, decision, outcome, deaths, dominantCause, moraleDelta, eventTitle, eventCategory, time };
+  return { actorName, decision, outcome, deaths, dominantCause, moraleDelta, eventTitle, eventCategory, time };
 }
 
 /**
@@ -60,10 +60,10 @@ function summarize(side: LeaderSideState, turn: number): LeaderTurnSummary | nul
  * events only; no LLM call.
  */
 export function TurnBanner({ state, currentTurn }: TurnBannerProps) {
-  const firstId = state.leaderIds[0];
-  const secondId = state.leaderIds[1];
-  const sideA = firstId ? state.leaders[firstId] : null;
-  const sideB = secondId ? state.leaders[secondId] : null;
+  const firstId = state.actorIds[0];
+  const secondId = state.actorIds[1];
+  const sideA = firstId ? state.actors[firstId] : null;
+  const sideB = secondId ? state.actors[secondId] : null;
   const a = useMemo(() => sideA ? summarize(sideA, currentTurn) : null, [sideA, currentTurn]);
   const b = useMemo(() => sideB ? summarize(sideB, currentTurn) : null, [sideB, currentTurn]);
 

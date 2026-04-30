@@ -19,7 +19,7 @@ import {
   estimateForkCost,
   parseCustomEvents,
 } from './ForkModal.helpers';
-import type { LeaderConfig } from '../../../../../engine/types.js';
+import type { ActorConfig } from '../../../../../engine/types.js';
 import type { RunArtifact } from '../../../../../engine/schema/index.js';
 import styles from './ForkModal.module.scss';
 
@@ -27,7 +27,7 @@ import styles from './ForkModal.module.scss';
 export interface ForkConfirmPayload {
   parentArtifact: RunArtifact;
   atTurn: number;
-  leader: LeaderConfig;
+  leader: ActorConfig;
   seedOverride?: number;
   customEvents?: Array<{ turn: number; title: string; description: string }>;
 }
@@ -45,7 +45,7 @@ export interface ForkModalProps {
   /** Current session provider (from Settings). */
   provider: 'openai' | 'anthropic';
   /** Session-custom leaders (optional; from SettingsPanel state). */
-  sessionCustomLeaders?: LeaderConfig[];
+  sessionCustomLeaders?: ActorConfig[];
   /** Called with the validated payload when the user confirms. */
   onConfirm: (payload: ForkConfirmPayload) => void;
   /** Called when the user dismisses without confirming. */
@@ -63,7 +63,7 @@ export function ForkModal(props: ForkModalProps) {
   const dialogRef = useFocusTrap<HTMLDivElement>(true);
 
   const presets = resolveLeaderPresets(scenario as never, sessionCustomLeaders);
-  const [leaderIndex, setLeaderIndex] = useState(0);
+  const [actorIndex, setLeaderIndex] = useState(0);
   const [seedText, setSeedText] = useState('');
   const [customEventsText, setCustomEventsText] = useState('');
 
@@ -80,7 +80,7 @@ export function ForkModal(props: ForkModalProps) {
   const parentSeed = parentArtifact.metadata.seed;
 
   const handleConfirm = () => {
-    const leader = presets[leaderIndex];
+    const leader = presets[actorIndex];
     if (!leader) return;
     const parsedSeed = seedText.trim() ? parseInt(seedText, 10) : undefined;
     const seedOverride = parsedSeed !== undefined && Number.isFinite(parsedSeed)
@@ -130,7 +130,7 @@ export function ForkModal(props: ForkModalProps) {
           ) : (
             <select
               id="fork-leader-select"
-              value={leaderIndex}
+              value={actorIndex}
               onChange={e => setLeaderIndex(parseInt(e.target.value, 10))}
             >
               {presets.map((p, i) => (

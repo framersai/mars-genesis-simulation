@@ -15,11 +15,16 @@
  */
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { z } from 'zod';
-import type { ScenarioPackage, LeaderConfig, LlmProvider, SimulationModelConfig } from '../engine/types.js';
+import type { ScenarioPackage, ActorConfig, LlmProvider, SimulationModelConfig } from '../engine/types.js';
 import type { RunArtifact } from '../engine/schema/index.js';
 import type { CompileOptions } from '../engine/compiler/types.js';
 import type { KeyPersonnel } from '../engine/core/agent-generator.js';
 import type { CostPreset } from './sim-config.js';
+import {
+  normalizeCredential,
+  resolveProviderFromCredentials,
+  type ProviderCredentialOptions,
+} from '../engine/provider-credentials.js';
 
 const LeaderSchema = z.object({
   name: z.string().min(1).max(80),
@@ -77,10 +82,8 @@ export interface SimulateResponse {
  * Narrow subset of the full RunOptions; the handler sets `scenario`
  * and leaves key personnel empty.
  *
- * `apiKey` / `anthropicKey` intentionally absent. RunOptions does not
- * declare them; LLM credentials route through `process.env`. The caller
- * (server-app's /simulate handler) scopes the env before invoking
- * `handleSimulate`.
+ * Explicit request credentials travel as data on these options so
+ * concurrent /simulate requests do not contend on process.env.
  */
 export interface SimulateRunOptions {
   maxTurns?: number;
@@ -91,6 +94,8 @@ export interface SimulateRunOptions {
   costPreset?: CostPreset;
   models?: Partial<SimulationModelConfig>;
   scenario: ScenarioPackage;
+  apiKey?: string;
+  anthropicKey?: string;
 }
 
 /**
@@ -98,16 +103,14 @@ export interface SimulateRunOptions {
  * server or hitting real LLM providers. Production wiring in
  * `server-app.ts` passes the real `compileScenario` + `runSimulation`.
  *
- * BYO-key handling lives at the caller layer, not here. The /simulate
- * server handler scopes `process.env.OPENAI_API_KEY` /
- * `ANTHROPIC_API_KEY` from the X-API-Key / X-Anthropic-Key headers
- * before calling `handleSimulate`, then restores in a `finally`.
+ * BYO-key handling is passed as data from the caller layer. The route
+ * handler never mutates process.env.
  */
 export interface SimulateDeps {
   /** Compile a raw scenario draft into a runnable ScenarioPackage. */
   compileScenario: (raw: Record<string, unknown>, options: CompileOptions) => Promise<ScenarioPackage>;
   /** Run one leader against a scenario and return a RunArtifact. */
-  runSimulation: (leader: LeaderConfig, keyPersonnel: KeyPersonnel[], options: SimulateRunOptions) => Promise<RunArtifact>;
+  runSimulation: (leader: ActorConfig, keyPersonnel: KeyPersonnel[], options: SimulateRunOptions) => Promise<RunArtifact>;
 }
 
 function writeJson(res: ServerResponse, status: number, body: unknown): void {
@@ -123,6 +126,7 @@ export async function handleSimulate(
   res: ServerResponse,
   body: unknown,
   deps: SimulateDeps,
+  credentials: ProviderCredentialOptions = {},
 ): Promise<void> {
   const parsed = SimulateRequestSchema.safeParse(body);
   if (!parsed.success) {
@@ -134,6 +138,11 @@ export async function handleSimulate(
   }
 
   const { scenario: scenarioInput, leader, options = {} } = parsed.data;
+  const cleanCredentials: ProviderCredentialOptions = {
+    apiKey: normalizeCredential(credentials.apiKey),
+    anthropicKey: normalizeCredential(credentials.anthropicKey),
+  };
+  const provider = resolveProviderFromCredentials(options.provider, cleanCredentials, 'openai');
 
   let scenarioPkg: ScenarioPackage;
   try {
@@ -141,9 +150,11 @@ export async function handleSimulate(
     // are nearly free, and forcing the server-side compile means we
     // never trust client-supplied hook code.
     scenarioPkg = await deps.compileScenario(scenarioInput, {
-      provider: options.provider,
+      provider,
       seedText: options.seedText,
       seedUrl: options.seedUrl,
+      apiKey: cleanCredentials.apiKey,
+      anthropicKey: cleanCredentials.anthropicKey,
     });
   } catch (err) {
     // Server-side log with the full stack; client gets a generic
@@ -156,14 +167,16 @@ export async function handleSimulate(
   const startedAt = Date.now();
   let artifact: RunArtifact;
   try {
-    artifact = await deps.runSimulation(leader as LeaderConfig, [], {
+    artifact = await deps.runSimulation(leader as ActorConfig, [], {
       scenario: scenarioPkg,
       maxTurns: options.maxTurns,
       seed: options.seed,
       startTime: options.startTime,
       captureSnapshots: options.captureSnapshots ?? false,
-      provider: options.provider,
+      provider,
       costPreset: options.costPreset,
+      apiKey: cleanCredentials.apiKey,
+      anthropicKey: cleanCredentials.anthropicKey,
     });
   } catch (err) {
     console.error('[simulate] runSimulation failed:', err);

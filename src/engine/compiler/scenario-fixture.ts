@@ -5,7 +5,7 @@
  * will actually see at runtime — not a hardcoded Mars fixture that
  * produces false positives and false negatives for non-Mars scenarios.
  *
- * Runtime `SimulationState` has `systems`, `politics`, `statuses`,
+ * Runtime `SimulationState` has `metrics`, `politics`, `statuses`,
  * `environment`, `agents`, `metadata` at the top level. `world.metrics`
  * AND `world.capacities` both flatten into `state.metrics`;
  * `world.politics` / `world.statuses` / `world.environment` each map

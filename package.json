@@ -1,7 +1,7 @@
 {
   "name": "paracosm",
-  "version": "0.7.0",
-  "description": "Prompt/document/URL-grounded structured world model for AI agents: typed ScenarioPackages, deterministic kernels, HEXACO leaders, LLM events, runtime tool forging, and reproducible counterfactual RunArtifacts. Built on AgentOS.",
+  "version": "0.8.0",
+  "description": "Prompt/document/URL-grounded structured world model for AI agents: typed ScenarioPackages, deterministic kernels, HEXACO actors, LLM events, runtime tool forging, and reproducible counterfactual RunArtifacts. Built on AgentOS.",
   "type": "module",
   "main": "dist/engine/index.js",
   "types": "dist/engine/index.d.ts",
@@ -71,7 +71,8 @@
     "dashboard:smoke": "npx tsx src/cli/serve.ts 3",
     "compile": "npx tsx src/cli/compile.ts",
     "check:dashboard": "node --check src/cli/dashboard/main.legacy.js",
-    "test": "node --import tsx --import ./scripts/test-css-stub.mjs --test 'tests/**/*.test.ts' 'src/cli/dashboard/src/**/*.test.ts' 'src/cli/dashboard/src/**/*.test.tsx'",
+    "typecheck:dashboard": "tsc -p src/cli/dashboard",
+    "test": "npm run typecheck:dashboard && node --import tsx --import ./scripts/test-css-stub.mjs --test 'tests/**/*.test.ts' 'src/cli/dashboard/src/**/*.test.ts' 'src/cli/dashboard/src/**/*.test.tsx'",
     "docs": "typedoc && cp assets/docs-theme/paracosm-override.css docs/api/assets/paracosm-override.css",
     "changelog": "node scripts/generate-changelog.mjs",
     "export:json-schema": "npx tsx scripts/export-json-schema.ts",
@@ -81,10 +82,10 @@
     "leader:b": "npx tsx src/cli/run-b.ts"
   },
   "dependencies": {
-    "@framers/agentos": "^0.2.11",
+    "@framers/agentos": "^0.5.12",
     "@framers/sql-storage-adapter": "^0.6.3",
     "better-sqlite3": "^12.9.0",
-    "pdfjs-dist": "^4.10.38",
+    "pdfjs-dist": "^5.7.284",
     "zod": "^4.3.6"
   },
   "devDependencies": {

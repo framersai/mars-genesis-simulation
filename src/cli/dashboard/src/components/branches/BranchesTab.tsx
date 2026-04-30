@@ -107,7 +107,7 @@ function BranchCard({
       }}
       tabIndex={0}
       role="button"
-      aria-label={`Branch ${branch.leaderName}, forked at ${labels.time} ${branch.forkedAtTurn}`}
+      aria-label={`Branch ${branch.actorName}, forked at ${labels.time} ${branch.forkedAtTurn}`}
     >
       <header className={styles.cardHeader}>
         <div className={styles.branchMeta}>
@@ -115,7 +115,7 @@ function BranchCard({
             Forked at {labels.Time} {branch.forkedAtTurn}
           </span>
           <h4 className={styles.branchTitle}>
-            {branch.leaderName} <span className={styles.archetype}>({branch.leaderArchetype})</span>
+            {branch.actorName} <span className={styles.archetype}>({branch.actorArchetype})</span>
           </h4>
         </div>
         <span className={`${styles.status} ${styles[`status_${branch.status}`]}`}>

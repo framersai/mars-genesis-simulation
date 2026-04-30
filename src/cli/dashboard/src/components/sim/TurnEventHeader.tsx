@@ -3,7 +3,7 @@ import { useScenarioLabels } from '../../hooks/useScenarioLabels';
 import { Tooltip } from '../shared/Tooltip';
 
 interface TurnEventHeaderProps {
-  leaderIndex: number;
+  actorIndex: number;
   event: TurnEventInfo | null;
 }
 
@@ -17,7 +17,7 @@ interface TurnEventHeaderProps {
  * EMERGENT) on line 1; description clamps to line 2 via
  * `-webkit-line-clamp: 2`. Hover popover shows the full context.
  */
-export function TurnEventHeader({ leaderIndex, event }: TurnEventHeaderProps) {
+export function TurnEventHeader({ actorIndex, event }: TurnEventHeaderProps) {
   const labels = useScenarioLabels();
   if (!event) return null;
 
@@ -41,7 +41,7 @@ export function TurnEventHeader({ leaderIndex, event }: TurnEventHeaderProps) {
           </span>
         )}
         <span style={{ fontSize: '11px', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
-          {labels.Time} {event.time} &middot; Leader {String.fromCharCode(65 + leaderIndex)}
+          {labels.Time} {event.time} &middot; Leader {String.fromCharCode(65 + actorIndex)}
         </span>
       </div>
       {fullText && (

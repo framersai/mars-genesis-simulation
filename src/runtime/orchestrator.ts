@@ -8,7 +8,7 @@ import type {
 } from '../engine/schema/index.js';
 import type { ITool } from '@framers/agentos';
 import {
-  webSearchTool,
+  createWebSearchTool,
   createEmergentEngine,
   createCallForgedTool,
   wrapForgeTool,
@@ -35,6 +35,10 @@ import type { Department, HexacoProfile, HexacoSnapshot, TurnOutcome } from '../
 import { SeededRng } from '../engine/core/rng.js';
 import { classifyOutcome, classifyOutcomeById, driftCommanderHexaco } from '../engine/core/progression.js';
 import { buildTrajectoryCue } from './hexaco-cues/trajectory.js';
+import { buildTrajectoryCue as buildTrajectoryCueGeneric, type TraitProfileSnapshot } from './trait-cues/trajectory.js';
+import { normalizeActorConfig } from '../engine/trait-models/normalize-leader.js';
+import { traitModelRegistry, type TraitProfile } from '../engine/trait-models/index.js';
+import { driftLeaderProfile } from '../engine/trait-models/drift.js';
 import type { DepartmentReport, CommanderDecision, TurnArtifact } from './contracts.js';
 import { SimulationKernel } from '../engine/core/kernel.js';
 import type { KeyPersonnel } from '../engine/core/agent-generator.js';
@@ -55,14 +59,19 @@ import {
   type StartingResources,
 } from '../cli/sim-config.js';
 import { resolveProviderWithFallback } from '../engine/provider-resolver.js';
+import {
+  apiKeyForProvider,
+  resolveProviderFromCredentials,
+  type RuntimeCredentialOptions,
+} from '../engine/provider-credentials.js';
 import { applyCustomEventToCrisis, buildTimeSchedule } from './runtime-helpers.js';
 import { classifyProviderError, shouldAbortRun, type ClassifiedProviderError } from './provider-errors.js';
 import { EffectRegistry } from '../engine/effect-registry.js';
 import { marsScenario } from '../engine/mars/index.js';
-import type { LeaderConfig } from '../engine/types.js';
+import type { ActorConfig } from '../engine/types.js';
 import type { ResolvedEconomicsProfile } from './economics-profile.js';
 import { projectSystemBags } from './world-snapshot.js';
-export type { LeaderConfig };
+export type { ActorConfig };
 
 
 
@@ -343,7 +352,7 @@ export function buildEventSummary(type: SimEventType, data: Record<string, unkno
   }
 }
 
-export interface RunOptions {
+export interface RunOptions extends RuntimeCredentialOptions {
   maxTurns?: number;
   seed?: number;
   startTime?: number;
@@ -427,20 +436,32 @@ export interface RunOptions {
   intervention?: InterventionConfig;
 }
 
-export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPersonnel[], opts: RunOptions = {}): Promise<RunArtifact> {
+export async function runSimulation(leader: ActorConfig, keyPersonnel: KeyPersonnel[], opts: RunOptions = {}): Promise<RunArtifact> {
   const startedAtIso = new Date().toISOString();
   const { agent } = await import('@framers/agentos');
   const sc = opts.scenario ?? marsScenario;
   const maxTurns = opts.maxTurns ?? 12;
   const startTime = opts.startTime ?? opts.scenario?.setup?.defaultStartTime ?? 0;
+
+  // Normalize the leader so traitProfile is guaranteed populated before
+  // any downstream code reads it. Legacy hexaco-only callers continue
+  // to work because the resolver synthesizes a hexaco-modeled
+  // traitProfile from leader.hexaco. Non-HEXACO callers (e.g. ai-agent
+  // leaders) get their explicit traitProfile passed through.
+  // See docs/superpowers/specs/2026-04-26-trait-model-generalization-design.md.
+  leader = normalizeActorConfig(leader);
   const timePerTurn = opts.timePerTurn ?? opts.scenario?.setup?.defaultTimePerTurn ?? 1;
-  const requestedProvider = opts.provider ?? 'openai';
+  const requestedProvider = resolveProviderFromCredentials(opts.provider, opts, 'openai');
+  const requestedProviderApiKey = apiKeyForProvider(requestedProvider, opts);
   // Preflight env check. Falls back to the other supported provider if
   // the requested one has no key; throws ProviderKeyMissingError when
   // neither OPENAI_API_KEY nor ANTHROPIC_API_KEY is set, rather than
   // hanging in a retry loop during the first LLM call.
-  const resolvedProvider = resolveProviderWithFallback(requestedProvider);
+  const resolvedProvider = resolveProviderWithFallback(requestedProvider, {
+    apiKey: requestedProviderApiKey,
+  });
   const provider = resolvedProvider.provider;
+  const providerApiKey = apiKeyForProvider(provider, opts);
   const sid = `${sc.labels.shortName}-v2-${leader.archetype.toLowerCase().replace(/\s+/g, '-')}`;
   const modelConfig = resolveSimulationModels(provider, opts.models, opts.costPreset);
   // Cost tracking: accumulate token usage and estimated cost across all LLM calls
@@ -596,6 +617,7 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
   // Populates RunArtifact.scenarioExtensions.kernelSnapshotsPerTurn.
   const kernelSnapshotsPerTurn: import('../engine/core/snapshot.js').KernelSnapshot[] = [];
 
+  const webSearchTool = createWebSearchTool(opts);
   const toolMap = new Map<string, ITool>();
   toolMap.set('web_search', webSearchTool);
   // Shared map of approved forged-tool executables. Populated by the
@@ -618,6 +640,7 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
     // path as failures from any other LLM call site.
     (err) => reportProviderError(err, 'judge'),
     forgedExecutables,
+    providerApiKey,
   );
   const callForgedTool = createCallForgedTool(forgedExecutables);
   const toolRegs: Record<string, string[]> = {};
@@ -639,13 +662,31 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
   const forgedLedger: ForgedLedger = new Map();
 
   // Commander HEXACO evolves per-turn via driftCommanderHexaco. Clone
-  // the caller's leader.hexaco so we never mutate the caller's config —
+  // the caller's leader.hexaco so we never mutate the caller's config:
   // pair-runner reuses configs across runs and chat-agents hold
   // references to the baseline profile. Every downstream read of the
   // commander's current personality goes through commanderHexacoLive.
   const commanderHexacoLive: HexacoProfile = { ...leader.hexaco };
   const commanderHexacoHistory: HexacoSnapshot[] = [
     { turn: 0, time: startTime, hexaco: { ...leader.hexaco } },
+  ];
+
+  // Parallel commander trait profile + history under whatever
+  // TraitModel the leader specified (hexaco by default; ai-agent or
+  // any future registered model when the leader supplies a non-HEXACO
+  // traitProfile). For HEXACO leaders, this state mirrors
+  // commanderHexacoLive byte-for-byte; for non-HEXACO leaders, it is
+  // the canonical source for trajectory cues and downstream
+  // traitProfile-aware paths. driftLeaderProfile maintains the same
+  // ±0.05/turn cap and [0.05, 0.95] kernel bounds as
+  // driftCommanderHexaco so cross-model drift discipline is uniform.
+  const commanderTraitModel = traitModelRegistry.require(leader.traitProfile!.modelId);
+  let commanderTraitProfileLive: TraitProfile = {
+    modelId: leader.traitProfile!.modelId,
+    traits: { ...leader.traitProfile!.traits },
+  };
+  const commanderTraitProfileHistory: TraitProfileSnapshot[] = [
+    { turn: 0, time: 0, profile: { modelId: commanderTraitProfileLive.modelId, traits: { ...commanderTraitProfileLive.traits } } },
   ];
 
   // Commander does NOT use systemBlocks caching because AgentOS's
@@ -656,6 +697,8 @@ export async function runSimulation(leader: LeaderConfig, keyPersonnel: KeyPerso
   // losing the trait-driven behavioral cues that make leaders diverge.
   const commander = agent({
     provider, model: modelConfig.commander,
+    apiKey: providerApiKey,
+    fallbackProviders: providerApiKey ? [] : undefined,
     instructions: leader.instructions,
     personality: { openness: leader.hexaco.openness, conscientiousness: leader.hexaco.conscientiousness, extraversion: leader.hexaco.extraversion, agreeableness: leader.hexaco.agreeableness, emotionality: leader.hexaco.emotionality, honesty: leader.hexaco.honestyHumility },
     maxSteps: opts.execution?.commanderMaxSteps ?? DEFAULT_EXECUTION.commanderMaxSteps,
@@ -899,6 +942,8 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
     const a = agent({
       provider,
       model: modelConfig.departments || cfg.defaultModel,
+      apiKey: providerApiKey,
+      fallbackProviders: providerApiKey ? [] : undefined,
       systemBlocks: [{ text: deptSystemPrompt, cacheBreakpoint: true }],
       tools,
       maxSteps: opts.execution?.departmentMaxSteps ?? DEFAULT_EXECUTION.departmentMaxSteps,
@@ -1010,13 +1055,28 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
     const getMilestone = sc.hooks.getMilestoneEvent;
     const milestone = getMilestone?.(turn, maxTurns);
     if (milestone) {
-      turnEvents = [{ ...milestone, description: (milestone as any).description || (milestone as any).crisis || '' } as DirectorEvent];
+      // Milestone events are LLM-generated at compile time with freeform
+      // category strings (e.g. "founding", "legacy", "Strategy & Launch")
+      // that almost never match the scenario's effects map keys. The
+      // EffectRegistry then falls through to its morale-only default and
+      // the run's declared metrics never move under the milestone turn.
+      // Force the category to a scenario-effects-map key so milestones
+      // actually exercise the scenario's declared effects: turn 1 uses
+      // the first effects key (typical "founding" feel — set the stage),
+      // final turn uses the last (typical "legacy" feel — close the
+      // arc). Falls through to the LLM-generated category when the
+      // scenario declares no categoryMapping (legacy scenarios).
+      const effectKeys = Object.keys(sc.knowledge?.categoryMapping ?? {});
+      const forcedCategory = effectKeys.length > 0
+        ? (turn === 1 ? effectKeys[0] : effectKeys[effectKeys.length - 1])
+        : milestone.category;
+      turnEvents = [{ ...milestone, category: forcedCategory, description: (milestone as any).description || (milestone as any).crisis || '' } as DirectorEvent];
     } else {
       const preState = kernel.getState();
       const alive = preState.agents.filter(c => c.health.alive);
       const dirCtx: DirectorContext = {
         turn, time,
-        leaderName: leader.name, leaderArchetype: leader.archetype, leaderHexaco: commanderHexacoLive,
+        actorName: leader.name, actorArchetype: leader.archetype, leaderHexaco: commanderHexacoLive,
         leaderHexacoHistory: commanderHexacoHistory,
         state: preState.metrics as unknown as Record<string, number>,
         politics: preState.politics as unknown as Record<string, number | string | boolean>,
@@ -1064,6 +1124,7 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
         (err) => reportProviderError(err, 'director'),
         // Feed per-schema retry telemetry.
         (attempts, fellBack) => recordSchemaAttempt('DirectorEventBatch', attempts, fellBack),
+        providerApiKey,
       );
       turnEvents = batch.events;
       batchPacing = batch.pacing;
@@ -1488,7 +1549,16 @@ Respond with valid JSON ONLY (no markdown, no prose outside the JSON):
       // preamble adds ~300 tokens of reasoning per call but visibly sharpens
       // rationale quality (rationales started citing specific tool outputs
       // and trade tradeoffs instead of generic risk-averse hedging).
-      const trajectoryCue = buildTrajectoryCue(commanderHexacoHistory, commanderHexacoLive);
+      // Trajectory cue dispatch: HEXACO leaders use the legacy path
+      // for byte-identical output (the cue strings are dasherized
+      // axis labels via the trait-cues shim, identical to the v0.7
+      // surface). Non-HEXACO leaders use the trait-cues path which
+      // pulls axis names from the registered model so the cue line
+      // reads "exploration" or "verification-rigor" instead of HEXACO
+      // axis names.
+      const trajectoryCue = commanderTraitProfileLive.modelId === 'hexaco'
+        ? buildTrajectoryCue(commanderHexacoHistory, commanderHexacoLive)
+        : buildTrajectoryCueGeneric(commanderTraitProfileHistory, commanderTraitProfileLive);
       const cmdPrompt =
 `TURN ${turn}${eventLabel} — ${time}: ${event.title}
 
@@ -1666,6 +1736,20 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
     // and appends this turn's snapshot to commanderHexacoHistory.
     driftCommanderHexaco(commanderHexacoLive, lastOutcome, timeDelta, turn, time, commanderHexacoHistory);
 
+    // Parallel drift on the commander's TraitProfile under its model.
+    // For HEXACO leaders this is redundant with the line above (both
+    // produce the same numbers because hexacoModel.drift.outcomes
+    // mirrors progression.ts:outcomePullForTrait byte-for-byte and
+    // both apply the same ±0.05/turn cap and [0.05, 0.95] bounds).
+    // For non-HEXACO leaders, this is the canonical drift call site.
+    commanderTraitProfileLive = driftLeaderProfile(commanderTraitProfileLive, commanderTraitModel, {
+      outcome: lastOutcome,
+      timeDelta,
+      turn,
+      time,
+      history: commanderTraitProfileHistory,
+    });
+
     const drifted = kernel.getState().agents.filter(c => c.promotion && c.health.alive);
     const driftData: Record<string, { name: string; hexaco: any }> = {};
     for (const p of drifted.slice(0, 5)) { const h = p.hexaco; driftData[p.core.id] = { name: p.core.name, hexaco: { O: +h.openness.toFixed(2), C: +h.conscientiousness.toFixed(2), E: +h.extraversion.toFixed(2), A: +h.agreeableness.toFixed(2) } }; }
@@ -1703,6 +1787,7 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
       lastEventCategory,
       lastOutcome,
       provider,
+      apiKey: providerApiKey,
       modelConfig,
       execution: opts.execution,
       trackUsage,
@@ -2018,8 +2103,8 @@ Then set selectedOptionId, decision, and rationale. The rationale compresses the
   });
 
   const writtenPath = writeRunOutput(output, {
-    leaderName: leader.name,
-    leaderArchetype: leader.archetype,
+    actorName: leader.name,
+    actorArchetype: leader.archetype,
     turns: artifacts.length,
     toolRegs,
   });

@@ -1,6 +1,6 @@
 import type { KeyPersonnel } from '../engine/core/agent-generator.js';
 import type { Department } from '../engine/core/state.js';
-import type { LeaderConfig } from './types.js';
+import type { ActorConfig } from './types.js';
 import {
   resolveEconomicsProfile,
   type ResolvedEconomicsProfile,
@@ -55,7 +55,7 @@ export interface SimulationExecutionConfig {
 }
 
 export interface SimulationSetupPayload {
-  leaders: LeaderConfig[];
+  actors: ActorConfig[];
   provider?: LlmProvider;
   turns?: number;
   seed?: number;
@@ -112,7 +112,7 @@ export interface SimulationSetupPayload {
 }
 
 export interface NormalizedSimulationConfig {
-  leaders: LeaderConfig[];
+  actors: ActorConfig[];
   provider: LlmProvider;
   turns: number;
   seed: number;
@@ -186,8 +186,14 @@ export const DEFAULT_MODELS: Record<LlmProvider, SimulationModelConfig> = {
   openai: {
     // Flagship: forge code correctness.
     departments: 'gpt-5.4',
-    // Mid-tier: structured output, no novel code.
-    commander: 'gpt-5.4-mini',
+    // gpt-4o for commander: gpt-5.4-mini was failing CommanderDecisionSchema
+    // validation 3 attempts in a row (10 fields, nested arrays). Result was
+    // visible to users as "Commander decision unavailable; defer to
+    // department consensus" in artifacts. gpt-4o was tuned for JSON-mode
+    // / structured-output reliability and handles the schema cleanly.
+    // Same input price as gpt-5.4 ($2.50/M), $10/M output (vs $15/M on
+    // 5.4). Net per-run cost: ~$0.20 (was ~$0.15) for 6 turns.
+    commander: 'gpt-4o',
     director: 'gpt-5.4-mini',
     judge: 'gpt-5.4-mini',
     // Cheapest: high-volume parallel reactions.
@@ -513,19 +519,19 @@ export function applyDemoCaps(config: NormalizedSimulationConfig): NormalizedSim
 }
 
 export function normalizeSimulationConfig(input: SimulationSetupPayload): NormalizedSimulationConfig {
-  // Fork setups take exactly one leader (the override for the forked
+  // Fork setups take exactly one actor (the override for the forked
   // branch); regular pair setups take exactly two. Spec 2B.
-  // Spec 2B: fork setup takes exactly one leader (the override for the
-  // forked branch). Tier 5 Quickstart: 3 to 6 leaders dispatch to the
+  // Spec 2B: fork setup takes exactly one actor (the override for the
+  // forked branch). Tier 5 Quickstart: 3 to 6 actors dispatch to the
   // batch runner. Regular pair setup still takes two.
   if (input.forkFrom) {
-    if (!Array.isArray(input.leaders) || input.leaders.length !== 1) {
-      throw new Error('Fork setup requires exactly one leader');
+    if (!Array.isArray(input.actors) || input.actors.length !== 1) {
+      throw new Error('Fork setup requires exactly one actor');
     }
-  } else if (!Array.isArray(input.leaders) || input.leaders.length < 2) {
-    throw new Error('Simulation requires at least 2 leaders');
-  } else if (input.leaders.length > 6) {
-    throw new Error(`Simulation accepts at most 6 leaders per run, got ${input.leaders.length}`);
+  } else if (!Array.isArray(input.actors) || input.actors.length < 2) {
+    throw new Error('Simulation requires at least 2 actors');
+  } else if (input.actors.length > 6) {
+    throw new Error(`Simulation accepts at most 6 actors per run, got ${input.actors.length}`);
   }
 
   // Priority for provider resolution:
@@ -563,7 +569,7 @@ export function normalizeSimulationConfig(input: SimulationSetupPayload): Normal
   });
 
   return {
-    leaders: input.leaders,
+    actors: input.actors,
     provider: inferredProvider,
     turns: input.turns ?? 12,
     seed: input.seed ?? 950,

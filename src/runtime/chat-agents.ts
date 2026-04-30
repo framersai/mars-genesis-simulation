@@ -15,6 +15,11 @@
 
 import { agent as createAgent, AgentMemory } from '@framers/agentos';
 import type { LlmProvider } from '../engine/types.js';
+import {
+  apiKeyForProvider,
+  credentialFingerprint,
+  resolveProviderFromCredentials,
+} from '../engine/provider-credentials.js';
 
 // ============================================================================
 // Types
@@ -112,6 +117,8 @@ export async function getOrCreateChatAgent(
   memories: ColonistMemoryEntry[],
   opts: {
     provider?: LlmProvider;
+    apiKey?: string;
+    anthropicKey?: string;
     settlementNoun?: string;
     populationNoun?: string;
     /** Full colony roster, used for name grounding. Optional for
@@ -121,7 +128,13 @@ export async function getOrCreateChatAgent(
     roster?: ColonistRosterEntry[];
   },
 ): Promise<{ session: PoolEntry['session']; isNew: boolean }> {
-  const key = colonist.agentId;
+  const provider = resolveProviderFromCredentials(opts.provider, opts, 'openai');
+  const providerApiKey = apiKeyForProvider(provider, opts);
+  const key = [
+    colonist.agentId,
+    provider,
+    credentialFingerprint(providerApiKey),
+  ].join(':');
 
   // Return existing agent if available
   const existing = pool.get(key);
@@ -184,12 +197,13 @@ export async function getOrCreateChatAgent(
 
   const instructions = buildInstructions(colonist, settlement, popNoun, roster);
 
-  const provider = opts.provider || 'openai';
   const model = provider === 'anthropic' ? 'claude-haiku-4-5-20251001' : 'gpt-4o-mini';
 
   const chatAgent = createAgent({
     provider,
     model,
+    apiKey: providerApiKey,
+    fallbackProviders: providerApiKey ? [] : undefined,
     name: colonist.name,
     instructions,
     personality,

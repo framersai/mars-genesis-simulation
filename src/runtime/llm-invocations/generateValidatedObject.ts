@@ -29,6 +29,10 @@ export interface ValidatedObjectOptions<T extends ZodType> {
   maxRetries?: number;
   /** Completion-token ceiling — caps tail spend on model yap. */
   maxTokens?: number;
+  /** Explicit provider API key. When omitted, AgentOS uses env fallback. */
+  apiKey?: string;
+  /** Ordered provider fallback chain. Defaults to disabled for explicit-key calls. */
+  fallbackProviders?: Array<{ provider: string; model?: string }>;
   onUsage?: (r: { usage?: { totalTokens?: number; promptTokens?: number; completionTokens?: number; costUSD?: number } }) => void;
   onProviderError?: (err: unknown) => void;
   /**
@@ -91,6 +95,8 @@ export async function generateValidatedObject<T extends ZodType>(
       prompt: opts.prompt,
       maxRetries: opts.maxRetries,
       maxTokens: opts.maxTokens,
+      apiKey: opts.apiKey,
+      fallbackProviders: opts.fallbackProviders ?? (opts.apiKey ? [] : undefined),
     });
     opts.onUsage?.({ usage: result.usage });
     return {

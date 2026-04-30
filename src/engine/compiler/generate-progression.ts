@@ -10,6 +10,7 @@ import type { GenerateTextFn } from './types.js';
 import type { CompilerTelemetry } from './telemetry.js';
 import { generateValidatedCode } from './llm-invocations/generateValidatedCode.js';
 import { runProgressionSync } from './sandbox-runner.js';
+import { isParseableArrowSource } from './source-validation.js';
 
 type ProgressionFn = (ctx: ProgressionHookContext) => void;
 
@@ -58,7 +59,7 @@ export function parseResponse(text: string): ProgressionFn | null {
   let cleaned = text.trim();
   cleaned = cleaned.replace(/^```(?:typescript|ts|javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
   if (cleaned.endsWith(';')) cleaned = cleaned.slice(0, -1).trim();
-  if (!cleaned) return null;
+  if (!isParseableArrowSource(cleaned)) return null;
   return (ctx: ProgressionHookContext) => {
     runProgressionSync(cleaned, ctx as unknown as { agents: Array<Record<string, unknown>> });
   };
@@ -97,8 +98,12 @@ export async function generateProgressionHook(
     parse: parseResponse,
     smokeTest,
     fallback,
-    fallbackSource: '// No-op: generation failed',
-    // Progression is an arrow function that mutates systems state — ~1500
+    // Must be a valid arrow function literal: cached when the LLM
+    // exhausts retries, and re-parsed by `parseResponse` on next load.
+    // Prior bug: a comment string parsed as syntax error and crashed
+    // the sandbox at simulate-time. See source-validation.ts.
+    fallbackSource: '(_ctx) => {}',
+    // Progression is an arrow function that mutates metrics state, roughly 1500
     // output tokens typical; 4000 caps runaway yap without risking
     // mid-function truncation.
     maxTokens: 4000,

@@ -9,7 +9,7 @@ export interface CitationEntry {
   /** Departments that referenced this citation. */
   departments: Set<string>;
   /** Leaders (by name) that referenced it, used for divergence display. */
-  leaderNames: Set<string>;
+  actorNames: Set<string>;
 }
 
 export interface CitationRegistry {
@@ -45,8 +45,8 @@ export function useCitationRegistry(state: GameState): CitationRegistry {
     const list: CitationEntry[] = [];
     let next = 1;
 
-    for (const leaderName of state.leaderIds) {
-      const sideState = state.leaders[leaderName];
+    for (const actorName of state.actorIds) {
+      const sideState = state.actors[actorName];
       if (!sideState) continue;
       for (const evt of sideState.events) {
         if (evt.type !== 'specialist_done') continue;
@@ -66,13 +66,13 @@ export function useCitationRegistry(state: GameState): CitationRegistry {
               url,
               doi: c.doi,
               departments: new Set(),
-              leaderNames: new Set(),
+              actorNames: new Set(),
             };
             byKey.set(key, entry);
             list.push(entry);
           }
           if (dept) entry.departments.add(dept);
-          entry.leaderNames.add(leaderName);
+          entry.actorNames.add(actorName);
           if (!entry.doi && c.doi) entry.doi = c.doi;
         }
       }

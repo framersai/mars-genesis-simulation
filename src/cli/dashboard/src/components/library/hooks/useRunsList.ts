@@ -10,7 +10,7 @@ export interface RunsListFilters {
   q?: string;
   mode?: 'turn-loop' | 'batch-trajectory' | 'batch-point';
   scenarioId?: string;
-  leaderConfigHash?: string;
+  actorConfigHash?: string;
   limit?: number;
   offset?: number;
 }
@@ -27,7 +27,7 @@ function readFiltersFromUrl(): RunsListFilters {
     q: p.get('q') ?? undefined,
     mode,
     scenarioId: p.get('scenario') ?? undefined,
-    leaderConfigHash: p.get('leader') ?? undefined,
+    actorConfigHash: p.get('leader') ?? undefined,
     limit: Number(p.get('limit')) || DEFAULT_LIMIT,
     offset: Number(p.get('offset')) || 0,
   };
@@ -38,7 +38,7 @@ function buildQueryString(f: RunsListFilters): string {
   if (f.q) p.set('q', f.q);
   if (f.mode) p.set('mode', f.mode);
   if (f.scenarioId) p.set('scenario', f.scenarioId);
-  if (f.leaderConfigHash) p.set('leader', f.leaderConfigHash);
+  if (f.actorConfigHash) p.set('leader', f.actorConfigHash);
   if (f.limit !== undefined) p.set('limit', String(f.limit));
   if (f.offset !== undefined) p.set('offset', String(f.offset));
   return p.toString();

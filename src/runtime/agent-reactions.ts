@@ -204,6 +204,8 @@ export async function generateAgentReactions(
   options: {
     provider?: string;
     model?: string;
+    /** Explicit provider API key for this run. */
+    apiKey?: string;
     maxConcurrent?: number;
     reactionContextHook?: (agent: any, ctx: any) => string;
     onUsage?: (result: { usage?: { totalTokens?: number; promptTokens?: number; completionTokens?: number; costUSD?: number } }) => void;
@@ -293,7 +295,9 @@ export async function generateAgentReactions(
           // with slack; scales down for smaller batches since the model
           // stops at the natural JSON close.
           maxTokens: 4500,
+          apiKey: options.apiKey,
           onUsage: options.onUsage,
+          onProviderError: options.onProviderError,
           fallback: { reactions: [] },
         });
         const { object, fromFallback } = reactionsResult;

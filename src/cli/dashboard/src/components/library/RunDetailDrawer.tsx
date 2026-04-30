@@ -42,6 +42,27 @@ export function RunDetailDrawer(props: RunDetailDrawerProps): JSX.Element {
       if (e.key === 'Escape') {
         e.preventDefault();
         onClose();
+        return;
+      }
+      if (e.key === 'Tab') {
+        const focusables = getFocusableElements(drawerRef.current);
+        if (focusables.length === 0) {
+          e.preventDefault();
+          return;
+        }
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const active = document.activeElement as HTMLElement | null;
+        if (!active || !drawerRef.current?.contains(active)) {
+          e.preventDefault();
+          first.focus();
+        } else if (e.shiftKey && active === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     }
     window.addEventListener('keydown', handler);
@@ -97,8 +118,8 @@ export function RunDetailDrawer(props: RunDetailDrawerProps): JSX.Element {
                 <span className={styles.modeBadge} data-mode={artifact.metadata.mode}>{artifact.metadata.mode}</span>
                 <h2>{artifact.metadata.scenario.name}</h2>
                 <p>
-                  {record.leaderName ?? 'Unknown'}
-                  {record.leaderArchetype ? ` · ${record.leaderArchetype}` : ''}
+                  {record.actorName ?? 'Unknown'}
+                  {record.actorArchetype ? ` · ${record.actorArchetype}` : ''}
                 </p>
                 <p className={styles.meta}>
                   {(artifact.trajectory?.timepoints?.length ?? 0)} timepoints · {record.costUSD != null ? `$${record.costUSD.toFixed(2)}` : '-'} · {record.createdAt.slice(0, 19).replace('T', ' ')}
@@ -116,4 +137,11 @@ export function RunDetailDrawer(props: RunDetailDrawerProps): JSX.Element {
       </aside>
     </>
   );
+}
+
+function getFocusableElements(root: HTMLElement | null): HTMLElement[] {
+  if (!root) return [];
+  return Array.from(root.querySelectorAll<HTMLElement>(
+    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+  )).filter(el => !el.hasAttribute('disabled') && el.getAttribute('aria-hidden') !== 'true');
 }

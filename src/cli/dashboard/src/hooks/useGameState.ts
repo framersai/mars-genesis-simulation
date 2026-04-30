@@ -19,7 +19,7 @@ export interface AgentSnapshot {
   shortTermMemory: string[];
 }
 
-export interface SystemsState {
+export interface MetricsState {
   population: number;
   morale: number;
   foodMonthsReserve: number;
@@ -64,10 +64,10 @@ export interface TurnEventInfo {
  * state-shape property). The rename sets up P2 arena's N-leader mode
  * without forcing the F2/F3 layout changes into this refactor.
  */
-export interface LeaderSideState {
+export interface ActorSideState {
   leader: LeaderInfo | null;
-  systems: SystemsState | null;
-  prevSystems: SystemsState | null;
+  metrics: MetricsState | null;
+  prevMetrics: MetricsState | null;
   /**
    * Categorical statuses bag (world.statuses declarations), as of the
    * most recent `turn_done` event. Undefined for Mars-shape scenarios
@@ -151,22 +151,22 @@ export interface CostBreakdown {
 }
 
 export interface GameState {
-  /** Per-leader state, keyed by `leader.name` (matches SimEvent.leader). */
-  leaders: Record<string, LeaderSideState>;
-  /** Launch order. leaderIds[0] renders in the first column, leaderIds[1] second.
+  /** Per-actor state, keyed by `actor.name` (matches SimEvent.leader). */
+  actors: Record<string, ActorSideState>;
+  /** Launch order. actorIds[0] renders in the first column, actorIds[1] second.
    *  F2/F3 will generalize to N-column rendering against the full list. */
-  leaderIds: string[];
+  actorIds: string[];
   turn: number;
   time: number;
   maxTurns: number;
   seed: number;
   isRunning: boolean;
   isComplete: boolean;
-  /** Combined cost across all leaders. */
+  /** Combined cost across all actors. */
   cost: CostBreakdown;
-  /** Per-leader cost. Keyed by leader name so N-leader arena mode (P2)
-   *  inherits per-leader accounting without another refactor. */
-  costByLeader: Record<string, CostBreakdown>;
+  /** Per-actor cost. Keyed by actor name so N-actor arena mode (P2)
+   *  inherits per-actor accounting without another refactor. */
+  costByActor: Record<string, CostBreakdown>;
 }
 
 /**
@@ -174,7 +174,7 @@ export interface GameState {
  * "visionary" palette, index 1 is "engineer". Indices 2+ fall back to
  * amber for now; F2/F3 extends the palette when N>2 rendering ships.
  */
-export function getLeaderColorVar(index: number): string {
+export function getActorColorVar(index: number): string {
   if (index === 0) return 'var(--vis)';
   if (index === 1) return 'var(--eng)';
   return 'var(--amber)';
@@ -184,9 +184,9 @@ export function getLeaderColorVar(index: number): string {
  * Construct a fresh per-leader state. Exported so tests and future
  * reducers can initialize new leaders without replicating the field list.
  */
-export function createEmptyLeaderSideState(): LeaderSideState {
+export function createEmptyActorSideState(): ActorSideState {
   return {
-    leader: null, systems: null, prevSystems: null, event: null,
+    leader: null, metrics: null, prevMetrics: null, event: null,
     events: [], popHistory: [], moraleHistory: [],
     deaths: 0, deathCauses: {}, tools: 0, toolNames: new Set<string>(), citations: 0, decisions: 0,
     pendingDecision: '', pendingRationale: '', pendingReasoning: '', pendingPolicies: [],
@@ -205,27 +205,27 @@ function emptyCost(): CostBreakdown {
  */
 export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): GameState {
   const state: GameState = {
-    leaders: {},
-    leaderIds: [],
+    actors: {},
+    actorIds: [],
     turn: 0, time: 0, maxTurns: 6, seed: 950,
     isRunning: false, isComplete,
     cost: emptyCost(),
-    costByLeader: {},
+    costByActor: {},
   };
 
   /**
    * Resolve (or lazily create) per-leader state. First-seen order drives
-   * leaderIds so the dashboard's leader-column ordering is stable and
+   * actorIds so the dashboard's leader-column ordering is stable and
    * deterministic. Returns null only if the event's leader field is
    * empty (server-synthetic events like sim_saved).
    */
-  const getLeaderSide = (leaderName: string): LeaderSideState | null => {
-    if (!leaderName) return null;
-    let s = state.leaders[leaderName];
+  const getActorSide = (actorName: string): ActorSideState | null => {
+    if (!actorName) return null;
+    let s = state.actors[actorName];
     if (!s) {
-      s = createEmptyLeaderSideState();
-      state.leaders[leaderName] = s;
-      state.leaderIds.push(leaderName);
+      s = createEmptyActorSideState();
+      state.actors[actorName] = s;
+      state.actorIds.push(actorName);
     }
     return s;
   };
@@ -233,7 +233,7 @@ export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): Ga
   for (let i = 0; i < sseEvents.length; i++) {
     const evt = sseEvents[i];
     const dd = evt.data || {};
-    const leaderName = evt.leader || '';
+    const actorName = evt.leader || '';
 
     // Per-leader cost tracking. Each event's _cost payload is the
     // CUMULATIVE spend for that leader, so we overwrite the slot rather
@@ -250,12 +250,12 @@ export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): Ga
       forgeStats?: { attempts: number; approved: number; rejected: number; approvedConfidenceSum: number };
     } | undefined;
 
-    if (evtCost && leaderName) {
+    if (evtCost && actorName) {
       // Guarantee the leader exists in the map so cost tracking
       // stays consistent even if no state-shaping event has landed yet
       // for this leader (rare but possible on cost-before-turn ordering).
-      getLeaderSide(leaderName);
-      state.costByLeader[leaderName] = {
+      getActorSide(actorName);
+      state.costByActor[actorName] = {
         totalTokens: evtCost.totalTokens ?? 0,
         totalCostUSD: evtCost.totalCostUSD ?? 0,
         llmCalls: evtCost.llmCalls ?? 0,
@@ -270,7 +270,7 @@ export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): Ga
       // Recompute combined totals across ALL leaders. The old hook only
       // merged 2; this generalization folds in every entry in the map,
       // so N-leader arena runs get correct totals with no extra work.
-      const leaderCosts = Object.values(state.costByLeader);
+      const leaderCosts = Object.values(state.costByActor);
 
       const mergedBreakdown: CostSiteBreakdown = {};
       for (const c of leaderCosts) {
@@ -331,25 +331,25 @@ export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): Ga
       };
     }
 
-    // Status events carry run-wide metadata + leader roster. They're
-    // leader-less at the SimEvent layer (leader = '') so they don't
-    // create per-leader state; the leader roster payload explicitly
-    // populates leaders for every entry it carries.
+    // Status events carry run-wide metadata + actor roster. They're
+    // actor-less at the SimEvent layer (leader = '') so they don't
+    // create per-actor state; the actor roster payload explicitly
+    // populates actors for every entry it carries.
     if (evt.type === 'status') {
       if (dd.maxTurns) state.maxTurns = dd.maxTurns as number;
-      if (dd.phase === 'parallel' && Array.isArray(dd.leaders)) {
-        const leaders = dd.leaders as LeaderInfo[];
-        for (const leaderInfo of leaders) {
-          if (!leaderInfo?.name) continue;
-          const s = getLeaderSide(leaderInfo.name);
-          if (s) s.leader = leaderInfo;
+      if (dd.phase === 'parallel' && Array.isArray(dd.actors)) {
+        const actors = dd.actors as LeaderInfo[];
+        for (const actorInfo of actors) {
+          if (!actorInfo?.name) continue;
+          const s = getActorSide(actorInfo.name);
+          if (s) s.leader = actorInfo;
         }
         state.isRunning = true;
       }
       continue;
     }
 
-    const s = getLeaderSide(leaderName);
+    const s = getActorSide(actorName);
     if (!s) continue;
 
     const processed: ProcessedEvent = {
@@ -400,10 +400,10 @@ export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): Ga
           };
         }
         if (dd.metrics) {
-          s.prevSystems = s.metrics ? { ...s.metrics } : null;
-          s.metrics = dd.metrics as SystemsState;
-          s.popHistory.push((dd.metrics as SystemsState).population || 0);
-          s.moraleHistory.push(Math.round(((dd.metrics as SystemsState).morale || 0) * 100));
+          s.prevMetrics = s.metrics ? { ...s.metrics } : null;
+          s.metrics = dd.metrics as MetricsState;
+          s.popHistory.push((dd.metrics as MetricsState).population || 0);
+          s.moraleHistory.push(Math.round(((dd.metrics as MetricsState).morale || 0) * 100));
         }
         if (dd.deaths) s.deaths += Number(dd.deaths) || 0;
         s.events.push(processed);
@@ -471,8 +471,8 @@ export function computeGameState(sseEvents: SimEvent[], isComplete: boolean): Ga
 
       case 'turn_done':
         if (dd.metrics) {
-          s.prevSystems = s.metrics ? { ...s.metrics } : null;
-          s.metrics = dd.metrics as SystemsState;
+          s.prevMetrics = s.metrics ? { ...s.metrics } : null;
+          s.metrics = dd.metrics as MetricsState;
         }
         if (dd.statuses && typeof dd.statuses === 'object') {
           s.statuses = { ...dd.statuses as Record<string, string | boolean> };

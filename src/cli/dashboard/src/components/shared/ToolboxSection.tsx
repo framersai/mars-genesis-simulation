@@ -35,7 +35,8 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
     } catch {
       /* silent */
     }
-    navigateTab('log');
+    // Log is a sub-tab of Settings after the merge.
+    navigateTab('settings');
   };
 
   const inner = (
@@ -48,7 +49,7 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
     }}>
       {registry.list.map(entry => {
         const depts = [...entry.departments].join(', ');
-        const sidesLabel = [...entry.leaderNames].join(' · ');
+        const sidesLabel = [...entry.actorNames].join(' · ');
         const inputCount = countSchemaFields(entry.inputSchema, entry.inputFields);
         const outputCount = countSchemaFields(entry.outputSchema, entry.outputFields);
         return (
@@ -180,7 +181,7 @@ export function ToolboxSection({ registry, title = 'Forged Toolbox', collapsible
                       <li key={i} style={{
                         color: h.rejected ? 'var(--rust)' : (h.isReforge ? 'var(--amber)' : 'var(--text-2)'),
                       }}>
-                        T{h.turn} · {h.department} · <span style={{ color: 'var(--teal)' }}>{h.leaderName}</span>
+                        T{h.turn} · {h.department} · <span style={{ color: 'var(--teal)' }}>{h.actorName}</span>
                         {' · '}
                         {i === 0 ? 'first forge' : h.isReforge ? (h.rejected ? 're-forge rejected' : 're-forge accepted') : 'reuse'}
                         {typeof h.confidence === 'number' && ` · conf ${h.confidence.toFixed(2)}`}

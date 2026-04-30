@@ -17,7 +17,7 @@ export function RunCard(props: RunCardProps): JSX.Element {
       className={[styles.card, variant === 'compact' ? styles.compact : ''].filter(Boolean).join(' ')}
       role="article"
       tabIndex={0}
-      aria-label={`Run ${record.scenarioId} by ${record.leaderName ?? 'unknown leader'}`}
+      aria-label={`Run ${record.scenarioId} by ${record.actorName ?? 'unknown leader'}`}
       data-run-card
       data-run-id={record.runId}
       onClick={onOpen}
@@ -35,13 +35,13 @@ export function RunCard(props: RunCardProps): JSX.Element {
       </header>
       <h3 className={styles.scenario}>{record.scenarioId}</h3>
       <p className={styles.leader}>
-        {record.leaderName ?? 'Unknown'}
-        {record.leaderArchetype ? ` · ${record.leaderArchetype}` : ''}
+        {record.actorName ?? 'Unknown'}
+        {record.actorArchetype ? ` · ${record.actorArchetype}` : ''}
       </p>
       <div className={styles.actions}>
         <button onClick={(e) => { e.stopPropagation(); onOpen(); }} className={styles.actionBtn}>Open</button>
         <button onClick={(e) => { e.stopPropagation(); onReplay(); }} className={styles.actionBtn} aria-label="Replay">Replay</button>
-        <button disabled className={styles.actionBtn} aria-label="Compare (coming soon)" title="Compare (coming soon)">Compare</button>
+        {/* Compare lives at the bundle level (BundleCard). Solo runs only get Open + Replay. */}
       </div>
     </article>
   );

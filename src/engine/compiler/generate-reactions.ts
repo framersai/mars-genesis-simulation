@@ -10,6 +10,7 @@ import type { GenerateTextFn } from './types.js';
 import type { CompilerTelemetry } from './telemetry.js';
 import { generateValidatedCode } from './llm-invocations/generateValidatedCode.js';
 import { runArrowSync } from './sandbox-runner.js';
+import { isParseableArrowSource } from './source-validation.js';
 
 type ReactionContextFn = (colonist: any, ctx: any) => string;
 
@@ -46,7 +47,7 @@ export function parseResponse(text: string): ReactionContextFn | null {
   let cleaned = text.trim();
   cleaned = cleaned.replace(/^```(?:typescript|ts|javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
   if (cleaned.endsWith(';')) cleaned = cleaned.slice(0, -1).trim();
-  if (!cleaned) return null;
+  if (!isParseableArrowSource(cleaned)) return null;
   return (colonist, ctx) =>
     runArrowSync<[unknown, unknown], string>(cleaned, [colonist, ctx]);
 }
@@ -89,7 +90,9 @@ export async function generateReactionContextHook(
     parse: parseResponse,
     smokeTest,
     fallback: buildFallback(scenarioJson),
-    fallbackSource: '// Fallback reaction context',
+    // Valid arrow literal so the cached source survives a parse round-
+    // trip. See source-validation.ts.
+    fallbackSource: '(_colonist, _ctx) => ""',
     // Reaction context hook is compact (~800 output tokens typical).
     maxTokens: 2000,
     generateText,

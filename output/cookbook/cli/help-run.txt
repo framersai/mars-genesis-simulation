@@ -1,0 +1,28 @@
+paracosm run [options]
+
+Run a simulation against leaders.json (or --leaders <path>) and print
+turn-by-turn narrative to stdout. Saves the full RunArtifact JSON to
+./output/v3-<archetype>-<timestamp>.json (override with PARACOSM_OUTPUT_DIR).
+
+Options:
+  --leader <n>            Leader index in leaders.json (default: 0)
+  --leaders <path>        Custom leaders.json path
+  --turns <n>             Override turn count
+  --seed <n>              Override seed
+  --start-time <n>        Override start time / year
+  --provider <p>          openai | anthropic (defaults to whichever key is set)
+  --cost <p>              quality | economy (default: quality)
+  --live                  Enable live web search during department analysis
+  --name <s>              Override leader name
+  --archetype <s>         Override leader archetype
+  --unit <s>              Override leader unit
+  --instructions <s>      Override leader instructions
+  --openness <0-1>        HEXACO openness override
+  --conscientiousness <0-1>
+  --extraversion <0-1>
+  --agreeableness <0-1>
+  --emotionality <0-1>
+  --honesty <0-1>         HEXACO honesty-humility override
+
+Positional turn count: a single trailing number is read as --turns
+  paracosm run 5          # equivalent to: paracosm run --turns 5

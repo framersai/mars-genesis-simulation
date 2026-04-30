@@ -11,6 +11,7 @@ import { generateValidatedCode } from './llm-invocations/generateValidatedCode.j
 import { buildScenarioFixture } from './scenario-fixture.js';
 import { buildStateShapeBlock } from './state-shape-block.js';
 import { runArrowSync } from './sandbox-runner.js';
+import { isParseableArrowSource } from './source-validation.js';
 
 type DepartmentPromptFn = (ctx: any) => string[];
 
@@ -26,7 +27,7 @@ ${depts}
 Function signature: (ctx) => string[]
 ctx shape:
 - ctx.department: string (department ID)
-- ctx.state: { agents, systems, politics, metadata: { currentTime, startTime, currentTurn } }
+- ctx.state: { agents, metrics, politics, metadata: { currentTime, startTime, currentTurn } }
 - ctx.scenario: any
 - ctx.researchPacket: { canonicalFacts[], counterpoints[], departmentNotes }
 
@@ -48,7 +49,7 @@ export function parseResponse(text: string): DepartmentPromptFn | null {
   let cleaned = text.trim();
   cleaned = cleaned.replace(/^```(?:typescript|ts|javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
   if (cleaned.endsWith(';')) cleaned = cleaned.slice(0, -1).trim();
-  if (!cleaned) return null;
+  if (!isParseableArrowSource(cleaned)) return null;
   return (ctx: unknown) => runArrowSync<[unknown], string[]>(cleaned, [ctx]);
 }
 
@@ -86,7 +87,9 @@ export async function generateDepartmentPromptHook(
     parse: parseResponse,
     smokeTest: buildSmokeTest(scenarioJson),
     fallback: buildFallback(scenarioJson),
-    fallbackSource: '// Fallback department prompts',
+    // Valid arrow literal so the cached source survives a parse round-
+    // trip. See source-validation.ts.
+    fallbackSource: '(_ctx) => []',
     // Department prompts contain one prompt template per declared dept,
     // so the output grows with scenario size. 4000 covers typical
     // scenarios (3-6 depts); pathologically large scenarios can be

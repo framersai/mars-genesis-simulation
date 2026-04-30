@@ -6,7 +6,7 @@ export interface RunRecord {
   createdAt: string;
   scenarioId: string;
   scenarioVersion: string;
-  leaderConfigHash: string;
+  actorConfigHash: string;
   economicsProfile: string;
   sourceMode: ParacosmServerMode;
   createdBy: 'anonymous' | 'user' | 'service';
@@ -20,9 +20,20 @@ export interface RunRecord {
   /** Simulation mode captured from artifact.metadata.mode. */
   mode?: 'turn-loop' | 'batch-trajectory' | 'batch-point';
   /** Captured leader display name for the gallery card. */
-  leaderName?: string;
+  actorName?: string;
   /** Captured leader archetype for the gallery card. */
-  leaderArchetype?: string;
+  actorArchetype?: string;
+  /** UUID shared by all runs from one Quickstart submission. Set when the
+   *  /setup handler dispatches to runBatchSimulations or when an explicit
+   *  Quickstart `quickstart.bundleId` is passed. Older runs persisted
+   *  before this column was added are bundle-less and render as solo
+   *  cards in the LIBRARY. */
+  bundleId?: string;
+  /** Sampled trajectory values (typically 8 points) for the
+   *  SmallMultiplesGrid cell sparkline in the Compare view. Computed
+   *  from `artifact.trajectory.points` at insert time via
+   *  `extractSummaryTrajectory`. Empty for batch-point runs. */
+  summaryTrajectory?: number[];
 }
 
 export function createRunRecord(input: Omit<RunRecord, 'runId' | 'createdAt'>): RunRecord {
@@ -33,6 +44,6 @@ export function createRunRecord(input: Omit<RunRecord, 'runId' | 'createdAt'>): 
   };
 }
 
-export function hashLeaderConfig(input: unknown): string {
+export function hashActorConfig(input: unknown): string {
   return `leaders:${createHash('sha256').update(JSON.stringify(input)).digest('hex').slice(0, 12)}`;
 }

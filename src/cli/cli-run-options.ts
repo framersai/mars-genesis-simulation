@@ -9,7 +9,7 @@ export interface CliRunOptions {
   models?: Partial<SimulationModelConfig>;
 }
 
-export function parseCliRunOptions(argv: string[]): CliRunOptions {
+export function parseCliRunOptions(argv: readonly string[]): CliRunOptions {
   const options: CliRunOptions = { liveSearch: false };
 
   for (let index = 0; index < argv.length; index++) {

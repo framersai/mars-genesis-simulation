@@ -1,11 +1,21 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDashboardNavigation, useScenarioContext } from '../../App';
 import { useScenarioLabels } from '../../hooks/useScenarioLabels';
-import { LeaderConfig, type LeaderFormData } from './LeaderConfig';
+import { ActorConfig, type ActorFormData } from './ActorConfig';
 import { ScenarioEditor } from './ScenarioEditor';
 import { LoadPriorRunsCTA } from './LoadPriorRunsCTA';
-import { getDashboardTabFromHref, resolveSetupRedirectHref } from '../../tab-routing';
+import { EventLogPanel } from '../log/EventLogPanel';
+import { SubTabNav } from '../shared/SubTabNav';
+import { getDashboardTabFromHref, resolveSetupRedirectHref, setSubTabUrlParam } from '../../tab-routing';
 import { subscribeScenarioUpdates } from '../../scenario-sync';
+import type { SimEvent } from '../../hooks/useSSE';
+
+type SettingsSubTab = 'config' | 'log';
+
+const SETTINGS_SUB_TABS = [
+  { id: 'config' as const, label: 'Settings' },
+  { id: 'log' as const, label: 'Event Log' },
+];
 import {
   ECONOMICS_PROFILE_OPTIONS,
   describeServerMode,
@@ -72,9 +82,9 @@ const TIER_LABELS: Record<ModelTier, { label: string; help: string }> = {
   agentReactions: { label: 'Agent Reactions',        help: 'One to two sentences per colonist per turn. Highest volume — pick cheapest.' },
 };
 
-function defaultLeader(idx: number): LeaderFormData {
+function defaultLeader(idx: number): ActorFormData {
   return {
-    name: idx === 0 ? 'Leader A' : 'Leader B',
+    name: idx === 0 ? 'Actor A' : 'Actor B',
     archetype: idx === 0 ? 'The Visionary' : 'The Engineer',
     unit: idx === 0 ? 'Colony Alpha' : 'Colony Beta',
     instructions: '',
@@ -88,42 +98,65 @@ const inputStyle = {
   fontFamily: 'var(--sans)', fontSize: '14px', boxSizing: 'border-box' as const,
 };
 
-export function SettingsPanel() {
+export interface SettingsPanelProps {
+  /** SSE events to feed the embedded EventLogPanel sub-tab. Optional
+   *  so callers that don't care about Log (or mount Settings before the
+   *  SSE pipe is ready) can omit it; the sub-tab just renders an empty
+   *  log in that case. */
+  events?: SimEvent[];
+  /** Sub-tab to land on. Used by tab-routing redirects: `?tab=log`
+   *  lands on `settings?subTab=log` for backward compat with deep
+   *  links from before the merge. */
+  initialSubTab?: SettingsSubTab;
+}
+
+export function SettingsPanel({ events = [], initialSubTab = 'config' }: SettingsPanelProps = {}) {
+  const [subTab, setSubTab] = useState<SettingsSubTab>(initialSubTab);
+  // Persist sub-tab in the URL so refresh / shared links land back on
+  // the user's last open panel. 'config' is the default — omit the
+  // param for that case to keep the URL clean.
+  const handleSubTabChange = useCallback((next: SettingsSubTab) => {
+    setSubTab(next);
+    setSubTabUrlParam(next === 'config' ? null : next);
+  }, []);
   const scenario = useScenarioContext();
   const labels = useScenarioLabels();
   const navigateTab = useDashboardNavigation();
 
   const defaultPreset = scenario.presets.find(p => p.id === 'default');
-  const initLeaderA = defaultPreset?.leaders?.[0]
-    ? { name: defaultPreset.leaders[0].name, archetype: defaultPreset.leaders[0].archetype, unit: 'Colony Alpha', instructions: defaultPreset.leaders[0].instructions, hexaco: defaultPreset.leaders[0].hexaco }
+  // Spread the hexaco object so the form's per-trait edits don't mutate
+  // the preset that lives in the scenario context (which is shared with
+  // every other consumer that reads scenario.presets).
+  const initLeaderA = defaultPreset?.actors?.[0]
+    ? { name: defaultPreset.actors[0].name, archetype: defaultPreset.actors[0].archetype, unit: 'Colony Alpha', instructions: defaultPreset.actors[0].instructions, hexaco: { ...defaultPreset.actors[0].hexaco } }
     : defaultLeader(0);
-  const initLeaderB = defaultPreset?.leaders?.[1]
-    ? { name: defaultPreset.leaders[1].name, archetype: defaultPreset.leaders[1].archetype, unit: 'Colony Beta', instructions: defaultPreset.leaders[1].instructions, hexaco: defaultPreset.leaders[1].hexaco }
+  const initLeaderB = defaultPreset?.actors?.[1]
+    ? { name: defaultPreset.actors[1].name, archetype: defaultPreset.actors[1].archetype, unit: 'Colony Beta', instructions: defaultPreset.actors[1].instructions, hexaco: { ...defaultPreset.actors[1].hexaco } }
     : defaultLeader(1);
 
-  const [leaderA, setLeaderA] = useState<LeaderFormData>(initLeaderA);
-  const [leaderB, setLeaderB] = useState<LeaderFormData>(initLeaderB);
+  const [leaderA, setLeaderA] = useState<ActorFormData>(initLeaderA);
+  const [leaderB, setLeaderB] = useState<ActorFormData>(initLeaderB);
 
   // Re-populate from presets when scenario data loads (async fetch)
   // Depend on presets length because the fallback has presets:[] but same id
   useEffect(() => {
     const p = scenario.presets.find(p => p.id === 'default');
-    if (p?.leaders?.[0]) {
+    if (p?.actors?.[0]) {
       setLeaderA({
-        name: p.leaders![0].name,
-        archetype: p.leaders![0].archetype,
+        name: p.actors[0].name,
+        archetype: p.actors[0].archetype,
         unit: 'Colony Alpha',
-        instructions: p.leaders![0].instructions,
-        hexaco: { ...p.leaders![0].hexaco },
+        instructions: p.actors[0].instructions,
+        hexaco: { ...p.actors[0].hexaco },
       });
     }
-    if (p?.leaders?.[1]) {
+    if (p?.actors?.[1]) {
       setLeaderB({
-        name: p.leaders![1].name,
-        archetype: p.leaders![1].archetype,
+        name: p.actors[1].name,
+        archetype: p.actors[1].archetype,
         unit: 'Colony Beta',
-        instructions: p.leaders![1].instructions,
-        hexaco: { ...p.leaders![1].hexaco },
+        instructions: p.actors[1].instructions,
+        hexaco: { ...p.actors[1].hexaco },
       });
     }
   }, [scenario.id, scenario.presets.length]);
@@ -313,6 +346,15 @@ export function SettingsPanel() {
   }, [leaderA, leaderB, turns, seed, startTime, timePerTurn, population, provider, liveSearch, navigateTab, scenario, keyOverrides, tierModels, hasUserLlmKey, effectiveEconomicsProfile]);
 
   return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg-deep)' }}>
+      <SubTabNav
+        options={SETTINGS_SUB_TABS}
+        active={subTab}
+        onChange={handleSubTabChange}
+        ariaLabel="Settings sub-navigation"
+      />
+      {subTab === 'log' && <EventLogPanel events={events} />}
+      {subTab === 'config' && (
     <div className="settings-content" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '20px 24px', background: 'var(--bg-deep)' }}>
       {/* Prior-runs CTA — surfaces saved sessions at the top so users
           who don't want to spend credits can replay an existing run
@@ -372,8 +414,8 @@ export function SettingsPanel() {
 
       {/* Leaders grid */}
       <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-        <LeaderConfig label="Commander A" sideColor="var(--vis)" data={leaderA} onChange={setLeaderA} />
-        <LeaderConfig label="Commander B" sideColor="var(--eng)" data={leaderB} onChange={setLeaderB} />
+        <ActorConfig label="Commander A" sideColor="var(--vis)" data={leaderA} onChange={setLeaderA} />
+        <ActorConfig label="Commander B" sideColor="var(--eng)" data={leaderB} onChange={setLeaderB} />
       </div>
 
       {/* Simulation config */}
@@ -661,6 +703,8 @@ export function SettingsPanel() {
         </button>
         {status && <span role="status" style={{ fontSize: '13px', color: 'var(--text-3)' }}>{status}</span>}
       </div>
+    </div>
+      )}
     </div>
   );
 }

@@ -2,8 +2,8 @@
  * TDD tests for enrichRunRecordFromArtifact: a pure helper that takes
  * a base RunRecord (created at run-start with sparse fields) and a
  * RunArtifact (returned at run-end), and produces an enriched RunRecord
- * with artifactPath, costUSD, durationMs, mode, leaderName, and
- * leaderArchetype populated from the artifact.
+ * with artifactPath, costUSD, durationMs, mode, actorName, and
+ * actorArchetype populated from the artifact.
  *
  * The Library tab needs these fields to render gallery cards and to
  * load full artifacts via /api/v1/runs/:runId.
@@ -20,7 +20,7 @@ function baseRecord(overrides: Partial<RunRecord> = {}): RunRecord {
     createdAt: '2026-04-25T00:00:00.000Z',
     scenarioId: 'mars-genesis',
     scenarioVersion: '0.7.0',
-    leaderConfigHash: 'leaders:abc',
+    actorConfigHash: 'leaders:abc',
     economicsProfile: 'balanced',
     sourceMode: 'local_demo',
     createdBy: 'anonymous',
@@ -80,8 +80,8 @@ test('enrichRunRecordFromArtifact populates mode from artifact.metadata.mode', (
 
 test('enrichRunRecordFromArtifact populates leader name + archetype from artifact.leader', () => {
   const enriched = enrichRunRecordFromArtifact(baseRecord(), fullArtifact());
-  assert.equal(enriched.leaderName, 'Marcus Reinhardt');
-  assert.equal(enriched.leaderArchetype, 'pragmatist');
+  assert.equal(enriched.actorName, 'Marcus Reinhardt');
+  assert.equal(enriched.actorArchetype, 'pragmatist');
 });
 
 test('enrichRunRecordFromArtifact preserves base record fields verbatim', () => {
@@ -120,6 +120,6 @@ test('enrichRunRecordFromArtifact handles missing completedAt (run aborted) by l
 test('enrichRunRecordFromArtifact handles missing leader gracefully', () => {
   const artifact = fullArtifact({ leader: undefined } as never);
   const enriched = enrichRunRecordFromArtifact(baseRecord(), artifact);
-  assert.equal(enriched.leaderName, undefined);
-  assert.equal(enriched.leaderArchetype, undefined);
+  assert.equal(enriched.actorName, undefined);
+  assert.equal(enriched.actorArchetype, undefined);
 });

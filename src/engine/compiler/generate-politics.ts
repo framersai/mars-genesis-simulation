@@ -9,6 +9,7 @@ import type { GenerateTextFn } from './types.js';
 import type { CompilerTelemetry } from './telemetry.js';
 import { generateValidatedCode } from './llm-invocations/generateValidatedCode.js';
 import { runArrowSync } from './sandbox-runner.js';
+import { isParseableArrowSource } from './source-validation.js';
 
 type PoliticsFn = (category: string, outcome: string) => Record<string, number> | null;
 
@@ -48,7 +49,7 @@ export function parseResponse(text: string): PoliticsFn | null {
   let cleaned = text.trim();
   cleaned = cleaned.replace(/^```(?:typescript|ts|javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
   if (cleaned.endsWith(';')) cleaned = cleaned.slice(0, -1).trim();
-  if (!cleaned) return null;
+  if (!isParseableArrowSource(cleaned)) return null;
   return (category, outcome) =>
     runArrowSync<[string, string], Record<string, number> | null>(cleaned, [category, outcome]);
 }
@@ -78,7 +79,9 @@ export async function generatePoliticsHook(
     parse: parseResponse,
     smokeTest,
     fallback,
-    fallbackSource: '// No-op: generation failed',
+    // Valid arrow literal so the cached source survives a parse round-
+    // trip. See source-validation.ts.
+    fallbackSource: '(_category, _outcome) => null',
     // Politics hook is short (~1000 output tokens typical).
     maxTokens: 2000,
     generateText,

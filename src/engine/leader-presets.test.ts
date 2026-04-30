@@ -1,22 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { LEADER_PRESETS, getPresetById, listPresetsByTrait } from './leader-presets.js';
+import { ACTOR_PRESETS, getPresetById, listPresetsByTrait } from './leader-presets.js';
 
-test('LEADER_PRESETS: exports exactly 10 archetypes', () => {
-  assert.equal(Object.keys(LEADER_PRESETS).length, 10);
+test('ACTOR_PRESETS: exports exactly 10 archetypes', () => {
+  assert.equal(Object.keys(ACTOR_PRESETS).length, 10);
 });
 
-test('LEADER_PRESETS: every HEXACO trait is in [0, 1]', () => {
-  for (const preset of Object.values(LEADER_PRESETS)) {
+test('ACTOR_PRESETS: every HEXACO trait is in [0, 1]', () => {
+  for (const preset of Object.values(ACTOR_PRESETS)) {
     for (const [trait, value] of Object.entries(preset.hexaco)) {
       assert.ok(value >= 0 && value <= 1, `${preset.id}.${trait} out of bounds: ${value}`);
     }
   }
 });
 
-test('LEADER_PRESETS: every preset has name, archetype, description under 140 chars', () => {
-  for (const preset of Object.values(LEADER_PRESETS)) {
+test('ACTOR_PRESETS: every preset has name, archetype, description under 140 chars', () => {
+  for (const preset of Object.values(ACTOR_PRESETS)) {
     assert.ok(preset.name.length > 0, `${preset.id} missing name`);
     assert.ok(preset.archetype.length > 0, `${preset.id} missing archetype`);
     assert.ok(
@@ -26,8 +26,8 @@ test('LEADER_PRESETS: every preset has name, archetype, description under 140 ch
   }
 });
 
-test('LEADER_PRESETS: ids are unique and match record keys', () => {
-  for (const [key, preset] of Object.entries(LEADER_PRESETS)) {
+test('ACTOR_PRESETS: ids are unique and match record keys', () => {
+  for (const [key, preset] of Object.entries(ACTOR_PRESETS)) {
     assert.equal(preset.id, key, `${key} id mismatch`);
   }
 });

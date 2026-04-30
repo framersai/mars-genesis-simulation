@@ -5,7 +5,7 @@ import { useScenarioLabels } from '../../../hooks/useScenarioLabels.js';
 interface RosterDrawerProps {
   open: boolean;
   cells: CellSnapshot[];
-  leaderName: string;
+  actorName: string;
   sideColor: string;
   searchQuery: string;
   hoveredId: string | null;
@@ -43,7 +43,7 @@ const SORT_CHIPS: { key: RosterSort; label: string }[] = [
 export function RosterDrawer({
   open,
   cells,
-  leaderName,
+  actorName,
   sideColor,
   searchQuery,
   hoveredId,
@@ -161,7 +161,7 @@ export function RosterDrawer({
             textTransform: 'uppercase',
           }}
         >
-          {leaderName} Roster · {alive.length}
+          {actorName} Roster · {alive.length}
         </span>
         <button
           type="button"

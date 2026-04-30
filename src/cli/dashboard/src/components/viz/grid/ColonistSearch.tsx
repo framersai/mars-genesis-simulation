@@ -5,7 +5,7 @@ import { useScenarioLabels } from '../../../hooks/useScenarioLabels.js';
 export interface SearchMatch {
   cell: CellSnapshot;
   side: 'a' | 'b';
-  leaderName: string;
+  actorName: string;
   sideColor: string;
 }
 

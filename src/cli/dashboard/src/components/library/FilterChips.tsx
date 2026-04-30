@@ -23,7 +23,7 @@ export function FilterChips(props: FilterChipsProps): JSX.Element {
     <div className={styles.row}>
       {filters.mode && <Chip label={`mode: ${filters.mode}`} onRemove={() => remove('mode')} />}
       {filters.scenarioId && <Chip label={`scenario: ${filters.scenarioId}`} onRemove={() => remove('scenarioId')} />}
-      {filters.leaderConfigHash && <Chip label={`leader: ${filters.leaderConfigHash.slice(0, 16)}…`} onRemove={() => remove('leaderConfigHash')} />}
+      {filters.actorConfigHash && <Chip label={`leader: ${filters.actorConfigHash.slice(0, 16)}…`} onRemove={() => remove('actorConfigHash')} />}
       <AddFilterPopover
         currentFilters={filters}
         onAdd={(next) => onChange({ ...filters, ...next, offset: 0 })}

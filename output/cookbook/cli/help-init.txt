@@ -1,0 +1,16 @@
+paracosm init <dir> --domain <text|url> [options]
+
+Scaffold a runnable paracosm project from a free-text brief or a URL.
+Calls compileFromSeed + generateQuickstartLeaders, then writes
+package.json, run.mjs, README.md, .env.example, .gitignore to <dir>.
+
+Options:
+  <dir>                 Output directory (default: ./paracosm-app)
+  --domain <text|url>   Required: seed text or URL describing the scenario
+  --mode <m>            turn-loop | batch-trajectory | batch-point (default: turn-loop)
+  --leaders <n>         Number of HEXACO leaders, 2-6 (default: 3)
+  --name <s>            Project name (default: derived from --domain)
+  --force               Overwrite a non-empty target directory
+
+Example:
+  paracosm init my-app --domain "Submarine crew of 8 in deep ocean for 30 days"

@@ -1,5 +1,5 @@
 // StatsBar styles — F4 batch 2 migration from inline style objects.
-// Per-leader color is fed in via `--leader-color-a` / `--leader-color-b`
+// Per-leader color is fed in via `--actor-color-a` / `--actor-color-b`
 // CSS custom properties on the root so per-pill color references stay
 // in CSS rather than inline JS.
 
@@ -13,7 +13,11 @@
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  background: var(--bg-panel);
+  // Match the Footer + body root background so the dashboard chrome
+  // disappears into the body. Top and bottom borders separate the
+  // bar from the leader columns above and the footer below.
+  background: var(--bg-deep);
+  border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   font-family: var(--mono);
 }
@@ -55,12 +59,12 @@
 
 .valueA {
   @extend .value;
-  color: var(--leader-color-a);
+  color: var(--actor-color-a);
 }
 
 .valueB {
   @extend .value;
-  color: var(--leader-color-b);
+  color: var(--actor-color-b);
 }
 
 .delta {

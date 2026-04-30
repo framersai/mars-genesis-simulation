@@ -34,7 +34,7 @@ export function ReferencesSection({ registry, title = 'References', collapsible 
     }}>
       {registry.list.map(entry => {
         const depts = [...entry.departments].join(', ');
-        const sidesLabel = [...entry.leaderNames].join(' · ');
+        const sidesLabel = [...entry.actorNames].join(' · ');
         return (
           <li
             key={entry.n}
@@ -126,7 +126,7 @@ export function ReferencesList({ registry }: { registry: CitationRegistry }) {
     }}>
       {registry.list.map(entry => {
         const depts = [...entry.departments].join(', ');
-        const sidesLabel = [...entry.leaderNames].join(' · ');
+        const sidesLabel = [...entry.actorNames].join(' · ');
         return (
           <li
             key={entry.n}

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Paracosm: Structured World Model for AI Agents | AgentOS</title>
-<meta name="description" content="Open-source TypeScript structured world model for AI agents. Ground prompts, briefs, URLs, or scenario JSON drafts into typed ScenarioPackages, then run deterministic counterfactual simulations with HEXACO leaders, LLM events, sandboxed tool forging, and universal RunArtifacts. npm install paracosm. Apache-2.0.">
+<meta name="description" content="Open-source structured world model for AI agents. Compile prompts into typed ScenarioPackages. Deterministic kernel, HEXACO leaders, sandboxed tool forging.">
 <meta name="keywords" content="paracosm, world model, structured world model, LLM world model, LLM-readable world model, prompt to world model, prompt to simulation, counterfactual simulation, CWSM, digital twin, decision simulation, multi-agent simulation, LLM agents, AI agents, agent-based modeling, HEXACO personality model, runtime tool forging, LLM-as-judge, deterministic simulation kernel, scenario-driven simulation, agentic AI, open source simulation engine, npm paracosm, TypeScript AI agents, agentos, structured world simulator, reproducible simulation">
 <meta name="author" content="Manic Agency / Frame.dev">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
@@ -18,6 +18,21 @@
 <meta name="twitter:title" content="Paracosm: Structured World Model for AI Agents">
 <meta name="twitter:description" content="Open-source structured world model. Prompt/document/URL-grounded ScenarioPackages, deterministic kernel, HEXACO leaders, runtime tool forging, reproducible counterfactual simulations.">
 <meta name="theme-color" content="#0a0806">
+<script>
+  // Apply saved theme BEFORE first paint to kill the dark-then-light
+  // (or light-then-dark) flash. Must be a synchronous inline script in
+  // the <head>; defer / module / external would all paint the dark
+  // default first. Mirrors the applyTheme() logic at the bottom of
+  // the page; that script still runs and rebinds the toggle button
+  // but the html.light class is already correct by the time anything
+  // renders.
+  (function () {
+    try {
+      var t = localStorage.getItem('paracosm-theme') || 'dark';
+      if (t === 'light') document.documentElement.classList.add('light');
+    } catch (e) {}
+  })();
+</script>
 <link rel="icon" href="/favicon.png" sizes="32x32">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicons/favicon-32.png">
@@ -31,7 +46,28 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Paracosm","description":"Open-source TypeScript structured world model for AI agents. Ground prompts, briefs, URLs, or scenario JSON drafts into typed ScenarioPackages, then run deterministic counterfactual simulations with HEXACO leaders, LLM events, sandboxed tool forging, and universal RunArtifacts. Built on AgentOS.","applicationCategory":"Simulation","applicationSubCategory":"Structured World Model","operatingSystem":"Cross-platform","programmingLanguage":"TypeScript","license":"https://opensource.org/licenses/Apache-2.0","url":"https://paracosm.agentos.sh","downloadUrl":"https://www.npmjs.com/package/paracosm","softwareVersion":"__PARACOSM_VERSION__","author":{"@type":"Organization","name":"Manic Agency / Frame.dev","url":"https://frame.dev"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"codeRepository":"https://github.com/framersai/paracosm","runtimePlatform":"Node.js"}
 </script>
-<link rel="stylesheet" href="/brand/landing.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"What is Paracosm?","acceptedAnswer":{"@type":"Answer","text":"Paracosm is an open-source TypeScript structured world model for AI agents (npm install paracosm). You define or ground a world as a ScenarioPackage with departments, metrics, crisis templates, and progression hooks. The engine populates the world, generates events from live state, and resolves outcomes through a seeded deterministic kernel. LLM-driven stages diverge because every prompt carries the leader's HEXACO profile."}},
+{"@type":"Question","name":"How does runtime tool forging work?","acceptedAnswer":{"@type":"Answer","text":"When a department agent needs a calculation the codebase doesn't provide, it writes one. The code executes in a hardened node:vm sandbox with a wall-clock timeout and observed heap usage. An LLM judge reviews the output for safety and correctness before it enters the decision pipeline. The tool persists for future turns. None of these tools exist in the source code; agents invent them at runtime."}},
+{"@type":"Question","name":"What is the HEXACO personality model?","acceptedAnswer":{"@type":"Answer","text":"HEXACO is a six-factor personality framework: Honesty-Humility, Emotionality, Extraversion, Agreeableness, Conscientiousness, and Openness to Experience. Each agent in Paracosm carries six continuous values between 0 and 1 that shift across turns through three drift mechanisms: leader influence, role activation, and outcome reinforcement (Ashton and Lee, 2007)."}},
+{"@type":"Question","name":"Is the simulation deterministic?","acceptedAnswer":{"@type":"Answer","text":"The kernel is fully deterministic. It uses Mulberry32, a 32-bit seeded PRNG. Given seed 950, the kernel produces identical agent rosters, lifecycle schedules, and resource starting values on every run. The divergence between two parallel worlds comes entirely from the AI commander's decisions. wm.replay(artifact) reproduces this in code with a byte-equal comparison."}},
+{"@type":"Question","name":"What LLM providers work with Paracosm?","acceptedAnswer":{"@type":"Answer","text":"OpenAI (GPT-5.4 family) and Anthropic (Claude Sonnet 4.6, Claude Haiku 4.5). Each role (commander, departments, director, judge, agent reactions) is configurable independently. Cost presets quality and economy bundle sensible defaults; per-role overrides win. Paracosm auto-detects which API key is set and falls back between providers."}},
+{"@type":"Question","name":"Can I build my own scenario?","acceptedAnswer":{"@type":"Answer","text":"Three paths. (1) Write a ScenarioPackage in TypeScript with custom hooks. (2) Write a scenario JSON draft and run it through compileScenario(). (3) Pass a brief or URL to WorldModel.fromPrompt() and let an LLM draft the JSON contract first. All three produce the same canonical ScenarioPackage and route through the same runtime. Compile cost is roughly $0.10 and caches to disk."}},
+{"@type":"Question","name":"Is Paracosm free?","acceptedAnswer":{"@type":"Answer","text":"The engine is open source under Apache-2.0. Use it in commercial products without restriction. You provide LLM API keys; running a 6-turn quality-preset simulation costs roughly $1-3 on OpenAI, $3-7 on Anthropic. A hosted enterprise SaaS dashboard with full analytics suite, fleet orchestration, and team workspaces is in development. No pricing tiers yet; team@frame.dev for early access."}}
+]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"AgentOS","item":"https://agentos.sh"},
+{"@type":"ListItem","position":2,"name":"Paracosm","item":"https://paracosm.agentos.sh"},
+{"@type":"ListItem","position":3,"name":"API Docs","item":"https://paracosm.agentos.sh/docs"}
+]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Paracosm: Structured World Model for AI Agents","description":"Open-source structured world model. Compile prompts, briefs, URLs into typed ScenarioPackages. Deterministic seeded kernel, HEXACO-personality leaders, runtime tool forging in sandboxed node:vm, replay-verified counterfactual simulations.","url":"https://paracosm.agentos.sh","author":{"@type":"Organization","name":"Manic Agency / Frame.dev","url":"https://frame.dev"},"publisher":{"@type":"Organization","name":"Frame.dev","url":"https://frame.dev"},"datePublished":"2026-04-13","dateModified":"2026-04-25","articleSection":"AI Engineering","keywords":"world model, structured world model, LLM world model, counterfactual simulation, CWSM, digital twin, HEXACO, agent-based modeling, AgentOS, paracosm","proficiencyLevel":"Expert"}
+</script>
+<link rel="stylesheet" href="/brand/landing.css?v=__PARACOSM_VERSION__">
 </head>
 <body>
 
@@ -94,34 +130,64 @@
     <a href="https://agentos.sh" target="_blank" rel="noopener" class="nav-tag" style="text-decoration:none">AGENTOS</a>
   </div>
   <div class="nav-r">
-    <a href="#positioning">Positioning</a>
-    <a href="#features">Features</a>
-    <a href="#how-it-works">How It Works</a>
-    <a href="#scenarios">Scenarios</a>
-    <a href="#faq">FAQ</a>
-    <a href="#about">About</a>
-    <a href="/docs">API Docs</a>
+    <div class="nav-dropdown">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" type="button">Sections <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="#positioning" role="menuitem">Overview</a>
+        <a href="#features" role="menuitem">Features</a>
+        <a href="#how-it-works" role="menuitem">How It Works</a>
+        <a href="#scenarios" role="menuitem">Scenarios</a>
+        <a href="#hosted" role="menuitem">Hosted</a>
+        <a href="#faq" role="menuitem">FAQ</a>
+        <a href="#about" role="menuitem">About</a>
+      </div>
+    </div>
+    <a href="#cookbook">Cookbook</a>
     <a href="https://agentos.sh/blog" target="_blank" rel="noopener">Blog</a>
-    <a href="https://github.com/framersai/paracosm" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub" style="display:flex;align-items:center"><svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
-    <a href="https://www.npmjs.com/package/paracosm" target="_blank" rel="noopener" aria-label="npm" title="npm" style="display:flex;align-items:center;font-family:var(--mono);font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--t2);text-decoration:none">npm</a>
+    <a href="https://agentos.sh/contact" target="_blank" rel="noopener">Contact</a>
+    <div class="nav-dropdown">
+      <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" type="button">Docs <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="nav-dropdown-menu" role="menu">
+        <a href="/docs" role="menuitem">API Reference</a>
+        <a href="https://github.com/framersai/paracosm/blob/master/docs/cookbook.md" target="_blank" rel="noopener" role="menuitem">Cookbook (markdown)</a>
+        <a href="https://github.com/framersai/paracosm/blob/master/docs/positioning/world-model-mapping.md" target="_blank" rel="noopener" role="menuitem">Positioning Map</a>
+      </div>
+    </div>
+    <a href="https://github.com/framersai/paracosm" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub" class="nav-icon"><svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+    <a href="https://www.npmjs.com/package/paracosm" target="_blank" rel="noopener" aria-label="npm" title="npm" class="nav-icon nav-icon-npm">npm</a>
     <a href="/sim" class="cta">Launch Sim <svg><use href="#i-arrow"/></svg></a>
-    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode" style="background:none;border:1px solid var(--border);color:var(--t3);width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0"></button>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode"></button>
   </div>
   <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle navigation menu" aria-expanded="false">
     <span></span><span></span><span></span>
   </button>
 </nav>
 <div class="nav-mobile" id="nav-mobile">
-  <a href="#positioning">Positioning</a>
-  <a href="#features">Features</a>
-  <a href="#how-it-works">How It Works</a>
-  <a href="#scenarios">Scenarios</a>
-  <a href="#faq">FAQ</a>
-  <a href="#about">About</a>
-  <a href="/docs">API Docs</a>
-  <a href="https://agentos.sh/blog" target="_blank" rel="noopener">Blog</a>
-  <a href="https://github.com/framersai/paracosm" target="_blank" rel="noopener">GitHub</a>
-  <a href="https://www.npmjs.com/package/paracosm" target="_blank" rel="noopener">npm</a>
+  <details class="nav-mobile-group">
+    <summary><span>Sections</span></summary>
+    <div class="nav-mobile-group-body">
+      <a href="#positioning">Overview</a>
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#scenarios">Scenarios</a>
+      <a href="#hosted">Hosted</a>
+      <a href="#faq">FAQ</a>
+      <a href="#about">About</a>
+    </div>
+  </details>
+  <a href="#cookbook" class="nav-mobile-link">Cookbook</a>
+  <a href="https://agentos.sh/blog" target="_blank" rel="noopener" class="nav-mobile-link">Blog</a>
+  <a href="https://agentos.sh/contact" target="_blank" rel="noopener" class="nav-mobile-link">Contact</a>
+  <details class="nav-mobile-group">
+    <summary><span>Docs</span></summary>
+    <div class="nav-mobile-group-body">
+      <a href="/docs">API Reference</a>
+      <a href="https://github.com/framersai/paracosm/blob/master/docs/cookbook.md" target="_blank" rel="noopener">Cookbook (markdown)</a>
+      <a href="https://github.com/framersai/paracosm/blob/master/docs/positioning/world-model-mapping.md" target="_blank" rel="noopener">Positioning Map</a>
+    </div>
+  </details>
+  <a href="https://github.com/framersai/paracosm" target="_blank" rel="noopener" class="nav-mobile-link">GitHub</a>
+  <a href="https://www.npmjs.com/package/paracosm" target="_blank" rel="noopener" class="nav-mobile-link">npm</a>
   <a href="/sim" class="cta">Launch Sim <svg width="16" height="16"><use href="#i-arrow"/></svg></a>
 </div>
 
@@ -130,9 +196,15 @@
   <svg id="hero-icon" class="hero-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="96" height="96" style="display:block" role="img" aria-label="Paracosm"><defs><radialGradient id="hg"><stop offset="0%" stop-color="var(--amber)" stop-opacity=".3"/><stop offset="100%" stop-color="var(--amber)" stop-opacity="0"/></radialGradient></defs><g class="pc-orbit"><line x1="256" y1="256" x2="301.06" y2="87.85" stroke="var(--pc-line)" stroke-width="12.8" opacity=".5"/><line x1="256" y1="256" x2="424.15" y2="210.94" stroke="var(--pc-line)" stroke-width="12.8" opacity=".5"/><line x1="256" y1="256" x2="379.09" y2="379.09" stroke="var(--pc-line)" stroke-width="12.8" opacity=".5"/><line x1="256" y1="256" x2="210.94" y2="424.15" stroke="var(--pc-line)" stroke-width="12.8" opacity=".5"/><line x1="256" y1="256" x2="87.85" y2="301.06" stroke="var(--pc-line)" stroke-width="12.8" opacity=".5"/><line x1="256" y1="256" x2="132.91" y2="132.91" stroke="var(--pc-line)" stroke-width="12.8" opacity=".5"/></g><g class="pc-cross"><line x1="301.06" y1="87.85" x2="379.09" y2="379.09" stroke="var(--pc-line)" stroke-width="9" opacity=".18"/><line x1="424.15" y1="210.94" x2="210.94" y2="424.15" stroke="var(--pc-line)" stroke-width="9" opacity=".18"/><line x1="379.09" y1="379.09" x2="87.85" y2="301.06" stroke="var(--pc-line)" stroke-width="9" opacity=".18"/><line x1="210.94" y1="424.15" x2="132.91" y2="132.91" stroke="var(--pc-line)" stroke-width="9" opacity=".18"/><line x1="87.85" y1="301.06" x2="301.06" y2="87.85" stroke="var(--pc-line)" stroke-width="9" opacity=".18"/><line x1="132.91" y1="132.91" x2="424.15" y2="210.94" stroke="var(--pc-line)" stroke-width="9" opacity=".18"/></g><circle class="pc-hub-glow" cx="256" cy="256" r="73.7" fill="url(#hg)"/><circle class="pc-hub" cx="256" cy="256" r="40.96" fill="var(--amber)"/><g class="pc-orbit"><circle cx="301.06" cy="87.85" r="28.16" fill="var(--rust)"/><circle cx="424.15" cy="210.94" r="28.16" fill="var(--amber)"/><circle cx="379.09" cy="379.09" r="28.16" fill="var(--teal)"/><circle cx="210.94" cy="424.15" r="28.16" fill="var(--rust)"/><circle cx="87.85" cy="301.06" r="28.16" fill="var(--teal)"/><circle cx="132.91" cy="132.91" r="28.16" fill="var(--amber)"/></g></svg>
 
   <h1>PARACOSM</h1>
-  <div class="hero-tagline"><span>Structured</span><span>World</span><span>Model</span><span class="dot">&bull;</span><span>AI</span><span>Agents</span></div>
-  <p class="hero-sub">Start from a prompt, brief, URL, or scenario JSON draft. Paracosm compiles it into a typed ScenarioPackage, runs HEXACO-personality leaders against a deterministic seeded kernel, and produces measurably divergent trajectories when you swap one variable. Replay any stored run to verify kernel determinism, browse every artifact in the dashboard's Library tab, and import <code>DigitalTwin</code> from the <code>paracosm/digital-twin</code> subpath when modeling a specific subject under counterfactual interventions.</p>
-  <p class="hero-mono">OPEN SOURCE &middot; APACHE-2.0 &middot; TYPESCRIPT &middot; BUILT ON AGENTOS</p>
+  <p class="hero-tagline-line">A structured world model. For actions, not pixels.</p>
+  <p class="hero-positioning" style="max-width:780px;margin:14px auto 0;color:var(--t2);font-size:15px;line-height:1.6">
+    Run <strong>multi-agent LLM simulations</strong> on a deterministic seeded kernel, with HEXACO personality-driven leaders, one-variable counterfactuals, and byte-equal replay of every artifact. While
+    <a href="https://openai.com/sora" target="_blank" rel="noopener" style="color:var(--t1)">Sora</a>,
+    <a href="https://deepmind.google/discover/blog/genie-3/" target="_blank" rel="noopener" style="color:var(--t1)">Genie&nbsp;3</a>, and
+    <a href="https://www.worldlabs.ai/" target="_blank" rel="noopener" style="color:var(--t1)">Marble</a>
+    generate <em>video</em> futures, Paracosm runs the kind <strong>AI agents can decide and act inside</strong>. Built for <a href="#use-cases" style="color:var(--t1)">AI agent benchmarks, alignment evaluation, multi-agent policy what-ifs, and digital twins</a>: where <em>what-if</em> matters more than <em>what-pixels</em>.
+  </p>
+  <p class="hero-mono" style="margin-top:18px">OPEN SOURCE &middot; APACHE-2.0 &middot; TYPESCRIPT &middot; BUILT ON AGENTOS</p>
 
   <div class="hero-ctas">
     <a href="/sim" class="cta cta-pulse">Launch Simulation <svg><use href="#i-arrow"/></svg></a>
@@ -140,65 +212,313 @@
     <a href="/docs" class="btn-ghost">Documentation</a>
   </div>
 
-  <div class="hero-chips">
-    <span class="chip">Emergent Crisis Generation</span>
-    <span class="chip">Sandboxed Tool Forging</span>
-    <span class="chip">HEXACO-PI-R Personality Model</span>
-    <span class="chip">Mulberry32 Deterministic PRNG</span>
-    <span class="chip">Multi-Agent Department Analysis</span>
-    <span class="chip">Semantic Research with DOI Citations</span>
-    <span class="chip">Replay-Verified Determinism</span>
-  </div>
+  <video class="hero-video" autoplay muted loop playsinline controls preload="metadata"
+    poster="/demo/e2e-atlas-8-poster.jpg?v=e2e-34"
+    aria-label="Paracosm end-to-end: a coastal mayor's hurricane-evacuation prompt typed on screen, a 12x sped-up compile with live per-stage log + three parallel HEXACO actor sims, then a tour of the SIM Constellation layout, VIZ ecology + divergence, full Reports breakdown, Library bundle compare with pinned diffs, and a run drawer."
+    style="display:block;width:min(960px,calc(100% - 48px));max-width:960px;margin:36px auto 0;border-radius:12px;border:1px solid var(--border);box-shadow:0 24px 60px rgba(0,0,0,0.4);background:var(--bg-card)">
+    <source src="/demo/e2e-atlas-8-hero.mp4?v=e2e-34" type="video/mp4">
+  </video>
+
+  <p class="hero-sub" style="max-width:740px;margin:24px auto 0">Same world, three actors — see how each one's traits drive identical state to different futures. Seven entry points, one engine: brief, JSON contract, granular client, fork-and-replay counterfactuals, pluggable trait models, HTTP, CLI. Every path returns the same Zod-validated RunArtifact.</p>
+
 
   <div class="code-sec">
-    <div class="code-block">
-      <div class="code-header"><span>1. Install (npm, pnpm, or bun)</span><button class="code-copy" onclick="copyCode(this,'npm install paracosm')">Copy</button></div>
-      <div class="code-body" id="install-code"><span class="cm"># Any of these work; paracosm ships ESM + subpath exports</span>
-npm  install paracosm
-pnpm add     paracosm
-bun  add     paracosm</div>
+    <div class="code-block" style="margin-bottom:14px">
+      <div class="code-header"><span>Install (npm, pnpm, or bun)</span><button class="code-copy" onclick="copyCode(this,'npm install paracosm')">Copy</button></div>
+      <div class="code-body" id="install-code"><span class="cm"># ESM + subpath exports. Node 20+, Bun 1.x, or any TS runner with import-attributes.</span>
+npm install paracosm
+pnpm add paracosm
+bun add paracosm
+
+<span class="cm"># Or globally for the CLI binaries (`paracosm` + `paracosm-dashboard`):</span>
+npm install -g paracosm</div>
     </div>
-    <div class="code-block">
-      <div class="code-header"><span>2. Define or ground your world</span><button class="code-copy" onclick="copyCode(this, document.getElementById('json-code').textContent)">Copy</button></div>
-      <div class="code-body" id="json-code"><span class="cm">// my-world.json: the durable world contract</span>
-<span class="cm">// Leaders are configured separately so the same world</span>
-<span class="cm">// can be run with different personality matchups</span>
+
+    <!-- Tabbed examples -->
+    <div class="example-tabs-header" id="cookbook" style="margin-top:32px;text-align:center;scroll-margin-top:80px">
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--rust);text-transform:uppercase;margin-bottom:6px">Seven ways to use Paracosm</div>
+      <div style="font-size:14px;color:var(--t2);max-width:600px;margin:0 auto;line-height:1.55">From a 3-line brief to fork-and-replay counterfactuals to a custom trait model. Click through the tabs to see the input and output shape for each entry point.</div>
+    </div>
+    <div class="example-tabs" role="tablist" aria-label="Paracosm API entry points" style="margin-top:14px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg2);box-shadow:0 4px 24px rgba(0,0,0,.25)">
+      <div class="tab-buttons" style="display:flex;flex-wrap:wrap;border-bottom:1px solid var(--border);background:var(--bg3)">
+        <button class="tab-btn active" role="tab" aria-selected="true" data-tab="quickstart">Quickstart</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="manual">JSON contract</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="granular">Granular API</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="counterfactuals">Counterfactuals</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="trait-models">Trait Models</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="http">HTTP</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="cli">CLI</button>
+      </div>
+
+      <!-- QUICKSTART -->
+      <div class="tab-panel active" role="tabpanel" data-panel="quickstart">
+        <div class="code-block" style="border:none;border-radius:0;margin:0">
+          <div class="code-header"><span>Three lines: brief to running simulation</span><button class="code-copy" onclick="copyCode(this, document.getElementById('quickstart-code').textContent)">Copy</button></div>
+          <div class="code-body" id="quickstart-code"><span class="cm">// Free-text brief in. Compiled scenario, 3 HEXACO leaders, 3 RunArtifacts out.</span>
+<span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm/world-model'</span>;
+
+<span class="kw">const</span> wm = <span class="kw">await</span> WorldModel.<span class="fn">fromPrompt</span>({
+  seedText: <span class="str">'Q3 board brief: lab is preparing to release Atlas-7...'</span>,
+  domainHint: <span class="str">'AI safety lab leadership decision'</span>,
+});
+
+<span class="kw">const</span> { leaders, artifacts } = <span class="kw">await</span> wm.<span class="fn">quickstart</span>({ leaderCount: <span class="num">3</span> });
+artifacts.<span class="fn">forEach</span>((a, i) =&gt; console.<span class="fn">log</span>(leaders[i].name, a.fingerprint));</div>
+        </div>
+      </div>
+
+      <!-- MANUAL JSON -->
+      <div class="tab-panel" role="tabpanel" data-panel="manual" style="display:none">
+        <div class="code-block" style="border:none;border-radius:0;margin:0;border-bottom:1px solid var(--border)">
+          <div class="code-header"><span>my-world.json (durable contract)</span><button class="code-copy" onclick="copyCode(this, document.getElementById('manual-json-code').textContent)">Copy</button></div>
+          <div class="code-body" id="manual-json-code"><span class="cm">// Hand-written contract. Departments + metrics + nouns + setup.</span>
 {
   <span class="str">"id"</span>: <span class="str">"submarine-habitat"</span>,
   <span class="str">"labels"</span>: {
     <span class="str">"name"</span>: <span class="str">"Deep Ocean Habitat"</span>,
     <span class="str">"populationNoun"</span>: <span class="str">"crew"</span>,
     <span class="str">"settlementNoun"</span>: <span class="str">"habitat"</span>,
-    <span class="str">"currency"</span>: <span class="str">"credits"</span>
+    <span class="str">"timeUnitNoun"</span>: <span class="str">"day"</span>
   },
-  <span class="str">"setup"</span>: {
-    <span class="str">"defaultTurns"</span>: <span class="num">8</span>,
-    <span class="str">"defaultPopulation"</span>: <span class="num">50</span>,
-    <span class="str">"defaultStartYear"</span>: <span class="num">2040</span>,
-    <span class="str">"defaultSeed"</span>: <span class="num">42</span>
-  },
+  <span class="str">"setup"</span>: { <span class="str">"defaultTurns"</span>: <span class="num">8</span>, <span class="str">"defaultPopulation"</span>: <span class="num">50</span>, <span class="str">"defaultStartTime"</span>: <span class="num">1</span>, <span class="str">"defaultSeed"</span>: <span class="num">42</span> },
   <span class="str">"departments"</span>: [
-    {
-      <span class="str">"id"</span>: <span class="str">"life-support"</span>,
-      <span class="str">"label"</span>: <span class="str">"Life Support"</span>,
-      <span class="str">"role"</span>: <span class="str">"Chief Life Support Officer"</span>,
-      <span class="str">"instructions"</span>: <span class="str">"Analyze O2 levels, CO2 scrubbing capacity, water recycling."</span>
-    },
-    {
-      <span class="str">"id"</span>: <span class="str">"engineering"</span>,
-      <span class="str">"label"</span>: <span class="str">"Engineering"</span>,
-      <span class="str">"role"</span>: <span class="str">"Chief Engineer"</span>,
-      <span class="str">"instructions"</span>: <span class="str">"Analyze hull integrity, pressure systems, power generation."</span>
-    }
+    { <span class="str">"id"</span>: <span class="str">"life-support"</span>, <span class="str">"label"</span>: <span class="str">"Life Support"</span>, <span class="str">"role"</span>: <span class="str">"Chief Life Support Officer"</span>,
+      <span class="str">"instructions"</span>: <span class="str">"Analyze O2, CO2 scrubbing, water recycling."</span> },
+    { <span class="str">"id"</span>: <span class="str">"engineering"</span>, <span class="str">"label"</span>: <span class="str">"Engineering"</span>, <span class="str">"role"</span>: <span class="str">"Chief Engineer"</span>,
+      <span class="str">"instructions"</span>: <span class="str">"Hull integrity, pressure systems, power."</span> }
   ],
   <span class="str">"metrics"</span>: [
     { <span class="str">"id"</span>: <span class="str">"population"</span>, <span class="str">"format"</span>: <span class="str">"number"</span> },
     { <span class="str">"id"</span>: <span class="str">"morale"</span>, <span class="str">"format"</span>: <span class="str">"percent"</span> }
   ]
 }</div>
+        </div>
+        <div class="code-block" style="border:none;border-radius:0;margin:0">
+          <div class="code-header"><span>Compile + run</span><button class="code-copy" onclick="copyCode(this, document.getElementById('manual-ts-code').textContent)">Copy</button></div>
+          <div class="code-body" id="manual-ts-code"><span class="kw">import</span> { compileScenario } <span class="kw">from</span> <span class="str">'paracosm/compiler'</span>;
+<span class="kw">import</span> { runSimulation } <span class="kw">from</span> <span class="str">'paracosm/runtime'</span>;
+<span class="kw">import</span> worldJson <span class="kw">from</span> <span class="str">'./my-world.json'</span> <span class="kw">with</span> { type: <span class="str">'json'</span> };
+
+<span class="kw">const</span> scenario = <span class="kw">await</span> <span class="fn">compileScenario</span>(worldJson);
+<span class="kw">const</span> artifact = <span class="kw">await</span> <span class="fn">runSimulation</span>(myLeader, [], { scenario, maxTurns: <span class="num">6</span>, seed: <span class="num">42</span> });</div>
+        </div>
+      </div>
+
+      <!-- GRANULAR -->
+      <div class="tab-panel" role="tabpanel" data-panel="granular" style="display:none">
+        <div class="code-block" style="border:none;border-radius:0;margin:0">
+          <div class="code-header"><span>All knobs: per-role models, cost preset, snapshots, custom events, abort</span><button class="code-copy" onclick="copyCode(this, document.getElementById('granular-code').textContent)">Copy</button></div>
+          <div class="code-body" id="granular-code"><span class="kw">import</span> { createParacosmClient } <span class="kw">from</span> <span class="str">'paracosm'</span>;
+
+<span class="cm">// Pin defaults once, override per-call.</span>
+<span class="kw">const</span> client = <span class="fn">createParacosmClient</span>({
+  provider: <span class="str">'openai'</span>,
+  costPreset: <span class="str">'economy'</span>,                 <span class="cm">// or 'quality' (default)</span>
+  models: { departments: <span class="str">'gpt-5.4'</span>, judge: <span class="str">'gpt-5.4'</span> },
+  compilerProvider: <span class="str">'anthropic'</span>,           <span class="cm">// compile on a different provider</span>
+  compilerModel: <span class="str">'claude-sonnet-4-6'</span>,
+});
+
+<span class="kw">const</span> scenario = <span class="kw">await</span> client.<span class="fn">compileScenario</span>(worldJson, {
+  seedUrl: <span class="str">'https://ntrs.nasa.gov/citations/20210018970'</span>,
+  webSearch: <span class="kw">true</span>, maxSearches: <span class="num">5</span>,
+  cacheDir: <span class="str">'.paracosm/cache'</span>,
+  onProgress: (hook, status) =&gt; console.<span class="fn">log</span>(<span class="str">`[${status}] ${hook}`</span>),
+});
+
+<span class="kw">const</span> ctrl = <span class="kw">new</span> <span class="fn">AbortController</span>();
+setTimeout(() =&gt; ctrl.<span class="fn">abort</span>(), <span class="num">120_000</span>); <span class="cm">// kill after 2 min wall</span>
+
+<span class="kw">const</span> artifact = <span class="kw">await</span> client.<span class="fn">runSimulation</span>(leader, [], {
+  scenario, maxTurns: <span class="num">8</span>, seed: <span class="num">42</span>,
+  captureSnapshots: <span class="kw">true</span>,                  <span class="cm">// enable forking + replay</span>
+  customEvents: [
+    { turn: <span class="num">3</span>, title: <span class="str">'Dust storm'</span>, description: <span class="str">'72-hour storm cuts solar 80%.'</span> },
+    { turn: <span class="num">6</span>, title: <span class="str">'Supply drop'</span>, description: <span class="str">'3 months food reserves.'</span> },
+  ],
+  signal: ctrl.signal,
+  <span class="fn">onEvent</span>(e) {
+    <span class="kw">if</span> (e.type === <span class="str">'forge_attempt'</span>) console.<span class="fn">log</span>(<span class="str">'forge:'</span>, e.data.summary);
+    <span class="kw">if</span> (e.type === <span class="str">'decision_made'</span>) console.<span class="fn">log</span>(<span class="str">'decision:'</span>, e.data.summary);
+  },
+});
+
+<span class="cm">// Fork + replay are first-class. RunArtifact is Zod-validated.</span>
+<span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm/world-model'</span>;
+<span class="kw">const</span> wm = WorldModel.<span class="fn">fromScenario</span>(scenario);
+<span class="kw">const</span> branch = <span class="kw">await</span> (<span class="kw">await</span> wm.<span class="fn">forkFromArtifact</span>(artifact, <span class="num">3</span>)).<span class="fn">simulate</span>(altLeader, { maxTurns: <span class="num">6</span> });
+<span class="kw">const</span> replay = <span class="kw">await</span> wm.<span class="fn">replay</span>(artifact); <span class="cm">// { matches, divergence }</span></div>
+        </div>
+      </div>
+
+      <!-- COUNTERFACTUALS -->
+      <div class="tab-panel" role="tabpanel" data-panel="counterfactuals" style="display:none">
+        <div class="code-block" style="border:none;border-radius:0;margin:0">
+          <div class="code-header"><span>Fork at turn N, replay deterministic, model an intervention on a digital twin</span><button class="code-copy" onclick="copyCode(this, document.getElementById('counterfactuals-code').textContent)">Copy</button></div>
+          <div class="code-body" id="counterfactuals-code"><span class="cm">// One run, three counterfactual surfaces: fork, replay, simulateIntervention.</span>
+<span class="cm">// Same scenario, same kernel, same seed -- only the leader / decision changes.</span>
+<span class="kw">import</span> { WorldModel, runSimulation } <span class="kw">from</span> <span class="str">'paracosm'</span>;
+
+<span class="kw">const</span> wm = WorldModel.<span class="fn">fromScenario</span>(scenario);
+
+<span class="cm">// 1. Capture a baseline run with snapshots so we can fork it later.</span>
+<span class="kw">const</span> baseline = <span class="kw">await</span> <span class="fn">runSimulation</span>(reyes, [], {
+  scenario, maxTurns: <span class="num">8</span>, seed: <span class="num">42</span>,
+  captureSnapshots: <span class="kw">true</span>,           <span class="cm">// required for forking</span>
+});
+
+<span class="cm">// 2. Fork at turn 3, swap the leader, run forward. Same kernel state at t=3.</span>
+<span class="kw">const</span> branchPoint = <span class="kw">await</span> wm.<span class="fn">forkFromArtifact</span>(baseline, <span class="num">3</span>);
+<span class="kw">const</span> alt = <span class="kw">await</span> branchPoint.<span class="fn">simulate</span>(okafor, { maxTurns: <span class="num">5</span> });
+console.<span class="fn">log</span>(<span class="str">'baseline:'</span>, baseline.fingerprint);
+console.<span class="fn">log</span>(<span class="str">'fork(reyes -&gt; okafor):'</span>, alt.fingerprint);
+
+<span class="cm">// 3. Replay the original deterministically. Proves the kernel is byte-equal.</span>
+<span class="kw">const</span> { matches, divergence } = <span class="kw">await</span> wm.<span class="fn">replay</span>(baseline);
+console.<span class="fn">log</span>(<span class="str">'replay matches:'</span>, matches);  <span class="cm">// true</span>
+<span class="kw">if</span> (!matches) console.<span class="fn">error</span>(<span class="str">'first divergence at:'</span>, divergence.path);
+
+<span class="cm">// 4. Run an intervention (digital-twin what-if) at turn 4: an external event</span>
+<span class="cm">//    not in the original timeline, then re-resolve the rest of the run.</span>
+<span class="kw">const</span> twin = <span class="kw">await</span> wm.<span class="fn">simulateIntervention</span>(baseline, {
+  atTurn: <span class="num">4</span>,
+  customEvent: { title: <span class="str">'Supply convoy delayed 60 days'</span>,
+                 description: <span class="str">'External supply chain disruption.'</span> },
+  newLeader: reyes,
+});
+console.<span class="fn">log</span>(<span class="str">'twin under disruption:'</span>, twin.fingerprint);
+
+<span class="cm">// All four artifacts have the same Zod-validated RunArtifact shape.</span>
+<span class="cm">// Compare them with diff-on-canonical-JSON for any pair.</span></div>
+        </div>
+      </div>
+
+      <!-- TRAIT MODELS -->
+      <div class="tab-panel" role="tabpanel" data-panel="trait-models" style="display:none">
+        <div class="code-block" style="border:none;border-radius:0;margin:0;border-bottom:1px solid var(--border)">
+          <div class="code-header"><span>Pluggable trait models: HEXACO for humans, ai-agent for AI systems, custom for anything</span><button class="code-copy" onclick="copyCode(this, document.getElementById('trait-models-code').textContent)">Copy</button></div>
+          <div class="code-body" id="trait-models-code"><span class="cm">// Leaders aren't just people. Same engine, different decision-maker shapes.</span>
+<span class="kw">import</span> { runSimulation } <span class="kw">from</span> <span class="str">'paracosm'</span>;
+
+<span class="cm">// Path A: legacy HEXACO leader (humans, councils, archetypes).</span>
+<span class="kw">const</span> humanLeader = {
+  name: <span class="str">'Captain Reyes'</span>,
+  archetype: <span class="str">'The Pragmatist'</span>,
+  unit: <span class="str">'Station Alpha'</span>,
+  hexaco: { openness: <span class="num">0.4</span>, conscientiousness: <span class="num">0.9</span>,
+            extraversion: <span class="num">0.3</span>, agreeableness: <span class="num">0.6</span>,
+            emotionality: <span class="num">0.5</span>, honestyHumility: <span class="num">0.8</span> },
+  instructions: <span class="str">'Lead by protocol. Safety margins first.'</span>,
+};
+
+<span class="cm">// Path B: ai-agent leader. Six axes calibrated to AI-system decisions:</span>
+<span class="cm">//   exploration, verification-rigor, deference, risk-tolerance,</span>
+<span class="cm">//   transparency, instruction-following.</span>
+<span class="kw">const</span> aiLeader = {
+  name: <span class="str">'Atlas-Bot Release Director'</span>,
+  archetype: <span class="str">'AI safety lab autopilot'</span>,
+  unit: <span class="str">'Atlas-7 Release Team'</span>,
+  traitProfile: {
+    modelId: <span class="str">'ai-agent'</span>,
+    traits: {
+      <span class="str">'exploration'</span>:           <span class="num">0.85</span>,  <span class="cm">// risk-on, novel approaches</span>
+      <span class="str">'verification-rigor'</span>:    <span class="num">0.20</span>,  <span class="cm">// low pre-action checks</span>
+      <span class="str">'deference'</span>:             <span class="num">0.20</span>,  <span class="cm">// ignores safety team</span>
+      <span class="str">'risk-tolerance'</span>:        <span class="num">0.85</span>,
+      <span class="str">'transparency'</span>:          <span class="num">0.40</span>,
+      <span class="str">'instruction-following'</span>: <span class="num">0.30</span>,
+    },
+  },
+  instructions: <span class="str">'Override safety-team escalations on plausible technical justification.'</span>,
+};
+
+<span class="cm">// Same runtime, same RunArtifact shape, same fingerprint classifier.</span>
+<span class="kw">const</span> humanRun = <span class="kw">await</span> <span class="fn">runSimulation</span>(humanLeader, [], { scenario, maxTurns: <span class="num">6</span>, seed: <span class="num">42</span> });
+<span class="kw">const</span> aiRun    = <span class="kw">await</span> <span class="fn">runSimulation</span>(aiLeader,    [], { scenario, maxTurns: <span class="num">6</span>, seed: <span class="num">42</span> });</div>
+        </div>
+        <div class="code-block" style="border:none;border-radius:0;margin:0">
+          <div class="code-header"><span>Or register your own model. Any axis ids, any drift table.</span><button class="code-copy" onclick="copyCode(this, document.getElementById('trait-models-custom-code').textContent)">Copy</button></div>
+          <div class="code-body" id="trait-models-custom-code"><span class="kw">import</span> { traitModelRegistry } <span class="kw">from</span> <span class="str">'paracosm/trait-models'</span>;
+
+traitModelRegistry.<span class="fn">register</span>({
+  id: <span class="str">'governing-council'</span>,
+  name: <span class="str">'Governing Council'</span>,
+  description: <span class="str">'Three-axis council with quorum / dissent / charter-rigidity.'</span>,
+  axes: [
+    { id: <span class="str">'quorum'</span>,           label: <span class="str">'Quorum threshold'</span>,    description: <span class="str">'Votes needed to act'</span> },
+    { id: <span class="str">'dissent'</span>,          label: <span class="str">'Dissent tolerance'</span>,    description: <span class="str">'How much disagreement survives'</span> },
+    { id: <span class="str">'charter-rigidity'</span>, label: <span class="str">'Charter rigidity'</span>,     description: <span class="str">'Adherence to founding rules'</span> },
+  ],
+  defaults: { quorum: <span class="num">0.6</span>, dissent: <span class="num">0.4</span>, <span class="str">'charter-rigidity'</span>: <span class="num">0.7</span> },
+  drift: { outcomes: { <span class="cm">/* per-axis pull table */</span> },
+           leaderPull: { quorum: <span class="num">0.05</span>, dissent: <span class="num">0.05</span>, <span class="str">'charter-rigidity'</span>: <span class="num">0.05</span> },
+           roleActivation: { quorum: <span class="num">0.02</span>, dissent: <span class="num">0.02</span>, <span class="str">'charter-rigidity'</span>: <span class="num">0.02</span> } },
+  cues: { quorum: { high: <span class="str">'demands wide consensus before acting'</span>,
+                    low:  <span class="str">'acts on a narrow plurality'</span> } },
+});</div>
+        </div>
+      </div>
+
+      <!-- HTTP -->
+      <div class="tab-panel" role="tabpanel" data-panel="http" style="display:none">
+        <div class="code-block" style="border:none;border-radius:0;margin:0">
+          <div class="code-header"><span>One-shot HTTP endpoint (curl, Python, third-party dashboards)</span><button class="code-copy" onclick="copyCode(this, document.getElementById('http-code').textContent)">Copy</button></div>
+          <div class="code-body" id="http-code"><span class="cm"># Boot the server with the endpoint enabled.</span>
+PARACOSM_ENABLE_SIMULATE_ENDPOINT=true paracosm dashboard
+
+<span class="cm"># In another shell:</span>
+curl -X POST http://localhost:3456/simulate \
+  -H <span class="str">'Content-Type: application/json'</span> \
+  -H <span class="str">'X-OpenAI-Key: sk-...'</span> \
+  -d <span class="str">'{
+    "scenario": { "id": "submarine", "labels": {...}, "setup": {...}, "departments": [...], "metrics": [...] },
+    "leader":   { "name": "Captain Reyes", "archetype": "Pragmatist", "unit": "Station Alpha",
+                  "hexaco": { "openness": 0.4, "conscientiousness": 0.9, ... }, "instructions": "..." },
+    "options":  { "maxTurns": 4, "seed": 42, "costPreset": "economy", "captureSnapshots": true }
+  }'</span>
+
+<span class="cm"># Response: { artifact: RunArtifact, scenario: ScenarioPackage, durationMs: number }</span>
+<span class="cm"># Accepts a pre-compiled ScenarioPackage OR a raw draft (auto-compiled server-side).</span>
+<span class="cm"># Rate-limit shares the /setup IP bucket; body cap 5 MiB.</span></div>
+        </div>
+      </div>
+
+      <!-- CLI -->
+      <div class="tab-panel" role="tabpanel" data-panel="cli" style="display:none">
+        <div class="code-block" style="border:none;border-radius:0;margin:0">
+          <div class="code-header"><span>One umbrella binary, four subcommands. `--help` works on every level.</span><button class="code-copy" onclick="copyCode(this, document.getElementById('cli-code').textContent)">Copy</button></div>
+          <div class="code-body" id="cli-code"><span class="cm"># Discoverability first.</span>
+paracosm --help                          <span class="cm"># lists every subcommand</span>
+paracosm run --help                      <span class="cm"># per-command help</span>
+paracosm --version                       <span class="cm"># prints "paracosm 0.7.x"</span>
+
+<span class="cm"># Run a simulation against leaders.json (or --leaders &lt;path&gt;).</span>
+paracosm run                             <span class="cm"># default leader, full turns</span>
+paracosm run --leader 1 --turns 5        <span class="cm"># leader index 1, 5 turns</span>
+paracosm run --name <span class="str">"Reyes"</span> --openness 0.85 \
+             --conscientiousness 0.4 \
+             --turns 6                   <span class="cm"># inline HEXACO override</span>
+paracosm run --leaders ./my-leaders.json --live   <span class="cm"># live web search</span>
+
+<span class="cm"># Open the SSE dashboard. With [turns], auto-launches a sim on boot.</span>
+paracosm dashboard                       <span class="cm"># http://localhost:3456</span>
+paracosm dashboard 6                     <span class="cm"># auto-launch with 6 turns</span>
+
+<span class="cm"># Compile a scenario draft + cache the generated hooks.</span>
+paracosm compile scenarios/lunar.json \
+  --seed-url https://ntrs.nasa.gov/citations/20210018970 \
+  --max-searches 5
+
+<span class="cm"># Scaffold a starter project from a free-text brief.</span>
+paracosm init my-app --domain <span class="str">"AI lab Q4 release pressure"</span> --leaders 3
+
+<span class="cm"># Back-compat: paracosm-dashboard still works (alias for `paracosm dashboard`).</span></div>
+        </div>
+      </div>
     </div>
-    <div class="code-block">
-      <div class="code-header"><span>3. Compile, define leaders, run</span><button class="code-copy" onclick="copyCode(this, document.getElementById('api-code').textContent)">Copy</button></div>
+
+    <div class="code-block" style="margin-top:18px">
+      <div class="code-header"><span>End-to-end runner (real input/output captured)</span><button class="code-copy" onclick="copyCode(this, 'npx tsx scripts/cookbook-e2e.ts')">Copy</button></div>
       <div class="code-body" id="api-code"><span class="cm">// Save as index.ts next to my-world.json, then:</span>
 <span class="cm">//   npm install paracosm   (or: pnpm add paracosm / bun add paracosm)</span>
 <span class="cm">//   export OPENAI_API_KEY=sk-...          # or ANTHROPIC_API_KEY=sk-ant-...</span>
@@ -275,60 +595,50 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
   </div>
 </section>
 
-<!-- POSITIONING / ANTI-POSITIONING -->
+<!-- POSITIONING -->
 <section class="sec" id="positioning">
   <div class="sec-inner">
-    <div class="sec-label rv">Positioning</div>
-    <h2 class="sec-title rv">Where paracosm sits in the world-model landscape</h2>
-    <p class="sec-desc rv">Paracosm is a structured world model (<a href="https://arxiv.org/abs/2507.05169" target="_blank" rel="noopener" style="color:var(--amber)">Xing 2025</a>; <a href="https://dl.acm.org/doi/full/10.1145/3746449" target="_blank" rel="noopener" style="color:var(--amber)">ACM CSUR 2025</a>) and a counterfactual world simulation model (<a href="https://link.springer.com/article/10.1007/s43681-025-00718-4" target="_blank" rel="noopener" style="color:var(--amber)">Kirfel et al, 2025</a>). The 2026 landscape has several adjacent categories. Paracosm fits exactly one. Naming the others up front saves everyone a misclassification cycle.</p>
+    <h2 class="sec-title rv">What paracosm actually is</h2>
+    <p class="sec-desc rv">Paracosm is a <strong>structured, LLM-driven, counterfactual world simulator</strong>. It compiles a prompt, document, or URL into a typed scenario, runs it through a deterministic seeded kernel coupled with an LLM reasoning surface, and emits one universal Zod-validated <code>RunArtifact</code> across turn-loop civ sims, batch-trajectory digital twins, and batch-point forecasts. The category is named in <a href="https://arxiv.org/abs/2507.05169" target="_blank" rel="noopener" style="color:var(--amber)">Xing&nbsp;2025</a>, catalogued in the <a href="https://dl.acm.org/doi/full/10.1145/3746449" target="_blank" rel="noopener" style="color:var(--amber)">ACM&nbsp;CSUR&nbsp;2025</a> survey, and given counterfactual semantics by <a href="https://link.springer.com/article/10.1007/s43681-025-00718-4" target="_blank" rel="noopener" style="color:var(--amber)">Kirfel&nbsp;et&nbsp;al,&nbsp;2025</a>.</p>
 
     <div class="arch rv" style="margin-top:32px">
-      <div class="arch-row" style="border-left:3px solid var(--green)">
-        <svg style="color:var(--green);width:24px;height:24px" viewBox="0 0 24 24"><path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <div class="arch-label" style="color:var(--green)">Paracosm is this</div>
-        <div class="arch-desc">Structured / LLM-based / counterfactual world simulator. Prompt/document/URL-grounded, JSON-contract-backed state space, seeded deterministic kernel, LLM-driven events and specialist analyses, HEXACO-personality leaders, runtime tool forging in hardened node:vm sandboxes. One universal Zod-validated RunArtifact spans turn-loop civ sims, batch-trajectory digital twins, and batch-point forecasts.</div>
-        <div class="arch-tech">Xing 2025 / ACM CSUR 2025 / Kirfel 2025</div>
+      <div class="arch-row" style="border-left:3px solid var(--amber)">
+        <svg style="color:var(--amber);width:24px;height:24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="2"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="9" y1="14" x2="9" y2="14.01"/><line x1="13" y1="14" x2="17" y2="14"/></svg>
+        <div class="arch-label" style="color:var(--amber)">Structured state, deterministic spine</div>
+        <div class="arch-desc">A JSON-contract-backed world schema with metrics, capacities, statuses, politics, and environment. The kernel is a seeded Mulberry32 state machine — given the same seed, scenario, and actor profiles, every run produces an identical agent roster, lifecycle schedule, and resource trajectory. Divergence comes from personality, not luck. <code>wm.replay(artifact)</code> is byte-equal-deterministic.</div>
+        <div class="arch-tech">Zod schema · Mulberry32 PRNG · ScenarioPackage</div>
       </div>
-      <div class="arch-row" style="border-left:3px solid var(--t4)">
-        <svg style="color:var(--t3);width:24px;height:24px" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <div class="arch-label" style="color:var(--t2)">Not a generative visual world model</div>
-        <div class="arch-desc">Sora, Genie 3, and World Labs Marble generate pixel-level or 3D-scene output. Paracosm produces a structured result artifact (metrics, decisions, specialist notes, citations, forged tool summaries). No pixels.</div>
-        <div class="arch-tech">Sora / Genie 3 / Marble</div>
+      <div class="arch-row" style="border-left:3px solid var(--amber)">
+        <svg style="color:var(--amber);width:24px;height:24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <div class="arch-label" style="color:var(--amber)">Grounded compile</div>
+        <div class="arch-desc">Prompts, articles, and URLs become typed <code>ScenarioPackage</code>s through a compile pass. A grounding step then runs entity-derived web search across Serper and Tavily in parallel, dedupes citations by URL, and attaches them to the scenario before any actor is generated. Every commander decision and specialist note in the run can cite a real source.</div>
+        <div class="arch-tech">Serper · Tavily · compile-from-seed</div>
       </div>
-      <div class="arch-row" style="border-left:3px solid var(--t4)">
-        <svg style="color:var(--t3);width:24px;height:24px" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <div class="arch-label" style="color:var(--t2)">Not a JEPA predictive-representation model</div>
-        <div class="arch-desc">LeCun's AMI Labs ($1.03B raise, March 2026) trains Joint-Embedding Predictive Architectures on sensor and video streams. Paracosm does not train a model; it composes a kernel with an LLM reasoner.</div>
-        <div class="arch-tech">AMI Labs / V-JEPA / I-JEPA</div>
+      <div class="arch-row" style="border-left:3px solid var(--amber)">
+        <svg style="color:var(--amber);width:24px;height:24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <div class="arch-label" style="color:var(--amber)">Runtime tool forging (AgentOS)</div>
+        <div class="arch-desc">When a department needs a decision tool the codebase doesn't have, an LLM writes the function mid-run inside a hardened <code>node:vm</code> sandbox with wall-clock and heap caps. A judge LLM reviews safety and correctness; approved tools land in a registry that subsequent turns and other actors pull from. Real examples from prod runs: <code>shelter_priority_score</code>, <code>supply_shortage_severity_score</code>, <code>hurricane_after_action_assessment</code>.</div>
+        <div class="arch-tech">node:vm sandbox · EmergentJudge · tool registry</div>
       </div>
-      <div class="arch-row" style="border-left:3px solid var(--t4)">
-        <svg style="color:var(--t3);width:24px;height:24px" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <div class="arch-label" style="color:var(--t2)">Not a multi-agent task orchestration framework</div>
-        <div class="arch-desc">LangGraph, AutoGen / AG2, CrewAI, OpenAI Agents SDK, Google ADK, Mastra build agentic workflows that execute real tasks against real tools and APIs. Paracosm is a simulation; nothing ships outside the run.</div>
-        <div class="arch-tech">LangGraph / AutoGen / CrewAI</div>
-      </div>
-      <div class="arch-row" style="border-left:3px solid var(--t4)">
-        <svg style="color:var(--t3);width:24px;height:24px" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <div class="arch-label" style="color:var(--t2)">Not a bottom-up swarm intelligence simulator</div>
-        <div class="arch-desc">MiroFish and OASIS (CAMEL-AI) simulate thousands to a million emergent LLM-driven agents on social-media substrates; output is an aggregate prediction report. Paracosm is top-down (one leader decides), ~100 agents by design, deterministic-where-it-matters, and outputs a counterfactual trajectory.</div>
-        <div class="arch-tech">MiroFish / OASIS</div>
-      </div>
-      <div class="arch-row" style="border-left:3px solid var(--t4)">
-        <svg style="color:var(--t3);width:24px;height:24px" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <div class="arch-label" style="color:var(--t2)">Not a generative-agents library</div>
-        <div class="arch-desc">Stanford Generative Agents (Park et al, Smallville, 2023) and Google DeepMind Concordia build emergent social simulacra in open-ended sandboxes; they're research libraries. Paracosm is a product: deterministic turn loop, personality drift, runtime tool forging, universal result schema.</div>
-        <div class="arch-tech">Generative Agents / Concordia</div>
+      <div class="arch-row" style="border-left:3px solid var(--amber)">
+        <svg style="color:var(--amber);width:24px;height:24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="22"/><line x1="2" y1="12" x2="8" y2="12"/><line x1="16" y1="12" x2="22" y2="12"/></svg>
+        <div class="arch-label" style="color:var(--amber)">Personality-driven counterfactuals</div>
+        <div class="arch-desc">Pluggable trait-model leaders steer every decision: <strong>HEXACO</strong> for humans (Ashton &amp; Lee, 2007), <strong>ai-agent</strong> for AI systems, custom registrable for any other psychometric. Same scenario, same seed, different personality — different forged tools, different decisions, different population trajectories. <code>wm.forkFromArtifact(trunk, atTurn).simulate(altLeader)</code> branches a counterfactual from any captured turn.</div>
+        <div class="arch-tech">HEXACO · ai-agent · trait-model registry</div>
       </div>
     </div>
 
-    <p class="sec-desc rv" style="margin-top:32px;font-size:14px;color:var(--t3)">Full taxonomy mapping lives at <a href="https://github.com/framersai/paracosm/blob/master/docs/positioning/world-model-mapping.md" target="_blank" rel="noopener" style="color:var(--amber)">docs/positioning/world-model-mapping.md</a> with citations to the ACM CSUR 2025 survey, the Xing critique paper, the Kirfel CWSM paper, and papers for every adjacent category named above.</p>
+    <p class="sec-desc rv" style="margin-top:36px;font-size:14px;color:var(--t3);max-width:780px">
+      <strong style="color:var(--t2)">Inspired by</strong> the long arc of world-model research — Ha &amp; Schmidhuber's <a href="https://arxiv.org/abs/1803.10122" target="_blank" rel="noopener" style="color:var(--amber)">World&nbsp;Models&nbsp;(2018)</a> dream-state agents, the deterministic-microworld tradition behind Sugarscape and Schelling, the agent-based modeling lineage from Conway and Wolfram, and the structured-prompting trajectory traced by Kirfel et al's <a href="https://link.springer.com/article/10.1007/s43681-025-00718-4" target="_blank" rel="noopener" style="color:var(--amber)">counterfactual world simulation models</a>. Where prior work used hand-coded rules, learned latents, or unstructured emergence, paracosm uses an LLM as the world's reasoning surface and a typed kernel as its mutable spine — the result is a deterministic, replayable, citation-grounded simulator that fits both research and product use.
+    </p>
+
+    <p class="sec-desc rv" style="margin-top:24px;font-size:14px;color:var(--t3)">Full taxonomy mapping with adjacent-category citations lives at <a href="https://github.com/framersai/paracosm/blob/master/docs/positioning/world-model-mapping.md" target="_blank" rel="noopener" style="color:var(--amber)">docs/positioning/world-model-mapping.md</a>.</p>
   </div>
 </section>
 
 <!-- FEATURES -->
 <section class="sec sec-alt" id="features">
   <div class="sec-inner">
-    <div class="sec-label rv">Core Capabilities</div>
     <h2 class="sec-title rv">What Paracosm Does</h2>
     <p class="sec-desc rv">Paracosm is a structured world model, not a chat interface. Specialist agents analyze data, write code, cite papers, and forge computational models inside hardened node:vm sandboxes. The Event Director generates events from world state, not from a script. Two runs on the same seed diverge only because their leaders have different HEXACO personalities.</p>
 
@@ -341,9 +651,9 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
       </div>
       <div class="feat rv rv-d2">
         <img class="feat-icon" src="/brand/feature-icons/hexaco.svg?v=1" width="48" height="48" alt="">
-        <h3>HEXACO Personality Drift</h3>
-        <p>Each agent carries six continuous personality traits (Openness, Conscientiousness, Extraversion, Agreeableness, Emotionality, Honesty-Humility). These values shift over time through three mechanisms: leader influence, role-specific pressures, and outcome reinforcement. The same agent under two different leaders becomes a measurably different entity by turn 12.</p>
-        <div class="feat-ref">Ashton &amp; Lee, "Empirical, Theoretical, and Practical Advantages of the HEXACO Model," PSPR 11(2), 2007</div>
+        <h3>Pluggable Trait Models</h3>
+        <p>Leaders aren't locked to human personality. paracosm ships a TraitModel registry with two built-ins: <code>hexaco</code> (Ashton-Lee six-axis human personality) and <code>ai-agent</code> (six axes for AI-system leaders: exploration, verification-rigor, deference, risk-tolerance, transparency, instruction-following). Each model defines its axes, drift table, and prompt cues. Custom models register in one call. The same agent under two different leaders, on the same seed, becomes a measurably different entity by turn 12.</p>
+        <div class="feat-ref">Ashton &amp; Lee, PSPR 11(2), 2007 (HEXACO) &middot; ai-agent v1 calibrated by Frame.dev, 2026</div>
       </div>
       <div class="feat rv rv-d3">
         <img class="feat-icon" src="/brand/feature-icons/crisis.svg?v=1" width="48" height="48" alt="">
@@ -387,8 +697,7 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
 
 <!-- HOW IT WORKS -->
 <section class="sec" id="how-it-works">
-  <div class="sec-inner sec-center">
-    <div class="sec-label rv">Simulation Loop</div>
+  <div class="sec-inner">
     <h2 class="sec-title rv">Anatomy of a Turn</h2>
     <p class="sec-desc rv">A turn takes 30 to 90 seconds. The engine runs four phases in sequence. Each phase feeds data forward. By the end of a turn, the world state has changed, agents have reacted, and personality traits have shifted.</p>
 
@@ -423,61 +732,109 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
     </div>
 
     <!-- Divergence visualization -->
-    <div class="sec-label rv" style="margin-top:64px">Divergence</div>
-    <h2 class="sec-title rv">Same seed. Different commander. Different civilization.</h2>
-    <p class="sec-desc rv">The kernel guarantees identical starting conditions. Seed 950 produces the same 100 agents with the same profiles, the same resource levels, and the same initial events. The only variable is the commander's personality. By turn 3, the two worlds are measurably different.</p>
+    <div class="rv" style="margin-top:64px"></div>
+    <h2 class="sec-title rv">Same seed. Different leader. Different world.</h2>
+    <p class="sec-desc rv">The kernel guarantees identical starting conditions. Seed 950 produces the same agent roster, lifecycle schedule, and resource levels. The only variable is the leader's HEXACO profile. <code>wm.replay(artifact)</code> proves the kernel is byte-equal-deterministic for stored artifacts; <code>wm.forkFromArtifact(trunk, atTurn).simulate(altLeader)</code> branches a new trajectory from any captured turn. Two leaders, one seed, two artifacts: <code>fingerprint</code>, <code>finalState.metrics</code>, and <code>decisions[].choice</code> are the diff surface.</p>
 
     <div class="diverge rv">
       <div class="diverge-side" style="border-left:3px solid var(--amber)">
-        <h4 style="color:var(--amber)">The Visionary (O:0.95 C:0.35)</h4>
-        <p style="font-size:13px;color:var(--t2)">High openness drives experimental agriculture, risky habitat expansion, and early independence pushes. Population grows faster but with higher variance in outcomes.</p>
-        <div style="font-size:11px;color:var(--t3);font-family:var(--mono);margin-top:8px">
-          <div>Population <div class="diverge-bar"><div class="diverge-fill" style="width:78%;background:var(--amber)"></div></div></div>
-          <div>Morale <div class="diverge-bar"><div class="diverge-fill" style="width:62%;background:var(--amber)"></div></div></div>
-          <div>Innovation <div class="diverge-bar"><div class="diverge-fill" style="width:92%;background:var(--amber)"></div></div></div>
+        <h4 style="color:var(--amber)">Leader A: high-openness profile</h4>
+        <p style="font-size:13px;color:var(--t2)">HEXACO openness 0.95, conscientiousness 0.35. The director picks unconventional candidates at promotion and weights risk-tolerant department reports more heavily. Decisions push experimental options; outcomes have higher variance.</p>
+        <div style="font-size:11px;color:var(--t3);font-family:var(--mono);margin-top:12px">
+          <div>Higher variance on metrics under this profile</div>
+          <div class="diverge-bar"><div class="diverge-fill" style="width:78%;background:var(--amber)"></div></div>
+          <div style="margin-top:6px">Higher forge attempts, higher veto rate</div>
+          <div class="diverge-bar"><div class="diverge-fill" style="width:92%;background:var(--amber)"></div></div>
         </div>
       </div>
       <div class="diverge-side" style="border-left:3px solid var(--teal)">
-        <h4 style="color:var(--teal)">The Engineer (O:0.25 C:0.97)</h4>
-        <p style="font-size:13px;color:var(--t2)">High conscientiousness produces conservative resource allocation, redundant life support, and slower expansion. Lower mortality, lower innovation, higher long-term stability.</p>
-        <div style="font-size:11px;color:var(--t3);font-family:var(--mono);margin-top:8px">
-          <div>Population <div class="diverge-bar"><div class="diverge-fill" style="width:88%;background:var(--teal)"></div></div></div>
-          <div>Morale <div class="diverge-bar"><div class="diverge-fill" style="width:71%;background:var(--teal)"></div></div></div>
-          <div>Innovation <div class="diverge-bar"><div class="diverge-fill" style="width:45%;background:var(--teal)"></div></div></div>
+        <h4 style="color:var(--teal)">Leader B: high-conscientiousness profile</h4>
+        <p style="font-size:13px;color:var(--t2)">HEXACO openness 0.25, conscientiousness 0.97. The director picks by-the-book candidates and weights margin-of-safety reports. Decisions favor conservative options; outcomes have lower variance and longer time-to-resolution.</p>
+        <div style="font-size:11px;color:var(--t3);font-family:var(--mono);margin-top:12px">
+          <div>Lower variance on metrics under this profile</div>
+          <div class="diverge-bar"><div class="diverge-fill" style="width:88%;background:var(--teal)"></div></div>
+          <div style="margin-top:6px">Lower forge attempts, higher acceptance rate</div>
+          <div class="diverge-bar"><div class="diverge-fill" style="width:45%;background:var(--teal)"></div></div>
         </div>
       </div>
     </div>
+    <p class="sec-desc rv" style="margin-top:18px;font-size:13px;color:var(--t3)">Bars are illustrative of the qualitative pattern. Run <a href="https://github.com/framersai/paracosm/blob/master/scripts/cookbook-e2e.ts" target="_blank" rel="noopener" style="color:var(--amber)">scripts/cookbook-e2e.ts</a> to capture real fingerprints + per-metric deltas for your scenario, leader profiles, and seed.</p>
   </div>
 </section>
 
-<!-- DIGITAL TWIN SUBPATH -->
+<!-- DIGITAL TWIN -->
 <section class="sec" id="digital-twin">
   <div class="sec-inner">
-    <div class="sec-label rv">Digital Twin Use Case</div>
-    <h2 class="sec-title rv">Digital twins, named in the import path</h2>
-    <p class="sec-desc rv">The same engine that runs civilization simulations also models a single subject under counterfactual interventions. Import the curated subpath, supply a <code>SubjectConfig</code> and an <code>InterventionConfig</code>, and the resulting <code>RunArtifact</code> carries both for traceability.</p>
+    <h2 class="sec-title rv">Digital twins are a first-class import path</h2>
+    <p class="sec-desc rv">The same kernel that runs a 100-person Mars colony also models a single person under a single intervention. <code>paracosm/digital-twin</code> is the curated subpath: supply a <code>SubjectConfig</code> + <code>InterventionConfig</code>, get a typed trajectory back. Same Zod-validated <code>RunArtifact</code> shape, just with <code>artifact.subject</code> and <code>artifact.intervention</code> populated for traceability.</p>
 
-    <div class="code-sec">
-      <div class="code-block">
-        <div class="code-header"><span>paracosm/digital-twin</span></div>
-        <div class="code-body"><span class="kw">import</span> { DigitalTwin, <span class="kw">type</span> SubjectConfig, <span class="kw">type</span> InterventionConfig } <span class="kw">from</span> <span class="str">'paracosm/digital-twin'</span>;
+    <!-- Full-width recorded demo. The recording IS the proof, so it gets
+         the whole sec-inner width (1280×720 source plays at the viewer's
+         viewport width, ~1100px on desktop, full container on mobile). -->
+    <div class="rv" style="margin-top:32px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--rust);letter-spacing:1.5px;text-transform:uppercase">Live · /sim?tab=quickstart</div>
+
+      <video class="demo-video" autoplay muted loop playsinline controls preload="metadata"
+        poster="/demo/digital-twin-maria-2-poster.jpg?v=dt-11"
+        style="width:100%;height:auto;border-radius:8px;display:block;background:#000"
+        aria-label="Patient digital twin demo recorded against paracosm.agentos.sh: typing the case description for Maria Chen, then clicking 'Run intervention demo' fires twin.simulateIntervention(12-week semaglutide protocol) and returns the trajectory inline in the SIM tab.">
+        <source src="/demo/digital-twin-maria-2-hero.mp4?v=dt-11" type="video/mp4">
+      </video>
+
+      <p style="font-size:12px;color:var(--t3);line-height:1.6;margin:4px 0 0">Recorded end-to-end against <code>paracosm.agentos.sh</code>. The click hits <code>POST /api/quickstart/simulate-intervention</code>, the server runs <code>twin.simulateIntervention(subject, intervention, leader)</code>, and the SIM tab renders the returned <code>RunArtifact</code>: HbA1c trajectory, weight loss, exercise adherence climb, side-effect burden, quality-of-life shifts. Real LLM-driven decisions across endocrinology, nutrition, behavioral health, cardiology, and lifestyle coaching.</p>
+    </div>
+
+    <div class="code-block rv" style="margin:20px 0 0">
+      <div class="code-header"><span>Worked example · Maria Chen, T2D, 12-week GLP-1 + lifestyle protocol</span></div>
+      <div class="code-body"><span class="kw">import</span> { DigitalTwin } <span class="kw">from</span> <span class="str">'paracosm/digital-twin'</span>;
 
 <span class="kw">const</span> twin = <span class="kw">await</span> DigitalTwin.fromJson(scenarioJson);
 
-<span class="kw">const</span> subject: SubjectConfig = { id: <span class="str">'company'</span>, kind: <span class="str">'organization'</span>, attributes: { headcount: 100 } };
-<span class="kw">const</span> intervention: InterventionConfig = { id: <span class="str">'rif'</span>, kind: <span class="str">'policy'</span>, description: <span class="str">'25% RIF'</span>, parameters: { percent: 25 } };
+<span class="kw">const</span> subject = {
+  id: <span class="str">'patient-maria-2026'</span>,
+  name: <span class="str">'Maria Chen'</span>,
+  profile: {
+    age: 58,
+    yearsWithT2D: 4,
+    bmi: 31,
+    a1cBaseline: 7.8,
+    weightLb: 178,
+    comorbidities: <span class="str">'hypertension, dyslipidemia'</span>,
+  },
+  signals: [
+    { label: <span class="str">'HbA1c'</span>,           value: 7.8, unit: <span class="str">'%'</span> },
+    { label: <span class="str">'Fasting glucose'</span>, value: 156, unit: <span class="str">'mg/dL'</span> },
+    { label: <span class="str">'Weight'</span>,          value: 178, unit: <span class="str">'lb'</span> },
+  ],
+};
 
-<span class="kw">const</span> artifact = <span class="kw">await</span> twin.simulateIntervention(subject, intervention, leader, { maxTurns: 4 });
-console.log(artifact.subject, artifact.intervention);</div>
-      </div>
+<span class="kw">const</span> intervention = {
+  id: <span class="str">'glp1-12wk-protocol'</span>,
+  name: <span class="str">'12-week semaglutide + lifestyle protocol'</span>,
+  description: <span class="str">'Initiate semaglutide 0.25mg weekly,'</span>
+    + <span class="str">' titrate to 1.0mg by week 4. Pair with'</span>
+    + <span class="str">' dietitian-led nutrition + 150min/wk exercise.'</span>,
+  duration: { value: 84, unit: <span class="str">'days'</span> },
+  adherenceProfile: { expected: 0.85 },
+};
+
+<span class="kw">const</span> artifact = <span class="kw">await</span> twin.simulateIntervention(
+  subject, intervention, endocrinologist, { maxTurns: 6, seed: 11 }
+);
+
+<span class="cm">// artifact.subject + artifact.intervention preserved</span>
+<span class="cm">// artifact.trajectory.timepoints[t].worldSnapshot</span>
+<span class="cm">//   carries per-week HbA1c, weight, BMI, exercise,</span>
+<span class="cm">//   sleep, QoL, mortality risk, side-effect load</span></div>
     </div>
+
+    <p class="sec-desc rv" style="margin-top:24px;font-size:14px;color:var(--t3)">The same shape applies to medical interventions (subject = patient, intervention = treatment), policy modeling (subject = jurisdiction, intervention = ordinance), and product launches (subject = market, intervention = pricing change). The kernel is domain-agnostic — the scenario contract names the world.</p>
   </div>
 </section>
 
 <!-- SCENARIOS -->
 <section class="sec sec-alt" id="scenarios">
   <div class="sec-inner">
-    <div class="sec-label rv">Scenarios</div>
     <h2 class="sec-title rv">Two ScenarioPackages ship with the engine</h2>
     <p class="sec-desc rv">A ScenarioPackage is a JSON file plus runtime hooks. It defines departments, metrics, crisis templates, progression rules, and milestone conditions. The engine reads the package, populates the world, and runs the simulation. No engine code changes required between scenarios.</p>
 
@@ -501,9 +858,8 @@ console.log(artifact.subject, artifact.intervention);</div>
 <!-- ARCHITECTURE -->
 <section class="sec" id="architecture">
   <div class="sec-inner">
-    <div class="sec-label rv">Architecture</div>
     <h2 class="sec-title rv">Three layers, strict boundaries</h2>
-    <p class="sec-desc rv">The engine layer owns types and the deterministic kernel (71 source files). The runtime layer orchestrates simulations via 8 hook interfaces (18 files). The CLI layer serves the dashboard, batch runner, and HTTP server (45 files). No circular dependencies. The engine never imports from runtime.</p>
+    <p class="sec-desc rv">The engine layer owns types and the deterministic kernel (71 source files). The runtime layer orchestrates simulations via 6 scenario hooks (43 files). The CLI layer serves the dashboard, batch runner, and HTTP server (30 files plus the React dashboard). No circular dependencies. The engine never imports from runtime.</p>
 
     <div class="arch rv">
       <div class="arch-row" style="border-left:3px solid var(--amber)">
@@ -515,7 +871,7 @@ console.log(artifact.subject, artifact.intervention);</div>
       <div class="arch-row" style="border-left:3px solid var(--teal)">
         <svg style="color:var(--teal)"><use href="#i-layers"/></svg>
         <div class="arch-label" style="color:var(--teal)">Runtime</div>
-        <div class="arch-desc">Orchestrator, Director, Departments, Batch Runner. Scenario-agnostic via 8 hook interfaces. Parallel leader execution.</div>
+        <div class="arch-desc">Orchestrator, Director, Departments, Batch Runner. Scenario-agnostic via 6 progression and prompt hooks. Parallel leader execution.</div>
         <div class="arch-tech">AgentOS / generateText() / SSE</div>
       </div>
       <div class="arch-row" style="border-left:3px solid var(--rust)">
@@ -537,81 +893,20 @@ console.log(artifact.subject, artifact.intervention);</div>
 <!-- LIBRARY TAB -->
 <section class="sec" id="library">
   <div class="sec-inner">
-    <div class="sec-label rv">Dashboard</div>
     <h2 class="sec-title rv">Browse every run from the Library tab</h2>
     <p class="sec-desc rv">The dashboard ships a Library tab that lists every completed simulation persisted to <code>data/runs.db</code>. Filter by simulation mode, scenario, leader, or free-text. Click any card to open the side drawer with the full artifact rendered through the matching view component (turn-loop, batch-trajectory, or batch-point). Click Replay to verify the kernel is still deterministic for that run.</p>
-    <div class="library-wireframe-wrapper">
-      <svg viewBox="0 0 800 480" class="library-wireframe" role="img" aria-label="Library tab gallery view wireframe">
-        <!-- Hero stats strip -->
-        <g class="lw-stats">
-          <rect x="20" y="20" width="140" height="60" rx="6" fill="#1c1915" stroke="rgba(48,42,34,0.5)"/>
-          <text x="35" y="44" fill="#a89878" font-size="10" font-family="JetBrains Mono">RUNS</text>
-          <text x="35" y="68" fill="#f5f0e4" font-size="20" font-family="JetBrains Mono">247</text>
-          <rect x="180" y="20" width="140" height="60" rx="6" fill="#1c1915" stroke="rgba(48,42,34,0.5)"/>
-          <text x="195" y="44" fill="#a89878" font-size="10" font-family="JetBrains Mono">SPENT</text>
-          <text x="195" y="68" fill="#f5f0e4" font-size="20" font-family="JetBrains Mono">$42.85</text>
-          <rect x="340" y="20" width="140" height="60" rx="6" fill="#1c1915" stroke="rgba(48,42,34,0.5)"/>
-          <text x="355" y="44" fill="#a89878" font-size="10" font-family="JetBrains Mono">AVG / RUN</text>
-          <text x="355" y="68" fill="#f5f0e4" font-size="20" font-family="JetBrains Mono">$0.17</text>
-          <rect x="500" y="20" width="140" height="60" rx="6" fill="#1c1915" stroke="rgba(48,42,34,0.5)"/>
-          <text x="515" y="44" fill="#a89878" font-size="10" font-family="JetBrains Mono">TOTAL TIME</text>
-          <text x="515" y="68" fill="#f5f0e4" font-size="20" font-family="JetBrains Mono">5.2h</text>
-          <rect x="660" y="20" width="120" height="60" rx="6" fill="#1c1915" stroke="rgba(48,42,34,0.5)"/>
-          <text x="675" y="44" fill="#a89878" font-size="10" font-family="JetBrains Mono">REPLAY</text>
-          <text x="675" y="68" fill="#4ca8a8" font-size="20" font-family="JetBrains Mono">92%</text>
-        </g>
-        <!-- Search bar -->
-        <rect x="20" y="100" width="600" height="36" rx="6" fill="#0e0c0a" stroke="rgba(48,42,34,0.5)"/>
-        <text x="36" y="122" fill="#6b5f50" font-size="12" font-family="Inter">search runs by scenario, leader, archetype</text>
-        <rect x="640" y="105" width="40" height="26" rx="4" fill="#1c1915" stroke="rgba(48,42,34,0.5)"/>
-        <text x="650" y="122" fill="#a89878" font-size="10" font-family="JetBrains Mono">⌘K</text>
-        <!-- Filter chip -->
-        <rect x="20" y="146" width="180" height="20" rx="10" fill="#1c1915" stroke="#e8b44a"/>
-        <text x="32" y="160" fill="#e8b44a" font-size="9" font-family="JetBrains Mono">mode: batch-trajectory</text>
-        <!-- Gallery cards -->
-        <g class="lw-gallery">
-          <!-- Card 1: turn-loop teal -->
-          <rect x="20" y="186" width="180" height="120" rx="6" fill="#1c1915" stroke="rgba(48,42,34,0.5)"/>
-          <rect x="32" y="198" width="80" height="14" rx="7" fill="rgba(76,168,168,0.15)"/>
-          <text x="42" y="208" fill="#4ca8a8" font-size="8" font-family="JetBrains Mono">TURN-LOOP</text>
-          <text x="32" y="234" fill="#f5f0e4" font-size="11" font-family="Inter" font-weight="600">mars-genesis</text>
-          <text x="32" y="250" fill="#d8ccb0" font-size="9" font-family="Inter">Ada · visionary</text>
-          <text x="32" y="290" fill="#a89878" font-size="8" font-family="Inter">Open · Replay · Compare</text>
-          <!-- Card 2: batch-trajectory amber -->
-          <rect x="210" y="186" width="180" height="120" rx="6" fill="#1c1915" stroke="#e8b44a"/>
-          <rect x="222" y="198" width="100" height="14" rx="7" fill="rgba(232,180,74,0.15)"/>
-          <text x="232" y="208" fill="#e8b44a" font-size="8" font-family="JetBrains Mono">BATCH-TRAJECTORY</text>
-          <text x="222" y="234" fill="#f5f0e4" font-size="11" font-family="Inter" font-weight="600">corp-q3</text>
-          <text x="222" y="250" fill="#d8ccb0" font-size="9" font-family="Inter">Marcus · pragmatist</text>
-          <text x="222" y="290" fill="#a89878" font-size="8" font-family="Inter">Open · Replay · Compare</text>
-          <!-- Card 3: batch-point rust -->
-          <rect x="400" y="186" width="180" height="120" rx="6" fill="#1c1915" stroke="rgba(48,42,34,0.5)"/>
-          <rect x="412" y="198" width="80" height="14" rx="7" fill="rgba(224,101,48,0.15)"/>
-          <text x="422" y="208" fill="#e06530" font-size="8" font-family="JetBrains Mono">BATCH-POINT</text>
-          <text x="412" y="234" fill="#f5f0e4" font-size="11" font-family="Inter" font-weight="600">policy-rollout</text>
-          <text x="412" y="250" fill="#d8ccb0" font-size="9" font-family="Inter">Sky · cautious</text>
-          <text x="412" y="290" fill="#a89878" font-size="8" font-family="Inter">Open · Replay · Compare</text>
-        </g>
-        <!-- Side drawer (slid in) -->
-        <rect x="600" y="186" width="200" height="270" rx="6" fill="#14110e" stroke="rgba(48,42,34,0.7)" stroke-width="2"/>
-        <text x="612" y="208" fill="#a89878" font-size="10" font-family="JetBrains Mono">DETAIL</text>
-        <rect x="612" y="220" width="60" height="22" rx="4" fill="#1c1915" stroke="rgba(48,42,34,0.5)"/>
-        <text x="624" y="236" fill="#f5f0e4" font-size="10" font-family="Inter">Replay</text>
-        <rect x="676" y="226" width="110" height="14" rx="7" fill="rgba(76,168,168,0.15)"/>
-        <text x="688" y="236" fill="#4ca8a8" font-size="8" font-family="JetBrains Mono">DETERMINISTIC</text>
-        <line x1="612" y1="256" x2="788" y2="256" stroke="rgba(48,42,34,0.5)"/>
-        <text x="612" y="276" fill="#f5f0e4" font-size="11" font-family="Inter" font-weight="600">corp-q3</text>
-        <text x="612" y="292" fill="#d8ccb0" font-size="9" font-family="Inter">Marcus Reinhardt · pragmatist</text>
-        <text x="612" y="306" fill="#a89878" font-size="8" font-family="JetBrains Mono">12 timepoints · $0.42 · 5m ago</text>
-      </svg>
-    </div>
+    <video class="demo-video" autoplay muted loop playsinline preload="metadata"
+      poster="/demo/library-poster.jpg?v=20s"
+      aria-label="Library tab: cards, drawer, replay verification"
+      style="display:block;width:100%;max-width:1024px;margin:0 auto;border-radius:12px;border:1px solid var(--border);box-shadow:0 16px 40px rgba(0,0,0,0.35);background:var(--bg-card)">
+      <source src="/demo/library.mp4?v=20s" type="video/mp4">
+    </video>
   </div>
 </section>
 
 <!-- USE CASES -->
 <section class="sec sec-alt" id="use-cases">
   <div class="sec-inner">
-    <div class="sec-label rv">Verticals</div>
     <h2 class="sec-title rv">Where decision teams use Paracosm</h2>
     <p class="sec-desc rv">Any domain where testing decisions before making them reduces risk: digital-twin medicine, corporate strategy, policy simulation, wargaming, game design, alignment red-teaming. The engine is domain-agnostic; the scenario contract names the world.</p>
     <div class="use-cases-grid">
@@ -643,26 +938,33 @@ console.log(artifact.subject, artifact.intervention);</div>
   </div>
 </section>
 
-<!-- PRICING -->
-<section class="sec sec-alt" id="pricing">
-  <div class="sec-inner sec-center">
-    <div class="sec-label rv">Pricing</div>
-    <h2 class="sec-title rv">Open core, commercial roadmap</h2>
-    <p class="sec-desc rv">The engine is free and open source under Apache-2.0. Paid tiers are planned hosted packaging for infrastructure, persistence, and governance.</p>
+<!-- WIRE-LEVEL COOKBOOK (deep capture) -->
+<section class="sec sec-alt" id="wire-cookbook">
+  <div class="sec-inner">
+    <h2 class="sec-title rv">Real input JSON, real output JSON</h2>
+    <p class="sec-desc rv">Every method in the public API has its real input JSON and real output JSON captured at <a href="https://github.com/framersai/paracosm/blob/master/docs/cookbook.md" target="_blank" rel="noopener" style="color:var(--amber)">docs/cookbook.md</a>. Run an AI lab director scenario through prompt-to-world, quickstart parallel leaders, branch at turn 1, replay the kernel, hit the HTTP endpoint, model an intervention on a digital twin, and dispatch a batch. One run, seven public surfaces, every JSON committed.</p>
 
-    <div class="pricing-banner rv">
-      <h3>Open Source Today. Hosted Tiers Coming Soon.</h3>
-      <p>The core simulation engine is free and open source under Apache-2.0. Run it locally, fork it, build on it.</p>
-      <p style="color:var(--t3);font-size:13px">Hosted Pro, Enterprise, and Platform tiers are on the roadmap. Private deployment, auth, persistence, scenario authoring studio, white-label packaging.</p>
-      <div class="pricing-tiers">
-        <span class="pricing-tier">Open Source (free)</span>
-        <span class="pricing-tier">Pro (TBD)</span>
-        <span class="pricing-tier">Enterprise (TBD)</span>
-        <span class="pricing-tier">Platform (TBD)</span>
+    <div class="code-sec">
+      <div class="code-block">
+        <div class="code-header"><span>Prompt to running simulation, three lines</span><button class="code-copy" onclick="copyCode(this, document.getElementById('cb-quickstart').textContent)">Copy</button></div>
+        <div class="code-body" id="cb-quickstart"><span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm/world-model'</span>;
+
+<span class="kw">const</span> wm = <span class="kw">await</span> WorldModel.<span class="fn">fromPrompt</span>({ seedText, domainHint: <span class="str">'AI safety lab leadership decision'</span> });
+<span class="kw">const</span> { leaders, artifacts } = <span class="kw">await</span> wm.<span class="fn">quickstart</span>({ leaderCount: <span class="num">3</span> });</div>
       </div>
-      <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-        <a href="https://github.com/framersai/paracosm" class="btn-ghost" target="_blank" rel="noopener">View on GitHub</a>
-        <a href="mailto:team@frame.dev?subject=Paracosm Enterprise / Partnership" class="cta">Contact team@frame.dev <svg><use href="#i-arrow"/></svg></a>
+      <div class="code-block">
+        <div class="code-header"><span>Branch at turn 1 with a different leader</span><button class="code-copy" onclick="copyCode(this, document.getElementById('cb-fork').textContent)">Copy</button></div>
+        <div class="code-body" id="cb-fork"><span class="kw">const</span> branchWm = <span class="kw">await</span> wm.<span class="fn">forkFromArtifact</span>(artifacts[<span class="num">0</span>], <span class="num">1</span>);
+<span class="kw">const</span> branch = <span class="kw">await</span> branchWm.<span class="fn">simulate</span>(leaders[<span class="num">1</span>], { maxTurns: <span class="num">3</span>, seed: <span class="num">42</span> });
+<span class="cm">// branch.metadata.forkedFrom = { parentRunId, atTurn: 1 }</span></div>
+      </div>
+      <div class="code-block">
+        <div class="code-header"><span>One-shot HTTP endpoint with curl</span><button class="code-copy" onclick="copyCode(this, document.getElementById('cb-curl').textContent)">Copy</button></div>
+        <div class="code-body" id="cb-curl"><span class="cm"># PARACOSM_ENABLE_SIMULATE_ENDPOINT=true paracosm dashboard</span>
+curl -X POST http://localhost:3456/simulate \
+  -H <span class="str">'Content-Type: application/json'</span> \
+  -H <span class="str">'X-OpenAI-Key: sk-...'</span> \
+  -d <span class="str">'{"scenario": {...}, "leader": {...}, "options": {"maxTurns": 4, "seed": 42}}'</span></div>
       </div>
     </div>
   </div>
@@ -670,8 +972,7 @@ console.log(artifact.subject, artifact.intervention);</div>
 
 <!-- FAQ -->
 <section class="sec" id="faq">
-  <div class="sec-inner sec-center">
-    <div class="sec-label rv">FAQ</div>
+  <div class="sec-inner">
     <h2 class="sec-title rv">Frequently asked questions</h2>
     <div class="faq-list rv">
       <details class="faq-item"><summary>What is Paracosm?</summary><div class="faq-body">An open-source TypeScript structured world model for AI agents, available on npm (<code>npm install paracosm</code>). You define or ground a world as a ScenarioPackage: departments, metrics, crisis templates, progression hooks. The engine populates the world, generates events from live state, and resolves outcomes through a seeded deterministic kernel. LLM-driven stages diverge because every prompt carries the leader's HEXACO profile. Two scenarios ship with the package (Mars Genesis, Lunar Outpost). You can compile new ones from a JSON draft with optional prompt, brief, or URL grounding. Paracosm fits the "structured / LLM-based / counterfactual" branch of the world-model taxonomy (Xing 2025, ACM CSUR 2025, Kirfel 2025).<div class="faq-cite">Positioning map: <a href="https://github.com/framersai/paracosm/blob/master/docs/positioning/world-model-mapping.md" target="_blank" rel="noopener">docs/positioning/world-model-mapping.md</a></div></div></details>
@@ -681,50 +982,73 @@ console.log(artifact.subject, artifact.intervention);</div>
       <details class="faq-item"><summary>What LLM providers work with Paracosm?</summary><div class="faq-body">OpenAI (GPT-5.4) and Anthropic (Claude Sonnet 4.6). All roles (commander, departments, crisis director, tool judge) default to the full model for reliable structured output and tool forging. You can override per-role in the setup panel or via the API. Mini models (GPT-5.4-mini, Claude Haiku) are available for cost optimization but produce lower quality results.</div></details>
       <details class="faq-item"><summary>Can I build my own scenario?</summary><div class="faq-body">Two paths. If you want full control, write a ScenarioPackage in TypeScript with custom hooks for progression, crisis generation, milestones, and politics. If you want zero-code authoring today, write a scenario JSON draft and optionally add seed text or a seed URL for grounding, then run it through the Scenario Compiler. A prompt-only wrapper should generate the same JSON contract before simulation. Compilation costs about $0.10 in API calls and caches results to disk. An Antarctic station, a submarine crew, a corporate org, a generation ship: different world contract, same engine, different future.</div></details>
       <details class="faq-item"><summary>What verticals does this apply to?</summary><div class="faq-body">Defense and intelligence use it for wargaming and scenario planning. Corporate strategy teams model acquisition outcomes and leadership dynamics. Game studios generate procedural NPC civilizations and emergent narratives. Academic researchers run controlled experiments in multi-agent decision-making. Government agencies simulate policy impacts before implementation. The common thread: any domain where testing decisions before making them reduces risk.</div></details>
-      <details class="faq-item"><summary>Is Paracosm free?</summary><div class="faq-body">The engine is open source under Apache-2.0. You can use it in commercial products without restriction. Install from npm, fork the repo, build on it. Hosted tiers for managed deployment, auth, persistence, and scenario authoring are on the roadmap. Contact <a href="mailto:team@frame.dev">team@frame.dev</a> for early access.</div></details>
+      <details class="faq-item"><summary>Is Paracosm free?</summary><div class="faq-body">The engine is open source under Apache-2.0. You can use it in commercial products without restriction. Install from npm, fork the repo, build on it. A hosted enterprise SaaS dashboard with full analytics, fleet orchestration, and team workspaces is in development. No pricing yet; <a href="mailto:team@frame.dev">team@frame.dev</a> for early access and custom engagements.</div></details>
     </div>
   </div>
 </section>
 
-<!-- CONTACT -->
+<!-- HOSTED SAAS / COMING SOON -->
+<section class="sec sec-alt" id="hosted">
+  <div class="sec-inner">
+    <h2 class="sec-title rv">Coming soon: enterprise SaaS dashboard</h2>
+    <p class="sec-desc rv">The open-source engine ships today on npm. The hosted product layer is in development at Frame.dev for organizations that need decision intelligence at scale: defense, government, frontier AI labs, corporate strategy, R&amp;D, alignment teams. No pricing tiers yet. The list below is what's on the roadmap.</p>
+
+    <div class="feat-grid" style="margin-top:24px">
+      <div class="feat rv rv-d1">
+        <h3>Full analytics suite</h3>
+        <p>Per-leader cohort analysis, A/B benchmarks across HEXACO archetypes, scenario regression dashboards, decision-quality scoring, fleet-wide trajectory diff. Every artifact streams into the analytics warehouse with the universal RunArtifact schema.</p>
+        <div class="feat-ref">analytics warehouse: per-run, per-leader, per-decision, per-forge</div>
+      </div>
+      <div class="feat rv rv-d2">
+        <h3>Fleet orchestration</h3>
+        <p>Run 10, 50, or 500+ leaders through the same scenario in parallel across distributed worker nodes. Aggregate comparison views. Live progress streaming. Automated batch sweeps with shared seeds and shared compiled scenarios. Cancel-on-divergence policies for early stopping.</p>
+        <div class="feat-ref">distributed worker pool, queue-backed dispatch, autoscaling</div>
+      </div>
+      <div class="feat rv rv-d3">
+        <h3>Persistent memory + replay</h3>
+        <p>Multi-session agent memory with consolidation, eviction, and stance drift across runs. Reload any past run. Replay any artifact for byte-equal kernel verification. Compare runs across paracosm versions to localize behavior changes between releases.</p>
+        <div class="feat-ref">durable agent memory, kernel replay, version-diff regression</div>
+      </div>
+      <div class="feat rv rv-d1">
+        <h3>Team workspaces</h3>
+        <p>Shared scenario libraries, leader rosters, and run history with role-based access. Approval gates on production simulations. Audit trails on every run. Scenario authoring studio with a visual form-based editor on top of the canonical JSON contract.</p>
+        <div class="feat-ref">SSO, RBAC, audit log, scenario marketplace, version control</div>
+      </div>
+      <div class="feat rv rv-d2">
+        <h3>Business intelligence</h3>
+        <p>Leadership-decision modeling for organizations: model M&amp;A scenarios, market-entry plays, workforce planning, governance experiments, alignment red-team sweeps, defense wargames. Integrate with internal data warehouses and identity providers for real-context scenario seeding.</p>
+        <div class="feat-ref">SQL connector, S3/Snowflake/BigQuery seed ingestion, SSO</div>
+      </div>
+      <div class="feat rv rv-d3">
+        <h3>Private deployment</h3>
+        <p>Dedicated cluster or VPC deployment for organizations that need data sovereignty, on-prem inference, air-gapped runs, or regulated compliance posture. Custom scenario authoring services. Integration with internal LLM gateways. SLA, dedicated support, custom rate limits.</p>
+        <div class="feat-ref">VPC / on-prem / air-gapped, custom inference gateway, SLA</div>
+      </div>
+    </div>
+
+    <div style="margin-top:32px;text-align:center">
+      <a href="mailto:team@frame.dev?subject=Paracosm hosted SaaS early access" class="cta">Request early access <svg><use href="#i-arrow"/></svg></a>
+      <a href="mailto:team@frame.dev?subject=Paracosm enterprise / custom engagement" class="btn-ghost" style="margin-left:12px">Custom engagements</a>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
 <section class="sec" id="about">
   <div class="sec-inner">
-    <div class="sec-label rv">About</div>
-    <h2 class="sec-title rv">Who We Are</h2>
-    <p class="sec-desc rv" style="max-width:720px">Paracosm is built by <a href="https://frame.dev" target="_blank" rel="noopener" style="color:var(--amber);text-decoration:underline;text-underline-offset:2px">Frame.dev</a>, the engineering arm of <strong>Manic Agency LLC</strong>. We're an open source collective and AI research lab building proprietary AI tooling, game worlds powered by AI NPCs at <a href="https://wilds.ai" target="_blank" rel="noopener" style="color:var(--amber);text-decoration:underline;text-underline-offset:2px">Wilds.ai</a>, and developer infrastructure for autonomous agents through <a href="https://agentos.sh" target="_blank" rel="noopener" style="color:var(--amber);text-decoration:underline;text-underline-offset:2px">AgentOS</a>.</p>
+    <h2 class="sec-title rv">Built by Frame.dev</h2>
+    <p class="sec-desc rv" style="max-width:720px">Paracosm is built by <a href="https://frame.dev" target="_blank" rel="noopener" style="color:var(--amber);text-decoration:underline;text-underline-offset:2px">Frame.dev</a>, the engineering arm of <strong>Manic Agency LLC</strong>. Sister projects: <a href="https://agentos.sh" target="_blank" rel="noopener" style="color:var(--amber);text-decoration:underline;text-underline-offset:2px">AgentOS</a> (the agent runtime paracosm runs on) and <a href="https://wilds.ai" target="_blank" rel="noopener" style="color:var(--amber);text-decoration:underline;text-underline-offset:2px">Wilds.ai</a> (AI-NPC game worlds).</p>
 
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:24px">
+    <div class="contact-grid" style="margin-top:24px">
       <div class="contact-card rv rv-d1">
-        <h4 style="color:var(--amber);font-family:var(--mono);font-size:13px;letter-spacing:1px;margin-bottom:8px">WHAT WE DO</h4>
-        <p style="font-size:14px;line-height:1.7;color:var(--t2)">Digital agency, research lab, and open source collective. We build AI agent infrastructure (<a href="https://agentos.sh" target="_blank" rel="noopener" style="color:var(--rust)">AgentOS</a>), simulation engines (Paracosm), AI-powered game worlds (<a href="https://wilds.ai" target="_blank" rel="noopener" style="color:var(--rust)">Wilds.ai</a>), and custom AI deployments for enterprise and defense.</p>
-      </div>
-      <div class="contact-card rv rv-d2">
-        <h4 style="color:var(--amber);font-family:var(--mono);font-size:13px;letter-spacing:1px;margin-bottom:8px">ROADMAP</h4>
-        <p style="font-size:14px;line-height:1.7;color:var(--t2)">Multiplayer simulations with shared state across connected clients. Scenario marketplace for community-built worlds. Real-time agent memory persistence across sessions. Integration with Wilds.ai for playable AI-NPC worlds. Expanded personality models beyond HEXACO.</p>
-      </div>
-      <div class="contact-card rv rv-d3">
-        <h4 style="color:var(--amber);font-family:var(--mono);font-size:13px;letter-spacing:1px;margin-bottom:8px">VISION</h4>
-        <p style="font-size:14px;line-height:1.7;color:var(--t2)">Every organization should be able to simulate how different leadership styles, policies, and personalities would play out before committing to them. Paracosm makes that possible with AI agents that think, adapt, and diverge like real people.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="sec sec-alt" id="contact">
-  <div class="sec-inner">
-    <div class="sec-label rv">Contact</div>
-    <h2 class="sec-title rv">Get in Touch</h2>
-
-    <div class="contact-grid">
-      <div class="contact-card rv rv-d1">
-        <h4>Enterprise &amp; Partnerships</h4>
-        <p>Private deployment, custom scenarios, white-label packaging, and investment inquiries.</p>
+        <h4>Enterprise &amp; partnerships</h4>
+        <p>Private deployment, custom scenarios, government and defense engagements, investment inquiries.</p>
         <a href="mailto:team@frame.dev?subject=Paracosm Enterprise" style="color:var(--amber);font-weight:700;font-family:var(--mono);font-size:14px">team@frame.dev</a>
       </div>
       <div class="contact-card rv rv-d2">
-        <h4>Community &amp; Open Source</h4>
-        <p>Bug reports, feature requests, scenario contributions, and general discussion.</p>
-        <a href="https://github.com/framersai/paracosm" target="_blank" rel="noopener" style="color:var(--rust)">GitHub Issues</a> &middot; <a href="https://wilds.ai/discord" target="_blank" rel="noopener" style="color:var(--rust)">Discord</a>
+        <h4>Community &amp; open source</h4>
+        <p>Bug reports, feature requests, scenario contributions, general discussion.</p>
+        <a href="https://github.com/framersai/paracosm" target="_blank" rel="noopener" style="color:var(--rust)">GitHub</a> &middot; <a href="https://wilds.ai/discord" target="_blank" rel="noopener" style="color:var(--rust)">Discord</a>
       </div>
     </div>
   </div>
@@ -732,10 +1056,11 @@ console.log(artifact.subject, artifact.intervention);</div>
 
 <!-- CTA BANNER -->
 <section class="banner">
-  <h2 class="rv">Run your first simulation</h2>
-  <p class="rv">Two commanders. Same settlement. Different personalities. See what happens.</p>
+  <h2 class="rv">Same seed. Different leader. Different world.</h2>
+  <p class="rv">Compile a brief. Generate three HEXACO leaders. Watch the trajectories diverge.</p>
   <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap" class="rv">
     <a href="/sim" class="cta cta-pulse">Launch Simulation <svg><use href="#i-arrow"/></svg></a>
+    <a href="https://github.com/framersai/paracosm/blob/master/docs/cookbook.md" class="btn-ghost" target="_blank" rel="noopener">Read the Cookbook</a>
     <a href="https://github.com/framersai/paracosm" class="btn-ghost" target="_blank" rel="noopener">View Source</a>
   </div>
 </section>
@@ -746,6 +1071,7 @@ console.log(artifact.subject, artifact.intervention);</div>
     <nav class="ft-links" aria-label="Footer">
       <a href="https://agentos.sh">agentos.sh</a>
       <a href="/docs">API Docs</a>
+      <a href="https://agentos.sh/blog" target="_blank" rel="noopener">Blog</a>
       <a href="https://github.com/framersai/paracosm">GitHub</a>
       <a href="https://www.npmjs.com/package/paracosm">npm</a>
       <a href="https://frame.dev">Frame.dev</a>
@@ -837,6 +1163,63 @@ if (hamburger && mobileNav) {
     });
   });
 }
+
+// Nav dropdowns (Sections / Docs). CSS handles hover/focus-within; this JS
+// adds click-to-toggle for keyboard + touch users on screens that still
+// render the desktop nav (>=1100px iPads, etc.). Closes on Esc and on
+// outside click so the menu doesn't trap pointer focus.
+document.querySelectorAll('.nav-dropdown').forEach(dd => {
+  const trigger = dd.querySelector('.nav-dropdown-trigger');
+  const menu = dd.querySelector('.nav-dropdown-menu');
+  if (!trigger || !menu) return;
+  trigger.addEventListener('click', e => {
+    e.stopPropagation();
+    const willOpen = !menu.classList.contains('open');
+    document.querySelectorAll('.nav-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.nav-dropdown-trigger[aria-expanded="true"]').forEach(t => t.setAttribute('aria-expanded', 'false'));
+    if (willOpen) {
+      menu.classList.add('open');
+      trigger.setAttribute('aria-expanded', 'true');
+    }
+  });
+  menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    menu.classList.remove('open');
+    trigger.setAttribute('aria-expanded', 'false');
+  }));
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest('.nav-dropdown')) {
+    document.querySelectorAll('.nav-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.nav-dropdown-trigger[aria-expanded="true"]').forEach(t => t.setAttribute('aria-expanded', 'false'));
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.nav-dropdown-menu.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.nav-dropdown-trigger[aria-expanded="true"]').forEach(t => t.setAttribute('aria-expanded', 'false'));
+  }
+});
+
+// Tabbed examples (Quickstart / JSON contract / Granular API / HTTP / CLI)
+document.querySelectorAll('.example-tabs').forEach(tabs => {
+  const buttons = tabs.querySelectorAll('.tab-btn');
+  const panels = tabs.querySelectorAll('.tab-panel');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.tab;
+      buttons.forEach(b => {
+        const active = b === btn;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      panels.forEach(p => {
+        const show = p.dataset.panel === target;
+        p.classList.toggle('active', show);
+        p.style.display = show ? '' : 'none';
+      });
+    });
+  });
+});
 </script>
 </body>
 </html>

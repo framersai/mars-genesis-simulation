@@ -5,7 +5,7 @@
  * scenarioId, and leader hash already known). When the simulation
  * completes and the artifact is available, this helper populates the
  * Library-tab fields (artifactPath, costUSD, durationMs, mode,
- * leaderName, leaderArchetype) so the dashboard can render gallery
+ * actorName, actorArchetype) so the dashboard can render gallery
  * cards and load full artifacts via /api/v1/runs/:runId.
  *
  * artifactPath comes from `artifact.scenarioExtensions.outputPath`,
@@ -18,6 +18,7 @@
  */
 import type { RunRecord } from './run-record.js';
 import type { RunArtifact } from '../../engine/schema/index.js';
+import { extractSummaryTrajectory } from './run-summary-trajectory.js';
 
 export function enrichRunRecordFromArtifact(base: RunRecord, artifact: RunArtifact): RunRecord {
   const ext = artifact.scenarioExtensions as { outputPath?: string } | undefined;
@@ -38,8 +39,13 @@ export function enrichRunRecordFromArtifact(base: RunRecord, artifact: RunArtifa
   if (meta?.mode === 'turn-loop' || meta?.mode === 'batch-trajectory' || meta?.mode === 'batch-point') {
     enriched.mode = meta.mode;
   }
-  if (leader?.name) enriched.leaderName = leader.name;
-  if (leader?.archetype) enriched.leaderArchetype = leader.archetype;
+  if (leader?.name) enriched.actorName = leader.name;
+  if (leader?.archetype) enriched.actorArchetype = leader.archetype;
+
+  // Sample 8 trajectory points for the Compare view's cell sparkline so
+  // the SmallMultiplesGrid can render without fetching the full artifact.
+  const summary = extractSummaryTrajectory(artifact, 8);
+  if (summary.length > 0) enriched.summaryTrajectory = summary;
 
   return enriched;
 }

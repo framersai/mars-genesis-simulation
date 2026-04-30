@@ -3,6 +3,7 @@
  */
 
 import type { LlmProvider } from '../types.js';
+import type { RuntimeCredentialOptions } from '../provider-credentials.js';
 import type { CompilerTelemetry } from './telemetry.js';
 
 /**
@@ -34,7 +35,7 @@ export type GenerateTextFn = (
 ) => Promise<string>;
 
 /** Options for compileScenario(). */
-export interface CompileOptions {
+export interface CompileOptions extends RuntimeCredentialOptions {
   /** LLM provider to use for hook generation. */
   provider?: LlmProvider;
   /** Model name for hook generation. */

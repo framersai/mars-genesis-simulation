@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '../../theme/ThemeProvider';
 import type { ScenarioClientPayload } from '../../hooks/useScenario';
-import type { GameState } from '../../hooks/useGameState';
+import type { GameState, ActorSideState } from '../../hooks/useGameState';
 import type { useSSE } from '../../hooks/useSSE';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { Tooltip } from '../shared/Tooltip';
@@ -28,7 +28,6 @@ interface TopBarProps {
   /** F14 local-history props, forwarded to the RunMenu's history section. */
   history?: LocalHistoryEntry[];
   onRestoreHistory?: (entry: LocalHistoryEntry) => void;
-  onDeleteHistory?: (id: number) => void;
   onClearHistory?: () => void;
   /** True while the /setup request is in flight but the first SSE
    *  event hasn't yet arrived. Hides the RUN button so users can't
@@ -69,9 +68,9 @@ const toolBtnStyle: React.CSSProperties = {
   fontFamily: 'var(--mono)',
 };
 
-export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRun, onTour, onCopy, launching = false, history, onRestoreHistory, onDeleteHistory, onClearHistory }: TopBarProps) {
+export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRun, onTour, onCopy, launching = false, history, onRestoreHistory, onClearHistory }: TopBarProps) {
   const { resolved, setTheme } = useTheme();
-  const hasEvents = Object.values(gameState.leaders).some(s => s.events.length > 0);
+  const hasEvents = Object.values(gameState.actors).some((s: ActorSideState) => s.events.length > 0);
 
   // Secondary run actions (Save / Copy / Clear) consolidate behind a
   // single overflow trigger so the right cluster does not carry 9+
@@ -318,7 +317,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
           </div>
         )}
         <div className="topbar-center hidden md:block truncate" style={{ color: 'var(--text-3)', fontFamily: 'var(--mono)', fontSize: '10px' }}>
-          {gameState.turn === 0 ? `Two leaders. Same ${scenario.labels.settlementNoun}. Emergent divergence.` : ''}
+          {gameState.turn === 0 ? 'Same input. Different decisions. Emergent divergence.' : ''}
         </div>
       </div>
 
@@ -390,7 +389,6 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
             onLoadFromFile={onLoad}
             history={history}
             onRestoreHistory={onRestoreHistory}
-            onDeleteHistory={onDeleteHistory}
             onClearHistory={onClearHistory}
             liveStateHasEvents={sse.events.length > 0}
           />
@@ -416,7 +414,11 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
             GITHUB / TOUR / status / theme. Visible only when a run
             has emitted events (same gating the 3 separate buttons
             had before). */}
-        {hasEvents && (onSave || onCopy || onClear) && (
+        {/* Clear always opens the menu so the user can wipe server-
+            stored runs + sessions + output files even with an empty
+            local buffer. Save/Copy still require an active run; their
+            individual buttons inside the menu are gated separately. */}
+        {((hasEvents && (onSave || onCopy)) || onClear) && (
           <div ref={overflowRootRef} style={{ position: 'relative' }}>
             <button
               type="button"
@@ -424,7 +426,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
               aria-haspopup="menu"
               aria-expanded={overflowOpen}
               aria-label={overflowOpen ? 'Close run actions' : 'Open run actions menu'}
-              title="Save · Copy · Clear"
+              title="Save · Copy · Wipe"
               style={{
                 ...toolBtnStyle,
                 width: 28,
@@ -459,7 +461,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
                   gap: 2,
                 }}
               >
-                {onSave && (
+                {hasEvents && onSave && (
                   <button
                     role="menuitem"
                     type="button"
@@ -481,7 +483,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
                     Save
                   </button>
                 )}
-                {onCopy && (
+                {hasEvents && onCopy && (
                   <button
                     role="menuitem"
                     type="button"
@@ -520,9 +522,9 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
                       fontWeight: 600,
                       borderRadius: 3,
                     }}
-                    title="Clear all data. Cannot be undone."
+                    title="Wipe local buffer + server-stored runs/sessions + output JSONs. Cannot be undone."
                   >
-                    Clear
+                    Wipe All
                   </button>
                 )}
               </div>
@@ -532,14 +534,20 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
 
         <span style={{ color: 'var(--border)', fontSize: '12px' }} aria-hidden="true">|</span>
 
-        {/* Status */}
+        {/* Status. The text label hides under .topbar-status-text at
+            narrow viewports (<640px) so the colored dot alone signals
+            connection state on phones; the title attribute still
+            carries the full explanation for hover, and the aria-label
+            keeps screen-reader semantics intact. */}
         <span
-          style={{ fontSize: '10px', fontFamily: 'var(--mono)', color: statusColor, fontWeight: 700, cursor: 'help' }}
+          style={{ fontSize: '10px', fontFamily: 'var(--mono)', color: statusColor, fontWeight: 700, cursor: 'help', display: 'inline-flex', alignItems: 'center', gap: 4 }}
           role="status"
           aria-live="polite"
+          aria-label={`${statusText}. ${statusTitle}`}
           title={statusTitle}
         >
-          {sse.status === 'connected' && !sse.isComplete ? '\u25CF' : '\u25CB'} {statusText}
+          <span aria-hidden="true">{sse.status === 'connected' && !sse.isComplete ? '\u25CF' : '\u25CB'}</span>
+          <span className="topbar-status-text" style={{ marginLeft: 4 }}>{statusText}</span>
         </span>
 
         {/* Theme toggle */}

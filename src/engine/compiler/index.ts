@@ -23,6 +23,10 @@
 import type { ScenarioPackage, ScenarioHooks, LlmProvider } from '../types.js';
 import type { CompileOptions, GenerateTextFn } from './types.js';
 import { resolveProviderWithFallback } from '../provider-resolver.js';
+import {
+  apiKeyForProvider,
+  resolveProviderFromCredentials,
+} from '../provider-credentials.js';
 import { readCache, writeCache, readSeedBundleCache, writeSeedBundleCache, seedSignature } from './cache.js';
 import { generateProgressionHook, parseResponse as parseProgression } from './generate-progression.js';
 import { generateDirectorInstructions } from './generate-director.js';
@@ -43,11 +47,17 @@ export type { SeedIngestionOptions } from './seed-ingestion.js';
  * legacy string form (no cache) and the cache-aware `{ system, prompt }`
  * form used by the schema/code/prose wrappers.
  */
-async function buildDefaultGenerateText(provider: LlmProvider, model: string): Promise<GenerateTextFn> {
+async function buildDefaultGenerateText(provider: LlmProvider, model: string, apiKey?: string): Promise<GenerateTextFn> {
   const { generateText } = await import('@framers/agentos');
   return async (promptOrOptions) => {
     if (typeof promptOrOptions === 'string') {
-      const r = await generateText({ provider, model, prompt: promptOrOptions });
+      const r = await generateText({
+        provider,
+        model,
+        prompt: promptOrOptions,
+        apiKey,
+        fallbackProviders: apiKey ? [] : undefined,
+      });
       return r.text;
     }
     const r = await generateText({
@@ -56,6 +66,8 @@ async function buildDefaultGenerateText(provider: LlmProvider, model: string): P
       system: promptOrOptions.system,
       prompt: promptOrOptions.prompt,
       maxTokens: promptOrOptions.maxTokens,
+      apiKey,
+      fallbackProviders: apiKey ? [] : undefined,
     });
     return r.text;
   };
@@ -135,7 +147,7 @@ export async function compileScenario(
     // Default to OpenAI since OPENAI_API_KEY is the more commonly set
     // one, and runSimulation already defaults to openai. Swap with
     // provider: 'anthropic' + model: 'claude-sonnet-4-6' when desired.
-    provider: requestedProvider = 'openai',
+    provider: requestedProviderRaw,
     model: requestedModel,
     cache = true,
     cacheDir = '.paracosm/cache',
@@ -147,9 +159,11 @@ export async function compileScenario(
   // silent retry-forever failure mode (seen on the landing-page example
   // when ANTHROPIC_API_KEY was not set) into either a clean fallback
   // or a loud ProviderKeyMissingError at the top of the run.
+  const requestedProvider = resolveProviderFromCredentials(requestedProviderRaw, options, 'openai');
+  const requestedProviderApiKey = apiKeyForProvider(requestedProvider, options);
   const resolved = options.generateText
     ? { provider: requestedProvider, fellBack: false, requested: requestedProvider }
-    : resolveProviderWithFallback(requestedProvider);
+    : resolveProviderWithFallback(requestedProvider, { apiKey: requestedProviderApiKey });
   const provider = resolved.provider;
   // When fallback kicked in, the caller's model (if any) was chosen for
   // the requested provider and will not work on the fallback. Force the
@@ -165,13 +179,31 @@ export async function compileScenario(
     );
   }
 
-  const genText = options.generateText ?? await buildDefaultGenerateText(provider, model);
+  const genText = options.generateText ?? await buildDefaultGenerateText(
+    provider,
+    model,
+    apiKeyForProvider(provider, options),
+  );
   const json = scenarioJson as Record<string, any>;
   const hooks: ScenarioHooks = {};
 
-  // Generate each hook, using cache when available
+  // Generate each hook, using cache when available.
+  //
+  // Cache writes below skip `result.fromFallback === true` so a failed
+  // generation (key exhaustion, transient LLM error) does not poison
+  // future compiles with the fallback's no-op source. The runtime path
+  // still gets the fallback hook for THIS run; the disk cache stays
+  // empty so the next compile retries against the LLM. Prior bug:
+  // `'// No-op: generation failed'` was cached for `progression`, then
+  // crashed the sandbox at parse on every subsequent simulate.
   for (const hookName of HOOK_NAMES) {
-    // Try to restore from cache first
+    // Try to restore from cache first.
+    //
+    // `restoreHookFromCache` validates the cached source via the same
+    // `parseResponse` used after a fresh LLM call, so a corrupted cache
+    // entry (older builds wrote comment-only fallbacks) returns null
+    // and falls through to regeneration instead of returning a closure
+    // that fails at simulate-time.
     if (cache) {
       const cached = readCache(json, hookName, model, cacheDir);
       if (cached !== null) {
@@ -190,43 +222,43 @@ export async function compileScenario(
       case 'progression': {
         const result = await generateProgressionHook(json, genText, { telemetry: options.telemetry });
         hooks.progressionHook = result.hook;
-        if (cache) writeCache(json, hookName, result.source, model, cacheDir);
+        if (cache && !result.fromFallback) writeCache(json, hookName, result.source, model, cacheDir);
         break;
       }
       case 'director': {
         const result = await generateDirectorInstructions(json, genText, { telemetry: options.telemetry });
         hooks.directorInstructions = result.hook;
-        if (cache) writeCache(json, hookName, result.source, model, cacheDir);
+        if (cache && !result.fromFallback) writeCache(json, hookName, result.source, model, cacheDir);
         break;
       }
       case 'prompts': {
         const result = await generateDepartmentPromptHook(json, genText, { telemetry: options.telemetry });
         hooks.departmentPromptHook = result.hook;
-        if (cache) writeCache(json, hookName, result.source, model, cacheDir);
+        if (cache && !result.fromFallback) writeCache(json, hookName, result.source, model, cacheDir);
         break;
       }
       case 'milestones': {
         const result = await generateMilestones(json, genText, { telemetry: options.telemetry });
         hooks.getMilestoneEvent = result.hook;
-        if (cache) writeCache(json, hookName, result.source, model, cacheDir);
+        if (cache && !result.fromFallback) writeCache(json, hookName, result.source, model, cacheDir);
         break;
       }
       case 'fingerprint': {
         const result = await generateFingerprintHook(json, genText, { telemetry: options.telemetry });
         hooks.fingerprintHook = result.hook;
-        if (cache) writeCache(json, hookName, result.source, model, cacheDir);
+        if (cache && !result.fromFallback) writeCache(json, hookName, result.source, model, cacheDir);
         break;
       }
       case 'politics': {
         const result = await generatePoliticsHook(json, genText, { telemetry: options.telemetry });
         hooks.politicsHook = result.hook;
-        if (cache) writeCache(json, hookName, result.source, model, cacheDir);
+        if (cache && !result.fromFallback) writeCache(json, hookName, result.source, model, cacheDir);
         break;
       }
       case 'reactions': {
         const result = await generateReactionContextHook(json, genText, { telemetry: options.telemetry });
         hooks.reactionContextHook = result.hook;
-        if (cache) writeCache(json, hookName, result.source, model, cacheDir);
+        if (cache && !result.fromFallback) writeCache(json, hookName, result.source, model, cacheDir);
         break;
       }
     }
@@ -262,6 +294,11 @@ export async function compileScenario(
         generateText: genText,
         webSearch: options.webSearch ?? true,
         maxSearches: options.maxSearches ?? 5,
+        serperKey: options.serperKey,
+        firecrawlKey: options.firecrawlKey,
+        tavilyKey: options.tavilyKey,
+        braveKey: options.braveKey,
+        cohereKey: options.cohereKey,
         onProgress: (step: string, status: 'start' | 'done') =>
           onProgress?.(`seed-${step}`, status === 'start' ? 'generating' : 'done'),
       };
@@ -291,8 +328,19 @@ export async function compileScenario(
       ? [{ id: 'category_effects', type: 'category_outcome', label: 'Category Outcome Effects', categoryDefaults: json.effects }]
       : [];
 
-  // Build UI definition
+  // Build UI definition. ScenarioUiDefinition has six required fields
+  // (engine/types.ts:173); spreading `json.ui ?? {}` alone leaves any
+  // omitted field undefined, which crashes downstream consumers (the
+  // dashboard's REPORTS tab does `for (const x of ui.reportSections)`
+  // and unmounts the tab bar on undefined). Default each field to a
+  // benign value so any `compileScenario` caller — including the
+  // schema-light `compileFromSeed` path — gets a consumable shape.
   const ui = {
+    headerMetrics: [] as Array<{ id: string; format: 'number' | 'percent' | 'currency' | 'duration' }>,
+    tooltipFields: [] as string[],
+    reportSections: ['crisis', 'departments', 'decision', 'outcome'] as Array<'crisis' | 'departments' | 'decision' | 'outcome' | 'quotes' | 'causality'>,
+    departmentIcons: {} as Record<string, string>,
+    setupSections: ['actors', 'departments', 'models'] as Array<'actors' | 'personnel' | 'resources' | 'departments' | 'events' | 'models' | 'advanced'>,
     ...(json.ui ?? {}),
     eventRenderers: Object.fromEntries(
       (json.events ?? []).map((e: any) => [e.id, { icon: e.icon, color: e.color }])
@@ -303,9 +351,22 @@ export async function compileScenario(
     id: json.id ?? 'compiled-scenario',
     version: json.version ?? '1.0.0',
     engineArchetype: json.engineArchetype ?? 'closed_turn_based_settlement',
-    labels: json.labels ?? { name: 'Compiled Scenario', shortName: 'compiled', populationNoun: 'members', settlementNoun: 'settlement', currency: 'credits' },
+    // Labels: spread explicit values over benign defaults so a seed
+    // draft that lacks `actorNoun` / `actorNounPlural` (or any other
+    // optional noun) gets sensible UI fallbacks instead of leaving
+    // dashboard fields undefined.
+    labels: {
+      name: 'Compiled Scenario',
+      shortName: 'compiled',
+      populationNoun: 'members',
+      settlementNoun: 'settlement',
+      currency: 'credits',
+      actorNoun: 'actor',
+      actorNounPlural: 'actors',
+      ...(json.labels ?? {}),
+    },
     theme: json.theme ?? { primaryColor: '#6366f1', accentColor: '#818cf8', cssVariables: {} },
-    setup: json.setup ?? { defaultTurns: 8, defaultSeed: 100, defaultStartTime: 2040, defaultPopulation: 50, configurableSections: ['leaders', 'departments', 'models'] },
+    setup: json.setup ?? { defaultTurns: 8, defaultSeed: 100, defaultStartTime: 2040, defaultPopulation: 50, configurableSections: ['actors', 'departments', 'models'] },
     world,
     departments: json.departments ?? [],
     metrics: json.metrics ?? [],

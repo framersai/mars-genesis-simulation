@@ -35,7 +35,7 @@ function CompactCard(props: { record: RunRecord; onClick: () => void }): JSX.Ele
   return (
     <button className={styles.card} onClick={onClick}>
       <span className={styles.cardScenario}>{record.scenarioId}</span>
-      <span className={styles.cardLeader}>{record.leaderName ?? 'Unknown leader'}</span>
+      <span className={styles.cardLeader}>{record.actorName ?? 'Unknown leader'}</span>
       <span className={styles.cardMode} data-mode={record.mode ?? 'unknown'}>{record.mode ?? 'unknown'}</span>
     </button>
   );

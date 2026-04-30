@@ -173,10 +173,11 @@ test('POST /setup normalizes config and hands it to the simulation runner', asyn
   };
 
   const server = createMarsServer({
+    maxSimsPerDay: 0,
     runPairSimulations: async (config, _broadcast, _signal, _scenario, onArtifact) => {
       captured = config;
       // Per-artifact insert is now wired via onArtifact rather than a
-      // fire-at-/setup hook. Simulate one completed leader so the test
+      // fire-at-/setup hook. Simulate one completed actor so the test
       // asserts the new persistence shape.
       if (onArtifact) {
         const fakeArtifact = {
@@ -207,7 +208,7 @@ test('POST /setup normalizes config and hands it to the simulation runner', asyn
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        leaders: [leaderA, leaderB],
+        actors: [leaderA, leaderB],
         provider: 'anthropic',
         turns: 1,
         startTime: 2042,
@@ -310,7 +311,7 @@ test('GET /results reconstructs timelines from current stream event names', asyn
     frame('complete', {}),
   ]);
 
-  const leader = json.leaders.find((entry: any) => entry.name === leaderA.name);
+  const leader = json.actors.find((entry: any) => entry.name === leaderA.name);
   assert.ok(leader, 'leader timeline should be present');
   assert.equal(leader.decisions[0]?.decision, 'Seal the breach');
   assert.equal(leader.decisions[0]?.outcome, 'conservative_success');
@@ -733,7 +734,7 @@ test('POST /chat replies using simulation colonist data after a completed run', 
  */
 function makeConfig(): NormalizedSimulationConfig {
   return {
-    leaders: [leaderA, leaderB],
+    actors: [leaderA, leaderB],
     turns: 3,
     timePerTurn: 0,
     seed: 1,
@@ -911,6 +912,106 @@ test('auto-save errors do not break the broadcast pipeline', async () => {
   try {
     await server.startWithConfig(makeConfig());
     assert.equal(saveCalled, true);
+  } finally {
+    server.close();
+    await once(server, 'close');
+  }
+});
+
+// -- /admin/* token gate -----------------------------------------------------
+
+test('POST /admin/data/wipe: 403 when ADMIN_WRITE is unset', async () => {
+  const server = createMarsServer({
+    env: { ...process.env, ADMIN_WRITE: 'false', ADMIN_TOKEN: '' },
+    runPairSimulations: async () => {},
+  });
+  server.listen(0);
+  await once(server, 'listening');
+  const port = (server.address() as { port: number }).port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/admin/data/wipe`, { method: 'POST' });
+    assert.equal(res.status, 403);
+    const json = await res.json() as { error: string };
+    assert.match(json.error, /ADMIN_WRITE/);
+  } finally {
+    server.close();
+    await once(server, 'close');
+  }
+});
+
+test('POST /admin/data/wipe: 503 when ADMIN_WRITE=true but ADMIN_TOKEN unset (fail closed)', async () => {
+  const server = createMarsServer({
+    env: { ...process.env, ADMIN_WRITE: 'true', ADMIN_TOKEN: '' },
+    runPairSimulations: async () => {},
+  });
+  server.listen(0);
+  await once(server, 'listening');
+  const port = (server.address() as { port: number }).port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/admin/data/wipe`, { method: 'POST' });
+    assert.equal(res.status, 503);
+    const json = await res.json() as { error: string };
+    assert.match(json.error, /ADMIN_TOKEN must be set/);
+  } finally {
+    server.close();
+    await once(server, 'close');
+  }
+});
+
+test('POST /admin/data/wipe: 401 when ADMIN_TOKEN set but no X-Admin-Token header', async () => {
+  const server = createMarsServer({
+    env: { ...process.env, ADMIN_WRITE: 'true', ADMIN_TOKEN: 'secret-test-token' },
+    runPairSimulations: async () => {},
+  });
+  server.listen(0);
+  await once(server, 'listening');
+  const port = (server.address() as { port: number }).port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/admin/data/wipe`, { method: 'POST' });
+    assert.equal(res.status, 401);
+  } finally {
+    server.close();
+    await once(server, 'close');
+  }
+});
+
+test('POST /admin/data/wipe: 401 when X-Admin-Token header does not match', async () => {
+  const server = createMarsServer({
+    env: { ...process.env, ADMIN_WRITE: 'true', ADMIN_TOKEN: 'secret-test-token' },
+    runPairSimulations: async () => {},
+  });
+  server.listen(0);
+  await once(server, 'listening');
+  const port = (server.address() as { port: number }).port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/admin/data/wipe`, {
+      method: 'POST',
+      headers: { 'X-Admin-Token': 'wrong-token' },
+    });
+    assert.equal(res.status, 401);
+  } finally {
+    server.close();
+    await once(server, 'close');
+  }
+});
+
+test('POST /admin/data/wipe: 200 when X-Admin-Token header matches', async () => {
+  const server = createMarsServer({
+    env: { ...process.env, ADMIN_WRITE: 'true', ADMIN_TOKEN: 'secret-test-token' },
+    runPairSimulations: async () => {},
+  });
+  server.listen(0);
+  await once(server, 'listening');
+  const port = (server.address() as { port: number }).port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/admin/data/wipe`, {
+      method: 'POST',
+      headers: { 'X-Admin-Token': 'secret-test-token', 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    assert.equal(res.status, 200);
+    const json = await res.json() as { wiped: { eventBuffer: boolean } };
+    assert.equal(json.wiped.eventBuffer, true);
   } finally {
     server.close();
     await once(server, 'close');

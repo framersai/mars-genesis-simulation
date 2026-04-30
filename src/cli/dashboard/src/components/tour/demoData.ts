@@ -9,6 +9,69 @@
 
 import type { SimEvent } from '../../hooks/useSSE';
 
+/**
+ * Generate a small but visually-rich agent roster for a tour snapshot.
+ * Picked to be just large enough that SwarmViz draws a recognizable
+ * canvas (cells + glyphs + departments) without bloating the demo
+ * bundle. Without these, useVizSnapshots returned empty arrays, maxTurn
+ * stayed 0, and SwarmViz fell back to its empty-state placeholder ("Run
+ * a simulation to see the colony visualization") — leaving the tour's
+ * Viz step looking blank to first-time visitors.
+ */
+function buildDemoAgents(side: 'A' | 'B', turn: number): Array<Record<string, unknown>> {
+  const departments = ['medical', 'engineering', 'agriculture', 'governance', 'science', 'logistics'];
+  const ranks = ['junior', 'senior', 'lead', 'chief'] as const;
+  const moods = ['neutral', 'optimistic', 'tense', 'focused', 'anxious', 'confident'];
+  const firstA = ['Aria', 'Diego', 'Yuki', 'Kira', 'Marco', 'Lila', 'Theo', 'Nia', 'Omar', 'Saanvi', 'Felix', 'Mira'];
+  const firstB = ['Ren', 'Iris', 'Kenji', 'Anya', 'Tomas', 'Zara', 'Vinh', 'Lena', 'Hugo', 'Priya', 'Jonah', 'Mei'];
+  const lastA = ['Vasquez', 'Park', 'Okafor', 'Reyes', 'Singh', 'Cohen', 'Mwangi', 'Roy', 'Tate', 'Lopez', 'Bauer', 'Akin'];
+  const lastB = ['Tanaka', 'Brandt', 'Kim', 'Nilsson', 'Diaz', 'Patel', 'Foley', 'Volkov', 'Cruz', 'Hossain', 'Mukherjee', 'Park'];
+  const firstNames = side === 'A' ? firstA : firstB;
+  const lastNames = side === 'A' ? lastA : lastB;
+  return Array.from({ length: 14 }, (_, i) => {
+    const aliveBias = ((i * 7 + turn * 3) % 13) > 1; // most alive, a few not
+    return {
+      agentId: `${side.toLowerCase()}-${i}`,
+      name: `${firstNames[i % firstNames.length]} ${lastNames[i % lastNames.length]}`,
+      department: departments[i % departments.length],
+      role: i === 0 ? 'Department Head' : (ranks[(i + turn) % ranks.length] === 'lead' ? 'Senior Specialist' : 'Specialist'),
+      rank: ranks[(i + turn) % ranks.length],
+      alive: aliveBias,
+      marsborn: i % 5 === 0,
+      psychScore: 0.55 + ((i * 11 + turn * 7) % 35) / 100,
+      age: 28 + ((i * 3 + turn) % 22),
+      generation: i % 5 === 0 ? 1 : 0,
+      childrenIds: i % 6 === 2 ? [`${side.toLowerCase()}-${(i + 7) % 14}`] : [],
+      featured: i < 3,
+      mood: moods[(i + turn) % moods.length],
+      shortTermMemory: [`Turn ${turn}: working on department duties`],
+    };
+  });
+}
+
+const DEMO_SNAPSHOTS: SimEvent[] = [1, 2, 3].flatMap(turn => [
+  {
+    type: 'systems_snapshot',
+    leader: 'Commander Elena Vasquez',
+    data: {
+      turn, time: 2034 + turn,
+      agents: buildDemoAgents('A', turn),
+      population: 100, morale: 0.85 + turn * 0.01, foodReserve: 18 - turn * 0.5,
+      births: turn === 2 ? 1 : 0, deaths: turn === 3 ? 1 : 0,
+    },
+  } as SimEvent,
+  {
+    type: 'systems_snapshot',
+    leader: 'Commander Hiroshi Tanaka',
+    data: {
+      turn, time: 2034 + turn,
+      agents: buildDemoAgents('B', turn),
+      population: 100, morale: 0.88 + turn * 0.005, foodReserve: 18 - turn * 0.3,
+      births: turn === 3 ? 1 : 0, deaths: 0,
+    },
+  } as SimEvent,
+]);
+
 export const DEMO_EVENTS: SimEvent[] = [
   // ── Status: initialize the simulation ──────────────────────────────
   {
@@ -50,7 +113,7 @@ export const DEMO_EVENTS: SimEvent[] = [
       crisis: 'A massive dust storm system approaching from the Hellas basin threatens solar panel efficiency and outdoor operations for the next several months.',
       category: 'environmental', emergent: false,
       turnSummary: 'The colony faces its first major environmental challenge as Martian dust storm season arrives early.',
-      systems: { population: 100, morale: 0.85, foodMonthsReserve: 18, waterLitersPerDay: 800, powerKw: 400, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 0 },
+      metrics: { population: 100, morale: 0.85, foodMonthsReserve: 18, waterLitersPerDay: 800, powerKw: 400, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 0 },
     },
   },
   { type: 'specialist_start', leader: 'Commander Elena Vasquez', data: { turn: 1, department: 'engineering', title: 'Engineering Analysis' } },
@@ -115,7 +178,7 @@ export const DEMO_EVENTS: SimEvent[] = [
   },
   {
     type: 'turn_done', leader: 'Commander Elena Vasquez',
-    data: { turn: 1, systems: { population: 100, morale: 0.78, foodMonthsReserve: 17.5, waterLitersPerDay: 790, powerKw: 340, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 2 } },
+    data: { turn: 1, metrics: { population: 100, morale: 0.78, foodMonthsReserve: 17.5, waterLitersPerDay: 790, powerKw: 340, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 2 } },
   },
 
   // ════════════════════════════════════════════════════════════════════
@@ -130,7 +193,7 @@ export const DEMO_EVENTS: SimEvent[] = [
       crisis: 'A massive dust storm system approaching from the Hellas basin threatens solar panel efficiency and outdoor operations for the next several months.',
       category: 'environmental', emergent: false,
       turnSummary: 'The colony faces its first major environmental challenge as Martian dust storm season arrives early.',
-      systems: { population: 100, morale: 0.85, foodMonthsReserve: 18, waterLitersPerDay: 800, powerKw: 400, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 0 },
+      metrics: { population: 100, morale: 0.85, foodMonthsReserve: 18, waterLitersPerDay: 800, powerKw: 400, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 0 },
     },
   },
   { type: 'specialist_start', leader: 'Commander Hiroshi Tanaka', data: { turn: 1, department: 'engineering', title: 'Engineering Analysis' } },
@@ -195,7 +258,7 @@ export const DEMO_EVENTS: SimEvent[] = [
   },
   {
     type: 'turn_done', leader: 'Commander Hiroshi Tanaka',
-    data: { turn: 1, systems: { population: 100, morale: 0.87, foodMonthsReserve: 17.8, waterLitersPerDay: 800, powerKw: 395, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 0 } },
+    data: { turn: 1, metrics: { population: 100, morale: 0.87, foodMonthsReserve: 17.8, waterLitersPerDay: 800, powerKw: 395, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 0 } },
   },
 
   // ════════════════════════════════════════════════════════════════════
@@ -210,7 +273,7 @@ export const DEMO_EVENTS: SimEvent[] = [
       crisis: 'Trace perchlorate contamination detected in the primary water recycling system. Secondary filters are catching it but operating at 150% rated capacity.',
       category: 'infrastructure', emergent: true,
       turnSummary: 'An emergent crisis triggered by dust storm operations. Aggressive EVA schedules allowed fine regolith into intake systems.',
-      systems: { population: 100, morale: 0.78, foodMonthsReserve: 17, waterLitersPerDay: 650, powerKw: 360, infrastructureModules: 3, lifeSupportCapacity: 118, scienceOutput: 4 },
+      metrics: { population: 100, morale: 0.78, foodMonthsReserve: 17, waterLitersPerDay: 650, powerKw: 360, infrastructureModules: 3, lifeSupportCapacity: 118, scienceOutput: 4 },
     },
   },
   { type: 'specialist_start', leader: 'Commander Elena Vasquez', data: { turn: 2, department: 'engineering', title: 'Engineering Analysis' } },
@@ -279,7 +342,7 @@ export const DEMO_EVENTS: SimEvent[] = [
   },
   {
     type: 'turn_done', leader: 'Commander Elena Vasquez',
-    data: { turn: 2, systems: { population: 98, morale: 0.68, foodMonthsReserve: 16, waterLitersPerDay: 850, powerKw: 350, infrastructureModules: 4, lifeSupportCapacity: 116, scienceOutput: 8 }, deaths: 2 },
+    data: { turn: 2, metrics: { population: 98, morale: 0.68, foodMonthsReserve: 16, waterLitersPerDay: 850, powerKw: 350, infrastructureModules: 4, lifeSupportCapacity: 116, scienceOutput: 8 }, deaths: 2 },
   },
 
   // ════════════════════════════════════════════════════════════════════
@@ -294,7 +357,7 @@ export const DEMO_EVENTS: SimEvent[] = [
       crisis: 'Trace perchlorate contamination detected in the primary water recycling system. Secondary filters are catching it but operating at 150% rated capacity.',
       category: 'infrastructure', emergent: true,
       turnSummary: 'An emergent crisis triggered by dust storm residue in the atmosphere settling into intake vents during routine maintenance.',
-      systems: { population: 100, morale: 0.87, foodMonthsReserve: 17.5, waterLitersPerDay: 650, powerKw: 390, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 0 },
+      metrics: { population: 100, morale: 0.87, foodMonthsReserve: 17.5, waterLitersPerDay: 650, powerKw: 390, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 0 },
     },
   },
   { type: 'specialist_start', leader: 'Commander Hiroshi Tanaka', data: { turn: 2, department: 'engineering', title: 'Engineering Analysis' } },
@@ -350,7 +413,7 @@ export const DEMO_EVENTS: SimEvent[] = [
   },
   {
     type: 'turn_done', leader: 'Commander Hiroshi Tanaka',
-    data: { turn: 2, systems: { population: 100, morale: 0.89, foodMonthsReserve: 17, waterLitersPerDay: 820, powerKw: 388, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 1 } },
+    data: { turn: 2, metrics: { population: 100, morale: 0.89, foodMonthsReserve: 17, waterLitersPerDay: 820, powerKw: 388, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 1 } },
   },
 
   // ════════════════════════════════════════════════════════════════════
@@ -365,7 +428,7 @@ export const DEMO_EVENTS: SimEvent[] = [
       crisis: 'Three colonists are pregnant. Colony must decide on birthing protocols, education infrastructure, and whether to allocate scarce resources to a pediatric wing.',
       category: 'social', emergent: true,
       turnSummary: 'A milestone moment as the colony prepares for its first generation of humans born on Mars.',
-      systems: { population: 98, morale: 0.72, foodMonthsReserve: 15, waterLitersPerDay: 850, powerKw: 370, infrastructureModules: 4, lifeSupportCapacity: 116, scienceOutput: 12 },
+      metrics: { population: 98, morale: 0.72, foodMonthsReserve: 15, waterLitersPerDay: 850, powerKw: 370, infrastructureModules: 4, lifeSupportCapacity: 116, scienceOutput: 12 },
     },
   },
   { type: 'specialist_start', leader: 'Commander Elena Vasquez', data: { turn: 3, department: 'medical', title: 'Medical Analysis' } },
@@ -430,7 +493,7 @@ export const DEMO_EVENTS: SimEvent[] = [
   },
   {
     type: 'turn_done', leader: 'Commander Elena Vasquez',
-    data: { turn: 3, systems: { population: 98, morale: 0.82, foodMonthsReserve: 14, waterLitersPerDay: 840, powerKw: 365, infrastructureModules: 4, lifeSupportCapacity: 114, scienceOutput: 16 } },
+    data: { turn: 3, metrics: { population: 98, morale: 0.82, foodMonthsReserve: 14, waterLitersPerDay: 840, powerKw: 365, infrastructureModules: 4, lifeSupportCapacity: 114, scienceOutput: 16 } },
   },
 
   // ════════════════════════════════════════════════════════════════════
@@ -445,7 +508,7 @@ export const DEMO_EVENTS: SimEvent[] = [
       crisis: 'Three colonists are pregnant. Colony must decide on birthing protocols, education infrastructure, and whether to allocate scarce resources to a pediatric wing.',
       category: 'social', emergent: true,
       turnSummary: 'A milestone moment as the colony prepares for its first generation of humans born on Mars.',
-      systems: { population: 100, morale: 0.89, foodMonthsReserve: 16.5, waterLitersPerDay: 820, powerKw: 385, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 2 },
+      metrics: { population: 100, morale: 0.89, foodMonthsReserve: 16.5, waterLitersPerDay: 820, powerKw: 385, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 2 },
     },
   },
   { type: 'specialist_start', leader: 'Commander Hiroshi Tanaka', data: { turn: 3, department: 'medical', title: 'Medical Analysis' } },
@@ -501,6 +564,9 @@ export const DEMO_EVENTS: SimEvent[] = [
   },
   {
     type: 'turn_done', leader: 'Commander Hiroshi Tanaka',
-    data: { turn: 3, systems: { population: 100, morale: 0.90, foodMonthsReserve: 16, waterLitersPerDay: 815, powerKw: 382, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 3 } },
+    data: { turn: 3, metrics: { population: 100, morale: 0.90, foodMonthsReserve: 16, waterLitersPerDay: 815, powerKw: 382, infrastructureModules: 3, lifeSupportCapacity: 120, scienceOutput: 3 } },
   },
+  // systems_snapshot events feed SwarmViz's living-canvas. Without
+  // these, the Viz step of the tour shows only the empty placeholder.
+  ...DEMO_SNAPSHOTS,
 ];

@@ -14,7 +14,7 @@ import { marsScenario } from '../../../src/engine/mars/index.js';
 import { lunarScenario } from '../../../src/engine/lunar/index.js';
 import type { KernelSnapshot } from '../../../src/engine/core/snapshot.js';
 import type { RunArtifact } from '../../../src/engine/schema/index.js';
-import type { LeaderConfig } from '../../../src/runtime/orchestrator.js';
+import type { ActorConfig } from '../../../src/runtime/orchestrator.js';
 
 function fakeKernelSnapshot(overrides: Partial<KernelSnapshot> = {}): KernelSnapshot {
   return {
@@ -50,7 +50,7 @@ function fakeKernelSnapshot(overrides: Partial<KernelSnapshot> = {}): KernelSnap
   };
 }
 
-const forkLeader: LeaderConfig = {
+const forkLeader: ActorConfig = {
   name: 'Fork Leader',
   archetype: 'Fork Test',
   unit: 'Test',

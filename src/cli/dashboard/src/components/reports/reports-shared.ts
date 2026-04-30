@@ -58,9 +58,9 @@ function seriesForSide(
   const out: Array<{ turn: number; value: number }> = [];
   const seenTurn = new Set<number>();
   for (const ev of events) {
-    const systems = ev.data?.metrics as Record<string, number> | undefined;
-    if (!systems || typeof ev.turn !== 'number') continue;
-    const value = systems[metricId];
+    const metrics = ev.data?.metrics as Record<string, number> | undefined;
+    if (!metrics || typeof ev.turn !== 'number') continue;
+    const value = metrics[metricId];
     if (typeof value !== 'number') continue;
     if (seenTurn.has(ev.turn)) {
       // Latest snapshot for the turn wins (turn_done overwrites turn_start).
@@ -76,10 +76,10 @@ function seriesForSide(
 
 /** Build the six-metric series for both sides from the game state. */
 export function collectMetricSeries(state: GameState): MetricSeries[] {
-  const firstId = state.leaderIds[0];
-  const secondId = state.leaderIds[1];
-  const aEvents = (firstId ? state.leaders[firstId]?.events : undefined) as Array<{ turn?: number; data: Record<string, unknown> }> | undefined;
-  const bEvents = (secondId ? state.leaders[secondId]?.events : undefined) as Array<{ turn?: number; data: Record<string, unknown> }> | undefined;
+  const firstId = state.actorIds[0];
+  const secondId = state.actorIds[1];
+  const aEvents = (firstId ? state.actors[firstId]?.events : undefined) as Array<{ turn?: number; data: Record<string, unknown> }> | undefined;
+  const bEvents = (secondId ? state.actors[secondId]?.events : undefined) as Array<{ turn?: number; data: Record<string, unknown> }> | undefined;
   return METRIC_DEFS.map(def => ({
     id: def.id,
     label: def.label,

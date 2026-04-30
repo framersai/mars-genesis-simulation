@@ -11,7 +11,7 @@ import { extractPdfText } from './pdf-extract';
 import styles from './SeedInput.module.scss';
 
 export interface SeedInputProps {
-  onSeedReady: (payload: { seedText: string; sourceUrl?: string; domainHint?: string }) => void;
+  onSeedReady: (payload: { seedText: string; sourceUrl?: string; domainHint?: string; actorCount?: number }) => void;
   disabled?: boolean;
 }
 
@@ -25,6 +25,11 @@ export function SeedInput({ onSeedReady, disabled = false }: SeedInputProps) {
   const [domainHint, setDomainHint] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [fetching, setFetching] = useState(false);
+  // Actor count: how many parallel actors run against this scenario.
+  // Default 3 matches the legacy Quickstart behavior. Cap 50 mirrors
+  // GenerateLeadersSchema. Each actor is ~$0.30 LLM spend; the cost
+  // preview surfaces the total below the slider.
+  const [actorCount, setActorCount] = useState(3);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const submit = useCallback(() => {
@@ -39,8 +44,13 @@ export function SeedInput({ onSeedReady, disabled = false }: SeedInputProps) {
       return;
     }
     setError(null);
-    onSeedReady({ seedText: trimmedSeed, sourceUrl, domainHint: domainHint.trim() || undefined });
-  }, [seedText, sourceUrl, domainHint, onSeedReady]);
+    onSeedReady({
+      seedText: trimmedSeed,
+      sourceUrl,
+      domainHint: domainHint.trim() || undefined,
+      actorCount,
+    });
+  }, [seedText, sourceUrl, domainHint, actorCount, onSeedReady]);
 
   const fetchUrl = useCallback(async () => {
     const validation = validateSeedUrl(urlInput);
@@ -63,7 +73,14 @@ export function SeedInput({ onSeedReady, disabled = false }: SeedInputProps) {
       setSourceUrl(data.sourceUrl ?? validation.url.toString());
       setTab('paste');
     } catch (err) {
-      setError(String(err));
+      // Network-level failures (DNS, CORS, TLS) reach this branch.
+      // Server-supplied error messages went through the body.error
+      // path above, so anything here is a transport problem.
+      const raw = (err as Error)?.message ?? String(err);
+      const msg = /Failed to fetch|NetworkError|ERR_/i.test(raw)
+        ? "Couldn't reach the server. Check your connection and try again."
+        : `URL fetch failed: ${raw}`;
+      setError(msg);
     } finally {
       setFetching(false);
     }
@@ -87,12 +104,35 @@ export function SeedInput({ onSeedReady, disabled = false }: SeedInputProps) {
       setSourceUrl(undefined);
       setTab('paste');
     } catch (err) {
-      setError(`PDF extraction failed: ${String(err)}`);
+      // Map pdf.js exceptions to actionable copy. The raw stringified
+      // exception (e.g. 'InvalidPDFException: Invalid PDF structure'
+      // or 'Setting up fake worker failed') reads as failure-by-bug
+      // even when the cause is just "this is a scanned PDF" or "the
+      // file is corrupted". Surface the recovery action instead.
+      const code = (err as Error & { code?: string })?.code;
+      const raw = String((err as Error)?.message ?? err);
+      let msg: string;
+      if (code === 'PDF_NO_TEXT') {
+        msg = 'No text found in this PDF. It looks like a scanned image — try a text-based PDF, or paste the content into WRITE.';
+      } else if (/InvalidPDFException|invalid pdf|corrupt/i.test(raw)) {
+        msg = 'This PDF appears to be corrupted or password-protected. Try a different file or paste the text directly.';
+      } else if (/worker|GlobalWorkerOptions/i.test(raw)) {
+        msg = 'PDF parser failed to start. Hard-refresh the page (Cmd/Ctrl-Shift-R) and try again.';
+      } else {
+        msg = `Couldn't read this PDF (${raw}). Try paste-text or a different file.`;
+      }
+      setError(msg);
     } finally {
       setFetching(false);
     }
   }, []);
 
+  // Tab id stays 'paste' for backward compat with existing telemetry
+  // and tests; the visible label is "WRITE" so the textarea reads as
+  // an invitation to type, not just paste. Multiple users called this
+  // out as confusing — "Paste" implied the only valid input was
+  // pre-existing text from a clipboard.
+  const TAB_LABELS: Record<Tab, string> = { paste: 'WRITE', url: 'URL', pdf: 'PDF' };
   return (
     <div className={styles.seedInput}>
       <div className={styles.tabs} role="tablist">
@@ -106,15 +146,16 @@ export function SeedInput({ onSeedReady, disabled = false }: SeedInputProps) {
             disabled={disabled}
             type="button"
           >
-            {t.toUpperCase()}
+            {TAB_LABELS[t]}
           </button>
         ))}
       </div>
 
       {tab === 'paste' && (
         <textarea
+          data-quickstart-seed
           className={styles.textarea}
-          placeholder="Paste a brief, article, meeting notes, or any domain-specific source material (at least 200 characters)."
+          placeholder="Type or paste a brief, article, meeting notes, or any domain-specific source material (at least 200 characters)."
           value={seedText}
           onChange={e => setSeedText(e.target.value)}
           rows={12}
@@ -199,14 +240,51 @@ export function SeedInput({ onSeedReady, disabled = false }: SeedInputProps) {
         {seedText.length.toLocaleString()} / 50,000 characters
       </div>
 
+      <div className={styles.actorCountRow}>
+        <label htmlFor="quickstart-actor-count" className={styles.actorCountLabel}>
+          Actors: <strong>{actorCount}</strong>
+        </label>
+        <input
+          id="quickstart-actor-count"
+          type="range"
+          min={1}
+          max={50}
+          value={actorCount}
+          onChange={(e) => setActorCount(parseInt(e.target.value, 10))}
+          disabled={disabled}
+          className={styles.actorCountSlider}
+          aria-label="Number of parallel actors to run"
+        />
+        <span className={styles.actorCountPreview} aria-live="polite">
+          ~${(0.10 + 0.30 * actorCount).toFixed(2)} · {wallTimeEstimate(actorCount)}
+        </span>
+      </div>
+
       <button
         type="button"
         className={styles.runButton}
         onClick={submit}
         disabled={disabled || seedText.trim().length < 200}
       >
-        Generate + Run 3 Leaders
+        Generate + Run {actorCount} {actorCount === 1 ? 'Actor' : 'Actors'} (~${(0.10 + 0.30 * actorCount).toFixed(2)})
       </button>
     </div>
   );
+}
+
+/** Rough wall-time estimate for the cost-preview tile. Three actors
+ *  run in parallel today (Promise.allSettled); higher counts will be
+ *  bounded by the eventual --max-parallel knob from the spec's risk
+ *  register. Returns a "X-Y min" range. */
+function wallTimeEstimate(count: number): string {
+  if (count <= 0) return '—';
+  // Compile + ground + leader gen baseline ~2 min, then ~5 min per
+  // batch-of-3 actors at full 6-turn runs. Padded to a 1.5x ceiling
+  // so callers see a realistic upper bound.
+  const baselineMin = 2;
+  const perBatchMin = 5;
+  const batches = Math.max(1, Math.ceil(count / 3));
+  const lo = baselineMin + perBatchMin * batches;
+  const hi = Math.ceil(lo * 1.5);
+  return `${lo}–${hi} min`;
 }

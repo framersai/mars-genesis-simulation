@@ -9,7 +9,7 @@ test('noop run history store is queryable without affecting replay storage', asy
     createdAt: new Date().toISOString(),
     scenarioId: 'mars-genesis',
     scenarioVersion: '0.4.88',
-    leaderConfigHash: 'leaders:test',
+    actorConfigHash: 'leaders:test',
     economicsProfile: 'balanced',
     sourceMode: 'local_demo',
     createdBy: 'anonymous',

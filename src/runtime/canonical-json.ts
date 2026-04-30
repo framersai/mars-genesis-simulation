@@ -28,23 +28,28 @@ export function canonicalJson(value: unknown): string {
 
 function sortDeep(value: unknown, seen: WeakSet<object>): unknown {
   if (value === null || typeof value !== 'object') return value;
+  if (value instanceof Date) return value.toJSON();
 
   if (seen.has(value as object)) {
     throw new TypeError('canonicalJson: circular reference detected');
   }
   seen.add(value as object);
 
-  if (Array.isArray(value)) {
-    return value.map(v => sortDeep(v, seen));
-  }
+  try {
+    if (Array.isArray(value)) {
+      return value.map(v => sortDeep(v, seen));
+    }
 
-  const entries = Object.entries(value as Record<string, unknown>)
-    .filter(([, v]) => v !== undefined)
-    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, v]) => v !== undefined)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
 
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of entries) {
-    out[k] = sortDeep(v, seen);
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of entries) {
+      out[k] = sortDeep(v, seen);
+    }
+    return out;
+  } finally {
+    seen.delete(value as object);
   }
-  return out;
 }

@@ -7,8 +7,8 @@ interface RunSummaryDrawerProps {
   onClose: () => void;
   snapsA: TurnSnapshot[];
   snapsB: TurnSnapshot[];
-  leaderNameA: string;
-  leaderNameB: string;
+  actorNameA: string;
+  actorNameB: string;
   forgeApprovedA: number;
   forgeApprovedB: number;
   reuseCountA: number;
@@ -239,8 +239,8 @@ export function RunSummaryDrawer(props: RunSummaryDrawerProps) {
         </div>
 
         <div style={{ display: 'flex', gap: 14, marginBottom: 14, flexWrap: 'wrap' }}>
-          {sideBlock(props.leaderNameA, 'var(--vis)', a, props.forgeApprovedA, props.reuseCountA)}
-          {sideBlock(props.leaderNameB, 'var(--eng)', b, props.forgeApprovedB, props.reuseCountB)}
+          {sideBlock(props.actorNameA, 'var(--vis)', a, props.forgeApprovedA, props.reuseCountA)}
+          {sideBlock(props.actorNameB, 'var(--eng)', b, props.forgeApprovedB, props.reuseCountB)}
         </div>
 
         <div

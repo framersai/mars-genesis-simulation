@@ -4,7 +4,7 @@
  *
  * - Dashboard `ForkModal` + `Quickstart` "Swap leader" controls read
  *   from it.
- * - External consumers pull `LEADER_PRESETS` via the `paracosm/leader-presets`
+ * - External consumers pull `ACTOR_PRESETS` via the `paracosm/leader-presets`
  *   subpath for programmatic `runBatch` sweeps.
  *
  * HEXACO traits live in [0, 1]. Each preset is designed to diverge from
@@ -29,7 +29,7 @@ export interface LeaderPreset {
   hexaco: HexacoProfile;
 }
 
-export const LEADER_PRESETS: Readonly<Record<string, LeaderPreset>> = Object.freeze({
+export const ACTOR_PRESETS: Readonly<Record<string, LeaderPreset>> = Object.freeze({
   'visionary': {
     id: 'visionary',
     name: 'Aria Okafor',
@@ -134,7 +134,7 @@ export const LEADER_PRESETS: Readonly<Record<string, LeaderPreset>> = Object.fre
 
 /** Lookup by preset id. Returns undefined for unknown ids. */
 export function getPresetById(id: string): LeaderPreset | undefined {
-  return LEADER_PRESETS[id];
+  return ACTOR_PRESETS[id];
 }
 
 /**
@@ -146,7 +146,7 @@ export function listPresetsByTrait(
   trait: keyof HexacoProfile,
   high: boolean,
 ): LeaderPreset[] {
-  return Object.values(LEADER_PRESETS).filter(p => {
+  return Object.values(ACTOR_PRESETS).filter(p => {
     const v = p.hexaco[trait];
     return high ? v > 0.7 : v < 0.3;
   });

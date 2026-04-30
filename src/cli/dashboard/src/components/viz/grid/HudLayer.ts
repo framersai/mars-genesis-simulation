@@ -1,7 +1,7 @@
 import type { TurnSnapshot, GridPosition, CellSnapshot } from '../viz-types.js';
 
 export interface HudOpts {
-  leaderName: string;
+  actorName: string;
   sideColor: string;
   /** Overlay canvas logical width/height for corner placement. */
   width: number;
@@ -14,7 +14,7 @@ export interface HudOpts {
   /** Previous snapshot for population + morale deltas. */
   previousSnapshot?: TurnSnapshot | undefined;
   /** Leader archetype chip rendered next to the name. */
-  leaderArchetype?: string;
+  actorArchetype?: string;
   /** First time of the scenario (for "age of settlement" math). */
   startTime?: number;
   /**
@@ -70,12 +70,12 @@ export function drawHud(
   ctx.fillStyle = opts.sideColor;
   ctx.textBaseline = 'top';
   ctx.textAlign = 'left';
-  const nameText = opts.leaderName.toUpperCase();
+  const nameText = opts.actorName.toUpperCase();
   ctx.fillText(nameText, 10, 10);
   const nameWidth = ctx.measureText(nameText).width;
 
   // Archetype chip next to the name.
-  const archetype = (opts.leaderArchetype || '').trim().replace(/^The\s+/i, '');
+  const archetype = (opts.actorArchetype || '').trim().replace(/^The\s+/i, '');
   if (archetype) {
     ctx.font = 'bold 8px ui-monospace, monospace';
     const chipText = archetype.toUpperCase();

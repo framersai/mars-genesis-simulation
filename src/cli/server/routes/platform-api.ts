@@ -1,6 +1,10 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { ListRunsFilters, RunHistoryStore } from '../run-history-store.js';
+import type { RunRecord } from '../run-record.js';
 import type { ParacosmServerMode } from '../server-mode.js';
+import type { ScenarioPackage } from '../../../engine/types.js';
+import { WorldModel, WorldModelReplayError } from '../../../runtime/world-model/index.js';
+import type { RunArtifact } from '../../../engine/schema/index.js';
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 500;
@@ -25,6 +29,12 @@ async function readBody(req: IncomingMessage): Promise<string> {
   return Buffer.concat(chunks).toString('utf-8');
 }
 
+function publicRunRecord(record: RunRecord): Omit<RunRecord, 'artifactPath'> {
+  const { artifactPath, ...publicRecord } = record;
+  void artifactPath;
+  return publicRecord;
+}
+
 export interface HandlePlatformApiOptions {
   runHistoryStore: RunHistoryStore;
   corsHeaders: Record<string, string>;
@@ -36,6 +46,13 @@ export interface HandlePlatformApiOptions {
    * run-history without explicit opt-in).
    */
   paracosmRoutesEnabled: boolean;
+  /**
+   * Resolves a scenarioId to its compiled ScenarioPackage. The route
+   * handler uses this to construct a WorldModel for replay. Returns
+   * undefined when the id is not in the catalog (built-in or custom).
+   * Wired by server-app.ts as `(id) => customScenarioCatalog.get(id)?.scenario`.
+   */
+  scenarioLookup: (scenarioId: string) => ScenarioPackage | undefined;
 }
 
 export async function handlePlatformApiRoute(
@@ -67,8 +84,12 @@ export async function handlePlatformApiRoute(
           : undefined,
         sourceMode: sourceModeParam ? (sourceModeParam as ParacosmServerMode) : undefined,
         scenarioId: url.searchParams.get('scenario') ?? undefined,
-        leaderConfigHash: url.searchParams.get('leader') ?? undefined,
+        actorConfigHash: url.searchParams.get('leader') ?? undefined,
         q: url.searchParams.get('q') ?? undefined,
+        // Filter by Quickstart bundle. The CompareModal uses
+        // /api/v1/bundles/:id directly; this filter is for Library tab
+        // breadcrumbs and ad-hoc URLs that scope a list to one bundle.
+        bundleId: url.searchParams.get('bundleId') ?? undefined,
         limit: clampLimit(url.searchParams.get('limit')),
         offset: clampOffset(url.searchParams.get('offset')),
       };
@@ -77,7 +98,7 @@ export async function handlePlatformApiRoute(
         mode: filters.mode,
         sourceMode: filters.sourceMode,
         scenarioId: filters.scenarioId,
-        leaderConfigHash: filters.leaderConfigHash,
+        actorConfigHash: filters.actorConfigHash,
         q: filters.q,
       };
       const total = options.runHistoryStore.countRuns
@@ -88,7 +109,7 @@ export async function handlePlatformApiRoute(
         'Content-Type': 'application/json',
         ...options.corsHeaders,
       });
-      res.end(JSON.stringify({ runs, total, hasMore }));
+      res.end(JSON.stringify({ runs: runs.map(publicRunRecord), total, hasMore }));
       return true;
     }
 
@@ -102,7 +123,7 @@ export async function handlePlatformApiRoute(
           : undefined,
         sourceMode: sourceModeParam ? (sourceModeParam as ParacosmServerMode) : undefined,
         scenarioId: url.searchParams.get('scenario') ?? undefined,
-        leaderConfigHash: url.searchParams.get('leader') ?? undefined,
+        actorConfigHash: url.searchParams.get('leader') ?? undefined,
       };
       const stats = options.runHistoryStore.aggregateStats
         ? await options.runHistoryStore.aggregateStats(aggFilters)
@@ -119,16 +140,84 @@ export async function handlePlatformApiRoute(
     const replayMatch = url.pathname.match(/^\/api\/v1\/runs\/([^/]+)\/replay-result$/);
     if (replayMatch && req.method === 'POST') {
       const runId = decodeURIComponent(replayMatch[1]);
-      const body = JSON.parse(await readBody(req)) as { matches: boolean };
+      let body: { matches?: unknown };
+      try {
+        body = JSON.parse(await readBody(req)) as { matches?: unknown };
+      } catch {
+        res.writeHead(400, { 'Content-Type': 'application/json', ...options.corsHeaders });
+        res.end(JSON.stringify({ error: 'invalid_json' }));
+        return true;
+      }
       if (typeof body?.matches !== 'boolean') {
         res.writeHead(400, { 'Content-Type': 'application/json', ...options.corsHeaders });
         res.end(JSON.stringify({ error: 'matches must be a boolean' }));
+        return true;
+      }
+      const record = await options.runHistoryStore.getRun(runId);
+      if (!record) {
+        res.writeHead(404, { 'Content-Type': 'application/json', ...options.corsHeaders });
+        res.end(JSON.stringify({ error: 'not_found', runId }));
         return true;
       }
       await options.runHistoryStore.recordReplayResult?.(runId, body.matches);
       res.writeHead(204, options.corsHeaders);
       res.end();
       return true;
+    }
+
+    // POST /api/v1/runs/:runId/replay — re-execute kernel progression
+    // against the stored artifact and report match/divergence. The
+    // outcome is persisted to the run-history store so the
+    // /api/v1/runs/aggregate counters reflect every attempt.
+    const replayRunMatch = url.pathname.match(/^\/api\/v1\/runs\/([^/]+)\/replay$/);
+    if (replayRunMatch && req.method === 'POST') {
+      const runId = decodeURIComponent(replayRunMatch[1]);
+      const record = await options.runHistoryStore.getRun(runId);
+      if (!record) {
+        res.writeHead(404, { 'Content-Type': 'application/json', ...options.corsHeaders });
+        res.end(JSON.stringify({ error: 'not_found', runId }));
+        return true;
+      }
+      if (!record.artifactPath) {
+        res.writeHead(410, { 'Content-Type': 'application/json', ...options.corsHeaders });
+        res.end(JSON.stringify({ error: 'artifact_unavailable', runId }));
+        return true;
+      }
+
+      let artifact: RunArtifact;
+      try {
+        const fs = await import('node:fs/promises');
+        artifact = JSON.parse(await fs.readFile(record.artifactPath, 'utf-8')) as RunArtifact;
+      } catch {
+        console.warn('[run-history] artifact unreadable for replay:', runId);
+        res.writeHead(410, { 'Content-Type': 'application/json', ...options.corsHeaders });
+        res.end(JSON.stringify({ error: 'artifact_unreadable', runId, message: 'Artifact file unreadable' }));
+        return true;
+      }
+
+      const scenarioId = artifact.metadata.scenario.id;
+      const scenario = options.scenarioLookup(scenarioId);
+      if (!scenario) {
+        res.writeHead(410, { 'Content-Type': 'application/json', ...options.corsHeaders });
+        res.end(JSON.stringify({ error: 'scenario_unavailable', scenarioId }));
+        return true;
+      }
+
+      try {
+        const wm = WorldModel.fromScenario(scenario);
+        const result = await wm.replay(artifact);
+        await options.runHistoryStore.recordReplayResult?.(runId, result.matches);
+        res.writeHead(200, { 'Content-Type': 'application/json', ...options.corsHeaders });
+        res.end(JSON.stringify({ matches: result.matches, divergence: result.divergence }));
+        return true;
+      } catch (err) {
+        if (err instanceof WorldModelReplayError) {
+          res.writeHead(422, { 'Content-Type': 'application/json', ...options.corsHeaders });
+          res.end(JSON.stringify({ error: 'replay_preconditions_unmet', message: err.message }));
+          return true;
+        }
+        throw err;
+      }
     }
 
     // GET /api/v1/runs/:runId — load full RunArtifact via record.artifactPath
@@ -143,20 +232,20 @@ export async function handlePlatformApiRoute(
       }
       if (!record.artifactPath) {
         res.writeHead(410, { 'Content-Type': 'application/json', ...options.corsHeaders });
-        res.end(JSON.stringify({ error: 'artifact_unavailable', record }));
+        res.end(JSON.stringify({ error: 'artifact_unavailable', runId }));
         return true;
       }
       let artifact: unknown;
       try {
         const fs = await import('node:fs/promises');
         artifact = JSON.parse(await fs.readFile(record.artifactPath, 'utf-8'));
-      } catch (err) {
+      } catch {
         res.writeHead(410, { 'Content-Type': 'application/json', ...options.corsHeaders });
-        res.end(JSON.stringify({ error: 'artifact_unreadable', record, message: String(err) }));
+        res.end(JSON.stringify({ error: 'artifact_unreadable', runId, message: 'Artifact file unreadable' }));
         return true;
       }
       res.writeHead(200, { 'Content-Type': 'application/json', ...options.corsHeaders });
-      res.end(JSON.stringify({ record, artifact }));
+      res.end(JSON.stringify({ record: publicRunRecord(record), artifact }));
       return true;
     }
   } catch (error) {

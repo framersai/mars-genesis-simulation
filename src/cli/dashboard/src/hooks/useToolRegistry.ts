@@ -4,7 +4,7 @@ import type { GameState } from './useGameState';
 export interface ToolUseEvent {
   /** Which leader used the tool here (by name, the dedup key across
    *  the SSE event stream). Was `side: 'a' | 'b'` pre-F1. */
-  leaderName: string;
+  actorName: string;
   turn: number;
   time: number;
   eventIndex: number;
@@ -30,7 +30,7 @@ export interface ToolEntry {
   /** All departments that referenced this tool across the run. */
   departments: Set<string>;
   /** Leaders (by name) that referenced it, for divergence display. */
-  leaderNames: Set<string>;
+  actorNames: Set<string>;
   /** Number of times reused after the first forge (across all events). */
   reuseCount: number;
   /** Of the reuses, how many were re-forge attempts (vs pure citations). */
@@ -90,8 +90,8 @@ export function useToolRegistry(state: GameState): ToolRegistry {
     const list: ToolEntry[] = [];
     let next = 1;
 
-    for (const leaderName of state.leaderIds) {
-      const sideState = state.leaders[leaderName];
+    for (const actorName of state.actorIds) {
+      const sideState = state.actors[actorName];
       if (!sideState) continue;
       for (const evt of sideState.events) {
         if (evt.type !== 'specialist_done') continue;
@@ -111,7 +111,7 @@ export function useToolRegistry(state: GameState): ToolRegistry {
               firstForgedTurn: typeof t.firstForgedTurn === 'number' ? (t.firstForgedTurn as number) : (evt.turn ?? 0),
               firstForgedDepartment: String(t.firstForgedDepartment || dept),
               departments: new Set(),
-              leaderNames: new Set(),
+              actorNames: new Set(),
               reuseCount: 0,
               reforgeCount: 0,
               rejectedReforges: 0,
@@ -146,7 +146,7 @@ export function useToolRegistry(state: GameState): ToolRegistry {
             }
           }
           if (dept) entry.departments.add(dept);
-          entry.leaderNames.add(leaderName);
+          entry.actorNames.add(actorName);
 
           const serverHistory = (t.history as Array<{
             turn: number; time: number; eventIndex: number; eventTitle: string;
@@ -154,7 +154,7 @@ export function useToolRegistry(state: GameState): ToolRegistry {
             isReforge: boolean; rejected: boolean; confidence?: number;
           }>) || null;
           if (Array.isArray(serverHistory)) {
-            entry.history = serverHistory.map(h => ({ ...h, leaderName }));
+            entry.history = serverHistory.map(h => ({ ...h, actorName }));
             entry.reuseCount = Math.max(0, serverHistory.length - 1);
             entry.reforgeCount = serverHistory.filter(h => h.isReforge).length;
             entry.rejectedReforges = serverHistory.filter(h => h.isReforge && h.rejected).length;
@@ -170,8 +170,8 @@ export function useToolRegistry(state: GameState): ToolRegistry {
     // those attempts wouldn't land in specialist_done.forgedTools but ARE in
     // the live forge_attempt stream, and users need to see terminal
     // failures in the toolbox to understand what was tried.
-    for (const leaderName of state.leaderIds) {
-      const sideState = state.leaders[leaderName];
+    for (const actorName of state.actorIds) {
+      const sideState = state.actors[actorName];
       if (!sideState) continue;
       for (const evt of sideState.events) {
         if (evt.type !== 'forge_attempt') continue;
@@ -190,7 +190,7 @@ export function useToolRegistry(state: GameState): ToolRegistry {
           departments: new Set<string>(
             typeof d.department === 'string' && d.department ? [d.department] : [],
           ),
-          leaderNames: new Set<string>([leaderName]),
+          actorNames: new Set<string>([actorName]),
           reuseCount: 0,
           reforgeCount: 0,
           rejectedReforges: 1,
@@ -214,7 +214,7 @@ export function useToolRegistry(state: GameState): ToolRegistry {
               rejected: true,
               confidence:
                 typeof d.confidence === 'number' ? (d.confidence as number) : undefined,
-              leaderName,
+              actorName,
             },
           ],
         };

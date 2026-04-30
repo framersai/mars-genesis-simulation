@@ -1,0 +1,94 @@
+{
+  "id": "corporate-quarterly",
+  "labels": {
+    "name": "Q-Scope Corp",
+    "shortName": "corp",
+    "populationNoun": "employees",
+    "settlementNoun": "company",
+    "currency": "USD",
+    "eventNoun": "decisions",
+    "eventNounSingular": "decision",
+    "timeUnitNoun": "quarter",
+    "timeUnitNounPlural": "quarters"
+  },
+  "departments": [
+    {
+      "id": "sales",
+      "label": "Sales",
+      "role": "VP of Sales",
+      "icon": "💼",
+      "defaultModel": "gpt-5.4-mini",
+      "instructions": "You are the VP of Sales. You analyze pipeline coverage, ACV trends, close rates, sales cycle length, and territory productivity. You argue for commission structure and GTM bets that move bookings this quarter while protecting next-quarter pipeline."
+    },
+    {
+      "id": "engineering",
+      "label": "Engineering",
+      "role": "VP of Engineering",
+      "icon": "🛠️",
+      "defaultModel": "gpt-5.4-mini",
+      "instructions": "You are the VP of Engineering. You analyze feature delivery, quality debt, incident load, hiring pipeline, and tooling spend. You flag when a commit deadline forces a cut against quality or headcount."
+    },
+    {
+      "id": "finance",
+      "label": "Finance",
+      "role": "CFO",
+      "icon": "📊",
+      "defaultModel": "gpt-5.4-mini",
+      "instructions": "You are the CFO. You analyze runway, burn, gross margin, unit economics, working capital, and scenarios for the next 4 quarters. Every decision goes through your runway projection before you sign off."
+    },
+    {
+      "id": "hr",
+      "label": "People",
+      "role": "Chief People Officer",
+      "icon": "🧑‍🤝‍🧑",
+      "defaultModel": "gpt-5.4-mini",
+      "instructions": "You are the Chief People Officer. You analyze retention risk, employee engagement, compensation bands, manager load, and culture signal. Every headcount move is weighed against burnout risk and attrition forecast."
+    },
+    {
+      "id": "operations",
+      "label": "Operations",
+      "role": "COO",
+      "icon": "🏭",
+      "defaultModel": "gpt-5.4-mini",
+      "instructions": "You are the COO. You analyze cross-functional throughput, vendor risk, contract exposure, operational efficiency, and the gap between plan and reality across every org. You push back when strategy ignores operating constraints."
+    }
+  ],
+  "metrics": [
+    {
+      "id": "population",
+      "label": "Employees",
+      "source": "metrics.population",
+      "format": "number"
+    },
+    {
+      "id": "morale",
+      "label": "Engagement",
+      "source": "metrics.morale",
+      "format": "percent"
+    },
+    {
+      "id": "revenueArr",
+      "label": "ARR",
+      "source": "metrics.revenueArr",
+      "format": "number"
+    },
+    {
+      "id": "burnRate",
+      "label": "Burn",
+      "source": "metrics.burnRate",
+      "format": "number"
+    },
+    {
+      "id": "runwayMonths",
+      "label": "Runway",
+      "source": "metrics.runwayMonths",
+      "format": "number"
+    },
+    {
+      "id": "marketShare",
+      "label": "Market Share",
+      "source": "metrics.marketShare",
+      "format": "percent"
+    }
+  ]
+}

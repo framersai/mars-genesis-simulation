@@ -1,9 +1,50 @@
 /**
- * Paracosm Engine — public API
+ * Paracosm Engine: public API
  *
  * Closed-state, turn-based settlement simulation engine.
  * Import scenario packages, registries, and core types.
  */
+
+// Built-in trait models register themselves on the singleton
+// registry as a side effect of this import. Done at the top of the
+// engine barrel so any consumer that touches paracosm has hexaco +
+// ai-agent available without explicit registration calls.
+import './trait-models/builtins.js';
+
+export {
+  TraitModelRegistry,
+  traitModelRegistry,
+  UnknownTraitModelError,
+  clampTrait,
+  traitZone,
+  withDefaults,
+} from './trait-models/index.js';
+export type {
+  TraitModel,
+  TraitProfile,
+  TraitAxis,
+  CueZone,
+  DriftTable,
+  Outcome,
+} from './trait-models/index.js';
+export { hexacoModel } from './trait-models/hexaco.js';
+export { aiAgentModel } from './trait-models/ai-agent.js';
+export { buildCueLine, pickCues, axisIntensities } from './trait-models/cue-translator.js';
+export {
+  applyOutcomeDrift,
+  applyLeaderPull,
+  applyRoleActivation,
+  driftLeaderProfile,
+} from './trait-models/drift.js';
+export {
+  normalizeActorConfig,
+  hexacoToTraits,
+  traitsToHexaco,
+} from './trait-models/normalize-leader.js';
+export type {
+  NormalizedActorConfig,
+  NormalizeOptions,
+} from './trait-models/normalize-leader.js';
 
 // Type system
 export type {
@@ -53,7 +94,15 @@ export type {
 export type { KeyPersonnel } from './core/agent-generator.js';
 export type { SystemsPatch, PolicyEffect, SimulationInitOverrides } from './core/kernel.js';
 export type { HexacoSnapshot, LifeEvent } from './core/state.js';
-export type { LeaderConfig, LlmProvider, SimulationModelConfig, Scenario, EventOptionDef, MilestoneEventDef, TurnOutcomeType } from './types.js';
+export type {
+  ActorConfig,
+  LlmProvider,
+  SimulationModelConfig,
+  Scenario,
+  EventOptionDef,
+  MilestoneEventDef,
+  TurnOutcomeType,
+} from './types.js';
 
 // Registry types
 export type { ScenarioMetric } from './mars/metrics.js';

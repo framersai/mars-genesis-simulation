@@ -19,6 +19,7 @@ import { RecentlyViewedStrip } from './RecentlyViewedStrip.js';
 import { RunGallery } from './RunGallery.js';
 import { RunTable } from './RunTable.js';
 import { RunDetailDrawer } from './RunDetailDrawer.js';
+import { CompareModal } from '../compare/CompareModal.js';
 import { EmptyState } from './EmptyState.js';
 
 export function LibraryTab(): JSX.Element {
@@ -42,12 +43,26 @@ export function LibraryTab(): JSX.Element {
     return new URLSearchParams(window.location.search).get('runId');
   });
 
+  // Compare-runs UI: opening a bundle card slides the CompareModal over
+  // the LibraryTab. Bundle id lives in the URL alongside `runId` so the
+  // page is shareable / restorable.
+  const [compareBundleId, setCompareBundleId] = React.useState<string | null>(() => {
+    return new URLSearchParams(window.location.search).get('bundleId');
+  });
+
   React.useEffect(() => {
     const url = new URL(window.location.href);
     if (selectedRunId) url.searchParams.set('runId', selectedRunId);
     else url.searchParams.delete('runId');
     window.history.replaceState({}, '', url.toString());
   }, [selectedRunId]);
+
+  React.useEffect(() => {
+    const url = new URL(window.location.href);
+    if (compareBundleId) url.searchParams.set('bundleId', compareBundleId);
+    else url.searchParams.delete('bundleId');
+    window.history.replaceState({}, '', url.toString());
+  }, [compareBundleId]);
 
   // Build scenario + leader option lists from the current page of runs.
   // De-duplicated; populated as the user browses.
@@ -60,9 +75,9 @@ export function LibraryTab(): JSX.Element {
   const leaderOptions = React.useMemo(() => {
     const map = new Map<string, string>();
     runs.forEach(r => {
-      if (r.leaderConfigHash) {
-        const label = r.leaderName ? `${r.leaderName} (${r.leaderConfigHash.slice(0, 12)})` : r.leaderConfigHash.slice(0, 16);
-        map.set(r.leaderConfigHash, label);
+      if (r.actorConfigHash) {
+        const label = r.actorName ? `${r.actorName} (${r.actorConfigHash.slice(0, 12)})` : r.actorConfigHash.slice(0, 16);
+        map.set(r.actorConfigHash, label);
       }
     });
     return [...map.entries()].map(([hash, label]) => ({ hash, label })).sort((a, b) => a.label.localeCompare(b.label));
@@ -79,7 +94,7 @@ export function LibraryTab(): JSX.Element {
     onClose: () => setSelectedRunId(null),
   });
 
-  const filtersActive = Boolean(filters.q || filters.mode || filters.scenarioId || filters.leaderConfigHash);
+  const filtersActive = Boolean(filters.q || filters.mode || filters.scenarioId || filters.actorConfigHash);
 
   return (
     <div className={styles.tab}>
@@ -100,7 +115,7 @@ export function LibraryTab(): JSX.Element {
       </header>
 
       <HeroStatsStrip
-        filters={{ mode: filters.mode, scenario: filters.scenarioId, leader: filters.leaderConfigHash }}
+        filters={{ mode: filters.mode, scenario: filters.scenarioId, leader: filters.actorConfigHash }}
       />
 
       <SearchBar
@@ -132,6 +147,7 @@ export function LibraryTab(): JSX.Element {
           loading={loading}
           onOpen={(runId) => setSelectedRunId(runId)}
           onReplay={(runId) => setSelectedRunId(runId)}
+          onOpenBundle={(bundleId) => setCompareBundleId(bundleId)}
           currentOffset={filters.offset ?? 0}
           pageSize={filters.limit ?? 24}
           onPageChange={(offset) => setFilters({ ...filters, offset })}
@@ -150,6 +166,16 @@ export function LibraryTab(): JSX.Element {
         onClose={() => setSelectedRunId(null)}
         onArtifactLoaded={pushRecent}
       />
+
+      {/* CompareModal mounts above the LibraryTab when a bundle is
+          opened. It is its own dialog with backdrop + Esc handling. */}
+      {compareBundleId && (
+        <CompareModal
+          bundleId={compareBundleId}
+          open
+          onClose={() => setCompareBundleId(null)}
+        />
+      )}
 
       {/* Touch recentRecords so React tracks it for the strip. */}
       <span hidden aria-hidden="true">{recentRecords.length}</span>

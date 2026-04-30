@@ -41,8 +41,8 @@ interface LivingSwarmGridProps {
   previousSnapshot?: TurnSnapshot | undefined;
   /** Full snapshot history for this side; enables recent-memory lookup. */
   snapshotHistory?: TurnSnapshot[];
-  leaderName: string;
-  leaderArchetype: string;
+  actorName: string;
+  actorArchetype: string;
   leaderUnit?: string;
   /** First time of the scenario for HUD "Yr N" readout. */
   startTime?: number;
@@ -136,8 +136,8 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
     snapshot,
     previousSnapshot,
     snapshotHistory,
-    leaderName,
-    leaderArchetype,
+    actorName,
+    actorArchetype,
     startTime,
     sideColor,
     side,
@@ -524,8 +524,8 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
       );
     }
     drawHud(ctx, snapshot, {
-      leaderName,
-      leaderArchetype,
+      actorName,
+      actorArchetype,
       startTime,
       sideColor: resolvedSide,
       width: size.w,
@@ -625,7 +625,7 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
     size.w,
     size.h,
     sideColor,
-    leaderName,
+    actorName,
     lagTurns,
     gridState.flares,
     mode,
@@ -637,7 +637,7 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
     searchQuery,
     cursor,
     settings,
-    leaderArchetype,
+    actorArchetype,
     startTime,
     forgeAttempts,
     eventFilter,
@@ -804,7 +804,7 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
       ref={containerRef}
       data-testid={`living-colony-grid-${side}`}
       role="region"
-      aria-label={`${leaderName} ${scenarioLabels.place} viz`}
+      aria-label={`${actorName} ${scenarioLabels.place} viz`}
       style={{
         flex: narrow ? '0 0 auto' : 1,
         display: 'flex',
@@ -874,8 +874,8 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
           role="img"
           aria-label={
             snapshot
-              ? `${leaderName} ${scenarioLabels.place}, turn ${snapshot.turn}. ${snapshot.cells.filter(c => c.alive).length} alive, morale ${Math.round(snapshot.morale * 100)}%, food reserve ${snapshot.foodReserve.toFixed(1)} months. ${snapshot.births} births, ${snapshot.deaths} deaths this turn. Click a ${scenarioLabels.person} glyph for drilldown.`
-              : `${leaderName} ${scenarioLabels.place} — waiting for first turn.`
+              ? `${actorName} ${scenarioLabels.place}, turn ${snapshot.turn}. ${snapshot.cells.filter(c => c.alive).length} alive, morale ${Math.round(snapshot.morale * 100)}%, food reserve ${snapshot.foodReserve.toFixed(1)} months. ${snapshot.births} births, ${snapshot.deaths} deaths this turn. Click a ${scenarioLabels.person} glyph for drilldown.`
+              : `${actorName} ${scenarioLabels.place} — waiting for first turn.`
           }
           onMouseMove={onMouseMove}
           onMouseLeave={onMouseLeave}
@@ -979,7 +979,7 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
         <RosterDrawer
           open={rosterOpen}
           cells={snapshot?.cells ?? []}
-          leaderName={leaderName}
+          actorName={actorName}
           sideColor={resolveCssColor(sideColor, containerRef.current)}
           searchQuery={searchQuery}
           hoveredId={hovered?.cell.agentId ?? siblingHoveredId ?? null}

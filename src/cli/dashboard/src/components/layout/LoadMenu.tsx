@@ -12,12 +12,10 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSessions, type StoredSessionMeta } from '../../hooks/useSessions';
-import { resolveSetupRedirectHref } from '../../tab-routing';
 import {
   formatExplicit,
   shouldShowCacheRow,
   cacheExpandedBody,
-  buildReplayHref,
 } from './LoadMenu.helpers';
 import styles from './LoadMenu.module.scss';
 
@@ -56,10 +54,10 @@ function Card({ s, onPick }: { s: StoredSessionMeta; onPick: () => void }) {
     ? `${s.leaderA} vs ${s.leaderB}${s.scenarioName ? ` · ${s.scenarioName}` : ''}`
     : s.scenarioName || 'Simulation Run';
   const title = s.title || s.scenarioName || deterministicTitle;
-  const leaders = s.leaderA && s.leaderB ? `${s.leaderA} vs ${s.leaderB}` : '';
+  const actors = s.leaderA && s.leaderB ? `${s.leaderA} vs ${s.leaderB}` : '';
   const scenarioSub = s.title && s.scenarioName ? s.scenarioName : '';
   const turns = s.turnCount != null ? `${s.turnCount} turn${s.turnCount === 1 ? '' : 's'}` : '';
-  const line2 = [leaders, scenarioSub, turns].filter(Boolean).join(' · ');
+  const line2 = [actors, scenarioSub, turns].filter(Boolean).join(' · ');
   const line3 = `${formatExplicit(s.createdAt)} (${formatRelative(s.createdAt)}) · ${formatDuration(s.durationMs)} · ${formatCost(s.totalCostUSD)}`;
   return (
     <button
@@ -118,8 +116,15 @@ export function LoadMenu(props: LoadMenuProps) {
   };
 
   const handlePick = (id: string) => {
-    const href = buildReplayHref(window.location.href, id);
-    window.location.assign(resolveSetupRedirectHref(href, 'sim'));
+    // See LoadPriorRunsCTA for the full backstory: resolveSetupRedirectHref
+    // is for server /setup redirect paths and rebuilds the URL from the
+    // redirect path arg, dropping the ?replay query buildReplayHref just
+    // appended. Set both params on the current URL directly instead.
+    const url = new URL(window.location.href);
+    url.searchParams.set('replay', id);
+    url.searchParams.set('tab', 'sim');
+    url.hash = '';
+    window.location.assign(url.toString());
   };
 
   const body = cacheExpandedBody(status, sessions);
