@@ -368,9 +368,28 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
   // (/opt/paracosm); dev runs default to `.` so the cache file lands
   // next to the project root.
   const rateLimitStatePath = resolve(env.APP_DIR || '.', '.rate-limit.json');
+  // Per-IP /chat cap (hourly). Each chat fires a 1k-2k token LLM call
+  // against the host key — 30 messages/hr is enough for a real user
+  // exploring colonist conversations, well under host-budget noise.
+  // Override with CHAT_RATE_LIMIT env var if a local fork wants more.
+  const chatPerHour = parseInt(env.CHAT_RATE_LIMIT || '30', 10);
+  // Global /chat cap (hourly, across all IPs). Defends against IP
+  // rotation: even if an attacker burns a fresh per-IP quota every
+  // request via a proxy pool, they can't exceed the aggregate budget
+  // for the host's chat traffic. 500/hr ≈ $1-2 worst-case host spend
+  // per hour. Override via CHAT_RATE_LIMIT_GLOBAL.
+  const chatGlobalPerHour = parseInt(env.CHAT_RATE_LIMIT_GLOBAL || '500', 10);
   const rateLimiter = maxSims > 0
-    ? new IpRateLimiter(maxSims, 5, 200, rateLimitStatePath)
+    ? new IpRateLimiter(maxSims, 5, chatPerHour, rateLimitStatePath, chatGlobalPerHour)
     : null;
+
+  // Concurrent-/chat limiter: hard cap on in-flight LLM calls. Stops
+  // a burst of N parallel POSTs from spawning N parallel LLM calls
+  // before any per-IP / global counter has had a chance to throw.
+  // Excess requests get a 429 (clients can retry); we don't queue
+  // because long queues hide the back-pressure from clients.
+  const chatConcurrencyCap = parseInt(env.CHAT_CONCURRENCY || '4', 10);
+  let chatInflight = 0;
 
   // Output retention: sweep simulation output JSON older than
   // OUTPUT_RETENTION_DAYS on boot. /opt/paracosm/output/ otherwise
@@ -1466,12 +1485,46 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
     // Rate limit status endpoint
     // Post-simulation colonist chat
     if (req.url === '/chat' && req.method === 'POST') {
+      let inflightSlot = false;
       try {
-        const { agentId, message, apiKey, anthropicKey } = JSON.parse(await readBody(req, maxRequestBodyBytes));
+        const parsed = JSON.parse(await readBody(req, maxRequestBodyBytes));
+        const { agentId, message, history, apiKey, anthropicKey } = parsed;
         if (!agentId || !message) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'agentId and message required' }));
           return;
+        }
+        // Hard caps on attacker-controlled inputs. Each /chat fires a
+        // multi-thousand-token LLM call against the host's API key, so
+        // unchecked message + history bytes are a direct cost-drain
+        // vector (one POST with 100KB of crafted history is a 25k+
+        // token call). Buckets are conservative — real human chats are
+        // a few hundred bytes; a 4KB cap on the live message and 32KB
+        // on cumulative history covers any real conversation.
+        const MAX_MESSAGE_BYTES = 4_096;
+        const MAX_HISTORY_BYTES = 32_768;
+        const MAX_HISTORY_TURNS = 32;
+        const messageBytes = Buffer.byteLength(String(message), 'utf-8');
+        if (messageBytes > MAX_MESSAGE_BYTES) {
+          res.writeHead(413, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: `message exceeds ${MAX_MESSAGE_BYTES} bytes (got ${messageBytes})` }));
+          return;
+        }
+        if (Array.isArray(history)) {
+          if (history.length > MAX_HISTORY_TURNS) {
+            res.writeHead(413, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: `history exceeds ${MAX_HISTORY_TURNS} turns (got ${history.length})` }));
+            return;
+          }
+          let total = 0;
+          for (const h of history) {
+            total += Buffer.byteLength(String(h?.content ?? ''), 'utf-8');
+            if (total > MAX_HISTORY_BYTES) {
+              res.writeHead(413, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: `history exceeds ${MAX_HISTORY_BYTES} bytes (cumulative content)` }));
+              return;
+            }
+          }
         }
 
         const chatCredentials = {
@@ -1486,6 +1539,19 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         // (same contract as /setup and /compile). 200/hour leaves
         // plenty of headroom for real host-billed users exploring
         // colonist conversations.
+        // Concurrency cap: rejects bursts before they can spawn N
+        // parallel LLM calls in flight. Applies even to user-keyed
+        // requests because a single laptop spamming requests with a
+        // valid key still hammers the server's outbound connection
+        // pool and the LLM provider's rate limit.
+        if (chatInflight >= chatConcurrencyCap) {
+          res.writeHead(429, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            error: 'Too many concurrent chat requests. Try again in a moment.',
+          }));
+          return;
+        }
+
         if (rateLimiter && !chatUserKey) {
           const ip = IpRateLimiter.getIp(req);
           const { allowed, remaining, resetAt, limit } = rateLimiter.consumeChat(ip);
@@ -1504,12 +1570,12 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
             }));
             return;
           }
-          if (remaining < 20) {
-            // Warn in logs when a user is nearing the cap; helps diagnose
-            // legit-user complaints from actual abuse.
+          if (remaining < 5) {
             console.log(`  [rate-limit] /chat ${ip}: ${remaining} remaining of ${limit}`);
           }
         }
+        chatInflight++;
+        inflightSlot = true;
 
         // The chat route builds agents from the event buffer. If the
         // buffer was lost (fresh boot with no persisted snapshot on disk,
@@ -1597,6 +1663,12 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         }));
       } catch (err) {
         writeJsonError(res, err, 500);
+      } finally {
+        // Only release if THIS request actually claimed a slot.
+        // Early-return paths (validation failures, rate-limit 429s)
+        // exit before chatInflight++, so we'd otherwise decrement
+        // somebody else's slot.
+        if (inflightSlot) chatInflight--;
       }
       return;
     }
