@@ -466,19 +466,20 @@ const SPEED_B = 12.0;
 console.log(`[e2e] ffmpeg -> hero mp4: ${heroOut}`);
 console.log(`  segments: A ${A_START_S.toFixed(1)}..${aEnd.toFixed(1)}s 1×, B ${aEnd.toFixed(1)}..${bEnd?.toFixed(1) ?? '∞'}s ${SPEED_B}×, C ${bEnd?.toFixed(1) ?? '?'}s..end 1×`);
 // drawtext caption stays inside the B trim window so it does not bleed
-// into A or C frames after the concat. Box + opaque background so it
-// reads cleanly over both light + dark UI states the dashboard cycles
-// through during the compile spinner.
+// into A or C frames after the concat. Amber-on-black to match the
+// digital-twin demo's caption styling — both heroes now read as a
+// matched pair on the landing page instead of one white / one yellow.
 const caption = `Compile + 3 parallel sims · ${SPEED_B}× speed`;
 const drawtext = (
   `drawtext=` +
   `text='${caption}'` +
-  `:fontcolor=white` +
-  `:fontsize=22` +
-  `:font='Helvetica'` +
+  `:fontcolor=#ffd970` +
+  `:fontsize=20` +
+  `:font='Helvetica-Bold'` +
+  `:shadowcolor=black:shadowx=0:shadowy=2` +
   `:x=(w-tw)/2` +
   `:y=h-72` +
-  `:box=1:boxcolor=black@0.65:boxborderw=14`
+  `:box=1:boxcolor=black@0.95:boxborderw=22`
 );
 const filterGraph = bEnd
   ? (
