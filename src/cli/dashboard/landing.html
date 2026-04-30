@@ -18,6 +18,21 @@
 <meta name="twitter:title" content="Paracosm: Structured World Model for AI Agents">
 <meta name="twitter:description" content="Open-source structured world model. Prompt/document/URL-grounded ScenarioPackages, deterministic kernel, HEXACO leaders, runtime tool forging, reproducible counterfactual simulations.">
 <meta name="theme-color" content="#0a0806">
+<script>
+  // Apply saved theme BEFORE first paint to kill the dark-then-light
+  // (or light-then-dark) flash. Must be a synchronous inline script in
+  // the <head>; defer / module / external would all paint the dark
+  // default first. Mirrors the applyTheme() logic at the bottom of
+  // the page; that script still runs and rebinds the toggle button
+  // but the html.light class is already correct by the time anything
+  // renders.
+  (function () {
+    try {
+      var t = localStorage.getItem('paracosm-theme') || 'dark';
+      if (t === 'light') document.documentElement.classList.add('light');
+    } catch (e) {}
+  })();
+</script>
 <link rel="icon" href="/favicon.png" sizes="32x32">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicons/favicon-32.png">
