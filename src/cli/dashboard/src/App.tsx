@@ -163,8 +163,17 @@ function AppContent() {
 
   // When tour is active, use demo events; otherwise use live SSE events.
   // Event Log pin-to-bottom scroll logic lives inside EventLogPanel.
-  const effectiveEvents = tourActive ? DEMO_EVENTS : sse.events;
-  const effectiveComplete = tourActive ? true : sse.isComplete;
+  // Tour data swap. The tour ships with DEMO_EVENTS so first-time
+  // visitors with no run loaded see realistic content while the
+  // highlight walks through tabs. BUT — if the user already has real
+  // events in flight (their own Quickstart run, a loaded Library
+  // bundle, an in-progress sim), swapping to demo data on tour start
+  // would visibly trash everything they had on screen. Keep their
+  // data instead; the tour copy describes UI structure either way,
+  // and the structure is the same regardless of whose data fills it.
+  const useDemoData = tourActive && sse.events.length === 0;
+  const effectiveEvents = useDemoData ? DEMO_EVENTS : sse.events;
+  const effectiveComplete = useDemoData ? true : sse.isComplete;
   const gameState = useGameState(effectiveEvents, effectiveComplete);
 
   // Forge-attempt toast pipeline (sessionStorage + watermark + toasted-key
@@ -370,10 +379,19 @@ function AppContent() {
   // launch-stalled, rate-limited, and simulation errors. The server's
   // `replay_done` SSE marker stays in place for future transient UX.
 
+  // Where the user was looking before the tour took over. Captured at
+  // tour-start time and restored at tour-end time so manually clicking
+  // HOW IT WORKS from (e.g.) Reports doesn't dump the user back on Sim
+  // when the tour finishes.
+  const preTourTabRef = useRef<DashboardTab | null>(null);
   const handleTourStart = useCallback(() => {
+    preTourTabRef.current = activeTab;
     setTourActive(true);
-    setActiveTab('sim');
-  }, [setActiveTab]);
+    // The tour's first step calls onTabChange('quickstart') itself, so
+    // there's no need to force-route through 'sim' here. Skipping that
+    // intermediate hop removes a wasted re-render of SimView (which is
+    // expensive when real run data is loaded).
+  }, [activeTab]);
 
   // Auto-start the GuidedTour on the user's FIRST visit to the sim
   // page so new viewers get oriented without having to find the
@@ -414,8 +432,10 @@ function AppContent() {
       if (currentTab !== 'quickstart') {
         return;
       }
+      preTourTabRef.current = currentTab;
       setTourActive(true);
-      setActiveTab('sim');
+      // The tour's first step is already 'quickstart' — no need to
+      // force-route through 'sim' before the tour takes over.
     }, 600);
     return () => clearTimeout(timer);
     // Run exactly once on mount.
@@ -433,7 +453,15 @@ function AppContent() {
 
   const handleTourEnd = useCallback(() => {
     setTourActive(false);
-    setActiveTab('sim');
+    // Restore the tab the user was on before the tour started, so
+    // someone who clicked HOW IT WORKS from Reports / Library / etc.
+    // returns there instead of being dumped on Sim. Falls back to
+    // whatever the tour was last on if we never captured a pre-tour
+    // tab (e.g., auto-start path).
+    if (preTourTabRef.current) {
+      setActiveTab(preTourTabRef.current);
+      preTourTabRef.current = null;
+    }
     // Mark the tour as seen so the auto-start useEffect above
     // stops re-firing on every mount. Fires on both finish-flow
     // and skip — either path means the user has been exposed to
