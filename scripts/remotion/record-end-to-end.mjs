@@ -87,21 +87,45 @@ page.on('console', (m) => {
 });
 
 // Pre-seed the tour-seen flag so the onboarding tour does not auto-
-// start. Without this, App.tsx fires `setActiveTab('sim')` 600ms
-// after mount on the quickstart tab, clobbering the form we want to
-// fill. The exact key is `paracosm:tourSeen=1` (App.tsx:309); the
-// other keys are belt-and-suspenders for older builds and
-// dev-only test harnesses.
+// start. Also wipe any prior paracosm:* localStorage so the verdict
+// banner from a previous run does not bleed into the new recording.
+// Earlier recordings showed a stale verdict notification at the top
+// of the dashboard because App.tsx rehydrated cached events from
+// localStorage on cold load.
 await page.addInitScript(() => {
   try {
+    // Clear every paracosm:* key so cached events / verdicts /
+    // history / cost from prior sessions can't leak in.
+    const toRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('paracosm')) toRemove.push(k);
+    }
+    toRemove.forEach((k) => localStorage.removeItem(k));
+    sessionStorage.clear();
+    // Pre-seed the tour-seen flag so the onboarding tour does not
+    // auto-start (it sets activeTab='sim' 600ms after mount, which
+    // clobbers the Quickstart form we want to fill).
     localStorage.setItem('paracosm:tourSeen', '1');
     const legacy = ['paracosm.tour.seen', 'tour.seen', 'tour-completed', 'paracosm.onboarding.dismissed'];
-    legacy.forEach(k => localStorage.setItem(k, 'true'));
+    legacy.forEach((k) => localStorage.setItem(k, 'true'));
   } catch {}
 });
 
 console.log(`[e2e] -> ${HOST}/sim?tab=quickstart`);
 await page.goto(`${HOST}/sim?tab=quickstart`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+
+// Server-side state wipe: clear the SSE event buffer + the live
+// gameState so the verdict banner from the prior run doesn't appear.
+// /clear is unauthenticated; admin/data/wipe needs the token (we don't
+// have it here). Best-effort — a 404 or 403 is fine, the localStorage
+// clear above already kills the client-side rehydration path.
+try {
+  await page.evaluate(async () => {
+    try { await fetch('/clear', { method: 'POST' }); } catch {}
+  });
+} catch {}
+
 await page.waitForTimeout(2000);
 
 async function killTour() {
@@ -140,23 +164,23 @@ await killTour();
 const seg = { promptDoneMs: 0, submitClickedMs: 0, resultsAppearedMs: 0 };
 const since = () => Date.now() - ctxCreationMs;
 
-console.log('[e2e] focus seed textarea + fill prompt');
+console.log('[e2e] focus seed textarea + type prompt');
 // Target the SeedInput's textarea explicitly via data-quickstart-seed.
-// `textarea.first()` used to work, but the dt card now sits ABOVE
-// SeedInput in QuickstartView and its case-input textarea matches
-// .first() instead, leaving the seed input empty and the Generate
-// button disabled.
+// `textarea.first()` used to match this; that broke after the dt
+// card moved into the Quickstart panel. The data-attribute is
+// stable across both layouts.
 const seedTextarea = page.locator('textarea[data-quickstart-seed]').first();
 await seedTextarea.waitFor({ state: 'visible', timeout: 8000 });
 await seedTextarea.click();
-// `fill` paints the prompt in one frame instead of streaming
-// keystrokes through React state on every char. Slow `type` runs hit
-// a 30 s playwright timeout when the seedText length counter re-renders
-// the parent on every keystroke during the 5+ s of typing. Visually
-// the prompt now appears in one beat and stays on screen for the
-// 5 s read-hold below — more readable than a fast typed-out wall of
-// text and more reliable than the streaming variant.
-await seedTextarea.fill(ATLAS_PROMPT);
+// keyboard.type() with 25ms delay matches the dt recorder's typing
+// rhythm so the e2e top hero reads as real input being entered, not a
+// pre-loaded paste. Earlier we used .fill() to dodge a Playwright
+// timeout under .type — the timeout was caused by the recorder's
+// default 30s action timeout when the seedText length counter
+// triggered React re-renders on every char. We bump the action
+// timeout below to 60s to give the typing room.
+page.setDefaultTimeout(60_000);
+await page.keyboard.type(ATLAS_PROMPT, { delay: 25 });
 seg.promptDoneMs = since();
 // Hold the typed prompt for 5 s so a viewer can read it before the
 // form submits and the compile spinner takes over.
