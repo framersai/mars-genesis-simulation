@@ -187,6 +187,8 @@ export function GuidedTour({ onTabChange, onClose, onRun }: GuidedTourProps) {
   const measure = useCallback(() => {
     const s = TOUR_STEPS[step];
     if (!s) return;
+    // eslint-disable-next-line no-console
+    console.log('[tour] step', step, '→ tab', s.tab, '· target', s.target);
     onTabChange(s.tab);
 
     cancelAnimationFrame(rafRef.current);
@@ -197,6 +199,8 @@ export function GuidedTour({ onTabChange, onClose, onRun }: GuidedTourProps) {
       const tryFind = () => {
         const el = document.querySelector(s.target);
         if (el) {
+          // eslint-disable-next-line no-console
+          console.log('[tour] step', step, 'found target after', attempt, 'retries');
           if (prevElRef.current && prevElRef.current !== el) {
             prevElRef.current.classList.remove(HIGHLIGHT_CLASS);
           }
@@ -212,9 +216,8 @@ export function GuidedTour({ onTabChange, onClose, onRun }: GuidedTourProps) {
         if (++attempt < MAX_ATTEMPTS) {
           setTimeout(tryFind, POLL_MS);
         } else {
-          // Target never showed up. Drop the prior highlight (next
-          // step's content won't have it anyway) and fall back to the
-          // bottom-right card position.
+          // eslint-disable-next-line no-console
+          console.warn('[tour] step', step, 'target not found after', MAX_ATTEMPTS, 'retries — falling back to bottom-right card');
           if (prevElRef.current) {
             prevElRef.current.classList.remove(HIGHLIGHT_CLASS);
             prevElRef.current = null;
