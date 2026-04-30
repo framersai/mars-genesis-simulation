@@ -1,14 +1,17 @@
+// Type scale: 11 (micro/labels) · 12 (legend) · 13 (title, copy, inputs).
+// Mono-uppercase for chrome (labels, legends, badges). Sans for content.
+
 .card {
-  max-width: 880px;
+  max-width: 920px;
   margin: 16px auto 0;
   width: 100%;
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 18px 20px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   font-family: var(--sans);
 }
 
@@ -24,7 +27,8 @@
   color: var(--amber);
   font-family: var(--mono);
   font-size: 13px;
-  letter-spacing: 1px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   margin: 0;
 }
@@ -32,15 +36,15 @@
 .eyebrow {
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 1px;
   text-transform: uppercase;
 }
 
 .copy {
   color: var(--text-2);
-  font-size: 12.5px;
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.6;
   margin: 0;
 }
 
@@ -49,7 +53,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: var(--bg-card);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-sm);
@@ -58,7 +62,7 @@
 .presetLabel {
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 1px;
   text-transform: uppercase;
   margin-right: 4px;
@@ -117,8 +121,8 @@
 
 .presetBlurb {
   color: var(--text-3);
-  font-size: 11.5px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.55;
   margin: -4px 0 0;
   font-style: italic;
 }
@@ -126,9 +130,11 @@
 .formGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 14px;
 
-  @media (max-width: 720px) {
+  // Two-column needs ~440px per column for placeholders to breathe;
+  // collapse to single column under 960px so nothing runs into nothing.
+  @media (max-width: 960px) {
     grid-template-columns: 1fr;
   }
 }
@@ -137,10 +143,10 @@
   background: var(--bg-card);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-sm);
-  padding: 12px 14px 14px;
+  padding: 14px 16px 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   margin: 0;
   min-width: 0;
 
@@ -152,17 +158,18 @@
 .formLegend {
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 1px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
-  padding: 0 6px;
-  margin-left: -6px;
+  padding: 0 8px;
+  margin-left: -8px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .fieldRow {
@@ -179,20 +186,21 @@
 .fieldLabel {
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.5px;
+  font-size: 11px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
 }
 
 .input {
   width: 100%;
-  background: var(--bg-panel);
+  background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 8px 10px;
+  padding: 9px 11px;
   color: var(--text-1);
   font-family: var(--sans);
-  font-size: 12.5px;
+  font-size: 13px;
+  line-height: 1.4;
   outline: none;
   transition: border-color 0.15s ease;
 
@@ -201,21 +209,21 @@
   }
 
   &::placeholder {
-    color: var(--text-3);
-    opacity: 0.7;
+    color: var(--text-4);
+    opacity: 0.85;
   }
 }
 
 .textarea {
   width: 100%;
-  background: var(--bg-panel);
+  background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 8px 10px;
+  padding: 9px 11px;
   color: var(--text-1);
   font-family: var(--sans);
-  font-size: 12.5px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.55;
   resize: vertical;
   min-height: 64px;
   outline: none;
@@ -226,33 +234,33 @@
   }
 
   &::placeholder {
-    color: var(--text-3);
-    opacity: 0.7;
+    color: var(--text-4);
+    opacity: 0.85;
   }
 }
 
 .mono {
   font-family: var(--mono);
-  font-size: 11.5px;
+  font-size: 12px;
 }
 
 .actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   flex-wrap: wrap;
   padding-top: 4px;
 }
 
 .button {
   background: var(--amber);
-  color: #1a1a1a;
+  color: var(--text-contrast);
   font-family: var(--mono);
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
-  padding: 10px 18px;
+  padding: 11px 20px;
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -271,7 +279,7 @@
 .helper {
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: 11px;
 }
 
 .spinner {

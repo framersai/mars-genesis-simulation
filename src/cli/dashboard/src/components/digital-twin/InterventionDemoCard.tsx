@@ -321,7 +321,7 @@ export function InterventionDemoCard({ onResult, onError, onRunStart }: Interven
               type="text"
               value={subject.id}
               onChange={(e) => setSubject((s) => ({ ...s, id: e.target.value }))}
-              placeholder="e.g. patient-001 or city-portland"
+              placeholder="patient-001"
               className={styles.input}
             />
           </label>
@@ -331,7 +331,7 @@ export function InterventionDemoCard({ onResult, onError, onRunStart }: Interven
               type="text"
               value={subject.name}
               onChange={(e) => setSubject((s) => ({ ...s, name: e.target.value }))}
-              placeholder="e.g. Maria Chen or Portland Metro"
+              placeholder="Maria Chen"
               className={styles.input}
             />
           </label>
@@ -340,7 +340,7 @@ export function InterventionDemoCard({ onResult, onError, onRunStart }: Interven
             <textarea
               value={subject.description}
               onChange={(e) => setSubject((s) => ({ ...s, description: e.target.value }))}
-              placeholder="One or two lines describing the subject (age, key attributes, baseline state)."
+              placeholder="Age, key attributes, baseline state."
               className={styles.textarea}
               rows={3}
             />
@@ -350,7 +350,7 @@ export function InterventionDemoCard({ onResult, onError, onRunStart }: Interven
             <textarea
               value={subject.profileJson}
               onChange={(e) => setSubject((s) => ({ ...s, profileJson: e.target.value }))}
-              placeholder='{"age": 58, "bmi": 31, ...}'
+              placeholder='{"age": 58, "bmi": 31}'
               className={`${styles.textarea} ${styles.mono}`}
               rows={5}
               spellCheck={false}
@@ -361,7 +361,7 @@ export function InterventionDemoCard({ onResult, onError, onRunStart }: Interven
             <textarea
               value={signalsJson}
               onChange={(e) => setSignalsJson(e.target.value)}
-              placeholder='[{"label": "HbA1c", "value": 7.8, "unit": "%", "recordedAt": "2026-09-15T00:00:00Z"}]'
+              placeholder='[{"label":"HbA1c","value":7.8,"unit":"%"}]'
               className={`${styles.textarea} ${styles.mono}`}
               rows={4}
               spellCheck={false}
@@ -377,7 +377,7 @@ export function InterventionDemoCard({ onResult, onError, onRunStart }: Interven
               type="text"
               value={intervention.id}
               onChange={(e) => setIntervention((iv) => ({ ...iv, id: e.target.value }))}
-              placeholder="e.g. semaglutide-12wk or congestion-pricing-pilot"
+              placeholder="semaglutide-12wk"
               className={styles.input}
             />
           </label>
@@ -387,7 +387,7 @@ export function InterventionDemoCard({ onResult, onError, onRunStart }: Interven
               type="text"
               value={intervention.name}
               onChange={(e) => setIntervention((iv) => ({ ...iv, name: e.target.value }))}
-              placeholder="Short label for the intervention"
+              placeholder="12-week semaglutide protocol"
               className={styles.input}
             />
           </label>
@@ -396,7 +396,7 @@ export function InterventionDemoCard({ onResult, onError, onRunStart }: Interven
             <textarea
               value={intervention.description}
               onChange={(e) => setIntervention((iv) => ({ ...iv, description: e.target.value }))}
-              placeholder="What is being applied, how, by whom, with what monitoring."
+              placeholder="What is being applied, by whom, with what monitoring."
               className={styles.textarea}
               rows={5}
             />
