@@ -8,6 +8,7 @@
 import * as React from 'react';
 import styles from './StudioTab.module.scss';
 import { StudioDropZone } from './StudioDropZone.js';
+import { StudioGuide } from './StudioGuide.js';
 import { StudioArtifactView } from './StudioArtifactView.js';
 import { StudioBundleView } from './StudioBundleView.js';
 import { useStudioPromote, type PromoteResult } from './useStudioPromote.js';
@@ -102,7 +103,12 @@ export function StudioTab({ initialSubTab = 'author' }: StudioTabProps = {}): JS
         ariaLabel="Studio sub-navigation"
       />
       {subTab === 'branches' && <BranchesTab />}
-      {subTab === 'author' && !loaded && <StudioDropZone onLoaded={onLoaded} />}
+      {subTab === 'author' && !loaded && (
+        <>
+          <StudioGuide />
+          <StudioDropZone onLoaded={onLoaded} />
+        </>
+      )}
       {subTab === 'author' && loaded && (
         <>
           <div className={styles.loadedBar}>
