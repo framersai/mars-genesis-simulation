@@ -12,8 +12,17 @@ import { StudioArtifactView } from './StudioArtifactView.js';
 import { StudioBundleView } from './StudioBundleView.js';
 import { useStudioPromote, type PromoteResult } from './useStudioPromote.js';
 import { CompareModal } from '../compare/CompareModal.js';
+import { BranchesTab } from '../branches/BranchesTab.js';
+import { SubTabNav } from '../shared/SubTabNav.js';
 import type { StudioInput } from './parseStudioInput.js';
 import type { RunArtifact } from '../../../../../engine/schema/index.js';
+
+type StudioSubTab = 'author' | 'branches';
+
+const STUDIO_SUB_TABS = [
+  { id: 'author' as const, label: 'Author' },
+  { id: 'branches' as const, label: 'Branches' },
+];
 
 interface LoadedState {
   input: Extract<StudioInput, { kind: 'single' | 'bundle' }>;
@@ -21,7 +30,15 @@ interface LoadedState {
   promote: PromoteResult | null;
 }
 
-export function StudioTab(): JSX.Element {
+export interface StudioTabProps {
+  /** Sub-tab to land on when the tab mounts. Used by tab-routing
+   *  redirects: `?tab=branches` lands on `studio?subTab=branches`
+   *  for backward compat with deep links from before the merge. */
+  initialSubTab?: StudioSubTab;
+}
+
+export function StudioTab({ initialSubTab = 'author' }: StudioTabProps = {}): JSX.Element {
+  const [subTab, setSubTab] = React.useState<StudioSubTab>(initialSubTab);
   const [loaded, setLoaded] = React.useState<LoadedState | null>(null);
   const [compareOpen, setCompareOpen] = React.useState(false);
   const promote = useStudioPromote();
@@ -69,8 +86,15 @@ export function StudioTab(): JSX.Element {
 
   return (
     <div className={styles.tab}>
-      {!loaded && <StudioDropZone onLoaded={onLoaded} />}
-      {loaded && (
+      <SubTabNav
+        options={STUDIO_SUB_TABS}
+        active={subTab}
+        onChange={setSubTab}
+        ariaLabel="Studio sub-navigation"
+      />
+      {subTab === 'branches' && <BranchesTab />}
+      {subTab === 'author' && !loaded && <StudioDropZone onLoaded={onLoaded} />}
+      {subTab === 'author' && loaded && (
         <>
           <div className={styles.loadedBar}>
             <span>

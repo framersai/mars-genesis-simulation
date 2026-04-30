@@ -4,8 +4,18 @@ import { useScenarioLabels } from '../../hooks/useScenarioLabels';
 import { ActorConfig, type ActorFormData } from './ActorConfig';
 import { ScenarioEditor } from './ScenarioEditor';
 import { LoadPriorRunsCTA } from './LoadPriorRunsCTA';
+import { EventLogPanel } from '../log/EventLogPanel';
+import { SubTabNav } from '../shared/SubTabNav';
 import { getDashboardTabFromHref, resolveSetupRedirectHref } from '../../tab-routing';
 import { subscribeScenarioUpdates } from '../../scenario-sync';
+import type { SimEvent } from '../../hooks/useSSE';
+
+type SettingsSubTab = 'config' | 'log';
+
+const SETTINGS_SUB_TABS = [
+  { id: 'config' as const, label: 'Settings' },
+  { id: 'log' as const, label: 'Event Log' },
+];
 import {
   ECONOMICS_PROFILE_OPTIONS,
   describeServerMode,
@@ -88,7 +98,20 @@ const inputStyle = {
   fontFamily: 'var(--sans)', fontSize: '14px', boxSizing: 'border-box' as const,
 };
 
-export function SettingsPanel() {
+export interface SettingsPanelProps {
+  /** SSE events to feed the embedded EventLogPanel sub-tab. Optional
+   *  so callers that don't care about Log (or mount Settings before the
+   *  SSE pipe is ready) can omit it; the sub-tab just renders an empty
+   *  log in that case. */
+  events?: SimEvent[];
+  /** Sub-tab to land on. Used by tab-routing redirects: `?tab=log`
+   *  lands on `settings?subTab=log` for backward compat with deep
+   *  links from before the merge. */
+  initialSubTab?: SettingsSubTab;
+}
+
+export function SettingsPanel({ events = [], initialSubTab = 'config' }: SettingsPanelProps = {}) {
+  const [subTab, setSubTab] = useState<SettingsSubTab>(initialSubTab);
   const scenario = useScenarioContext();
   const labels = useScenarioLabels();
   const navigateTab = useDashboardNavigation();
@@ -316,6 +339,15 @@ export function SettingsPanel() {
   }, [leaderA, leaderB, turns, seed, startTime, timePerTurn, population, provider, liveSearch, navigateTab, scenario, keyOverrides, tierModels, hasUserLlmKey, effectiveEconomicsProfile]);
 
   return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg-deep)' }}>
+      <SubTabNav
+        options={SETTINGS_SUB_TABS}
+        active={subTab}
+        onChange={setSubTab}
+        ariaLabel="Settings sub-navigation"
+      />
+      {subTab === 'log' && <EventLogPanel events={events} />}
+      {subTab === 'config' && (
     <div className="settings-content" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '20px 24px', background: 'var(--bg-deep)' }}>
       {/* Prior-runs CTA — surfaces saved sessions at the top so users
           who don't want to spend credits can replay an existing run
@@ -664,6 +696,8 @@ export function SettingsPanel() {
         </button>
         {status && <span role="status" style={{ fontSize: '13px', color: 'var(--text-3)' }}>{status}</span>}
       </div>
+    </div>
+      )}
     </div>
   );
 }

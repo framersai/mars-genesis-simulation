@@ -42,7 +42,11 @@ export function QuickstartResults({ actors, artifacts, sessionId, onSwap }: Quic
 
   const handleFork = (i: number) => {
     dispatch({ type: 'SET_PARENT', artifact: artifacts[i] });
-    navigate('branches');
+    // Branches is a sub-tab inside Studio after the merge. Land on
+    // Studio; the user clicks Branches in Studio's sub-nav. Future
+    // polish: thread the sub-tab through so this lands directly on
+    // Branches without the manual click.
+    navigate('studio');
   };
 
   const handleShare = async (i: number) => {

@@ -18,10 +18,10 @@ import { useLaunchState } from './hooks/useLaunchState';
 import { VerdictBanner } from './components/layout/VerdictBanner';
 import { VerdictModal } from './components/layout/VerdictModal';
 import { ReplayBanner, ReplayNotFoundBanner } from './components/layout/ReplayBanner';
-import { EventLogPanel } from './components/log/EventLogPanel';
+// EventLogPanel + BranchesTab are now rendered inside SettingsPanel +
+// StudioTab as sub-tabs; App.tsx no longer needs them at top level.
 import { BranchesProvider } from './components/branches/BranchesContext';
 import { BranchesSyncer } from './components/branches/BranchesSyncer';
-import { BranchesTab } from './components/branches/BranchesTab';
 import { LibraryTab } from './components/library/index.js';
 import { StudioTab } from './components/studio/StudioTab.js';
 import { QuickstartView } from './components/quickstart/QuickstartView';
@@ -46,6 +46,7 @@ import { GuidedTour } from './components/tour/GuidedTour';
 import { DEMO_EVENTS } from './components/tour/demoData';
 import {
   createDashboardTabHref,
+  getDashboardTabAndSubFromHref,
   getDashboardTabFromHref,
   type DashboardTab,
 } from './tab-routing';
@@ -176,7 +177,17 @@ function AppContent() {
     shortName: scenario.labels.shortName,
   });
   const history = useLocalHistory({ scenarioShortName: scenario.labels.shortName });
-  const [activeTab, setActiveTabState] = useState<DashboardTab>(() => getDashboardTabFromHref(window.location.href));
+  // Initial tab + sub-tab from URL. Legacy ?tab=branches and ?tab=log
+  // resolve to studio/settings with the matching sub-tab pre-selected
+  // so old deep links keep working.
+  const initialRoute = getDashboardTabAndSubFromHref(window.location.href);
+  const [activeTab, setActiveTabState] = useState<DashboardTab>(initialRoute.tab);
+  const [studioInitialSubTab] = useState<'author' | 'branches'>(
+    initialRoute.tab === 'studio' && initialRoute.sub === 'branches' ? 'branches' : 'author',
+  );
+  const [settingsInitialSubTab] = useState<'config' | 'log'>(
+    initialRoute.tab === 'settings' && initialRoute.sub === 'log' ? 'log' : 'config',
+  );
   const setActiveTab = useCallback((tab: DashboardTab) => {
     if (tab === 'about') {
       window.location.href = '/';
@@ -787,15 +798,18 @@ function AppContent() {
 
             {activeTab === 'viz' && <SwarmViz state={gameState} onNavigateToChat={navigateToChat} />}
 
-            {activeTab === 'settings' && <SettingsPanel />}
+            {activeTab === 'settings' && (
+              <SettingsPanel
+                events={effectiveEvents}
+                initialSubTab={settingsInitialSubTab}
+              />
+            )}
 
             {activeTab === 'reports' && <ReportView state={gameState} verdict={sse.verdict} reportSections={scenario.ui.reportSections} />}
 
-            {activeTab === 'branches' && <BranchesTab />}
-
             {activeTab === 'library' && <LibraryTab />}
 
-            {activeTab === 'studio' && <StudioTab />}
+            {activeTab === 'studio' && <StudioTab initialSubTab={studioInitialSubTab} />}
 
             {/* ChatPanel stays mounted across tab switches so per-agent
                 message threads survive when the user jumps to Sim / Reports
@@ -808,7 +822,8 @@ function AppContent() {
               <ChatPanel state={gameState} onChatUsage={handleChatUsage} />
             </div>
 
-            {activeTab === 'log' && <EventLogPanel events={effectiveEvents} />}
+            {/* LOG moved into SETTINGS as a sub-tab; EventLogPanel is now
+                rendered inside SettingsPanel when its sub-tab is 'log'. */}
 
             {/* About tab redirects to the landing page */}
           </main>
@@ -851,7 +866,18 @@ function AppContent() {
           <DropZoneOverlay active={dropZone.isDragging} />
           {tourActive && (
             <GuidedTour
-              onTabChange={(tab) => setActiveTab(tab)}
+              onTabChange={(tab) => {
+                // Tour still references the legacy 'log' top-level
+                // tab in its step list. Log is now a sub-tab of
+                // Settings — redirect cleanly so the tour's "show
+                // the log" step lands on Settings (user can flip to
+                // the Log sub-tab from there).
+                if (tab === 'log') {
+                  setActiveTab('settings');
+                  return;
+                }
+                setActiveTab(tab);
+              }}
               onClose={handleTourEnd}
               onRun={handleRun}
             />
