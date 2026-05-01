@@ -470,6 +470,8 @@ curl -s -X POST http://localhost:3456/simulate \
 
 The body accepts either a pre-compiled `ScenarioPackage` or a raw scenario draft (auto-compiled server-side with optional `options.seedText` / `options.seedUrl` grounding). The response is `{ artifact, scenario, durationMs }`. Rate limiting and the 5 MiB body cap match `/setup`.
 
+The dashboard server also exposes nine read-and-replay routes under `/api/v1/*` (list runs, fetch artifacts, re-execute, import). Wire-level reference: [`docs/HTTP_API.md`](docs/HTTP_API.md).
+
 ---
 
 ## Storage
