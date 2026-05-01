@@ -45,9 +45,9 @@
 }
 
 // Sentence-case CTA: "← Back to live mode" must NOT be uppercased.
+// Heavier weight than button-label's 600 for stronger CTA presence.
 .returnButton {
-  font-family: var(--mono);
-  font-size: var(--font-xs);
+  @include typo.button-label;
   font-weight: 800;
   background: var(--bg-card);
   color: var(--text-1);

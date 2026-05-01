@@ -24,8 +24,8 @@
 }
 
 .statValue {
-  font-family: var(--mono);
-  font-size: var(--font-3xl);
+  @include typo.metric-value;
+  font-size: var(--font-3xl); // 24px hero variant
   font-weight: 600;
   color: var(--text-1);
 }

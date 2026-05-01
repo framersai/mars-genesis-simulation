@@ -8,10 +8,19 @@
 //   card-title     · 13px mono uppercase 700  · card / row group title
 //   section-label  · 11px mono uppercase 700  · inline section eyebrow
 //   field-label    · 11px mono uppercase 600  · form-field label
+//   button-label   · 11px mono sentence  600  · sentence-case button text
 //   body           · 13px sans normal 400     · default reading surface
 //   body-strong    · 13px sans 600            · emphasized inline body
 //   caption        · 10px mono normal 500     · metadata / footnote
 //   micro          ·  9px mono uppercase 700  · badge / tag
+//   metric-value   · 20px mono 700            · large numeric display
+//                  ·   override font-size on the call site for sm (13)
+//                  ·   md (16) or lg (24) variants
+//
+// Pre-CodeRabbit-pass note (2026-04-30): button-label and metric-value
+// were added after the prose-on-uppercase regression sweep. Use
+// button-label for any CTA whose JSX text is sentence case; the role
+// matches field-label exactly except text-transform stays at none.
 
 @mixin page-title {
   font-family: var(--mono);
@@ -53,6 +62,14 @@
   text-transform: uppercase;
 }
 
+@mixin button-label {
+  font-family: var(--mono);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  // No text-transform — the CTA's JSX text decides its own casing.
+}
+
 @mixin body {
   font-family: var(--sans);
   font-size: var(--font-md);
@@ -80,4 +97,14 @@
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
+}
+
+@mixin metric-value {
+  font-family: var(--mono);
+  font-size: var(--font-2xl);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  // Override font-size on the call site if sm (13) / md (16) / lg (24)
+  // is closer to the role the surrounding card asks for.
 }

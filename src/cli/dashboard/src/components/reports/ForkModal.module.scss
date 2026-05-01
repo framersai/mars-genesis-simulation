@@ -2,7 +2,7 @@
 
 // "↳ Fork at Turn N" — sentence case button text.
 .forkButton {
-  @include typo.field-label;
+  @include typo.button-label;
   background: transparent;
   color: var(--teal);
   border: 1px solid var(--teal-dim);
@@ -10,8 +10,6 @@
   padding: 4px 10px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
-  text-transform: none;
-  letter-spacing: 0.3px;
 
   &:hover {
     background: var(--teal-glow);

@@ -25,9 +25,7 @@
 }
 
 .tileValue {
-  font-family: var(--mono);
-  font-size: var(--font-2xl);
-  font-weight: 700;
+  @include typo.metric-value;
   color: var(--amber);
 }
 
