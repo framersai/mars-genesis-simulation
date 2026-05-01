@@ -87,7 +87,7 @@ Rollup counters across the filtered set.
 {
   "totalRuns": 132,
   "totalCostUSD": 47.62,
-  "totalDurationMs": 28_800_000,
+  "totalDurationMs": 28800000,
   "replaysAttempted": 18,
   "replaysMatched": 17
 }
@@ -186,7 +186,7 @@ Bundle-scoped rollup. Used by the Compare modal's `AggregateStrip`.
   "bundleId": "8b1e...",
   "count": 3,
   "costTotalUSD": 1.07,
-  "meanDurationMs": 218_000,
+  "meanDurationMs": 218000,
   "outcomeBuckets": {}
 }
 ```
