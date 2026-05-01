@@ -1,9 +1,16 @@
 // ReplayBanner styles (both replay-active and replay-not-found variants).
+//
+// Intentionally NOT using a typography role mixin: the banner body is
+// dynamic prose (scenario name, leader pairing, "stored event stream,
+// no LLM calls", "The saved run X no longer exists…"). Every role
+// mixin in src/theme/_typography.scss sets text-transform: uppercase,
+// which would shout the prose at the user.
 
 @use '../../theme/typography' as typo;
 
 .banner {
-  @include typo.field-label;
+  font-family: var(--mono);
+  font-size: var(--font-xs);
   padding: 8px 16px;
   display: flex;
   align-items: center;
@@ -37,13 +44,15 @@
   cursor: pointer;
 }
 
+// Sentence-case CTA: "← Back to live mode" must NOT be uppercased.
 .returnButton {
-  @include typo.section-label;
+  font-family: var(--mono);
+  font-size: var(--font-xs);
+  font-weight: 800;
   background: var(--bg-card);
   color: var(--text-1);
   border: 1px solid var(--border);
   padding: 6px 14px;
-  font-weight: 800; // intentionally heavier than section-label's 700 for stronger CTA presence
   cursor: pointer;
   border-radius: 4px;
   white-space: nowrap;

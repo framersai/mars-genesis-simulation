@@ -41,9 +41,12 @@
   filter: brightness(1.2);
 }
 
+// SVG <text> rendering actor IDs (e.g. "aria-001"); preserve casing.
 .label {
   @include typo.field-label;
   fill: var(--text-2);
   pointer-events: none;
   user-select: none;
+  text-transform: none;
+  letter-spacing: normal;
 }

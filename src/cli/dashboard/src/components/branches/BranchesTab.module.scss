@@ -16,10 +16,13 @@
   color: var(--text-3);
   font-family: var(--sans);
 
+  // "No branches yet" — preserve sentence case.
   h2 {
     @include typo.panel-title;
     color: var(--text-2);
     margin-bottom: 12px;
+    text-transform: none;
+    letter-spacing: 0.4px;
   }
   p {
     @include typo.body;
@@ -92,10 +95,14 @@
   flex: 1;
 }
 
+// Holds dynamic scenario name + actor name; preserve sentence case
+// and tighten the airy mono tracking that card-title applies.
 .parentTitle, .branchTitle {
   @include typo.card-title;
   margin: 0;
   color: var(--text-1);
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .archetype {

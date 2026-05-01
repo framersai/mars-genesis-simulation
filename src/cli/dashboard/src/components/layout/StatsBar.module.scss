@@ -48,7 +48,12 @@
 .label {
   @include typo.micro;
   color: var(--text-1);
-  font-weight: 800; // intentionally heavier than micro's 700 for stats-pill legibility at 9px
+  // Two intentional deviations from `micro` for stats-pill legibility
+  // at 9px: heavier weight (800 vs 700) so the label reads against the
+  // colored value next to it, and tighter tracking (0.6px vs micro's
+  // 1.5px) so the pill stays narrow in a horizontally-packed bar.
+  font-weight: 800;
+  letter-spacing: 0.6px;
   margin-right: 1px;
   opacity: 0.7;
 }

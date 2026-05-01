@@ -86,6 +86,7 @@
   gap: 0.4rem;
 }
 
+// "Compare" — sentence case CTA.
 .actionBtn {
   @include typo.field-label;
   background: transparent;
@@ -94,6 +95,8 @@
   padding: 0.3rem 0.7rem;
   cursor: pointer;
   color: var(--amber);
+  text-transform: none;
+  letter-spacing: 0.3px;
 
   &:hover {
     background: rgba(232, 180, 74, 0.1);

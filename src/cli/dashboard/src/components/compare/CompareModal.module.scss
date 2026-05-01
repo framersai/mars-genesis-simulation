@@ -31,10 +31,14 @@
   flex-shrink: 0;
 }
 
+// Renders sentence-case prose ("Compare bundle <id> · N actors" or
+// "Loading bundle…"); preserve casing.
 .title {
   @include typo.panel-title;
   margin: 0;
   color: var(--text-1);
+  text-transform: none;
+  letter-spacing: 0.4px;
 }
 
 .titleAccent {

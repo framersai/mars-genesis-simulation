@@ -188,16 +188,23 @@
   background: var(--bg-deep);
 }
 
+// "Simulation starting...", "Connecting...", "No simulation running" —
+// friendly sentence-case prose; preserve casing. Sibling
+// .centerStateHeadingAmber below stays sentence case for the same reason.
 .centerStateHeading {
   @include typo.card-title;
   color: var(--text-1);
   margin-bottom: 8px;
+  text-transform: none;
+  letter-spacing: 0.3px;
 }
 
 .centerStateHeadingLarger {
   @include typo.panel-title;
   color: var(--text-1);
   margin-bottom: 12px;
+  text-transform: none;
+  letter-spacing: 0.4px;
 }
 
 .centerStateHeadingAmber {

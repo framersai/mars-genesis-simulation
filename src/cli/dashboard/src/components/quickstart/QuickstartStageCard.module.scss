@@ -172,6 +172,7 @@
   border: 1px solid var(--border-subtle, var(--border));
   white-space: nowrap;
   text-transform: none; // chip body shows actor name; preserve casing
+  letter-spacing: normal;
 }
 
 .actorChipName {
@@ -287,6 +288,7 @@
   text-overflow: ellipsis;
   max-width: 140px;
   text-transform: none; // actor name; preserve casing
+  letter-spacing: normal;
 }
 
 .lineBody {

@@ -41,6 +41,7 @@
   font-size: var(--font-sm);
 }
 
+// Renders "Compare all {N} actors →"; preserve sentence case.
 .compareCta {
   @include typo.card-title;
   background: linear-gradient(135deg, var(--amber) 0%, #b87425 100%);
@@ -51,6 +52,8 @@
   cursor: pointer;
   transition: transform 200ms ease, box-shadow 200ms ease;
   align-self: center;
+  text-transform: none;
+  letter-spacing: 0.4px;
 
   &:hover {
     transform: translateY(-1px);

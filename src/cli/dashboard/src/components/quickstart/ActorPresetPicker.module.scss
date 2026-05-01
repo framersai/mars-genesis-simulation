@@ -27,10 +27,13 @@
   justify-content: space-between;
   align-items: center;
 
+  // "Swap leader" or similar sentence-case modal h3.
   h3 {
     @include typo.panel-title;
     margin: 0;
     color: var(--amber);
+    text-transform: none;
+    letter-spacing: 0.4px;
   }
 
   button {

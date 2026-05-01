@@ -16,9 +16,12 @@
   flex-wrap: wrap;
 }
 
+// "Event Log (123 events)" — preserve casing on the dynamic count.
 .heading {
   @include typo.card-title;
   color: var(--text-1);
+  text-transform: none;
+  letter-spacing: 0.4px;
 }
 
 .filterBar {

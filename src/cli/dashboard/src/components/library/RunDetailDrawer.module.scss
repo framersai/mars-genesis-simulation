@@ -99,10 +99,13 @@
   border-bottom: 1px solid var(--glass-border);
   margin-bottom: 1rem;
 
+  // Holds dynamic scenario name; preserve original casing.
   h2 {
     @include typo.page-title;
     margin: 0;
     color: var(--text-1);
+    text-transform: none;
+    letter-spacing: normal;
   }
 
   p {

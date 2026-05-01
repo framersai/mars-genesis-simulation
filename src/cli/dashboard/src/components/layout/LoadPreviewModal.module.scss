@@ -39,10 +39,13 @@
   gap: 12px;
 }
 
+// "Load simulation" — sentence case.
 .title {
   @include typo.panel-title;
   margin: 0;
   color: var(--text-1);
+  text-transform: none;
+  letter-spacing: 0.4px;
 }
 
 .closeButton {

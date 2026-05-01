@@ -38,10 +38,13 @@
   color: var(--accent, var(--amber));
 }
 
+// "Drop to load" — sentence case.
 .heading {
   @include typo.panel-title;
   margin: 0 0 4px 0;
   color: var(--text-1);
+  text-transform: none;
+  letter-spacing: 0.4px;
 }
 
 .sub {

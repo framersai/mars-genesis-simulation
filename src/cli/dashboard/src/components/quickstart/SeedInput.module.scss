@@ -72,6 +72,7 @@
   }
 }
 
+// "Fetch" / "Generate + Run {N} {Actor|Actors} (~$X.XX)" — sentence case.
 .fetchButton,
 .runButton {
   @include typo.field-label;
@@ -81,6 +82,8 @@
   border-radius: var(--radius-sm);
   padding: 8px 16px;
   cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0.3px;
 
   &:hover:not(:disabled) {
     background: var(--accent-hover);

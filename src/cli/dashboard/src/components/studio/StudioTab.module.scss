@@ -182,9 +182,12 @@
   gap: 0.4rem;
 }
 
+// "How to get a RunArtifact JSON" — preserve casing.
 .guideTitle {
   @include typo.panel-title;
   margin: 0;
+  text-transform: none;
+  letter-spacing: 0.4px;
 }
 
 .guideSub {

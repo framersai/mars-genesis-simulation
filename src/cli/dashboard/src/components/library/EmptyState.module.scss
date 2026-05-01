@@ -18,10 +18,14 @@
   font-family: var(--mono);
 }
 
+// "No runs match these filters." / "No runs in your library yet." —
+// friendly empty-state prose; preserve casing.
 .empty h2 {
   @include typo.panel-title;
   color: var(--text-1);
   margin: 0;
+  text-transform: none;
+  letter-spacing: 0.4px;
 }
 
 .empty p {

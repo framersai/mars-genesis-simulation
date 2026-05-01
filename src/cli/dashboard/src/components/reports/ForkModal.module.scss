@@ -1,5 +1,6 @@
 @use '../../theme/typography' as typo;
 
+// "↳ Fork at Turn N" — sentence case button text.
 .forkButton {
   @include typo.field-label;
   background: transparent;
@@ -9,6 +10,8 @@
   padding: 4px 10px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
+  text-transform: none;
+  letter-spacing: 0.3px;
 
   &:hover {
     background: var(--teal-glow);
@@ -61,10 +64,13 @@
   justify-content: space-between;
   align-items: center;
 
+  // "Fork at Turn N" — preserve casing.
   h3 {
     @include typo.panel-title;
     margin: 0;
     color: var(--amber);
+    text-transform: none;
+    letter-spacing: 0.4px;
   }
 }
 
