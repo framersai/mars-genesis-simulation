@@ -1,0 +1,385 @@
+// Migrated from inline `style={{}}` per the no-inline-styles convention.
+// Dynamic values (verdict colors, threshold colors, bar widths) flow in
+// via CSS custom properties set on the relevant element.
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  padding: 16px;
+}
+
+.dialog {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 680px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  font-family: var(--sans);
+  color: var(--text-1);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  outline: none;
+}
+
+.titleRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.title {
+  font-family: var(--mono);
+  font-size: var(--font-lg);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  margin: 0;
+  color: var(--amber);
+}
+
+.escBtn {
+  background: transparent;
+  color: var(--text-3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 10px;
+  font-size: var(--font-xs);
+  cursor: pointer;
+  font-family: var(--mono);
+}
+
+.totalLine {
+  font-size: var(--font-sm);
+  color: var(--text-3);
+  margin-bottom: 16px;
+}
+
+.totalAmount {
+  color: var(--green);
+  font-family: var(--mono);
+  font-weight: 800;
+}
+
+.cacheBlock {
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border-radius: 4px;
+  background: rgba(106, 173, 72, 0.06);
+  border: 1px solid rgba(106, 173, 72, 0.2);
+}
+
+.cacheLabel {
+  color: var(--green);
+  font-weight: 800;
+  font-size: var(--font-2xs);
+  letter-spacing: 0.08em;
+  font-family: var(--mono);
+  margin-bottom: 6px;
+}
+
+.cacheVerdict {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  // --cache-verdict-color is set inline based on cache health.
+  color: var(--cache-verdict-color, var(--text-3));
+  margin-bottom: 4px;
+  font-family: var(--sans);
+}
+
+.cacheSubLine {
+  font-size: var(--font-xs);
+  color: var(--text-2);
+  font-family: var(--sans);
+  margin-bottom: 6px;
+}
+
+.cacheTokenRow {
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+  font-family: var(--mono);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cacheMultiplier {
+  opacity: 0.7;
+}
+
+.emptyState {
+  padding: 24px 8px;
+  color: var(--text-3);
+  font-size: var(--font-md);
+  text-align: center;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+  font-family: var(--mono);
+}
+
+.tableSm {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-xs);
+  font-family: var(--mono);
+}
+
+.headRow {
+  color: var(--text-3);
+  text-align: left;
+  font-size: var(--font-2xs);
+  letter-spacing: 0.08em;
+}
+
+.th {
+  padding: 4px 0;
+  font-weight: 700;
+}
+
+.thRight {
+  padding: 4px 0;
+  font-weight: 700;
+  text-align: right;
+}
+
+.bodyRow {
+  border-top: 1px solid var(--border);
+}
+
+.stageCell {
+  padding: 8px 0;
+}
+
+.stageLabel {
+  font-size: var(--font-sm);
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.stageDescription {
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+  font-family: var(--sans);
+  margin-top: 1px;
+}
+
+.bar {
+  margin-top: 4px;
+  height: 4px;
+  width: 100%;
+  background: var(--bg-deep);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.barFill {
+  // --bar-pct is set inline as a percentage string.
+  width: var(--bar-pct, 0%);
+  height: 100%;
+  background: var(--amber);
+  transition: width 0.3s ease;
+}
+
+.numericCell {
+  padding: 8px 0 0 12px;
+  text-align: right;
+  vertical-align: top;
+}
+
+.numericCellGreen {
+  padding: 8px 0 0 12px;
+  text-align: right;
+  vertical-align: top;
+  color: var(--green);
+  font-weight: 700;
+}
+
+.numericCellMuted {
+  padding: 8px 0 0 12px;
+  text-align: right;
+  vertical-align: top;
+  color: var(--text-2);
+}
+
+.section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.sectionLabel {
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+  letter-spacing: 0.08em;
+  font-family: var(--mono);
+  margin-bottom: 8px;
+}
+
+.sectionFootnote {
+  margin-top: 6px;
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+  font-family: var(--sans);
+}
+
+.sectionFootnoteTight {
+  margin-top: 4px;
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+  font-family: var(--sans);
+}
+
+.subBlock {
+  margin-bottom: 14px;
+}
+
+.subBlockLabel {
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+  font-family: var(--mono);
+  margin-bottom: 4px;
+}
+
+.cellSchemaName {
+  padding: 6px 0;
+  color: var(--text-1);
+}
+
+.cellNumericTight {
+  padding: 6px 0;
+  text-align: right;
+  color: var(--text-2);
+}
+
+.cellAvgAttempts {
+  padding: 6px 0;
+  text-align: right;
+  // --avg-color set inline based on threshold (rust/amber/text-1).
+  color: var(--avg-color, var(--text-1));
+  font-weight: 700;
+}
+
+.cellFallback {
+  padding: 6px 0;
+  text-align: right;
+  // --fb-color set inline; --fb-weight controls weight when > 0.
+  color: var(--fb-color, var(--text-3));
+  font-weight: var(--fb-weight, 400);
+}
+
+.cellRight1 {
+  padding: 6px 0;
+  text-align: right;
+  color: var(--text-1);
+}
+
+.cellRightGreen {
+  padding: 6px 0;
+  text-align: right;
+  color: var(--green);
+  font-weight: 700;
+}
+
+.cellRightRust {
+  padding: 6px 0;
+  text-align: right;
+  color: var(--rust);
+}
+
+.cellRightMuted {
+  padding: 6px 0;
+  text-align: right;
+  color: var(--text-3);
+}
+
+.cellRateColor {
+  padding: 6px 0;
+  text-align: right;
+  // --rate-color set inline based on threshold.
+  color: var(--rate-color, var(--text-1));
+  font-weight: 700;
+}
+
+.cellConfColor {
+  padding: 6px 0;
+  text-align: right;
+  // --conf-color set inline based on threshold.
+  color: var(--conf-color, var(--text-1));
+  font-weight: 700;
+}
+
+.statusInline {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+  font-family: var(--mono);
+}
+
+.statusErrorTag {
+  color: var(--rust);
+}
+
+.rejectionWrap {
+  margin-top: 10px;
+}
+
+.rejectionLabel {
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+  font-family: var(--mono);
+  margin-bottom: 4px;
+}
+
+.rejectionCell {
+  padding: 6px 0;
+  text-align: right;
+  // --rj-color and --rj-weight set inline based on count.
+  color: var(--rj-color, var(--text-3));
+  font-weight: var(--rj-weight, 400);
+}
+
+.perLeaderRow {
+  display: flex;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: var(--font-sm);
+}
+
+.leaderCard {
+  flex: 1;
+  padding: 12px;
+  background: var(--bg-deep);
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.leaderName {
+  // --leader-color is var(--vis) for A, var(--eng) for B.
+  color: var(--leader-color, var(--text-1));
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.leaderCost {
+  color: var(--green);
+  font-size: var(--font-lg);
+  font-weight: 800;
+}
+
+.leaderMeta {
+  color: var(--text-3);
+  font-size: var(--font-2xs);
+  margin-top: 2px;
+}
