@@ -154,7 +154,13 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
     ? 'Reconnecting to the simulation server.'
     : 'Connecting to the simulation server.';
 
-  const progressPct = `${Math.round((gameState.turn / gameState.maxTurns) * 100)}%`;
+  // Guard against gameState.maxTurns === 0 during the initialization
+  // window before /scenario resolves. The outer `turn > 0` check below
+  // makes this defensive in practice, but a stray 0 here would render
+  // "NaN%" or "Infinity%" and break the progress bar.
+  const progressPct = gameState.maxTurns > 0
+    ? `${Math.round((gameState.turn / gameState.maxTurns) * 100)}%`
+    : '0%';
 
   return (
     <header
