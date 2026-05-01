@@ -167,7 +167,7 @@ export function Footer({ cost, costBreakdown, simStatus }: FooterProps) {
     >
       {!isPhone && (
         <nav aria-label="Footer links" style={{ display: 'flex', gap: '12px' }}>
-          <a href="https://agentos.sh" target="_blank" rel="noopener" style={{ color: 'var(--rust)', fontWeight: 600 }}>agentos.sh</a>
+          <a href="https://agentos.sh/en" target="_blank" rel="noopener" style={{ color: 'var(--rust)', fontWeight: 600 }}>agentos.sh</a>
           <a href="https://github.com/framersai/paracosm" target="_blank" rel="noopener" style={{ color: 'var(--rust)', fontWeight: 600 }}>github</a>
           <a href="https://www.npmjs.com/package/paracosm" target="_blank" rel="noopener" style={{ color: 'var(--rust)', fontWeight: 600 }}>npm</a>
           <a href="/docs" style={{ color: 'var(--rust)', fontWeight: 600 }}>docs</a>

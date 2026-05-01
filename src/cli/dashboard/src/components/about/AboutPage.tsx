@@ -485,7 +485,7 @@ export function AboutPage() {
         <section style={{ marginBottom: '16px' }} aria-labelledby="links-heading">
           <h2 id="links-heading" style={{ fontSize: 'var(--font-2xl)', color: 'var(--amber)', fontFamily: 'var(--mono)', paddingBottom: '8px', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>Links</h2>
           <nav aria-label="External links" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-            <a href="https://agentos.sh" target="_blank" rel="noopener" style={{ color: 'var(--amber)' }}>agentos.sh</a>
+            <a href="https://agentos.sh/en" target="_blank" rel="noopener" style={{ color: 'var(--amber)' }}>agentos.sh</a>
             <a href="https://docs.agentos.sh" target="_blank" rel="noopener" style={{ color: 'var(--amber)' }}>Documentation</a>
             <a href="https://github.com/framersai/paracosm" target="_blank" rel="noopener" style={{ color: 'var(--amber)' }}>GitHub</a>
             <a href="https://github.com/framersai/agentos" target="_blank" rel="noopener" style={{ color: 'var(--amber)' }}>AgentOS GitHub</a>

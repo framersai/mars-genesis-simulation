@@ -178,7 +178,7 @@ export function TopBar({ scenario, sse, gameState, onSave, onLoad, onClear, onRu
         <a href="/" style={{ fontFamily: 'var(--mono)', fontSize: 'var(--font-md)', fontWeight: 700, color: 'var(--text-1)', textDecoration: 'none', letterSpacing: '.08em' }}>
           PARA<span style={{ color: 'var(--amber)' }}>COSM</span>
         </a>
-        <a href="https://agentos.sh" target="_blank" rel="noopener" className="topbar-agentos" style={{ fontSize: 'var(--font-3xs)', fontWeight: 700, letterSpacing: '1px', color: 'var(--rust)', fontFamily: 'var(--mono)', textDecoration: 'none' }} title="AgentOS Runtime">
+        <a href="https://agentos.sh/en" target="_blank" rel="noopener" className="topbar-agentos" style={{ fontSize: 'var(--font-3xs)', fontWeight: 700, letterSpacing: '1px', color: 'var(--rust)', fontFamily: 'var(--mono)', textDecoration: 'none' }} title="AgentOS Runtime">
           AGENTOS
         </a>
         <span className="topbar-agentos" style={{ color: 'var(--border)', fontSize: 'var(--font-sm)' }} aria-hidden="true">|</span>

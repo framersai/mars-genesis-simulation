@@ -2388,7 +2388,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="22" height="22" style="margin-right:8px;flex-shrink:0;display:block" role="img" aria-label="Paracosm"><style>.ph{animation:ph-p 4s ease-in-out infinite}.pg{animation:ph-g 4s ease-in-out infinite}@keyframes ph-p{0%,100%{opacity:1}50%{opacity:.75}}@keyframes ph-g{0%,100%{opacity:.06}50%{opacity:.15}}@media(prefers-reduced-motion:reduce){.ph,.pg{animation:none!important}}</style><line x1="32" y1="32" x2="37.63" y2="10.98" stroke="#f5f0e4" stroke-width="1.6" opacity=".5"/><line x1="32" y1="32" x2="53.02" y2="26.37" stroke="#f5f0e4" stroke-width="1.6" opacity=".5"/><line x1="32" y1="32" x2="47.39" y2="47.39" stroke="#f5f0e4" stroke-width="1.6" opacity=".5"/><line x1="32" y1="32" x2="26.37" y2="53.02" stroke="#f5f0e4" stroke-width="1.6" opacity=".5"/><line x1="32" y1="32" x2="10.98" y2="37.63" stroke="#f5f0e4" stroke-width="1.6" opacity=".5"/><line x1="32" y1="32" x2="16.61" y2="16.61" stroke="#f5f0e4" stroke-width="1.6" opacity=".5"/><line x1="37.63" y1="10.98" x2="47.39" y2="47.39" stroke="#f5f0e4" stroke-width="1.1" opacity=".18"/><line x1="53.02" y1="26.37" x2="26.37" y2="53.02" stroke="#f5f0e4" stroke-width="1.1" opacity=".18"/><line x1="47.39" y1="47.39" x2="10.98" y2="37.63" stroke="#f5f0e4" stroke-width="1.1" opacity=".18"/><line x1="26.37" y1="53.02" x2="16.61" y2="16.61" stroke="#f5f0e4" stroke-width="1.1" opacity=".18"/><line x1="10.98" y1="37.63" x2="37.63" y2="10.98" stroke="#f5f0e4" stroke-width="1.1" opacity=".18"/><line x1="16.61" y1="16.61" x2="53.02" y2="26.37" stroke="#f5f0e4" stroke-width="1.1" opacity=".18"/><circle class="pg" cx="32" cy="32" r="9.2" fill="#e8b44a"/><circle class="ph" cx="32" cy="32" r="5.12" fill="#e8b44a"/><circle cx="37.63" cy="10.98" r="3.52" fill="#e06530"/><circle cx="53.02" cy="26.37" r="3.52" fill="#e8b44a"/><circle cx="47.39" cy="47.39" r="3.52" fill="#4ca8a8"/><circle cx="26.37" cy="53.02" r="3.52" fill="#e06530"/><circle cx="10.98" cy="37.63" r="3.52" fill="#4ca8a8"/><circle cx="16.61" cy="16.61" r="3.52" fill="#e8b44a"/></svg>
       <span class="pdh-brand">PARA<span style="color:#e8b44a">COSM</span></span>
     </a>
-    <a href="https://agentos.sh" target="_blank" rel="noopener" class="pdh-tag">AGENTOS</a>
+    <a href="https://agentos.sh/en" target="_blank" rel="noopener" class="pdh-tag">AGENTOS</a>
     <span class="pdh-sep">|</span>
     <span class="pdh-current">API Reference v${PARACOSM_VERSION}</span>
   </div>
@@ -2409,7 +2409,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
   <a href="/docs">API Docs</a>
   <a href="https://github.com/framersai/paracosm" target="_blank" rel="noopener">GitHub</a>
   <a href="https://www.npmjs.com/package/paracosm" target="_blank" rel="noopener">npm</a>
-  <a href="https://agentos.sh" target="_blank" rel="noopener">AgentOS</a>
+  <a href="https://agentos.sh/en" target="_blank" rel="noopener">AgentOS</a>
   <a href="https://wilds.ai/discord" target="_blank" rel="noopener">Discord</a>
 </div>
 <script>
@@ -2454,7 +2454,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
             html = html.replace('</body>',
               `<div class="paracosm-docs-footer">
   <div class="pdf-links">
-    <a href="https://agentos.sh">agentos.sh</a>
+    <a href="https://agentos.sh/en">agentos.sh</a>
     <a href="https://github.com/framersai/paracosm">GitHub</a>
     <a href="https://www.npmjs.com/package/paracosm">npm</a>
     <a href="https://frame.dev">Frame.dev</a>

@@ -12,7 +12,7 @@
   <a href="https://www.npmjs.com/package/paracosm"><img src="https://img.shields.io/npm/v/paracosm?style=flat-square&color=e8b44a&labelColor=14110e" alt="npm" /></a>
   <a href="https://github.com/framersai/paracosm/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-e06530?style=flat-square&labelColor=14110e" alt="License" /></a>
   <a href="https://paracosm.agentos.sh/docs"><img src="https://img.shields.io/badge/docs-API%20Reference-4ca8a8?style=flat-square&labelColor=14110e" alt="Docs" /></a>
-  <a href="https://agentos.sh"><img src="https://img.shields.io/badge/built%20on-AgentOS-e06530?style=flat-square&labelColor=14110e" alt="AgentOS" /></a>
+  <a href="https://agentos.sh/en"><img src="https://img.shields.io/badge/built%20on-AgentOS-e06530?style=flat-square&labelColor=14110e" alt="AgentOS" /></a>
 </p>
 
 <p align="center">
@@ -539,7 +539,7 @@ Paracosm sits in the structured world model lineage ([Xing 2025](https://arxiv.o
 >
 > *SOMA*, Frictional Games, 2015
 
-Paracosm uses [AgentOS](https://agentos.sh) for agent orchestration, LLM dispatch, tool forging, and memory. The composition is what makes the runs feel inhabited rather than scripted: department heads remember, specialists invent tools mid-decision, and the LLM judge holds the line on safety before any forge enters the pipeline.
+Paracosm uses [AgentOS](https://agentos.sh/en) for agent orchestration, LLM dispatch, tool forging, and memory. The composition is what makes the runs feel inhabited rather than scripted: department heads remember, specialists invent tools mid-decision, and the LLM judge holds the line on safety before any forge enters the pipeline.
 
 | AgentOS API                  | Used for                                                              |
 |------------------------------|-----------------------------------------------------------------------|
@@ -575,7 +575,7 @@ The open-source engine is the permanent foundation. The hosted product targets o
 | Landing page   | [paracosm.agentos.sh](https://paracosm.agentos.sh)           |
 | API docs       | [paracosm.agentos.sh/docs](https://paracosm.agentos.sh/docs) |
 | npm            | [npmjs.com/package/paracosm](https://www.npmjs.com/package/paracosm) |
-| AgentOS        | [agentos.sh](https://agentos.sh)                              |
+| AgentOS        | [agentos.sh](https://agentos.sh/en)                              |
 | Discord        | [wilds.ai/discord](https://wilds.ai/discord)                  |
 
 ## License
