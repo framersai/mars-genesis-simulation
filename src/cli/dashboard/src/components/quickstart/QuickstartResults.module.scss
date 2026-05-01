@@ -1,3 +1,5 @@
+@use '../../theme/typography' as typo;
+
 .results {
   padding: 20px;
   max-width: 1200px;
@@ -47,12 +49,8 @@
 }
 
 .summaryLabel {
-  font-family: var(--mono);
-  font-size: var(--font-2xs);
-  font-weight: 600;
+  @include typo.section-label;
   color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   margin-top: 4px;
   line-height: 1.3;
 }
@@ -158,6 +156,7 @@
 }
 
 .traitLabel {
+  @include typo.caption;
   color: var(--text-3);
 }
 

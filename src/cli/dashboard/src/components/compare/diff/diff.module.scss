@@ -1,3 +1,5 @@
+@use '../../../theme/typography' as typo;
+
 .diffSection {
   background: var(--bg-card);
   border: 1px solid var(--glass-border);
@@ -15,13 +17,9 @@
 }
 
 .diffTitle {
+  @include typo.section-label;
   margin: 0;
-  font-family: var(--mono);
-  font-size: var(--font-xs);
-  font-weight: 700;
-  letter-spacing: 0.06em;
   color: var(--text-3);
-  text-transform: uppercase;
 }
 
 .diffEmpty {
@@ -140,11 +138,8 @@
   gap: 0.25rem;
 }
 .metricLabel {
-  font-family: var(--mono);
-  font-size: var(--font-3xs);
+  @include typo.micro;
   color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 .metricSparkline {
   width: 100%;

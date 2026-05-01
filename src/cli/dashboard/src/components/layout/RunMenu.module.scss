@@ -1,6 +1,8 @@
 // Full RunMenu styles. History section landed with F14; the rest of
 // the menu's legacy inline styles migrated in F4 batch 3.
 
+@use '../../theme/typography' as typo;
+
 .root {
   position: relative;
   display: inline-block;
@@ -219,7 +221,7 @@
 }
 
 .sessionCardTitle {
-  font-weight: 700;
+  @include typo.body-strong;
   color: var(--text-1);
   margin-bottom: 2px;
 }
@@ -238,8 +240,7 @@
 
 // Tooltip heading inside the trigger's Tooltip component
 .tooltipHeading {
-  font-size: var(--font-md);
-  font-weight: 800;
+  @include typo.card-title;
   color: var(--amber);
   margin-bottom: 6px;
 }
@@ -329,8 +330,7 @@
 }
 
 .historyCardTitle {
-  font-size: var(--font-sm);
-  font-weight: 600;
+  @include typo.body-strong;
   color: var(--text-1);
   margin-bottom: 2px;
 }

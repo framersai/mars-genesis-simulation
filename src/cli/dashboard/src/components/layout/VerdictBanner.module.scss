@@ -1,5 +1,7 @@
 // VerdictBanner styles migrated from inline styles (F4).
 
+@use '../../theme/typography' as typo;
+
 .banner {
   margin: 8px 16px 4px;
   padding: 14px 18px;
@@ -72,10 +74,8 @@
 }
 
 .turnLabel {
-  font-size: var(--font-2xs);
+  @include typo.caption;
   color: var(--text-3);
-  font-family: var(--mono);
-  letter-spacing: 0.04em;
 }
 
 .viewButton {

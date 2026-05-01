@@ -3,6 +3,8 @@
 // properties set on the root: `--actor-color`, `--actor-bg`,
 // `--actor-border`.
 
+@use '../../theme/typography' as typo;
+
 .root {
   flex: 1;
   padding: 4px 12px;
@@ -118,8 +120,8 @@
 
 // Tooltip inner chrome
 .tooltipHeading {
+  @include typo.body-strong;
   color: var(--actor-color);
-  font-size: var(--font-lg);
   display: block;
   margin-bottom: 6px;
 }

@@ -1,5 +1,7 @@
 // LoadMenu styles migrated from inline-object definitions (F4).
 
+@use '../../theme/typography' as typo;
+
 .trigger {
   background: linear-gradient(135deg, var(--amber), #b88a1f);
   color: var(--bg-canvas);
@@ -51,8 +53,8 @@
 }
 
 .rowSubLabel {
+  @include typo.caption;
   color: var(--text-3);
-  font-size: var(--font-2xs);
 }
 
 .card {
@@ -71,7 +73,7 @@
 }
 
 .cardTitle {
-  font-weight: 700;
+  @include typo.body-strong;
   color: var(--text-1);
   margin-bottom: 2px;
 }

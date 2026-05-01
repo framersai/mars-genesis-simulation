@@ -1,5 +1,7 @@
 // EventLogPanel styles migrated from inline styles (F4).
 
+@use '../../theme/typography' as typo;
+
 .panel {
   background: var(--bg-deep);
   color: var(--text-3);
@@ -15,9 +17,8 @@
 }
 
 .heading {
+  @include typo.card-title;
   color: var(--text-1);
-  font-size: var(--font-lg);
-  font-weight: 700;
 }
 
 .filterBar {
@@ -35,17 +36,13 @@
 }
 
 .clearFilterButton {
+  @include typo.section-label;
   padding: 2px 8px;
   border-radius: 3px;
   background: var(--bg-card);
   color: var(--text-3);
   border: 1px solid var(--border);
   cursor: pointer;
-  font-family: var(--mono);
-  font-size: var(--font-2xs);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 
   &:hover { color: var(--text-1); }
 }

@@ -3,6 +3,8 @@
    styling (QuickstartStageCard.module.scss); this file just lays them
    out and styles the wrapper chrome. */
 
+@use '../../theme/typography' as typo;
+
 .progress {
   display: flex;
   flex-direction: column;
@@ -23,18 +25,15 @@
   padding-bottom: 4px;
 }
 
+// .title here is a tiny eyebrow above the panel body, not a panel head;
+// rendered at section-label scale rather than panel-title.
 .title {
-  font-family: var(--mono);
-  font-size: var(--font-xs);
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  @include typo.section-label;
   color: var(--amber);
 }
 
 .subtitle {
-  font-size: var(--font-md);
-  line-height: 1.45;
+  @include typo.body;
   color: var(--text-2);
 }
 

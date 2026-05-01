@@ -2,6 +2,8 @@
 // over the dashboard. Pointer-events: none so clicks never intercept
 // after the drop resolves.
 
+@use '../../theme/typography' as typo;
+
 .overlay {
   position: fixed;
   inset: 0;
@@ -37,8 +39,7 @@
 }
 
 .heading {
-  font-size: var(--font-xl);
-  font-weight: 600;
+  @include typo.panel-title;
   margin: 0 0 4px 0;
   color: var(--text-1);
 }

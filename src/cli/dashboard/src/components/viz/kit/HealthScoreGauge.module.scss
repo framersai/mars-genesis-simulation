@@ -1,3 +1,5 @@
+@use '../../../theme/typography' as typo;
+
 .gauge {
   display: inline-flex;
   flex-direction: column;
@@ -10,15 +12,12 @@
 }
 
 .label {
-  font-size: var(--font-xs);
+  @include typo.field-label;
   color: var(--paracosm-text-muted, #888);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .value {
-  font-size: var(--font-lg);
-  font-weight: 600;
+  @include typo.body-strong;
   color: var(--paracosm-text, #eee);
 }
 

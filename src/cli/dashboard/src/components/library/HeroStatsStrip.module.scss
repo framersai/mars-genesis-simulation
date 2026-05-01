@@ -1,3 +1,5 @@
+@use '../../theme/typography' as typo;
+
 .strip {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -17,10 +19,8 @@
 }
 
 .statLabel {
-  font-size: var(--font-xs);
+  @include typo.section-label;
   color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
 }
 
 .statValue {

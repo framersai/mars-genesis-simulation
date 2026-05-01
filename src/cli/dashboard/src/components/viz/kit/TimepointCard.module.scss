@@ -1,3 +1,5 @@
+@use '../../../theme/typography' as typo;
+
 .card {
   background: var(--paracosm-surface, #1c1814);
   border: 1px solid var(--paracosm-border, rgba(255,255,255,0.08));
@@ -9,9 +11,7 @@
 }
 
 .label {
-  font-size: var(--font-md);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  @include typo.card-title;
   color: var(--paracosm-accent, #e8b44a);
 }
 

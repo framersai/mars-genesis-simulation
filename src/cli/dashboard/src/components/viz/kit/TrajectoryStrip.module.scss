@@ -1,3 +1,5 @@
+@use '../../../theme/typography' as typo;
+
 .strip {
   background: var(--paracosm-surface, #1c1814);
   border: 1px solid var(--paracosm-border, rgba(255,255,255,0.08));
@@ -44,8 +46,8 @@
 }
 
 .labels {
+  @include typo.field-label;
   display: flex;
   justify-content: space-between;
-  font-size: var(--font-xs);
   color: var(--paracosm-text-muted, #888);
 }
