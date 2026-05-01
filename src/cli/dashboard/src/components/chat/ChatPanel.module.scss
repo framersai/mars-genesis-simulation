@@ -1,0 +1,333 @@
+// Migrated from inline `style={{}}` per the no-inline-styles convention.
+// Mood color, sentiment, valence, and HEXACO threshold colors flow in
+// via CSS custom properties set on the consuming element.
+
+.layout {
+  display: flex;
+  height: 100%;
+  gap: 1px;
+  background: var(--border);
+}
+
+.sidebar {
+  width: 240px;
+  background: var(--bg-panel);
+  overflow-y: auto;
+  padding: 12px;
+  flex-shrink: 0;
+}
+
+.sidebarHeading {
+  font-size: var(--font-lg);
+  color: var(--amber);
+  font-family: var(--mono);
+  margin: 0 0 6px 0;
+}
+
+.sidebarLead {
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.agentBtn {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 4px;
+  font-size: var(--font-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-1);
+  display: block;
+}
+
+.agentBtn.selected {
+  border-color: var(--amber);
+  background: var(--bg-card);
+}
+
+.agentName { font-weight: 700; }
+
+.agentMeta {
+  color: var(--text-3);
+  font-size: var(--font-2xs);
+}
+
+.agentMood {
+  font-size: var(--font-2xs);
+  font-weight: 700;
+  margin-top: 2px;
+  // --mood-color set inline from moodColors lookup.
+  color: var(--mood-color, var(--text-3));
+}
+
+.chatArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-deep);
+}
+
+.memoryBar {
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+  font-size: var(--font-2xs);
+}
+
+.memoryLabel {
+  font-weight: 700;
+  color: var(--text-3);
+  font-family: var(--mono);
+  letter-spacing: 0.5px;
+}
+
+.memoryBelief {
+  color: var(--text-2);
+  margin-right: 8px;
+}
+
+.memoryStance {
+  margin-right: 8px;
+  // --stance-color set inline based on value sign.
+  color: var(--stance-color, var(--text-3));
+}
+
+.hexacoStrip {
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: var(--font-2xs);
+}
+
+.hexacoLabel {
+  font-weight: 700;
+  color: var(--text-3);
+  letter-spacing: 0.5px;
+}
+
+.hexacoTrait { color: var(--amber); }
+.hexacoBar { color: var(--text-2); }
+
+.healthSignal {
+  // --signal-color set inline based on threshold.
+  color: var(--signal-color, var(--text-3));
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.emptyState {
+  color: var(--text-3);
+  text-align: center;
+  padding: 30px 20px;
+}
+
+.emptyTitle {
+  font-size: var(--font-lg);
+  margin-bottom: 10px;
+}
+
+.emptyCopy {
+  font-size: var(--font-xs);
+  line-height: 1.6;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.eventCtx {
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: var(--font-2xs);
+  line-height: 1.5;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.eventGroup { margin-bottom: 8px; }
+.eventGroupLast { margin-bottom: 0; }
+
+.eventGroupLabel {
+  font-weight: 700;
+  font-family: var(--mono);
+  font-size: var(--font-3xs);
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+  // --group-color rust/amber/teal depending on group.
+  color: var(--group-color, var(--amber));
+}
+
+.eventRow {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.eventTurn {
+  font-family: var(--mono);
+  color: var(--text-3);
+  flex-shrink: 0;
+  min-width: 45px;
+}
+
+.eventTitle {
+  color: var(--text-1);
+  font-weight: 600;
+}
+
+.eventCategory {
+  color: var(--text-3);
+  font-family: var(--mono);
+}
+
+.memoryItem {
+  color: var(--text-2);
+  padding-left: 6px;
+  // --valence-border set inline based on valence string.
+  border-left: 2px solid var(--valence-border, var(--border));
+  margin-bottom: 2px;
+}
+
+.memoryTime {
+  font-family: var(--mono);
+  color: var(--text-3);
+}
+
+.relationshipsRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.relationshipChip {
+  // --rel-color set inline based on sentiment sign.
+  color: var(--rel-color, var(--text-3));
+}
+
+.bubbleWrap {
+  max-width: 80%;
+}
+
+.bubbleWrap.fromUser {
+  align-self: flex-end;
+}
+
+.bubbleWrap.fromAgent {
+  align-self: flex-start;
+}
+
+.bubbleName {
+  font-size: var(--font-2xs);
+  color: var(--amber);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.bubble {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: var(--font-md);
+  line-height: 1.6;
+  color: var(--text-1);
+  box-shadow: var(--card-shadow);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+
+.bubble.user {
+  background: rgba(232, 180, 74, 0.12);
+  border-color: var(--amber-dim);
+}
+
+.typingBubble {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: var(--card-shadow);
+}
+
+.typingLabel {
+  font-size: var(--font-xs);
+  font-style: italic;
+}
+
+@keyframes chat-dot-bounce {
+  0%, 60%, 100% { opacity: 0.2; transform: translateY(0); }
+  30%           { opacity: 1;   transform: translateY(-2px); }
+}
+
+.dot {
+  display: inline-block;
+  font-weight: 800;
+  font-size: var(--font-lg);
+  line-height: 1;
+  color: var(--amber);
+  animation: chat-dot-bounce 1s ease-in-out infinite;
+  // --dot-delay set inline (0ms / 160ms / 320ms).
+  animation-delay: var(--dot-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+.inputRow {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+}
+
+.inputField {
+  flex: 1;
+  background: var(--bg-card);
+  color: var(--text-1);
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: var(--font-lg);
+  font-family: var(--sans);
+
+  &:disabled { opacity: 0.5; }
+}
+
+.sendBtn {
+  background: linear-gradient(135deg, var(--rust), #c44a1e);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: var(--font-md);
+  font-weight: 700;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
