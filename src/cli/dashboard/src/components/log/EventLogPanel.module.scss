@@ -38,18 +38,6 @@
   font-weight: 800;
 }
 
-.clearFilterButton {
-  @include typo.section-label;
-  padding: 2px 8px;
-  border-radius: 3px;
-  background: var(--bg-card);
-  color: var(--text-3);
-  border: 1px solid var(--border);
-  cursor: pointer;
-
-  &:hover { color: var(--text-1); }
-}
-
 .emptyState {
   color: var(--text-3);
   padding: 20px 0;

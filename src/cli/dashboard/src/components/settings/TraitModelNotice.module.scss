@@ -33,8 +33,13 @@
   min-width: 0;
 }
 
+// "Leaders accept pluggable trait models." sits inside the mono
+// .notice container, so keep mono here to avoid a family discontinuity.
+// body-strong would have switched to sans.
 .headline {
-  @include typo.body-strong;
+  font-family: var(--mono);
+  font-size: var(--font-md);
+  font-weight: 700;
   color: var(--text-1);
   margin-bottom: 4px;
 }
