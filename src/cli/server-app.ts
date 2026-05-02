@@ -2451,10 +2451,11 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
   // a11y: typedoc renders <details><summary><a>...</a></summary></details>
   // for module accordion entries in the left nav. axe flags this as
   // nested-interactive (a focusable <a> inside an interactive
-  // <summary>). Restructure each match by moving the <a> out as a
-  // next-sibling of the summary, then add a flex layout class so
-  // the visual row stays intact. Re-run on every nav mutation since
-  // typedoc hydrates the sidebar asynchronously.
+  // <summary>). Restructure each match by moving the <a> out of the
+  // <details> entirely (as a next-sibling of <details>), so it stays
+  // visible regardless of details state, and tag the parent so CSS
+  // can flex chevron + link side-by-side. Re-run on every nav
+  // mutation since typedoc hydrates the sidebar asynchronously.
   function fixNestedInteractive(){
     var summaries=document.querySelectorAll('details > summary.tsd-accordion-summary > a');
     for(var i=0;i<summaries.length;i++){
@@ -2463,13 +2464,15 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       var details=summary&&summary.parentElement;
       if(!details||details.tagName!=='DETAILS') continue;
       if(link.dataset.tsdExtracted) continue;
+      var detailsParent=details.parentElement;
+      if(!detailsParent) continue;
       var label=(link.textContent||'').trim();
       if(label) summary.setAttribute('aria-label','Toggle '+label);
       summary.removeChild(link);
-      details.insertBefore(link,summary.nextSibling);
+      detailsParent.insertBefore(link,details.nextSibling);
       link.dataset.tsdExtracted='1';
       link.classList.add('tsd-extracted-summary-link');
-      details.classList.add('tsd-fixed-accordion');
+      detailsParent.classList.add('tsd-fixed-accordion-row');
     }
   }
   fixNestedInteractive();
