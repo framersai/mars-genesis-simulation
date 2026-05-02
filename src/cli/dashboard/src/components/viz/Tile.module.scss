@@ -1,0 +1,104 @@
+// Migrated from inline `style={{}}`. Tile size, dept color, divergence
+// shading, and selected state flow in via CSS custom properties.
+
+.tile {
+  // --tile-size, --tile-padding, --tile-margin, --dept-bar-h, --dept-color
+  // --diverged-shadow set inline.
+  width: var(--tile-size, 28px);
+  height: var(--tile-size, 28px);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-1);
+  opacity: 1;
+  border-radius: 6px;
+  padding: var(--tile-padding, 2px);
+  box-shadow: var(--diverged-shadow, none);
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  font-family: var(--mono);
+  text-align: left;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.tile.selected { border: 2px solid var(--amber); }
+
+.tile.ghost {
+  background: transparent;
+  color: var(--text-3);
+  opacity: 0.35;
+}
+
+.deptBar {
+  display: block;
+  height: var(--dept-bar-h, 3px);
+  background: var(--dept-color, var(--text-3));
+  margin: var(--dept-bar-margin, -2px -2px 2px -2px);
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+}
+
+.ghostX {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-2xl);
+  color: var(--text-3);
+}
+
+.xlName {
+  font-weight: 700;
+  font-size: var(--font-xs);
+  line-height: 1.2;
+  color: var(--text-1);
+}
+
+.xlRole {
+  font-size: var(--font-3xs);
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
+.flexFill { flex: 1; }
+
+.xlBottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-sm);
+}
+
+.xlAge {
+  font-size: var(--font-3xs);
+  color: var(--text-3);
+}
+
+.mdName {
+  font-weight: 600;
+  font-size: var(--font-3xs);
+  line-height: 1.2;
+}
+
+.mdBottom {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-2xs);
+}
+
+.mdAge { color: var(--text-3); }
+
+.smInitial {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-2xs);
+  font-weight: 700;
+  // --dept-color set inline.
+  color: var(--dept-color, var(--text-3));
+}
