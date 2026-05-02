@@ -2448,6 +2448,34 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       a.addEventListener('click',function(){hb.classList.remove('open');mn.classList.remove('open');});
     });
   }
+  // a11y: typedoc renders <details><summary><a>...</a></summary></details>
+  // for module accordion entries in the left nav. axe flags this as
+  // nested-interactive (a focusable <a> inside an interactive
+  // <summary>). Restructure each match by moving the <a> out as a
+  // next-sibling of the summary, then add a flex layout class so
+  // the visual row stays intact. Re-run on every nav mutation since
+  // typedoc hydrates the sidebar asynchronously.
+  function fixNestedInteractive(){
+    var summaries=document.querySelectorAll('details > summary.tsd-accordion-summary > a');
+    for(var i=0;i<summaries.length;i++){
+      var link=summaries[i];
+      var summary=link.parentElement;
+      var details=summary&&summary.parentElement;
+      if(!details||details.tagName!=='DETAILS') continue;
+      if(link.dataset.tsdExtracted) continue;
+      var label=(link.textContent||'').trim();
+      if(label) summary.setAttribute('aria-label','Toggle '+label);
+      summary.removeChild(link);
+      details.insertBefore(link,summary.nextSibling);
+      link.dataset.tsdExtracted='1';
+      link.classList.add('tsd-extracted-summary-link');
+      details.classList.add('tsd-fixed-accordion');
+    }
+  }
+  fixNestedInteractive();
+  if(window.MutationObserver){
+    new MutationObserver(fixNestedInteractive).observe(document.body,{childList:true,subtree:true});
+  }
 })();
 </script>`);
             // Inject footer before </body>
