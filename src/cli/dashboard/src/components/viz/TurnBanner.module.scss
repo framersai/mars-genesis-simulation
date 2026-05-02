@@ -1,0 +1,40 @@
+// Migrated from inline `style={{}}`.
+
+.banner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  font-size: var(--font-xs);
+  font-family: var(--mono);
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.headline {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  color: var(--text-2);
+  flex-wrap: wrap;
+}
+
+.turnLabel { color: var(--text-3); }
+
+.title {
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.categoryPill {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: var(--font-3xs);
+  background: var(--bg-card);
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.lineA { color: var(--vis); }
+.lineB { color: var(--eng); }

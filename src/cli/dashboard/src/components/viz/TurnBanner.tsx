@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { GameState, ActorSideState } from '../../hooks/useGameState.js';
 import { humanizeOutcome } from './humanize-outcome.js';
+import styles from './TurnBanner.module.scss';
 
 interface TurnBannerProps {
   state: GameState;
@@ -74,34 +75,14 @@ export function TurnBanner({ state, currentTurn }: TurnBannerProps) {
   if (!headline) return null;
 
   return (
-    <div
-      role="status"
-      aria-label="Current turn narrative"
-      style={{
-        display: 'flex', flexDirection: 'column', gap: 4,
-        padding: '8px 12px', fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)',
-        background: 'var(--bg-panel)', borderBottom: '1px solid var(--border)',
-      }}
-    >
-      <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', color: 'var(--text-2)', flexWrap: 'wrap' }}>
-        <span style={{ color: 'var(--text-3)' }}>T{currentTurn + 1}{time ? ` \u00b7 ${time}` : ''}</span>
-        <span style={{ fontWeight: 700, color: 'var(--text-1)' }}>{headline}</span>
-        {category && (
-          <span style={{
-            padding: '2px 6px', borderRadius: 4, fontSize: 'var(--font-3xs)',
-            background: 'var(--bg-card)', color: 'var(--text-3)',
-            textTransform: 'uppercase', letterSpacing: '0.04em',
-          }}>
-            {category}
-          </span>
-        )}
+    <div role="status" aria-label="Current turn narrative" className={styles.banner}>
+      <div className={styles.headline}>
+        <span className={styles.turnLabel}>T{currentTurn + 1}{time ? ` \u00b7 ${time}` : ''}</span>
+        <span className={styles.title}>{headline}</span>
+        {category && <span className={styles.categoryPill}>{category}</span>}
       </div>
-      {a && (
-        <div style={{ color: 'var(--vis)' }}>A: {humanizeOutcome(a)}</div>
-      )}
-      {b && (
-        <div style={{ color: 'var(--eng)' }}>B: {humanizeOutcome(b)}</div>
-      )}
+      {a && <div className={styles.lineA}>A: {humanizeOutcome(a)}</div>}
+      {b && <div className={styles.lineB}>B: {humanizeOutcome(b)}</div>}
     </div>
   );
 }
