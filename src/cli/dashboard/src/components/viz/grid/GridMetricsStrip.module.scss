@@ -1,0 +1,160 @@
+// Migrated from inline `style={{}}`. Side color, morale color, and per-bar
+// fill ratios flow in via CSS custom properties.
+
+.strip {
+  display: grid;
+  grid-template-columns: auto 1.1fr 1fr auto auto;
+  gap: 10px;
+  align-items: stretch;
+  padding: 8px 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+}
+
+.strip.narrow {
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.colNarrow { min-width: 90px; }
+.colPaired { min-width: 80px; }
+
+.row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.rowBaseline {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.label {
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+.moraleValue {
+  font-weight: 800;
+  font-size: var(--font-md);
+  // --morale-color set inline based on threshold.
+  color: var(--morale-color, var(--text-2));
+}
+
+.bar {
+  height: 4px;
+  background: var(--bg-deep);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.moraleFill {
+  // --morale-pct set inline as percentage string.
+  width: var(--morale-pct, 0%);
+  height: 100%;
+  background: var(--morale-color, var(--text-2));
+  transition: width 500ms cubic-bezier(0.2, 0.9, 0.3, 1), background 400ms ease;
+}
+
+.value2 { color: var(--text-2); }
+.valueRust { color: var(--rust); }
+.valueNative {
+  // --side-color set inline.
+  color: var(--side-color, var(--text-2));
+  font-weight: 700;
+}
+
+.moodHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.moodEmpty {
+  font-size: var(--font-3xs);
+  color: var(--text-4);
+}
+
+.moodBar {
+  display: flex;
+  height: 8px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--bg-deep);
+}
+
+.moodSegment {
+  // --segment-pct and --segment-bg set inline.
+  width: var(--segment-pct, 0%);
+  background: var(--segment-bg, var(--text-4));
+  transition: width 500ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.moodLegend {
+  font-size: var(--font-3xs);
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ageBars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 22px;
+}
+
+.ageBarCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.ageBarFill {
+  width: 100%;
+  // --age-height set inline as percentage. --age-min sets min-height.
+  height: var(--age-height, 0%);
+  min-height: var(--age-min, 0);
+  background: var(--age-bg, transparent);
+  border-radius: 2px 2px 0 0;
+  opacity: 0.85;
+  transition: height 500ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.ageScale {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-3xs);
+  color: var(--text-4);
+}
+
+.deptBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.deptLabel {
+  font-size: var(--font-3xs);
+  color: var(--text-4);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

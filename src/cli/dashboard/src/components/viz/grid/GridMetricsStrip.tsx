@@ -1,6 +1,8 @@
+import type { CSSProperties } from 'react';
 import type { TurnSnapshot } from '../viz-types.js';
 import { useMediaQuery, NARROW_QUERY } from './useMediaQuery.js';
 import { DeptDonut } from './DeptDonut.js';
+import styles from './GridMetricsStrip.module.scss';
 
 /**
  * Full colony metrics strip rendered above the living grid. Same
@@ -48,71 +50,47 @@ export function GridMetricsStrip({
   const morale = Math.round(snapshot.morale * 100);
   const moraleColor =
     morale >= 60 ? 'var(--green)' : morale >= 30 ? 'var(--amber)' : 'var(--rust)';
+  const sideStyle = { '--side-color': sideColor } as CSSProperties;
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: narrow ? '1fr 1fr' : 'auto 1.1fr 1fr auto auto',
-        gap: narrow ? 8 : 10,
-        alignItems: 'stretch',
-        padding: '8px 10px',
-        background: 'var(--bg-panel)',
-        border: '1px solid var(--border)',
-        borderRadius: 6,
-        fontFamily: 'var(--mono)',
-        fontSize: 'var(--font-2xs)',
-        color: 'var(--text-3)',
-      }}
-    >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 90 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <span style={{ letterSpacing: '0.5px', fontWeight: 700 }}>MORALE</span>
-          <span style={{ color: moraleColor, fontWeight: 800, fontSize: 'var(--font-md)' }}>{morale}%</span>
+    <div className={[styles.strip, narrow ? styles.narrow : ''].filter(Boolean).join(' ')}>
+      <div className={[styles.col, styles.colNarrow].join(' ')}>
+        <div className={styles.rowBaseline}>
+          <span className={styles.label}>MORALE</span>
+          <span
+            className={styles.moraleValue}
+            style={{ '--morale-color': moraleColor } as CSSProperties}
+          >
+            {morale}%
+          </span>
         </div>
-        <div
-          style={{
-            height: 4,
-            background: 'var(--bg-deep)',
-            borderRadius: 2,
-            overflow: 'hidden',
-          }}
-        >
+        <div className={styles.bar}>
           <div
+            className={styles.moraleFill}
             style={{
-              width: `${Math.max(2, morale)}%`,
-              height: '100%',
-              background: moraleColor,
-              transition: 'width 500ms cubic-bezier(0.2, 0.9, 0.3, 1), background 400ms ease',
-            }}
+              '--morale-pct': `${Math.max(2, morale)}%`,
+              '--morale-color': moraleColor,
+            } as CSSProperties}
           />
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div className={styles.row}>
           <span>FOOD</span>
-          <span style={{ color: 'var(--text-2)' }}>{snapshot.foodReserve.toFixed(1)}mo</span>
+          <span className={styles.value2}>{snapshot.foodReserve.toFixed(1)}mo</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div className={styles.row}>
           <span>DEATHS</span>
-          <span style={{ color: 'var(--rust)' }}>{snapshot.deaths}</span>
+          <span className={styles.valueRust}>{snapshot.deaths}</span>
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <span style={{ letterSpacing: '0.5px', fontWeight: 700 }}>MOOD MIX</span>
-          <span style={{ color: 'var(--text-2)' }}>{alive.length} alive</span>
+      <div className={styles.col}>
+        <div className={styles.moodHeader}>
+          <span className={styles.label}>MOOD MIX</span>
+          <span className={styles.value2}>{alive.length} alive</span>
         </div>
         {alive.length === 0 ? (
-          <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-4)' }}>no survivors</div>
+          <div className={styles.moodEmpty}>no survivors</div>
         ) : (
           <>
-            <div
-              style={{
-                display: 'flex',
-                height: 8,
-                borderRadius: 2,
-                overflow: 'hidden',
-                background: 'var(--bg-deep)',
-              }}
-            >
+            <div className={styles.moodBar}>
               {moodOrder.map(m => {
                 const c = moodCounts[m] || 0;
                 if (c === 0) return null;
@@ -121,25 +99,16 @@ export function GridMetricsStrip({
                   <div
                     key={m}
                     title={`${m}: ${c}`}
+                    className={styles.moodSegment}
                     style={{
-                      width: `${pct}%`,
-                      background: moodColors[m] || 'var(--text-4)',
-                      transition:
-                        'width 500ms cubic-bezier(0.2, 0.9, 0.3, 1)',
-                    }}
+                      '--segment-pct': `${pct}%`,
+                      '--segment-bg': moodColors[m] || 'var(--text-4)',
+                    } as CSSProperties}
                   />
                 );
               })}
             </div>
-            <div
-              style={{
-                fontSize: 'var(--font-3xs)',
-                color: 'var(--text-3)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
+            <div className={styles.moodLegend}>
               {moodOrder
                 .filter(m => (moodCounts[m] || 0) > 0)
                 .map(m => `${Math.round(((moodCounts[m] || 0) / totalMood) * 100)}% ${m}`)
@@ -149,90 +118,52 @@ export function GridMetricsStrip({
           </>
         )}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
-        <div style={{ letterSpacing: '0.5px', fontWeight: 700 }}>AGE</div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 22 }}>
+      <div className={styles.col}>
+        <div className={styles.label}>AGE</div>
+        <div className={styles.ageBars}>
           {ageBuckets.map((n, i) => (
-            <div
-              key={i}
-              style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'flex-end',
-                minWidth: 0,
-              }}
-            >
+            <div key={i} className={styles.ageBarCol}>
               <div
                 title={`${['<20', '20-40', '40-60', '60+'][i]}: ${n} colonists`}
+                className={styles.ageBarFill}
                 style={{
-                  width: '100%',
-                  height: `${(n / ageMax) * 100}%`,
-                  minHeight: n > 0 ? 2 : 0,
-                  background: n > 0 ? sideColor : 'transparent',
-                  borderRadius: '2px 2px 0 0',
-                  opacity: 0.85,
-                  transition: 'height 500ms cubic-bezier(0.2, 0.9, 0.3, 1)',
-                }}
+                  '--age-height': `${(n / ageMax) * 100}%`,
+                  '--age-min': n > 0 ? '2px' : '0',
+                  '--age-bg': n > 0 ? sideColor : 'transparent',
+                } as CSSProperties}
               />
             </div>
           ))}
         </div>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            fontSize: 'var(--font-3xs)',
-            color: 'var(--text-4)',
-          }}
-        >
+        <div className={styles.ageScale}>
           <span>{'<20'}</span>
           <span>20</span>
           <span>40</span>
           <span>60+</span>
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 80 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ letterSpacing: '0.5px', fontWeight: 700 }}>PAIRED</span>
-          <span style={{ color: 'var(--text-2)' }}>
+      <div className={[styles.col, styles.colPaired].join(' ')}>
+        <div className={styles.row}>
+          <span className={styles.label}>PAIRED</span>
+          <span className={styles.value2}>
             {partnered}/{alive.length}
           </span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div className={styles.row}>
           <span>EARTH</span>
-          <span style={{ color: 'var(--text-2)' }}>{earthBorn}</span>
+          <span className={styles.value2}>{earthBorn}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div className={styles.row}>
           <span>NATIVE</span>
-          <span style={{ color: sideColor, fontWeight: 700 }}>
+          <span className={styles.valueNative} style={sideStyle}>
             {alive.length - earthBorn}
           </span>
         </div>
       </div>
       {!narrow && (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 2,
-          }}
-          aria-label="Department breakdown"
-        >
+        <div className={styles.deptBlock} aria-label="Department breakdown">
           <DeptDonut cells={snapshot.cells} size={44} />
-          <span
-            style={{
-              fontSize: 'var(--font-3xs)',
-              color: 'var(--text-4)',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-            }}
-          >
-            Depts
-          </span>
+          <span className={styles.deptLabel}>Depts</span>
         </div>
       )}
     </div>
