@@ -124,12 +124,21 @@ export function ClickPopover(props: ClickPopoverProps) {
     return `Gen ${g}`;
   })();
 
+  // Cap max-height to the space remaining below `top` within the
+  // canvasWrap. `canvasWrap` has overflow:hidden, so a popover positioned
+  // at `top` with max-height = containerH - margin*2 would extend past
+  // the bottom edge whenever top > margin and the parent's clip would
+  // hide the chat button + memory tail with no way for the popover's
+  // internal overflow:auto to reveal it. Floor at 120px so a click in
+  // the very-bottom row still produces a usable card (it'll flip down
+  // via the positioning logic above when there's room).
+  const popMaxHeight = Math.max(120, containerH - top - margin);
   const popStyle = {
     '--side-color': sideColor,
     '--pop-left': `${left}px`,
     '--pop-top': `${top}px`,
     '--pop-width': `${POP_W}px`,
-    '--pop-max-height': `${containerH - margin * 2}px`,
+    '--pop-max-height': `${popMaxHeight}px`,
   } as CSSProperties;
 
   return (

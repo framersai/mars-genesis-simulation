@@ -7,6 +7,7 @@
 .panel {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   padding: 8px 16px;
   background: var(--bg-panel);
@@ -18,10 +19,14 @@
 .label {
   @include typo.field-label;
   color: var(--text-3);
+  flex-shrink: 0;
 }
 
 .copy {
   color: var(--text-2);
+  flex: 1;
+  min-width: 0;
+  line-height: 1.45;
 }
 
 .button {
@@ -35,6 +40,7 @@
   color: white;
   border: none;
   cursor: pointer;
+  flex-shrink: 0;
 
   &:hover {
     filter: brightness(1.08);
@@ -49,5 +55,31 @@
     opacity: 0.5;
     cursor: not-allowed;
     filter: none;
+  }
+}
+
+// Narrow viewports — the inline label + copy + button row collapses
+// the copy onto a too-narrow column and pushes the button against
+// the SimFooterBar hint above. Stack the copy as its own full-width
+// row and span the button so the rerun affordance reads as the
+// primary action of the panel instead of a tucked-right chip.
+@media (max-width: 600px) {
+  .panel {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+
+  .copy {
+    flex-basis: 100%;
+    order: 2;
+  }
+
+  .button {
+    margin-left: 0;
+    order: 3;
+    flex-basis: 100%;
+    padding: 9px 14px;
+    font-size: var(--font-sm);
+    text-align: center;
   }
 }

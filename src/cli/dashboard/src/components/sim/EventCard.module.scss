@@ -1177,3 +1177,117 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+// -- Narrow viewports --------------------------------------------------
+//
+// On phones the SimView column flips to a single stacked column
+// (tokens.css 768px). The default 8px side margin + 6-10px internal
+// padding then leaves event cards looking cramped against each other —
+// header pills wrap but the body stays vertically tight, and the row
+// gap is only 1px so adjacent cards visually merge. Drop the side
+// margin so the card uses the full column width, raise internal padding
+// for legibility, and let pill rows breathe so the FORGED-TOOL / dept /
+// description / verdict line wraps without overlapping.
+@media (max-width: 600px) {
+  .eventStartRow {
+    padding: 8px 10px;
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .forgeBtn {
+    margin: 0 0 2px;
+    padding: 10px 12px;
+    font-size: var(--font-sm);
+    line-height: 1.5;
+  }
+
+  .forgeRow {
+    gap: 6px 8px;
+    row-gap: 4px;
+  }
+
+  .forgeDescription { font-size: var(--font-md); }
+
+  .specWrap { margin: 0 0 2px; }
+
+  .specCard {
+    padding: 10px 12px;
+    font-size: var(--font-sm);
+  }
+
+  .specHeader { row-gap: 4px; }
+
+  .specRiskRow,
+  .specRecRow {
+    font-size: var(--font-sm);
+    line-height: 1.5;
+  }
+
+  .toolDetail { margin: 0 0 2px; }
+
+  .toolSummary {
+    padding: 10px 76px 10px 12px;
+    gap: 8px;
+  }
+
+  .toolDescription { font-size: var(--font-md); line-height: 1.4; }
+
+  .toolBody { padding: 0 12px 10px; }
+
+  .outcomeCard {
+    margin: 0 0 2px;
+    padding: 10px 12px;
+  }
+
+  .outcomeText {
+    font-size: var(--font-md);
+    line-height: 1.55;
+  }
+
+  .reactionsCard {
+    margin: 0 0 2px;
+    padding: 10px 12px;
+  }
+
+  .reactionRow {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  .reactionRowName { min-width: 0; }
+
+  .bulletinWrap {
+    margin: 0 0 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .bulletinRow {
+    flex-wrap: wrap;
+    row-gap: 2px;
+    padding: 4px 0;
+  }
+
+  .driftRow {
+    padding: 6px 10px;
+    line-height: 1.55;
+  }
+
+  .promotionRow {
+    padding: 4px 10px;
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  .promotionReason {
+    flex-basis: 100%;
+    white-space: normal;
+  }
+
+  .fallbackBox {
+    margin: 0 0 2px;
+    padding: 10px 12px;
+  }
+}

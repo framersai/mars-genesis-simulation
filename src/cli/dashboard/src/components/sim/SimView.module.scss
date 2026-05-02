@@ -36,6 +36,22 @@
   gap: 1px;
 }
 
+// Below 600px the side-by-side columns flip to stacked (tokens.css 768px).
+// At narrow widths the 1px stack gap and tight per-card padding squeezes
+// every event card into a wall of barely-distinguishable rows. Add
+// breathing room so the chronicle is scannable on a 360px phone.
+@media (max-width: 600px) {
+  .leaderColumnScroll {
+    gap: 6px;
+    padding: 6px 8px 12px;
+  }
+
+  .deptsRow {
+    gap: 6px;
+    padding: 4px 0;
+  }
+}
+
 .leaderColumnGeneratingBlock {
   color: var(--text-3);
   font-size: var(--font-sm);

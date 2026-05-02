@@ -9,6 +9,8 @@
   background: var(--bg-panel);
   border-top: 1px solid var(--border);
   flex-shrink: 0;
+  flex-wrap: wrap;
+  row-gap: 6px;
 }
 
 .label {
@@ -27,6 +29,33 @@
   font-family: var(--mono);
   color: var(--text-3);
   font-style: italic;
+}
+
+// Narrow viewports — without wrap, .spacer's flex:1 squeezed the hint
+// into a per-word vertical column on the right edge of the row. With
+// `flex-wrap: wrap` on .bar (above), the hint now drops to its own
+// row when there is no horizontal room. Drop the spacer (pointless once
+// items wrap) and span the hint full-width so it reads as a one-liner
+// over the rerun panel below instead of stacking word-per-line.
+@media (max-width: 600px) {
+  .bar {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .spacer { display: none; }
+
+  .hint {
+    flex: 1 0 100%;
+    line-height: 1.4;
+  }
+}
+
+// Phone — the hint is helpful but expendable when every pixel matters.
+// The [N] pills it references are still tappable, and dropping the
+// line keeps the footer compact above the rerun panel.
+@media (max-width: 380px) {
+  .hint { display: none; }
 }
 
 .cta {
