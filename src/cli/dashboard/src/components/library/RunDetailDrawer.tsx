@@ -2,6 +2,7 @@ import * as React from 'react';
 import styles from './RunDetailDrawer.module.scss';
 import { useRunArtifact } from './hooks/useRunArtifact.js';
 import { ReplayPanel } from './ReplayPanel.js';
+import { SwarmPanel } from './SwarmPanel.js';
 import { BatchArtifactView } from '../reports/BatchArtifactView.js';
 import { ReportViewAdapter } from '../reports/ReportViewAdapter.js';
 import type { MetricSpec } from '../viz/kit/index.js';
@@ -125,6 +126,8 @@ export function RunDetailDrawer(props: RunDetailDrawerProps): JSX.Element {
                   {(artifact.trajectory?.timepoints?.length ?? 0)} timepoints · {record.costUSD != null ? `$${record.costUSD.toFixed(2)}` : '-'} · {record.createdAt.slice(0, 19).replace('T', ' ')}
                 </p>
               </section>
+
+              <SwarmPanel artifact={artifact} />
 
               <section className={styles.detailBody}>
                 {artifact.metadata.mode === 'turn-loop'
