@@ -1,4 +1,6 @@
+import type { CSSProperties } from 'react';
 import type { ProviderErrorState } from '../../hooks/useSSE';
+import styles from './ProviderErrorBanner.module.scss';
 
 /**
  * Persistent banner shown at the top of the dashboard when a simulation
@@ -59,49 +61,23 @@ export function ProviderErrorBanner({
           ? `Network error contacting ${providerLabel(providerError.provider)}`
           : 'Provider error';
 
+  const bannerVars = {
+    '--banner-bg': colors.bg,
+    '--banner-border': colors.border,
+    '--banner-text': colors.text,
+    '--action-bg': colors.actionBg,
+    '--action-text': colors.actionText,
+  } as CSSProperties;
+
   return (
-    <div
-      role="alert"
-      aria-live="assertive"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        padding: '10px 16px',
-        background: colors.bg,
-        borderBottom: `2px solid ${colors.border}`,
-        fontFamily: 'var(--mono)',
-        fontSize: 'var(--font-md)',
-        color: colors.text,
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        flexWrap: 'wrap',
-      }}
-    >
-      <span
-        aria-hidden="true"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '22px',
-          height: '22px',
-          borderRadius: '50%',
-          border: `2px solid ${colors.border}`,
-          fontWeight: 700,
-          fontSize: 'var(--font-lg)',
-          flexShrink: 0,
-        }}
-      >
-        !
-      </span>
-      <div style={{ flex: 1, minWidth: '260px' }}>
-        <div style={{ fontWeight: 700, marginBottom: '2px' }}>{heading}</div>
-        <div style={{ color: 'var(--text-2)', fontSize: 'var(--font-sm)', fontFamily: 'var(--sans)' }}>
+    <div role="alert" aria-live="assertive" className={styles.banner} style={bannerVars}>
+      <span aria-hidden="true" className={styles.icon}>!</span>
+      <div className={styles.body}>
+        <div className={styles.heading}>{heading}</div>
+        <div className={styles.message}>
           {providerError.message}
           {providerError.leader ? (
-            <span style={{ color: 'var(--text-3)' }}> (hit by {providerError.leader})</span>
+            <span className={styles.messageActor}> (hit by {providerError.leader})</span>
           ) : null}
         </div>
       </div>
@@ -110,35 +86,13 @@ export function ProviderErrorBanner({
           href={providerError.actionUrl}
           target="_blank"
           rel="noreferrer noopener"
-          style={{
-            background: colors.actionBg,
-            color: colors.actionText,
-            textDecoration: 'none',
-            padding: '6px 12px',
-            borderRadius: '4px',
-            fontWeight: 700,
-            fontSize: 'var(--font-sm)',
-            whiteSpace: 'nowrap',
-          }}
+          className={styles.actionLink}
         >
           {providerError.kind === 'quota' ? 'Add credits →' : 'Fix key →'}
         </a>
       ) : null}
       {onDismiss ? (
-        <button
-          onClick={onDismiss}
-          aria-label="Dismiss banner"
-          style={{
-            background: 'transparent',
-            color: colors.text,
-            border: `1px solid ${colors.border}`,
-            padding: '4px 10px',
-            borderRadius: '4px',
-            fontSize: 'var(--font-sm)',
-            cursor: 'pointer',
-            fontFamily: 'var(--mono)',
-          }}
-        >
+        <button onClick={onDismiss} aria-label="Dismiss banner" className={styles.dismissBtn}>
           Dismiss
         </button>
       ) : null}

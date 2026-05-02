@@ -1,0 +1,71 @@
+// Migrated from inline `style={{}}`. Severity-driven colors flow in via
+// --banner-bg / --banner-border / --banner-text / --action-bg / --action-text.
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--banner-bg, rgba(232, 180, 74, 0.14));
+  border-bottom: 2px solid var(--banner-border, var(--amber));
+  font-family: var(--mono);
+  font-size: var(--font-md);
+  color: var(--banner-text, var(--amber));
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-wrap: wrap;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--banner-border, var(--amber));
+  font-weight: 700;
+  font-size: var(--font-lg);
+  flex-shrink: 0;
+}
+
+.body {
+  flex: 1;
+  min-width: 260px;
+}
+
+.heading {
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.message {
+  color: var(--text-2);
+  font-size: var(--font-sm);
+  font-family: var(--sans);
+}
+
+.messageActor { color: var(--text-3); }
+
+.actionLink {
+  background: var(--action-bg, var(--amber));
+  color: var(--action-text, var(--bg-primary));
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: var(--font-sm);
+  white-space: nowrap;
+}
+
+.dismissBtn {
+  background: transparent;
+  color: var(--banner-text, var(--amber));
+  border: 1px solid var(--banner-border, var(--amber));
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: var(--font-sm);
+  cursor: pointer;
+  font-family: var(--mono);
+}
