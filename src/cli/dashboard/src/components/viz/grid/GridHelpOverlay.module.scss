@@ -1,0 +1,128 @@
+// Migrated from inline `style={{}}`. Phone padding switches via class.
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal-top);
+  padding: 16px;
+}
+
+.dialog {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow: auto;
+  font-family: var(--mono);
+  font-size: var(--font-xs);
+  color: var(--text-2);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
+}
+
+.dialog.phone { padding: 16px; }
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-lg);
+  font-weight: 800;
+  color: var(--amber);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: var(--mono);
+}
+
+.closeBtn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-3);
+  cursor: pointer;
+  width: 26px;
+  height: 26px;
+  font-size: var(--font-md);
+  line-height: 1;
+  padding: 0;
+}
+
+.section { margin-bottom: 16px; }
+
+.sectionTitle {
+  font-size: var(--font-3xs);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(110px, 160px) 1fr;
+  gap: 12px;
+  align-items: baseline;
+  font-size: var(--font-xs);
+}
+
+.rowKey {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: var(--font-2xs);
+  letter-spacing: 0.05em;
+}
+
+.rowVal {
+  color: var(--text-2);
+  font-family: var(--sans);
+}
+
+.swatchWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  // --swatch-color set inline.
+  background: var(--swatch-color, var(--text-3));
+  border: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.footer {
+  font-size: var(--font-3xs);
+  color: var(--text-4);
+  margin-top: 12px;
+}
+
+.kbd {
+  padding: 1px 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-family: var(--mono);
+}

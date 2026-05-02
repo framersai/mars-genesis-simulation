@@ -1,5 +1,7 @@
+import type { CSSProperties } from 'react';
 import { useMediaQuery, PHONE_QUERY } from './useMediaQuery.js';
 import { useScenarioLabels } from '../../../hooks/useScenarioLabels.js';
+import styles from './GridHelpOverlay.module.scss';
 
 interface GridHelpOverlayProps {
   open: boolean;
@@ -16,77 +18,14 @@ export function GridHelpOverlay({ open, onClose }: GridHelpOverlayProps) {
   const labels = useScenarioLabels();
   if (!open) return null;
 
+  const dialogCls = [styles.dialog, phone ? styles.phone : ''].filter(Boolean).join(' ');
+
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Grid viz help"
-      onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0, 0, 0, 0.75)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        padding: 16,
-      }}
-    >
-      <div
-        onClick={e => e.stopPropagation()}
-        style={{
-          background: 'var(--bg-panel)',
-          border: '1px solid var(--border)',
-          borderRadius: 8,
-          padding: phone ? 16 : 24,
-          maxWidth: 640,
-          maxHeight: '90vh',
-          overflow: 'auto',
-          fontFamily: 'var(--mono)',
-          fontSize: 'var(--font-xs)',
-          color: 'var(--text-2)',
-          boxShadow: '0 12px 48px rgba(0, 0, 0, 0.7)',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 16,
-          }}
-        >
-          <h2
-            style={{
-              margin: 0,
-              fontSize: 'var(--font-lg)',
-              fontWeight: 800,
-              color: 'var(--amber)',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              fontFamily: 'var(--mono)',
-            }}
-          >
-            Living {labels.Place} Grid — Legend
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close help"
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--border)',
-              borderRadius: 3,
-              color: 'var(--text-3)',
-              cursor: 'pointer',
-              width: 26,
-              height: 26,
-              fontSize: 'var(--font-md)',
-              lineHeight: 1,
-              padding: 0,
-            }}
-          >
+    <div role="dialog" aria-modal="true" aria-label="Grid viz help" onClick={onClose} className={styles.backdrop}>
+      <div onClick={e => e.stopPropagation()} className={dialogCls}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>Living {labels.Place} Grid — Legend</h2>
+          <button type="button" onClick={onClose} aria-label="Close help" className={styles.closeBtn}>
             ×
           </button>
         </div>
@@ -100,14 +39,8 @@ export function GridHelpOverlay({ open, onClose }: GridHelpOverlayProps) {
         </Section>
 
         <Section title="Grid elements">
-          <Row
-            k={<Swatch color="rgba(232, 180, 74, 0.9)" /> as unknown as string}
-            v={`Warm amber = high vitality (${labels.place} thriving)`}
-          />
-          <Row
-            k={<Swatch color="rgba(196, 74, 30, 0.9)" /> as unknown as string}
-            v="Rust red = stress concentration (decay / anxiety)"
-          />
+          <Row k={<Swatch color="rgba(232, 180, 74, 0.9)" />} v={`Warm amber = high vitality (${labels.place} thriving)`} />
+          <Row k={<Swatch color="rgba(196, 74, 30, 0.9)" />} v="Rust red = stress concentration (decay / anxiety)" />
           <Row k="○ small ring" v={`Alive ${labels.person}, hover for identity`} />
           <Row k="◎ thick ring" v={`Featured ${labels.person} (drives narrative this turn)`} />
           <Row k="○ amber halo" v={`Diverged ${labels.person} — alive here but dead on the other side`} />
@@ -115,30 +48,12 @@ export function GridHelpOverlay({ open, onClose }: GridHelpOverlayProps) {
         </Section>
 
         <Section title="Event flares">
-          <Row
-            k={<Swatch color="rgba(154, 205, 96, 0.8)" /> as unknown as string}
-            v="Green bloom — birth"
-          />
-          <Row
-            k={<Swatch color="rgba(168, 152, 120, 0.7)" /> as unknown as string}
-            v="Grey wave — death"
-          />
-          <Row
-            k={<Swatch color="rgba(232, 180, 74, 0.8)" /> as unknown as string}
-            v="Amber dot — forge approved"
-          />
-          <Row
-            k={<Swatch color="rgba(224, 101, 48, 0.7)" /> as unknown as string}
-            v="Red flash — forge rejected"
-          />
-          <Row
-            k={<Swatch color="rgba(232, 180, 74, 0.6)" /> as unknown as string}
-            v="Amber arc — tool reuse across departments"
-          />
-          <Row
-            k={<Swatch color="rgba(196, 74, 30, 0.8)" /> as unknown as string}
-            v="Red ring — crisis shockwave (category-gated)"
-          />
+          <Row k={<Swatch color="rgba(154, 205, 96, 0.8)" />} v="Green bloom — birth" />
+          <Row k={<Swatch color="rgba(168, 152, 120, 0.7)" />} v="Grey wave — death" />
+          <Row k={<Swatch color="rgba(232, 180, 74, 0.8)" />} v="Amber dot — forge approved" />
+          <Row k={<Swatch color="rgba(224, 101, 48, 0.7)" />} v="Red flash — forge rejected" />
+          <Row k={<Swatch color="rgba(232, 180, 74, 0.6)" />} v="Amber arc — tool reuse across departments" />
+          <Row k={<Swatch color="rgba(196, 74, 30, 0.8)" />} v="Red ring — crisis shockwave (category-gated)" />
         </Section>
 
         <Section title="Family lines">
@@ -155,20 +70,8 @@ export function GridHelpOverlay({ open, onClose }: GridHelpOverlayProps) {
           <Row k="click glyph" v={`Open ${labels.person} drilldown (HEXACO radar, memory, chat)`} />
         </Section>
 
-        <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-4)', marginTop: 12 }}>
-          Press{' '}
-          <kbd
-            style={{
-              padding: '1px 4px',
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border)',
-              borderRadius: 2,
-              fontFamily: 'var(--mono)',
-            }}
-          >
-            ?
-          </kbd>{' '}
-          anytime to reopen.
+        <div className={styles.footer}>
+          Press <kbd className={styles.kbd}>?</kbd> anytime to reopen.
         </div>
       </div>
     </div>
@@ -177,71 +80,28 @@ export function GridHelpOverlay({ open, onClose }: GridHelpOverlayProps) {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 16 }}>
-      <div
-        style={{
-          fontSize: 'var(--font-3xs)',
-          fontWeight: 800,
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
-          color: 'var(--text-3)',
-          marginBottom: 8,
-          borderBottom: '1px solid var(--border)',
-          paddingBottom: 4,
-        }}
-      >
-        {title}
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>{children}</div>
+    <div className={styles.section}>
+      <div className={styles.sectionTitle}>{title}</div>
+      <div className={styles.rows}>{children}</div>
     </div>
   );
 }
 
 function Row({ k, v }: { k: React.ReactNode; v: React.ReactNode }) {
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(110px, 160px) 1fr',
-        gap: 12,
-        alignItems: 'baseline',
-        fontSize: 'var(--font-xs)',
-      }}
-    >
-      <span
-        style={{
-          color: 'var(--text-3)',
-          fontFamily: 'var(--mono)',
-          fontSize: 'var(--font-2xs)',
-          letterSpacing: '0.05em',
-        }}
-      >
-        {k}
-      </span>
-      <span style={{ color: 'var(--text-2)', fontFamily: 'var(--sans)' }}>{v}</span>
+    <div className={styles.row}>
+      <span className={styles.rowKey}>{k}</span>
+      <span className={styles.rowVal}>{v}</span>
     </div>
   );
 }
 
 function Swatch({ color }: { color: string }) {
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-      }}
-    >
+    <span className={styles.swatchWrap}>
       <span
-        style={{
-          display: 'inline-block',
-          width: 12,
-          height: 12,
-          borderRadius: 2,
-          background: color,
-          border: '1px solid var(--border)',
-          verticalAlign: 'middle',
-        }}
+        className={styles.swatch}
+        style={{ '--swatch-color': color } as CSSProperties}
       />
     </span>
   );
