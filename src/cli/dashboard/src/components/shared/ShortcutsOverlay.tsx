@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import styles from './ShortcutsOverlay.module.scss';
 
 interface Shortcut {
   keys: string[];
@@ -56,40 +57,15 @@ export function ShortcutsOverlay() {
       aria-modal="true"
       aria-label="Keyboard shortcuts"
       onClick={() => setOpen(false)}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 100000,
-        background: 'rgba(10,8,6,0.78)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 20,
-      }}
+      className={styles.backdrop}
     >
-      <div
-        onClick={e => e.stopPropagation()}
-        style={{
-          background: 'var(--bg-card)',
-          border: '2px solid var(--amber)', borderRadius: 10,
-          padding: '20px 24px',
-          maxWidth: 520, width: '100%', maxHeight: '80vh', overflowY: 'auto',
-          boxShadow: '0 12px 60px rgba(0,0,0,0.6)',
-          fontFamily: 'var(--sans)', color: 'var(--text-1)',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <h2 style={{
-            fontFamily: 'var(--mono)', fontSize: 'var(--font-lg)', fontWeight: 800,
-            color: 'var(--amber)', letterSpacing: '0.06em',
-            textTransform: 'uppercase', margin: 0,
-          }}>
-            Keyboard Shortcuts
-          </h2>
+      <div onClick={e => e.stopPropagation()} className={styles.dialog}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>Keyboard Shortcuts</h2>
           <button
             onClick={() => setOpen(false)}
             aria-label="Close shortcuts"
-            style={{
-              background: 'none', border: 'none', color: 'var(--text-3)',
-              cursor: 'pointer', fontSize: 'var(--font-2xl)', lineHeight: 1,
-              padding: 4,
-            }}
+            className={styles.closeBtn}
           >
             ×
           </button>
@@ -99,44 +75,17 @@ export function ShortcutsOverlay() {
           const items = SHORTCUTS.filter(s => s.scope === scope);
           if (items.length === 0) return null;
           return (
-            <section key={scope} style={{ marginBottom: 16 }}>
-              <h3 style={{
-                fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)', fontWeight: 700,
-                color: 'var(--text-3)', letterSpacing: '0.08em',
-                textTransform: 'uppercase', margin: '0 0 6px',
-              }}>
-                {scope}
-              </h3>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            <section key={scope} className={styles.section}>
+              <h3 className={styles.scopeTitle}>{scope}</h3>
+              <ul className={styles.list}>
                 {items.map(s => (
-                  <li
-                    key={s.keys.join('+')}
-                    style={{
-                      display: 'grid', gridTemplateColumns: '110px 1fr', gap: 12,
-                      padding: '5px 0', borderTop: '1px solid var(--border)',
-                      fontSize: 'var(--font-md)',
-                    }}
-                  >
-                    <span style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                  <li key={s.keys.join('+')} className={styles.row}>
+                    <span className={styles.keys}>
                       {s.keys.map((k, i) => (
-                        <kbd
-                          key={i}
-                          style={{
-                            display: 'inline-block',
-                            padding: '2px 7px', borderRadius: 4,
-                            background: 'var(--bg-deep)',
-                            border: '1px solid var(--border)',
-                            fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)', fontWeight: 700,
-                            color: 'var(--amber)', minWidth: 18, textAlign: 'center',
-                          }}
-                        >
-                          {k}
-                        </kbd>
+                        <kbd key={i} className={styles.kbd}>{k}</kbd>
                       ))}
                     </span>
-                    <span style={{ color: 'var(--text-2)', lineHeight: 1.45 }}>
-                      {s.description}
-                    </span>
+                    <span className={styles.description}>{s.description}</span>
                   </li>
                 ))}
               </ul>
@@ -144,20 +93,8 @@ export function ShortcutsOverlay() {
           );
         })}
 
-        <div style={{
-          borderTop: '1px solid var(--border)', paddingTop: 10, marginTop: 4,
-          fontSize: 'var(--font-xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)',
-          textAlign: 'center',
-        }}>
-          press <kbd style={{
-            padding: '1px 6px', background: 'var(--bg-deep)',
-            border: '1px solid var(--border)', borderRadius: 3,
-            fontFamily: 'var(--mono)', color: 'var(--amber)',
-          }}>?</kbd> anywhere · <kbd style={{
-            padding: '1px 6px', background: 'var(--bg-deep)',
-            border: '1px solid var(--border)', borderRadius: 3,
-            fontFamily: 'var(--mono)', color: 'var(--amber)',
-          }}>Esc</kbd> to close
+        <div className={styles.footer}>
+          press <kbd className={styles.kbdInline}>?</kbd> anywhere · <kbd className={styles.kbdInline}>Esc</kbd> to close
         </div>
       </div>
     </div>
