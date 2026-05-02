@@ -45,17 +45,28 @@
 .dropdown {
   position: absolute;
   left: 44px;
+  right: 10px;
   top: 100%;
-  width: calc(100% - 180px);
   max-width: 420px;
   max-height: 280px;
-  overflow-y: auto;
+  overflow: hidden auto;
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: 3px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   z-index: 30;
   margin-top: 2px;
+
+  // At the narrow phone breakpoint we want the dropdown to fill the
+  // search bar's full width minus the icon + label padding. The fixed
+  // `left: 44px` keeps it aligned to the input start; pinning the right
+  // edge inside the viewport stops option meta from spilling past the
+  // screen.
+  @media (max-width: 480px) {
+    left: 8px;
+    right: 8px;
+    max-width: none;
+  }
 }
 
 .option {
@@ -63,6 +74,7 @@
   align-items: center;
   gap: 8px;
   width: 100%;
+  min-width: 0;
   padding: 5px 10px;
   background: transparent;
   border: none;
@@ -92,9 +104,21 @@
 .optionName {
   color: var(--text-1);
   font-weight: 700;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.optionMeta { color: var(--text-4); }
+.optionMeta {
+  color: var(--text-4);
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .featuredPill {
   margin-left: auto;

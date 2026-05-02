@@ -566,13 +566,18 @@
     .sim-columns { flex-direction: column !important; }
     .sim-columns > div { min-height: 200px; }
 
-    /* Leaders stack into two rows, each full width. Give each panel
-       a minimum height so the Conway grid / RD field / glyphs have
-       enough room to render meaningfully. Without this, the
-       flex:1-of-remaining-height allocation on short viewports
-       produced ~100px panels that rendered as unreadable slivers. */
+    /* Leaders stack into two rows, each full width. The 280px floor
+       on each panel exists for the VIZ canvas (Conway grid / RD field /
+       glyphs) — without it, flex:1-of-remaining-height collapses panels
+       to ~100px slivers on short viewports. SIM tab uses the same
+       `.leaders-row` class but its ActorBar columns are short summary
+       headers that don't need a tall canvas, so scope the min-height
+       to `.viz-content` only. SimView's compact leader cards then
+       size to content instead of leaving a 280px void below each
+       header. */
     .leaders-row { flex-direction: column !important; }
-    .leaders-row > div { width: 100% !important; min-height: 280px !important; }
+    .leaders-row > div { width: 100% !important; }
+    .viz-content .leaders-row > div { min-height: 280px !important; }
 
     /* Chat sidebar collapses */
     .chat-layout { flex-direction: column !important; }

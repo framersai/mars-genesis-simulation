@@ -16,7 +16,13 @@
 }
 
 .strip.narrow {
-  grid-template-columns: 1fr 1fr;
+  // minmax(0, 1fr) forces each track to its 1fr fraction even when
+  // child content (mood histogram legend, age bars) would otherwise
+  // expand the track beyond viewport. Without minmax(0, …), CSS Grid
+  // resolves `1fr` to max-content, which lets the moodLegend's full
+  // text overflow past the right edge on phone widths despite the
+  // legend's own white-space:nowrap + text-overflow:ellipsis rules.
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
 }
 
