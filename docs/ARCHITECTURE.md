@@ -1,8 +1,8 @@
 # Paracosm Architecture
 
-Paracosm is a prompt/document/URL-grounded structured world model for AI agents. It compiles source material into a typed `ScenarioPackage`, runs parallel simulations with AI leaders that have different HEXACO personality profiles, and produces measurably different outcomes from identical starting conditions. Fits the structured / LLM-based / counterfactual branch of the 2026 world-model taxonomy; see [`docs/positioning/world-model-mapping.md`](positioning/world-model-mapping.md) for the placement against adjacent categories.
+Paracosm is an **agent swarm simulation framework for structured world modeling with LLMs**. It compiles prompts, documents, URLs, or scenario JSON drafts into a typed `ScenarioPackage`, then runs multi-agent simulations: one or more AI leaders with HEXACO personality profiles direct a swarm of specialist departments and ~100 personality-typed agents through a deterministic kernel, producing measurably different outcomes from identical starting conditions. Fits the structured / LLM-based / top-down-swarm branch of the 2026 world-model taxonomy; see [`docs/positioning/world-model-mapping.md`](positioning/world-model-mapping.md) for the placement against adjacent categories.
 
-This document covers the full system: how scenarios become simulations, how agents make decisions, how tools get forged at runtime, how the chat system maintains character consistency, and how the API enables arbitrary scenario types.
+This document covers the full system: how scenarios become simulations, how the agent swarm runs (leader → specialists → cells), how tools get forged at runtime, how the swarm exposes itself to consumers via the public API, how the chat system maintains character consistency, and how the universal schema enables arbitrary scenario types.
 
 ## System Overview
 
@@ -35,8 +35,17 @@ This document covers the full system: how scenarios become simulations, how agen
                   │
                   ▼
 ┌─────────────────────────────────────────────────────────────┐
+│                       Agent Swarm                            │
+│  1 leader → 5 specialist departments → ~100 cells           │
+│  Per-agent: HEXACO traits, mood, family edges, memory       │
+│  Surfaced on RunArtifact.finalSwarm + paracosm/swarm        │
+└─────────────────┬───────────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────────┐
 │              Dashboard (React/Vite) + SSE Stream             │
 │  Side-by-side visualization, reports, chat, event log        │
+│  Living-swarm grid renders the cell population per turn     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -289,6 +298,66 @@ Turn N:
 
 The Event Director generates different crises for each commander based on their colony's current state. Same seed controls the deterministic kernel, but the LLM-generated crises diverge based on accumulated state differences.
 
+## The Agent Swarm
+
+Every paracosm run produces a swarm: ~100 named agents with departments, roles, family edges, mood, and short-term memory. The swarm is hierarchical, not bottom-up emergent: one leader directs strategy, five specialist departments report, and the cell population reacts to the resulting world state. See [`docs/positioning/world-model-mapping.md`](positioning/world-model-mapping.md) for the contrast against bottom-up swarm intelligence simulators (OASIS, MiroFish).
+
+### Swarm shape
+
+```
+┌──────────────────────────┐
+│         Leader           │   1 commander, HEXACO-typed,
+│  (CEO / general / AI…)   │   personality drifts each turn
+└─────────────┬────────────┘
+              ▼
+┌──────────────────────────┐
+│  5 specialist depts      │   Engineering · Medical · Agriculture
+│  (per scenario hooks)    │   · Psychology · Governance (Mars defaults)
+└─────────────┬────────────┘
+              ▼
+┌──────────────────────────┐
+│  ~100 personality cells  │   Each has HEXACO, role, mood,
+│  (born + die + reproduce)│   social edges, persistent memory
+└──────────────────────────┘
+```
+
+### Per-agent state
+
+Every cell carries state defined in [`src/engine/core/state.ts`](../src/engine/core/state.ts) — `core` (id, name, department, role), `health` (alive, psychScore, conditions), `career` (rank, achievements), `social` (partnerId, childrenIds, friendIds), `narrative` (lifeEvents, featured), `hexaco` (six-axis personality), `hexacoHistory` (drift over turns), and `memory` (shortTerm, longTerm, stances, relationships sentiment map).
+
+The leader and each specialist also carry HEXACO profiles. Personality drift propagates across the swarm via three mechanisms (see [HEXACO Personality Model](#hexaco-personality-model)).
+
+### Swarm exposure on the public API
+
+The swarm is first-class on every consumer surface:
+
+| Surface | Access |
+|---|---|
+| **`RunArtifact.finalSwarm`** | End-of-run snapshot: every agent's id, name, dept, role, alive flag, mood, family edges, last memories. |
+| **`paracosm/schema`** | `SwarmAgent` and `SwarmSnapshot` Zod schemas + TypeScript types. |
+| **`paracosm/swarm`** | Pure projections: `getSwarm`, `swarmByDepartment`, `swarmFamilyTree`, `aliveCount`, `deathCount`, `moodHistogram`, `departmentHeadcount`. |
+| **`paracosm/world-model`** | `WorldModel.swarm(artifact)` and the same helpers as static methods. |
+| **HTTP** | `GET /api/v1/runs/:runId/swarm` returns just the swarm snapshot — lighter than the full artifact. |
+| **SSE stream** | `systems_snapshot` event fires every turn with the full agent roster + per-turn births/deaths/morale. |
+
+```ts
+import { getSwarm, swarmByDepartment, moodHistogram } from 'paracosm/swarm';
+
+const swarm = getSwarm(runArtifact);
+if (swarm) {
+  console.log(`T${swarm.turn}: ${swarm.population} alive, morale ${Math.round((swarm.morale ?? 0) * 100)}%`);
+  console.log(moodHistogram(swarm)); // { focused: 12, anxious: 5, ... }
+}
+```
+
+The SSE `systems_snapshot` event is what drives the live LivingSwarmGrid viz on the dashboard — same shape, streamed per turn instead of persisted.
+
+### Why top-down, not bottom-up
+
+Bottom-up swarm simulators (OASIS, MiroFish, classical ABM) put behavior in each agent and wait for emergent collective dynamics to surface. Paracosm puts behavior in the *leader*, treats the swarm as a population that reacts to leader decisions, and measures divergence by swapping leaders.
+
+The economic argument: a 1000-agent bottom-up sim runs ~1000 LLM calls per turn ($10–$100/run minimum). A 100-agent top-down sim runs ~10 LLM calls per turn (~$0.10–$1/run). The top-down shape keeps cost in the right band for decision-support usage while still producing measurable per-agent state. Swarm dynamics that need richer per-cell autonomy land as opt-in `swarmDynamics` modes (Phase 2 spec, not yet shipped).
+
 ## Post-Simulation
 
 ### LLM Verdict
@@ -334,12 +403,14 @@ Every `runSimulation()` call returns a `RunArtifact`: one Zod-validated shape co
 import { RunArtifactSchema, StreamEventSchema, type RunArtifact } from 'paracosm/schema';
 ```
 
-**Eleven content primitives:**
+**Thirteen content primitives:**
 
 | Primitive | Role |
 |---|---|
 | `RunMetadata` | runId, scenario, mode, seed, timestamps |
 | `WorldSnapshot` | 5-bag state (metrics / capacities / statuses / politics / environment) |
+| `SwarmAgent` | public, serializable view of one agent: id, name, dept, role, alive, mood, family edges, recent memory |
+| `SwarmSnapshot` | full population at a point in time: agents[], population, morale, births, deaths |
 | `Score` | bounded numeric score with explicit min/max/label |
 | `HighlightMetric` | featured metric card (label + formatted value + direction) |
 | `Timepoint` | labeled snapshot: narrative + score + highlight metrics + world snapshot |
@@ -366,16 +437,33 @@ import { RunArtifactSchema, StreamEventSchema, type RunArtifact } from 'paracosm
 
 ### HTTP Endpoints
 
+Two surfaces:
+
+**Demo runtime** (the local dashboard server — single-tenant, ephemeral state)
+
 | Method | Path | Description |
 |--------|------|-------------|
 | `POST` | `/setup` | Start a new simulation with leaders, turns, seed, departments |
-| `GET` | `/events` | SSE stream of simulation events |
+| `GET` | `/events` | SSE stream of simulation events (`systems_snapshot` carries the swarm) |
 | `POST` | `/clear` | Clear simulation state and chat agent pool |
 | `POST` | `/chat` | Chat with a colonist agent |
 | `GET` | `/results` | Full simulation results including verdict |
 | `GET` | `/rate-limit` | Check rate limit status |
 | `POST` | `/compile` | Compile a custom scenario draft with optional `seedText` / `seedUrl` grounding |
 | `GET` | `/retry-stats` | Cross-run reliability rollup (schemas + forges + caches + providerErrors) over the last N completed runs. Query param: `?limit=N` |
+
+**Platform API** (multi-tenant, run history persisted — see [`docs/HTTP_API.md`](HTTP_API.md))
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/v1/runs` | List runs newest-first with filters |
+| `GET` | `/api/v1/runs/aggregate` | Rollup counters over the filtered set |
+| `GET` | `/api/v1/runs/:runId` | Full RunArtifact JSON |
+| `GET` | `/api/v1/runs/:runId/swarm` | Final agent-swarm snapshot (lightweight) |
+| `POST` | `/api/v1/runs/:runId/replay` | Re-execute the kernel; report byte-for-byte match |
+| `GET` | `/api/v1/bundles/:bundleId` | Quickstart-bundle metadata + member RunRecords |
+| `POST` | `/api/v1/library/import` | Import an externally-produced RunArtifact |
+| `GET` | `/api/v1/demo/status` | Public-demo capability flags |
 
 ### Reliability telemetry (`/retry-stats`)
 
@@ -457,8 +545,13 @@ The runtime `scenario` parameter MUST be a compiled `ScenarioPackage` (has `hook
 | `paracosm` | Engine types, registries, kernel |
 | `paracosm/compiler` | `compileScenario()` |
 | `paracosm/runtime` | `runSimulation()`, `runBatch()` |
+| `paracosm/world-model` | `WorldModel` façade (`fromJson` / `fromPrompt` / `simulate` / `fork` / `replay` + swarm statics) |
+| `paracosm/swarm` | Pure swarm projections: `getSwarm`, `swarmByDepartment`, `swarmFamilyTree`, `aliveCount`, `deathCount`, `moodHistogram`, `departmentHeadcount` |
+| `paracosm/schema` | Universal schemas + types (`RunArtifact`, `SwarmAgent`, `SwarmSnapshot`, …) |
 | `paracosm/mars` | Mars Genesis scenario package |
 | `paracosm/lunar` | Lunar Outpost scenario package |
+| `paracosm/digital-twin` | Subject + intervention digital-twin scenarios |
+| `paracosm/leader-presets` | Library of HEXACO-typed leader archetypes |
 | `paracosm/core` | Kernel state types |
 
 ### Programmatic Usage
