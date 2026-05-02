@@ -2,6 +2,7 @@
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": [
     "src/engine/index.ts",
+    "src/engine/core/state.ts",
     "src/engine/compiler/index.ts",
     "src/engine/schema/index.ts",
     "src/engine/digital-twin/index.ts",
