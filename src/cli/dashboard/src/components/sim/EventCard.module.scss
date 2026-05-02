@@ -1,0 +1,1167 @@
+// Migrated from inline `style={{}}` per the no-inline-styles convention.
+// Per-side leader color, severity, accent, and dynamic tints flow in via
+// CSS custom properties:
+//   --side-color    leader-side accent (var(--vis) or var(--eng))
+//   --accent        semantic accent for forge cards (side or rust)
+//   --bg-tint       resolved color-mix tint for the card background
+//   --border-tint   resolved color-mix tint for the card border
+//   --mood-color    quote-mood color for tooltip rows + pills
+
+.eventStartRow {
+  padding: 6px 12px;
+  font-size: var(--font-xs);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.eventStartRow.notFirst {
+  border-top: 2px solid var(--border);
+  margin-top: 6px;
+}
+
+.eventNumber {
+  font-weight: 800;
+  color: var(--rust);
+  font-family: var(--mono);
+  font-size: var(--font-2xs);
+}
+
+.eventStartTitle {
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.eventCategoryPill {
+  font-size: var(--font-3xs);
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: var(--bg-deep);
+  color: var(--text-3);
+  font-family: var(--mono);
+}
+
+// Promotion tooltip + row
+
+.promotionTooltipTitle {
+  // --side-color set inline.
+  color: var(--side-color, var(--amber));
+  font-size: var(--font-lg);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.promotionTooltipRow {
+  margin-bottom: 4px;
+}
+
+.promotionTooltipKey { color: var(--text-2); }
+
+.promotionTooltipValue {
+  color: var(--text-1);
+  font-weight: 600;
+}
+
+.promotionTooltipReason {
+  color: var(--text-2);
+  line-height: 1.6;
+}
+
+.promotionRow {
+  padding: 1px 10px;
+  font-size: var(--font-xs);
+  line-height: 1.3;
+  display: flex;
+  gap: 6px;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.promotionArrow {
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+.promotionRole {
+  font-weight: 700;
+  color: var(--side-color, var(--amber));
+  flex-shrink: 0;
+}
+
+.promotionReason {
+  color: var(--text-3);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+// Forge attempt card
+
+.forgeBtn {
+  display: block;
+  width: auto;
+  align-self: stretch;
+  text-align: left;
+  margin: 0 8px 4px;
+  padding: 6px 10px;
+  font-size: var(--font-xs);
+  line-height: 1.5;
+  // --bg-tint, --border-tint, --accent set inline; pass through here.
+  background: var(--bg-tint, transparent);
+  border-left: 3px solid var(--accent, var(--rust));
+  border: 1px solid var(--border-tint, var(--border));
+  border-radius: 4px;
+  animation: forgeSlide 0.4s ease both;
+  // --shadow-tint set inline (approved | card-shadow).
+  box-shadow: var(--shadow-tint, var(--card-shadow));
+  cursor: pointer;
+  font: inherit;
+  color: var(--text-1);
+}
+
+.forgeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.forgeBadge {
+  font-size: var(--font-3xs);
+  font-weight: 900;
+  font-family: var(--mono);
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  // --badge-color and --badge-bg set inline.
+  color: var(--badge-color, var(--bg-deep));
+  background: var(--badge-bg, var(--accent, var(--amber)));
+  // --badge-shadow set inline (approved gets a glow).
+  box-shadow: var(--badge-shadow, none);
+}
+
+.forgeDept {
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+  font-family: var(--mono);
+}
+
+.forgeDescription {
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.forgeName {
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+  font-family: var(--mono);
+}
+
+.forgeVerdictPass {
+  margin-left: auto;
+  font-size: var(--font-3xs);
+  font-weight: 800;
+  font-family: var(--mono);
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: var(--green);
+  background: rgba(106, 173, 72, 0.12);
+  border: 1px solid rgba(106, 173, 72, 0.3);
+}
+
+.forgeVerdictFail {
+  margin-left: auto;
+  font-size: var(--font-3xs);
+  font-weight: 800;
+  font-family: var(--mono);
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: var(--rust);
+  background: rgba(224, 101, 48, 0.1);
+  border: 1px solid rgba(224, 101, 48, 0.2);
+}
+
+.forgeFieldsRow {
+  margin-top: 4px;
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+  font-family: var(--mono);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fieldsLabelIn { color: var(--teal); }
+.fieldsLabelOut { color: var(--green); }
+
+.forgeError {
+  margin-top: 3px;
+  font-size: var(--font-2xs);
+  color: var(--rust);
+  font-style: italic;
+}
+
+// Specialist done card
+
+.specWrap { margin: 0 8px 4px; }
+
+.specCard {
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: var(--font-xs);
+  // --card-bg, --card-border, --card-accent set inline based on severity.
+  background: var(--card-bg, var(--bg-card));
+  border: 1px solid var(--card-border, var(--border));
+  border-left: 3px solid var(--card-accent, var(--teal));
+}
+
+.specHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.specHeaderDept {
+  font-weight: 800;
+  font-size: var(--font-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--teal);
+}
+
+.specToolCount {
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+  font-family: var(--mono);
+}
+
+.severityBadge {
+  font-size: var(--font-3xs);
+  font-weight: 800;
+  font-family: var(--mono);
+  padding: 1px 5px;
+  border-radius: 2px;
+  // --sev-color, --sev-bg set inline.
+  color: var(--sev-color, var(--amber));
+  background: var(--sev-bg, rgba(232, 180, 74, 0.1));
+}
+
+.specSummary {
+  font-size: var(--font-sm);
+  color: var(--text-1);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.specSummaryEmpty {
+  font-size: var(--font-xs);
+  color: var(--text-3);
+  font-style: italic;
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.specRisks { margin-bottom: 6px; }
+
+.specRisksLabel {
+  font-size: var(--font-3xs);
+  font-weight: 800;
+  color: var(--rust);
+  letter-spacing: 0.5px;
+  font-family: var(--mono);
+  margin-bottom: 2px;
+}
+
+.specRiskRow {
+  font-size: var(--font-xs);
+  color: var(--text-2);
+  line-height: 1.4;
+  display: flex;
+  gap: 4px;
+  margin-bottom: 1px;
+}
+
+.specRiskSeverity {
+  // --risk-color set inline.
+  color: var(--risk-color, var(--amber));
+  font-family: var(--mono);
+  font-size: var(--font-3xs);
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.specRecs { margin-bottom: 4px; }
+
+.specRecsLabel {
+  font-size: var(--font-3xs);
+  font-weight: 800;
+  color: var(--green);
+  letter-spacing: 0.5px;
+  font-family: var(--mono);
+  margin-bottom: 2px;
+}
+
+.specRecRow {
+  font-size: var(--font-xs);
+  color: var(--text-2);
+  line-height: 1.4;
+  padding-left: 8px;
+  border-left: 2px solid var(--border);
+  margin-bottom: 2px;
+}
+
+// Tool detail row inside specialist_done
+
+.toolDetail {
+  margin: 0 8px 4px;
+  border-radius: 4px;
+  font-size: var(--font-sm);
+  // --tool-bg, --tool-border, --tool-accent, --tool-shadow set inline.
+  background: var(--tool-bg, var(--bg-card));
+  border-left: 3px solid var(--tool-accent, var(--green));
+  border: 1px solid var(--tool-border, var(--border));
+  border-left-width: 3px;
+  box-shadow: var(--tool-shadow, var(--card-shadow));
+  // Animation set via class modifier
+}
+
+.toolDetail.newTool { animation: forgeSlide 0.4s ease both, forgeGlow 2.4s ease both; }
+.toolDetail.reused { animation: forgeSlide 0.3s ease both; }
+
+.toolSummary {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toolSummaryMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.toolSummaryHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.toolNewBadge {
+  font-size: var(--font-3xs);
+  color: var(--bg-deep);
+  // --side-color set inline.
+  background: var(--side-color, var(--amber));
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 900;
+  font-family: var(--mono);
+  padding: 2px 6px;
+  border-radius: 3px;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--side-color, var(--amber)) 40%, transparent);
+}
+
+.toolReusedBadge {
+  font-size: var(--font-3xs);
+  color: var(--green);
+  background: rgba(106, 173, 72, 0.12);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 800;
+  font-family: var(--mono);
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(106, 173, 72, 0.3);
+}
+
+.toolFirstForged {
+  font-size: var(--font-3xs);
+  color: var(--text-3);
+  font-family: var(--mono);
+}
+
+.toolSchemaBadge {
+  font-size: var(--font-3xs);
+  color: var(--teal);
+  font-family: var(--mono);
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: rgba(76, 168, 168, 0.1);
+  border: 1px solid rgba(76, 168, 168, 0.25);
+}
+
+.toolDescription {
+  font-size: var(--font-md);
+  color: var(--text-1);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.toolNameLine {
+  display: block;
+  font-size: var(--font-xs);
+  color: var(--text-3);
+  font-family: var(--mono);
+  margin-top: 2px;
+}
+
+.toolPassPill {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: var(--font-3xs);
+  font-weight: 800;
+  font-family: var(--mono);
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: rgba(106, 173, 72, 0.15);
+  color: var(--green);
+  border: 1px solid rgba(106, 173, 72, 0.3);
+}
+
+.toolFailPill {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: var(--font-3xs);
+  font-weight: 800;
+  font-family: var(--mono);
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: rgba(224, 101, 48, 0.1);
+  color: var(--rust);
+  border: 1px solid rgba(224, 101, 48, 0.2);
+}
+
+.toolInspectBtn {
+  font-size: var(--font-3xs);
+  font-family: var(--mono);
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(232, 180, 74, 0.35);
+  background: rgba(232, 180, 74, 0.06);
+  color: var(--amber);
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.toolBody {
+  padding: 0 12px 8px;
+  font-size: var(--font-xs);
+}
+
+.toolMetaRow {
+  color: var(--text-3);
+  margin-bottom: 4px;
+}
+
+.toolMetaLabel {
+  font-weight: 700;
+  font-family: var(--mono);
+  font-size: var(--font-3xs);
+  letter-spacing: 0.5px;
+}
+
+.toolRawSummary {
+  font-size: var(--font-2xs);
+  font-weight: 600;
+  cursor: pointer;
+  // --side-color set inline.
+  color: var(--side-color, var(--amber));
+  font-family: var(--mono);
+}
+
+.toolRawPre {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px;
+  overflow: auto;
+  max-height: 200px;
+  font-size: var(--font-2xs);
+  font-family: var(--mono);
+  color: var(--text-2);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  margin-top: 4px;
+}
+
+.toolEmpty {
+  color: var(--text-3);
+  font-style: italic;
+}
+
+// Outcome card
+
+.outcomeCard {
+  margin: 0 8px 4px;
+  border-radius: 4px;
+  padding: 6px 10px;
+  animation: decisionPulse 2s ease both;
+  // --outcome-bg and --outcome-border vary by actor side.
+  background: var(--outcome-bg, rgba(232, 180, 74, 0.06));
+  border: 1px solid var(--outcome-border, var(--amber-dim));
+  // --side-color set inline.
+  border-left: 3px solid var(--side-color, var(--amber));
+  box-shadow: var(--card-shadow);
+}
+
+.outcomeHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3px;
+}
+
+.outcomeLabel {
+  font-weight: 800;
+  font-size: var(--font-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--side-color, var(--amber));
+}
+
+.outcomeMeta {
+  font-size: var(--font-xs);
+  color: var(--text-3);
+  font-family: var(--mono);
+  margin-left: 8px;
+}
+
+.outcomeText {
+  color: var(--text-1);
+  line-height: 1.5;
+  font-size: var(--font-md);
+}
+
+.outcomeDeltas {
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: var(--font-xs);
+  color: var(--teal);
+}
+
+.outcomeDeltaSpan { margin-right: 4px; }
+
+.outcomeReasoningSummary {
+  font-size: var(--font-sm);
+  color: var(--side-color, var(--amber));
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.outcomeReasoningBody {
+  margin-top: 4px;
+  font-size: var(--font-xs);
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.outcomeReasoningPre {
+  margin-bottom: 6px;
+  white-space: pre-wrap;
+  font-family: var(--mono);
+  font-size: var(--font-xs);
+  color: var(--text-1);
+  background: var(--bg-card);
+  padding: 6px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+
+.outcomeRationale {
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.outcomePolicyLine { color: var(--amber); }
+
+// Personality drift
+
+.driftRow {
+  padding: 3px 10px;
+  font-size: var(--font-xs);
+  font-family: var(--mono);
+  color: var(--text-2);
+  line-height: 1.4;
+}
+
+.driftLabel {
+  color: var(--text-3);
+  font-size: var(--font-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+.driftName { color: var(--side-color, var(--amber)); }
+
+// Agent reactions
+
+.reactionsCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--card-shadow);
+  margin: 0 8px 4px;
+  padding: 6px 10px;
+}
+
+.reactionsHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.reactionsLabel {
+  font-size: var(--font-2xs);
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-family: var(--mono);
+  color: var(--side-color, var(--amber));
+}
+
+.reactionsBar {
+  flex: 1;
+  display: flex;
+  height: 10px;
+  border-radius: 2px;
+  overflow: hidden;
+  gap: 1px;
+}
+
+.reactionsBarSegment {
+  // --seg-flex and --seg-bg set inline per mood.
+  flex: var(--seg-flex, 1);
+  background: var(--seg-bg, var(--text-3));
+}
+
+.reactionsLegend {
+  display: flex;
+  gap: 10px;
+  font-size: var(--font-xs);
+  margin-bottom: 4px;
+}
+
+.reactionsLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.reactionsLegendSwatch {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  // --swatch-bg set inline.
+  background: var(--swatch-bg, var(--text-3));
+}
+
+.reactionsQuotesSummary {
+  font-size: var(--font-2xs);
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--side-color, var(--amber));
+  font-family: var(--mono);
+}
+
+.reactionsQuotesList {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reactionTooltipName {
+  color: var(--side-color, var(--amber));
+  display: block;
+  margin-bottom: 4px;
+}
+
+.reactionTooltipMeta {
+  font-size: var(--font-xs);
+  color: var(--text-2);
+}
+
+.reactionTooltipHexaco {
+  font-family: var(--mono);
+  font-size: var(--font-xs);
+  margin-top: 6px;
+  color: var(--text-1);
+}
+
+.reactionTooltipHealth {
+  font-size: var(--font-xs);
+  margin-top: 4px;
+}
+
+.reactionTooltipQuote {
+  font-style: italic;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  line-height: 1.5;
+}
+
+.reactionTooltipMoodLine {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  margin-top: 4px;
+  // --mood-color set inline.
+  color: var(--mood-color, var(--text-3));
+}
+
+.reactionTooltipBeliefs {
+  font-size: var(--font-2xs);
+  margin-top: 6px;
+  color: var(--text-3);
+}
+
+.reactionRow {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: var(--font-xs);
+  padding: 3px 0;
+  cursor: pointer;
+}
+
+.reactionRow.notLast { border-bottom: 1px solid rgba(48, 42, 34, 0.3); }
+
+.reactionRowName {
+  font-weight: 700;
+  color: var(--side-color, var(--amber));
+  flex-shrink: 0;
+  min-width: 90px;
+}
+
+.reactionRowQuote {
+  flex: 1;
+  color: var(--text-2);
+  font-style: italic;
+  line-height: 1.4;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reactionRowMoodPill {
+  font-size: var(--font-3xs);
+  font-weight: 800;
+  flex-shrink: 0;
+  font-family: var(--mono);
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  // --mood-color set inline; bg derived via color-mix.
+  color: var(--mood-color, var(--text-3));
+  background: color-mix(in srgb, var(--mood-color, var(--text-3)) 12%, transparent);
+}
+
+// Bulletin
+
+.bulletinWrap { margin: 0 8px 4px; }
+
+.bulletinTooltipName { color: var(--side-color, var(--amber)); }
+
+.bulletinTooltipRole {
+  color: var(--text-3);
+  font-size: var(--font-xs);
+}
+
+.bulletinTooltipBody {
+  margin-top: 6px;
+  line-height: 1.6;
+  color: var(--text-1);
+}
+
+.bulletinTooltipMood {
+  margin-top: 4px;
+  font-size: var(--font-xs);
+  color: var(--mood-color, var(--text-3));
+}
+
+.bulletinRow {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: var(--font-xs);
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.bulletinName {
+  font-weight: 700;
+  color: var(--side-color, var(--amber));
+  flex-shrink: 0;
+}
+
+.bulletinPost {
+  flex: 1;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.bulletinLikes {
+  font-size: var(--font-3xs);
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+// Turn done
+
+.turnDone {
+  text-align: center;
+  padding: 5px 0;
+  font-size: var(--font-xs);
+  color: var(--text-3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  border-top: 1px solid var(--border);
+  margin-top: 3px;
+  font-family: var(--mono);
+}
+
+// Validation fallback
+
+.fallbackBox {
+  margin: 0 8px 4px;
+  border-radius: 4px;
+  padding: 6px 10px;
+  background: rgba(232, 180, 74, 0.08);
+  border: 1px solid var(--amber-dim, #8a6a2a);
+  // --side-color set inline.
+  border-left: 3px solid var(--side-color, var(--amber));
+  font-size: var(--font-xs);
+  color: var(--text-2);
+  font-family: var(--mono);
+}
+
+.fallbackTitle {
+  font-weight: 700;
+  color: var(--amber);
+  margin-bottom: 2px;
+}
+
+.fallbackSite {
+  color: var(--text-3);
+  font-size: var(--font-2xs);
+}
+
+.fallbackPreviewWrap { margin-top: 3px; }
+
+.fallbackPreviewSummary {
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+.fallbackPreviewPre {
+  margin: 3px 0 0;
+  padding: 4px 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: var(--font-2xs);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+// ToolDetailModal
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal-critical);
+  background: rgba(10, 8, 6, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modalDialog {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--amber);
+  border-radius: 10px;
+  padding: 16px 20px;
+  max-width: 720px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.6);
+  font-family: var(--sans);
+  color: var(--text-1);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.modalHeaderLeft {
+  flex: 1;
+  min-width: 0;
+}
+
+.modalKicker {
+  font-size: var(--font-3xs);
+  font-family: var(--mono);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--amber);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.modalTitle {
+  font-size: var(--font-xl);
+  font-weight: 800;
+  font-family: var(--mono);
+  color: var(--text-1);
+  margin-bottom: 4px;
+}
+
+.modalDescription {
+  font-size: var(--font-md);
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.modalCloseBtn {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  font-size: var(--font-2xl);
+  line-height: 1;
+  padding: 4px;
+  margin-left: 12px;
+}
+
+.modalScroll {
+  overflow-y: auto;
+  flex: 1;
+  padding: 4px 2px;
+}
+
+.modalPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: var(--font-xs);
+  font-family: var(--mono);
+}
+
+.modalEmpty {
+  font-size: var(--font-sm);
+  color: var(--text-3);
+  font-style: italic;
+}
+
+.usageList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.usageItem {
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  // --usage-accent set inline.
+  border-left: 3px solid var(--usage-accent, var(--green));
+  font-family: var(--mono);
+  font-size: var(--font-xs);
+  line-height: 1.5;
+}
+
+.usageHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.usageTurn {
+  color: var(--amber);
+  font-weight: 800;
+}
+
+.usageTime { color: var(--text-3); }
+
+.usageDept {
+  color: var(--text-2);
+  font-weight: 700;
+}
+
+.usageEvent { color: var(--text-3); }
+
+.usageStatus {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+
+.usageStatusBadge {
+  padding: 1px 6px;
+  border-radius: 2px;
+  font-size: var(--font-3xs);
+  font-weight: 800;
+  // --status-color set inline.
+  color: var(--status-color, var(--green));
+  background: color-mix(in srgb, var(--status-color, var(--green)) 12%, transparent);
+}
+
+.usageConf {
+  color: var(--text-3);
+  font-size: var(--font-3xs);
+}
+
+.usageOutput {
+  color: var(--text-2);
+  margin-top: 3px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: var(--font-2xs);
+}
+
+.codePre {
+  margin: 4px 0 0;
+  padding: 10px;
+  font-size: var(--font-xs);
+  line-height: 1.5;
+  font-family: var(--mono);
+  color: var(--text-2);
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 280px;
+  overflow: auto;
+}
+
+.fieldsBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: var(--font-xs);
+}
+
+// Pill helper
+
+.pill {
+  padding: 2px 8px;
+  border-radius: 3px;
+  // --pill-color set inline.
+  color: var(--pill-color, var(--text-1));
+  background: color-mix(in srgb, var(--pill-color, var(--text-1)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--pill-color, var(--text-1)) 30%, transparent);
+  font-weight: 700;
+  font-size: var(--font-2xs);
+  letter-spacing: 0.04em;
+}
+
+.modalSection { margin-bottom: 14px; }
+
+.modalSectionTitle {
+  font-size: var(--font-3xs);
+  font-family: var(--mono);
+  font-weight: 800;
+  color: var(--amber);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+// SchemaBlock
+
+.schemaBlock { margin-bottom: 4px; }
+
+.schemaFieldsLabel {
+  font-weight: 700;
+  // --color set inline.
+  color: var(--field-color, var(--teal));
+  font-family: var(--mono);
+  font-size: var(--font-3xs);
+  letter-spacing: 0.5px;
+}
+
+.schemaFieldsList {
+  color: var(--text-2);
+  font-family: var(--mono);
+}
+
+.schemaTitle {
+  font-weight: 700;
+  color: var(--field-color, var(--teal));
+  font-family: var(--mono);
+  font-size: var(--font-3xs);
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.schemaTable {
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: var(--font-2xs);
+  width: 100%;
+  table-layout: fixed;
+}
+
+.schemaRow { border-top: 1px solid var(--border); }
+
+.schemaKeyCell {
+  padding: 2px 6px 2px 0;
+  color: var(--text-1);
+  font-weight: 700;
+  width: 32%;
+  vertical-align: top;
+}
+
+.schemaRequired {
+  color: var(--rust);
+  margin-left: 2px;
+}
+
+.schemaTypeCell {
+  padding: 2px 6px;
+  color: var(--field-color, var(--teal));
+  width: 20%;
+  vertical-align: top;
+}
+
+.schemaDescCell {
+  padding: 2px 0;
+  color: var(--text-3);
+  vertical-align: top;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

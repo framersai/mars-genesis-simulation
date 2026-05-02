@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import type { ProcessedEvent } from '../../hooks/useGameState';
 import { getActorColorVar } from '../../hooks/useGameState';
 import { useScenarioContext } from '../../App';
@@ -6,23 +6,21 @@ import { useToolContext } from '../../hooks/useToolRegistry';
 import { Badge } from '../shared/Badge';
 import { Tooltip } from '../shared/Tooltip';
 import { CitationPills } from '../shared/CitationPills';
+import styles from './EventCard.module.scss';
 
 interface EventCardProps {
   event: ProcessedEvent;
   actorIndex: number;
 }
 
-// Shared card base style
-const cardBase = {
-  background: 'var(--bg-card)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius-md)',
-  boxShadow: 'var(--card-shadow)',
-};
-
 const moodColors: Record<string, string> = {
   positive: 'var(--green)', negative: 'var(--rust)', anxious: 'var(--amber)',
   defiant: 'var(--rust)', hopeful: 'var(--green)', resigned: 'var(--text-3)', neutral: 'var(--text-2)',
+};
+
+const moodBgColors: Record<string, string> = {
+  positive: '#6aad48', negative: '#e06530', anxious: '#e8b44a',
+  defiant: '#e06530', hopeful: '#6aad48', resigned: '#a89878', neutral: '#a89878',
 };
 
 export function EventCard({ event, actorIndex }: EventCardProps) {
@@ -33,6 +31,7 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
   // output + reuse stats from the registry.
   const [inspectingTool, setInspectingTool] = useState<string | null>(null);
   const sideColor = getActorColorVar(actorIndex);
+  const sideStyle = { '--side-color': sideColor } as CSSProperties;
   const dd = event.data;
 
   switch (event.type) {
@@ -46,21 +45,10 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
       const category = String(dd.category || '');
       if (total <= 1) return null;
       return (
-        <div style={{
-          padding: '6px 12px', fontSize: 'var(--font-xs)',
-          borderTop: idx > 0 ? '2px solid var(--border)' : undefined,
-          marginTop: idx > 0 ? '6px' : undefined,
-          display: 'flex', alignItems: 'center', gap: '8px',
-        }}>
-          <span style={{ fontWeight: 800, color: 'var(--rust)', fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)' }}>
-            EVENT {idx + 1}/{total}
-          </span>
-          <span style={{ fontWeight: 700, color: 'var(--text-1)' }}>{title}</span>
-          {category && (
-            <span style={{ fontSize: 'var(--font-3xs)', padding: '1px 5px', borderRadius: '2px', background: 'var(--bg-deep)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
-              {category}
-            </span>
-          )}
+        <div className={[styles.eventStartRow, idx > 0 ? styles.notFirst : ''].filter(Boolean).join(' ')}>
+          <span className={styles.eventNumber}>EVENT {idx + 1}/{total}</span>
+          <span className={styles.eventStartTitle}>{title}</span>
+          {category && <span className={styles.eventCategoryPill}>{category}</span>}
         </div>
       );
     }
@@ -72,23 +60,26 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
       return (
         <Tooltip content={
           <div>
-            <b style={{ color: sideColor, fontSize: 'var(--font-lg)', display: 'block', marginBottom: '6px' }}>Promotion: {role}</b>
-            {name && <div style={{ marginBottom: '4px' }}><span style={{ color: 'var(--text-2)' }}>Agent:</span> <span style={{ color: 'var(--text-1)', fontWeight: 600 }}>{name}</span></div>}
-            {reason && <div style={{ color: 'var(--text-2)', lineHeight: 1.6 }}>{reason}</div>}
+            <b className={styles.promotionTooltipTitle} style={sideStyle}>Promotion: {role}</b>
+            {name && (
+              <div className={styles.promotionTooltipRow}>
+                <span className={styles.promotionTooltipKey}>Agent:</span>{' '}
+                <span className={styles.promotionTooltipValue}>{name}</span>
+              </div>
+            )}
+            {reason && <div className={styles.promotionTooltipReason}>{reason}</div>}
           </div>
         }>
-          <div style={{ padding: '1px 10px', fontSize: 'var(--font-xs)', lineHeight: 1.3, display: 'flex', gap: '6px', cursor: 'pointer', minWidth: 0 }}>
-            <span style={{ color: 'var(--text-3)', flexShrink: 0 }}>&rarr;</span>
-            <span style={{ fontWeight: 700, color: sideColor, flexShrink: 0 }}>{role}</span>
-            <span style={{ color: 'var(--text-3)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{reason}</span>
+          <div className={styles.promotionRow}>
+            <span className={styles.promotionArrow}>&rarr;</span>
+            <span className={styles.promotionRole} style={sideStyle}>{role}</span>
+            <span className={styles.promotionReason}>{reason}</span>
           </div>
         </Tooltip>
       );
     }
 
     case 'specialist_start':
-      return null;
-
     case 'decision_pending':
       return null;
 
@@ -111,52 +102,38 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
       const inputFields = Array.isArray(dd.inputFields) ? (dd.inputFields as string[]) : [];
       const outputFields = Array.isArray(dd.outputFields) ? (dd.outputFields as string[]) : [];
 
+      const forgeStyle = {
+        '--accent': accent,
+        '--bg-tint': approved
+          ? `color-mix(in srgb, ${sideColor} 7%, transparent)`
+          : 'rgba(224,101,48,0.04)',
+        '--border-tint': approved
+          ? `color-mix(in srgb, ${sideColor} 25%, transparent)`
+          : 'rgba(224,101,48,0.2)',
+        '--shadow-tint': approved
+          ? `0 0 0 1px color-mix(in srgb, ${sideColor} 10%, transparent)`
+          : 'var(--card-shadow)',
+        '--badge-color': approved ? 'var(--bg-deep)' : '#fff',
+        '--badge-bg': accent,
+        '--badge-shadow': approved ? '0 0 8px rgba(232,180,74,0.4)' : 'none',
+      } as CSSProperties;
+
       return (
         <>
         <button
           type="button"
           onClick={() => setInspectingTool(name)}
           aria-label={`Inspect forged tool ${name}`}
-          style={{
-            display: 'block', width: 'auto', alignSelf: 'stretch', textAlign: 'left',
-            margin: '0 8px 4px',
-            padding: '6px 10px',
-            fontSize: 'var(--font-xs)', lineHeight: 1.5,
-            background: approved
-              ? `color-mix(in srgb, ${sideColor} 7%, transparent)`
-              : 'rgba(224,101,48,0.04)',
-            borderLeft: `3px solid ${accent}`,
-            border: `1px solid ${approved
-              ? `color-mix(in srgb, ${sideColor} 25%, transparent)`
-              : 'rgba(224,101,48,0.2)'}`,
-            borderRadius: 4,
-            animation: 'forgeSlide 0.4s ease both',
-            boxShadow: approved
-              ? `0 0 0 1px color-mix(in srgb, ${sideColor} 10%, transparent)`
-              : 'var(--card-shadow)',
-            cursor: 'pointer', font: 'inherit', color: 'var(--text-1)',
-          }}
+          className={styles.forgeBtn}
+          style={forgeStyle}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <span style={{
-              fontSize: 'var(--font-3xs)', fontWeight: 900, fontFamily: 'var(--mono)',
-              padding: '2px 6px', borderRadius: 3,
-              letterSpacing: '0.12em', textTransform: 'uppercase',
-              color: approved ? 'var(--bg-deep)' : '#fff',
-              background: accent,
-              boxShadow: approved ? '0 0 8px rgba(232,180,74,0.4)' : 'none',
-            }}>
+          <div className={styles.forgeRow}>
+            <span className={styles.forgeBadge}>
               {approved ? '✦ FORGED TOOL' : '✗ FORGED TOOL'}
             </span>
-            <span style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
-              {dept}
-            </span>
-            <span style={{ fontWeight: 700, color: 'var(--text-1)' }}>
-              {description}
-            </span>
-            <span style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
-              {name} ({mode})
-            </span>
+            <span className={styles.forgeDept}>{dept}</span>
+            <span className={styles.forgeDescription}>{description}</span>
+            <span className={styles.forgeName}>{name} ({mode})</span>
             {/* Static PASS/FAIL pill. Full judge reasoning lives in the
                 ToolDetailModal opened by the inspect button below and in
                 the Forged Toolbox section at the bottom of the sim,
@@ -164,31 +141,22 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
                 "Why it passed / Why it failed" block. Keeping the pill
                 non-interactive avoids the hover-popover UX issues on
                 touch + keeps visual rhythm consistent with the toolbox. */}
-            <span style={{
-              marginLeft: 'auto',
-              fontSize: 'var(--font-3xs)', fontWeight: 800, fontFamily: 'var(--mono)',
-              padding: '1px 6px', borderRadius: 3,
-              color: approved ? 'var(--green)' : 'var(--rust)',
-              background: approved ? 'rgba(106,173,72,0.12)' : 'rgba(224,101,48,0.1)',
-              border: `1px solid ${approved ? 'rgba(106,173,72,0.3)' : 'rgba(224,101,48,0.2)'}`,
-            }}>
+            <span className={approved ? styles.forgeVerdictPass : styles.forgeVerdictFail}>
               {approved ? `PASS ${confidence.toFixed(2)}` : 'FAIL'}
             </span>
           </div>
           {(inputFields.length > 0 || outputFields.length > 0) && (
-            <div style={{ marginTop: 4, fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <div className={styles.forgeFieldsRow}>
               {inputFields.length > 0 && (
-                <span><span style={{ color: 'var(--teal)' }}>in:</span> {inputFields.join(', ')}</span>
+                <span><span className={styles.fieldsLabelIn}>in:</span> {inputFields.join(', ')}</span>
               )}
               {outputFields.length > 0 && (
-                <span><span style={{ color: 'var(--green)' }}>out:</span> {outputFields.join(', ')}</span>
+                <span><span className={styles.fieldsLabelOut}>out:</span> {outputFields.join(', ')}</span>
               )}
             </div>
           )}
           {!approved && errorReason && (
-            <div style={{ marginTop: 3, fontSize: 'var(--font-2xs)', color: 'var(--rust)', fontStyle: 'italic' }}>
-              {errorReason}
-            </div>
+            <div className={styles.forgeError}>{errorReason}</div>
           )}
         </button>
         {inspectingTool && (
@@ -229,28 +197,40 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
         return null;
       }
 
+      const cardStyle = {
+        '--card-bg': severity === 'critical'
+          ? 'rgba(224,101,48,.08)'
+          : severity === 'high' ? 'rgba(232,180,74,.06)' : 'var(--bg-card)',
+        '--card-border': severity === 'critical'
+          ? 'rgba(224,101,48,.25)'
+          : severity === 'high' ? 'rgba(232,180,74,.2)' : 'var(--border)',
+        '--card-accent': severity === 'critical'
+          ? 'var(--rust)'
+          : severity === 'high' ? 'var(--amber)' : 'var(--teal)',
+      } as CSSProperties;
+
+      const sevStyle = severity ? ({
+        '--sev-color': severity === 'critical' ? 'var(--rust)' : 'var(--amber)',
+        '--sev-bg': severity === 'critical' ? 'rgba(224,101,48,.15)' : 'rgba(232,180,74,.1)',
+      } as CSSProperties) : undefined;
+
       return (
         <>
-        <div style={{ margin: '0 8px 4px' }}>
-          <div style={{
-            padding: '8px 10px', borderRadius: '6px', fontSize: 'var(--font-xs)',
-            background: severity === 'critical' ? 'rgba(224,101,48,.08)' : severity === 'high' ? 'rgba(232,180,74,.06)' : 'var(--bg-card)',
-            border: `1px solid ${severity === 'critical' ? 'rgba(224,101,48,.25)' : severity === 'high' ? 'rgba(232,180,74,.2)' : 'var(--border)'}`,
-            borderLeft: `3px solid ${severity === 'critical' ? 'var(--rust)' : severity === 'high' ? 'var(--amber)' : 'var(--teal)'}`,
-          }}>
+        <div className={styles.specWrap}>
+          <div className={styles.specCard} style={cardStyle}>
             {/* Header: dept name, tool count, severity badge, inline citation pills */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
-              <span style={{ fontWeight: 800, fontSize: 'var(--font-2xs)', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--teal)' }}>
+            <div className={styles.specHeader}>
+              <span className={styles.specHeaderDept}>
                 {scenario.ui.departmentIcons[dept] || ''} {dept}
               </span>
               {allTools.length > 0 && (
-                <span style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
+                <span className={styles.specToolCount}>
                   +{allTools.length} tool{allTools.length === 1 ? '' : 's'}
                   {tools.length < allTools.length && ` (${tools.length} reused)`}
                 </span>
               )}
               {severity && (
-                <span style={{ fontSize: 'var(--font-3xs)', fontWeight: 800, fontFamily: 'var(--mono)', padding: '1px 5px', borderRadius: '2px', background: severity === 'critical' ? 'rgba(224,101,48,.15)' : 'rgba(232,180,74,.1)', color: severity === 'critical' ? 'var(--rust)' : 'var(--amber)' }}>
+                <span className={styles.severityBadge} style={sevStyle}>
                   {severity.toUpperCase()} RISK
                 </span>
               )}
@@ -266,11 +246,9 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
             {/* Summary — falls back to a compact inventory line when the
                 LLM returned a sparse report so the card never looks empty. */}
             {summary ? (
-              <div style={{ fontSize: 'var(--font-sm)', color: 'var(--text-1)', lineHeight: 1.5, marginBottom: '6px' }}>
-                {summary}
-              </div>
+              <div className={styles.specSummary}>{summary}</div>
             ) : (risks.length === 0 && recs.length === 0) && (citeCount > 0 || allTools.length > 0) ? (
-              <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-3)', fontStyle: 'italic', lineHeight: 1.5, marginBottom: '6px' }}>
+              <div className={styles.specSummaryEmpty}>
                 Department analysis complete &mdash; no narrative summary returned, but
                 {citeCount > 0 && ` ${citeCount} source${citeCount === 1 ? '' : 's'} surveyed`}
                 {citeCount > 0 && allTools.length > 0 && ' and '}
@@ -281,11 +259,16 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
 
             {/* Risks */}
             {risks.length > 0 && (
-              <div style={{ marginBottom: '6px' }}>
-                <div style={{ fontSize: 'var(--font-3xs)', fontWeight: 800, color: 'var(--rust)', letterSpacing: '0.5px', fontFamily: 'var(--mono)', marginBottom: '2px' }}>RISKS</div>
+              <div className={styles.specRisks}>
+                <div className={styles.specRisksLabel}>RISKS</div>
                 {risks.slice(0, 3).map((r: any, i: number) => (
-                  <div key={i} style={{ fontSize: 'var(--font-xs)', color: 'var(--text-2)', lineHeight: 1.4, display: 'flex', gap: '4px', marginBottom: '1px' }}>
-                    <span style={{ color: (r.severity === 'critical' || r.severity === 'high') ? 'var(--rust)' : 'var(--amber)', fontFamily: 'var(--mono)', fontSize: 'var(--font-3xs)', fontWeight: 700, flexShrink: 0, marginTop: '1px' }}>
+                  <div key={i} className={styles.specRiskRow}>
+                    <span
+                      className={styles.specRiskSeverity}
+                      style={{
+                        '--risk-color': (r.severity === 'critical' || r.severity === 'high') ? 'var(--rust)' : 'var(--amber)',
+                      } as CSSProperties}
+                    >
                       {String(r.severity || 'med').toUpperCase()}
                     </span>
                     <span>{String(r.description || '')}</span>
@@ -296,19 +279,13 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
 
             {/* Recommended Actions */}
             {recs.length > 0 && (
-              <div style={{ marginBottom: '4px' }}>
-                <div style={{ fontSize: 'var(--font-3xs)', fontWeight: 800, color: 'var(--green)', letterSpacing: '0.5px', fontFamily: 'var(--mono)', marginBottom: '2px' }}>RECOMMENDATIONS</div>
+              <div className={styles.specRecs}>
+                <div className={styles.specRecsLabel}>RECOMMENDATIONS</div>
                 {recs.slice(0, 3).map((rec, i) => (
-                  <div key={i} style={{ fontSize: 'var(--font-xs)', color: 'var(--text-2)', lineHeight: 1.4, paddingLeft: '8px', borderLeft: '2px solid var(--border)', marginBottom: '2px' }}>
-                    {rec}
-                  </div>
+                  <div key={i} className={styles.specRecRow}>{rec}</div>
                 ))}
               </div>
             )}
-
-            {/* Citation pills are rendered inline next to the dept name
-                in the header above. The full source list lives in the
-                References section at the bottom of the report. */}
           </div>
 
           {/* Tool cards. First-forge gets a bright amber pulse +
@@ -334,48 +311,33 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
             const borderTint = !approved
               ? 'rgba(224,101,48,.15)'
               : isNew ? `color-mix(in srgb, ${sideColor} 40%, transparent)` : 'rgba(106,173,72,.2)';
+            const shadow = isNew
+              ? `0 0 0 1px color-mix(in srgb, ${sideColor} 15%, transparent), var(--card-shadow)`
+              : 'var(--card-shadow)';
             const inputSchema = t.inputSchema;
             const outputSchema = t.outputSchema;
             const hasFullSchema = !!inputSchema || !!outputSchema;
+            const detailStyle = {
+              '--tool-bg': bgTint,
+              '--tool-border': borderTint,
+              '--tool-accent': accent,
+              '--tool-shadow': shadow,
+              '--side-color': sideColor,
+            } as CSSProperties;
+            const toolCls = [styles.toolDetail, isNew ? styles.newTool : styles.reused].join(' ');
 
             return (
-              <details key={i} style={{
-                margin: '0 8px 4px', borderRadius: '4px', fontSize: 'var(--font-sm)',
-                animation: isNew
-                  ? 'forgeSlide 0.4s ease both, forgeGlow 2.4s ease both'
-                  : 'forgeSlide 0.3s ease both',
-                background: bgTint,
-                borderLeft: `3px solid ${accent}`,
-                border: `1px solid ${borderTint}`,
-                borderLeftWidth: '3px',
-                boxShadow: isNew
-                  ? `0 0 0 1px color-mix(in srgb, ${sideColor} 15%, transparent), var(--card-shadow)`
-                  : 'var(--card-shadow)',
-              }}>
-                <summary style={{ padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+              <details key={i} className={toolCls} style={detailStyle}>
+                <summary className={styles.toolSummary}>
+                  <div className={styles.toolSummaryMain}>
+                    <div className={styles.toolSummaryHead}>
                       {isNew ? (
-                        <span style={{
-                          fontSize: 'var(--font-3xs)', color: 'var(--bg-deep)', background: sideColor,
-                          textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: 900,
-                          fontFamily: 'var(--mono)', padding: '2px 6px', borderRadius: 3,
-                          boxShadow: `0 0 8px color-mix(in srgb, ${sideColor} 40%, transparent)`,
-                        }}>
-                          FORGED TOOL
-                        </span>
+                        <span className={styles.toolNewBadge}>FORGED TOOL</span>
                       ) : (
-                        <span style={{
-                          fontSize: 'var(--font-3xs)', color: 'var(--green)', background: 'rgba(106,173,72,.12)',
-                          textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 800,
-                          fontFamily: 'var(--mono)', padding: '1px 6px', borderRadius: 3,
-                          border: '1px solid rgba(106,173,72,.3)',
-                        }}>
-                          REUSED
-                        </span>
+                        <span className={styles.toolReusedBadge}>REUSED</span>
                       )}
                       {!isNew && t.firstForgedTurn != null && (
-                        <span style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
+                        <span className={styles.toolFirstForged}>
                           first forged T{t.firstForgedTurn}
                           {t.firstForgedDepartment && t.firstForgedDepartment !== t.department
                             ? ` · ${t.firstForgedDepartment}`
@@ -383,29 +345,17 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
                         </span>
                       )}
                       {hasFullSchema && (
-                        <span style={{
-                          fontSize: 'var(--font-3xs)', color: 'var(--teal)', fontFamily: 'var(--mono)',
-                          padding: '1px 5px', borderRadius: 2,
-                          background: 'rgba(76,168,168,.1)', border: '1px solid rgba(76,168,168,.25)',
-                        }}>
-                          SCHEMA
-                        </span>
+                        <span className={styles.toolSchemaBadge}>SCHEMA</span>
                       )}
                     </div>
-                    <span style={{ fontSize: 'var(--font-md)', color: 'var(--text-1)', fontWeight: 600, lineHeight: 1.3 }}>
+                    <span className={styles.toolDescription}>
                       {String(t.description || t.name || '')}
                     </span>
-                    <span style={{ display: 'block', fontSize: 'var(--font-xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginTop: '2px' }}>
+                    <span className={styles.toolNameLine}>
                       {t.name} {t.mode ? `(${t.mode})` : ''}
                     </span>
                   </div>
-                  <span style={{
-                    padding: '2px 6px', borderRadius: '3px', fontSize: 'var(--font-3xs)', fontWeight: 800,
-                    fontFamily: 'var(--mono)', whiteSpace: 'nowrap', flexShrink: 0,
-                    background: approved ? 'rgba(106,173,72,.15)' : 'rgba(224,101,48,.1)',
-                    color: approved ? 'var(--green)' : 'var(--rust)',
-                    border: `1px solid ${approved ? 'rgba(106,173,72,.3)' : 'rgba(224,101,48,.2)'}`,
-                  }}>
+                  <span className={approved ? styles.toolPassPill : styles.toolFailPill}>
                     {approved
                       ? `PASS ${(typeof t.confidence === 'number' ? t.confidence : 0.85).toFixed(2)}`
                       : 'FAIL'}
@@ -416,28 +366,21 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
                     type="button"
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); setInspectingTool(t.name || ''); }}
                     aria-label={`Inspect tool ${t.name || ''}`}
-                    style={{
-                      fontSize: 'var(--font-3xs)', fontFamily: 'var(--mono)', fontWeight: 700,
-                      padding: '2px 6px', borderRadius: 3,
-                      border: '1px solid rgba(232,180,74,0.35)',
-                      background: 'rgba(232,180,74,0.06)',
-                      color: 'var(--amber)', cursor: 'pointer',
-                      letterSpacing: '0.05em', whiteSpace: 'nowrap', flexShrink: 0,
-                    }}
+                    className={styles.toolInspectBtn}
                   >
                     INSPECT
                   </button>
                 </summary>
-                <div style={{ padding: '0 12px 8px', fontSize: 'var(--font-xs)' }}>
+                <div className={styles.toolBody}>
                   {t.crisis && (
-                    <div style={{ color: 'var(--text-3)', marginBottom: '4px' }}>
-                      <span style={{ fontWeight: 700, fontFamily: 'var(--mono)', fontSize: 'var(--font-3xs)', letterSpacing: '0.5px' }}>CRISIS: </span>
+                    <div className={styles.toolMetaRow}>
+                      <span className={styles.toolMetaLabel}>CRISIS: </span>
                       {String(t.crisis)}
                     </div>
                   )}
                   {t.department && (
-                    <div style={{ color: 'var(--text-3)', marginBottom: '4px' }}>
-                      <span style={{ fontWeight: 700, fontFamily: 'var(--mono)', fontSize: 'var(--font-3xs)', letterSpacing: '0.5px' }}>DEPT: </span>
+                    <div className={styles.toolMetaRow}>
+                      <span className={styles.toolMetaLabel}>DEPT: </span>
                       {String(t.department)}
                     </div>
                   )}
@@ -453,15 +396,17 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
                   )}
 
                   {t.output && (
-                    <details style={{ marginTop: '4px' }}>
-                      <summary style={{ fontSize: 'var(--font-2xs)', fontWeight: 600, cursor: 'pointer', color: sideColor, fontFamily: 'var(--mono)' }}>Raw Output</summary>
-                      <pre style={{ background: 'var(--bg-deep)', border: '1px solid var(--border)', borderRadius: '4px', padding: '8px', overflow: 'auto', maxHeight: '200px', fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', color: 'var(--text-2)', lineHeight: 1.5, whiteSpace: 'pre-wrap', marginTop: '4px' }}>
+                    <details>
+                      <summary className={styles.toolRawSummary} style={{ '--side-color': sideColor } as CSSProperties}>
+                        Raw Output
+                      </summary>
+                      <pre className={styles.toolRawPre}>
                         {typeof t.output === 'object' ? JSON.stringify(t.output, null, 2) : String(t.output)}
                       </pre>
                     </details>
                   )}
                   {!t.output && !inputSchema && !outputSchema && (!t.inputFields || t.inputFields.length === 0) && (
-                    <div style={{ color: 'var(--text-3)', fontStyle: 'italic' }}>Tool forged but no output captured. The tool will be available for subsequent turns.</div>
+                    <div className={styles.toolEmpty}>Tool forged but no output captured. The tool will be available for subsequent turns.</div>
                   )}
                 </div>
               </details>
@@ -490,38 +435,33 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
       const toolCount = Number(dd._toolCount ?? 0);
       const citeCount = Number(dd._citeCount ?? 0);
 
+      const outcomeStyle = {
+        '--side-color': sideColor,
+        '--outcome-bg': actorIndex === 0 ? 'rgba(232,180,74,.06)' : 'rgba(76,168,168,.06)',
+        '--outcome-border': actorIndex === 0 ? 'var(--amber-dim)' : 'var(--teal-dim)',
+      } as CSSProperties;
+
       return (
-        <div style={{
-          margin: '0 8px 4px', borderRadius: '4px', padding: '6px 10px',
-          animation: 'decisionPulse 2s ease both',
-          background: actorIndex === 0 ? 'rgba(232,180,74,.06)' : 'rgba(76,168,168,.06)',
-          border: `1px solid ${actorIndex === 0 ? 'var(--amber-dim)' : 'var(--teal-dim)'}`,
-          borderLeft: `3px solid ${sideColor}`,
-          boxShadow: 'var(--card-shadow)',
-        }}>
+        <div className={styles.outcomeCard} style={outcomeStyle}>
           {/* Header: DECISION #N  tools · citations  BADGE */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+          <div className={styles.outcomeHead}>
             <span>
-              <span style={{ fontWeight: 800, fontSize: 'var(--font-xs)', textTransform: 'uppercase', letterSpacing: '0.5px', color: sideColor }}>
-                DECISION #{turnNum}
-              </span>
-              <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginLeft: '8px' }}>
+              <span className={styles.outcomeLabel}>DECISION #{turnNum}</span>
+              <span className={styles.outcomeMeta}>
                 {toolCount} tools &middot; {citeCount} citations
               </span>
             </span>
             <Badge outcome={outcome} />
           </div>
           {/* Decision text */}
-          <div style={{ color: 'var(--text-1)', lineHeight: 1.5, fontSize: 'var(--font-md)' }}>
-            {decision}
-          </div>
+          <div className={styles.outcomeText}>{decision}</div>
           {/* System deltas in teal mono */}
           {systemDeltas && Object.keys(systemDeltas).length > 0 && (
-            <div style={{ marginTop: '4px', fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)', color: 'var(--teal)' }}>
+            <div className={styles.outcomeDeltas}>
               {Object.entries(systemDeltas).map(([k, v]) => (
-                <span key={k} style={{ marginRight: '4px' }}>
+                <span key={k} className={styles.outcomeDeltaSpan}>
                   {k} {v > 0 ? '+' : ''}{typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : v}
-                  {'\u00b7'}
+                  {' · '}
                 </span>
               ))}
             </div>
@@ -533,19 +473,17 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
               steps render in the wrapping `div` as preformatted lines),
               then rationale, then policies. */}
           {(rationale || reasoning || policies.length > 0) && (
-            <details style={{ marginTop: '4px' }}>
-              <summary style={{ fontSize: 'var(--font-sm)', color: sideColor, fontWeight: 600, cursor: 'pointer' }}>
+            <details>
+              <summary className={styles.outcomeReasoningSummary}>
                 Full reasoning &amp; policies
               </summary>
-              <div style={{ marginTop: '4px', fontSize: 'var(--font-xs)', color: 'var(--text-2)', lineHeight: 1.5 }}>
+              <div className={styles.outcomeReasoningBody}>
                 {reasoning && (
-                  <div style={{ marginBottom: '6px', whiteSpace: 'pre-wrap', fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)', color: 'var(--text-1)', background: 'var(--bg-card)', padding: '6px 8px', borderRadius: '3px', border: '1px solid var(--border)' }}>
-                    {reasoning}
-                  </div>
+                  <div className={styles.outcomeReasoningPre}>{reasoning}</div>
                 )}
                 {decision && <div>{decision}</div>}
-                {rationale && <div style={{ marginTop: '4px', fontStyle: 'italic' }}>{rationale}</div>}
-                {policies.map((p, i) => <div key={i} style={{ color: 'var(--amber)' }}>&rarr; {p}</div>)}
+                {rationale && <div className={styles.outcomeRationale}>{rationale}</div>}
+                {policies.map((p, i) => <div key={i} className={styles.outcomePolicyLine}>&rarr; {p}</div>)}
               </div>
             </details>
           )}
@@ -557,13 +495,13 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
       const entries = Object.values(dd.agents as Record<string, any> || {});
       if (!entries.length) return null;
       return (
-        <div style={{ padding: '3px 10px', fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)', color: 'var(--text-2)', lineHeight: 1.4 }}>
-          <span style={{ color: 'var(--text-3)', fontSize: 'var(--font-2xs)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>DRIFT </span>
+        <div className={styles.driftRow}>
+          <span className={styles.driftLabel}>DRIFT </span>
           {entries.slice(0, 3).map((c: any, i: number) => (
             <span key={i}>
-              <span style={{ color: sideColor }}>{c.name?.split(' ')[0]}</span>
+              <span className={styles.driftName} style={sideStyle}>{c.name?.split(' ')[0]}</span>
               {' '}O{c.hexaco?.O ?? '?'} C{c.hexaco?.C ?? '?'}
-              {i < Math.min(entries.length, 3) - 1 ? ' \u00b7 ' : ''}
+              {i < Math.min(entries.length, 3) - 1 ? ' · ' : ''}
             </span>
           ))}
         </div>
@@ -577,58 +515,71 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
 
       const moodCounts: Record<string, number> = {};
       for (const r of reactions) moodCounts[r.mood] = (moodCounts[r.mood] || 0) + 1;
-      const moodBgColors: Record<string, string> = {
-        positive: '#6aad48', negative: '#e06530', anxious: '#e8b44a',
-        defiant: '#e06530', hopeful: '#6aad48', resigned: '#a89878', neutral: '#a89878',
-      };
       const segments = Object.entries(moodCounts).sort((a, b) => b[1] - a[1]).map(([mood, count]) => ({
         mood, count, pct: Math.round((count / reactions.length) * 100), bg: moodBgColors[mood] || '#a89878',
       }));
 
       return (
-        <div style={{ ...cardBase, margin: '0 8px 4px', padding: '6px 10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <span style={{ fontSize: 'var(--font-2xs)', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', fontFamily: 'var(--mono)', color: sideColor }}>
-              {total} VOICES
-            </span>
-            <div style={{ flex: 1, display: 'flex', height: '10px', borderRadius: '2px', overflow: 'hidden', gap: '1px' }}>
-              {segments.map(m => <div key={m.mood} style={{ flex: m.pct, background: m.bg }} title={`${m.pct}% ${m.mood}`} />)}
+        <div className={styles.reactionsCard}>
+          <div className={styles.reactionsHead}>
+            <span className={styles.reactionsLabel} style={sideStyle}>{total} VOICES</span>
+            <div className={styles.reactionsBar}>
+              {segments.map(m => (
+                <div
+                  key={m.mood}
+                  className={styles.reactionsBarSegment}
+                  style={{ '--seg-flex': String(m.pct), '--seg-bg': m.bg } as CSSProperties}
+                  title={`${m.pct}% ${m.mood}`}
+                />
+              ))}
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '10px', fontSize: 'var(--font-xs)', marginBottom: '4px' }}>
+          <div className={styles.reactionsLegend}>
             {segments.slice(0, 3).map(m => (
-              <span key={m.mood} style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', display: 'inline-block', background: m.bg }} />
+              <span key={m.mood} className={styles.reactionsLegendItem}>
+                <span
+                  className={styles.reactionsLegendSwatch}
+                  style={{ '--swatch-bg': m.bg } as CSSProperties}
+                />
                 {m.pct}% {m.mood}
               </span>
             ))}
           </div>
           <details>
-            <summary style={{ fontSize: 'var(--font-2xs)', fontWeight: 600, cursor: 'pointer', color: sideColor, fontFamily: 'var(--mono)' }}>quotes ({reactions.length})</summary>
-            <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <summary className={styles.reactionsQuotesSummary} style={sideStyle}>
+              quotes ({reactions.length})
+            </summary>
+            <div className={styles.reactionsQuotesList}>
               {reactions.slice(0, 4).map((r, i) => (
                 <Tooltip key={i} dot content={
                   <div>
-                    <b style={{ color: sideColor, display: 'block', marginBottom: '4px' }}>{r.name}</b>
-                    <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-2)' }}>{r.role} in {r.department} {r.age ? `· Age ${r.age}` : ''}</div>
-                    <div style={{ fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)', marginTop: '6px', color: 'var(--text-1)' }}>O:{r.hexaco?.O} C:{r.hexaco?.C} E:{r.hexaco?.E} A:{r.hexaco?.A} Em:{r.hexaco?.Em} HH:{r.hexaco?.HH}</div>
-                    <div style={{ fontSize: 'var(--font-xs)', marginTop: '4px' }}>Bone: {r.boneDensity}% · Radiation: {r.radiation}mSv · Psych: {r.psychScore}</div>
-                    <div style={{ fontStyle: 'italic', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--border)', lineHeight: 1.5 }}>&ldquo;{r.quote}&rdquo;</div>
-                    <div style={{ fontSize: 'var(--font-xs)', fontWeight: 700, marginTop: '4px', color: moodColors[r.mood] || 'var(--text-3)' }}>{String(r.mood || '').toUpperCase()} · intensity {r.intensity?.toFixed?.(2) || '?'}</div>
-                    {r.memory?.beliefs?.length > 0 && <div style={{ fontSize: 'var(--font-2xs)', marginTop: '6px', color: 'var(--text-3)' }}>Beliefs: {r.memory.beliefs.slice(0, 2).join('; ')}</div>}
+                    <b className={styles.reactionTooltipName} style={sideStyle}>{r.name}</b>
+                    <div className={styles.reactionTooltipMeta}>{r.role} in {r.department} {r.age ? `· Age ${r.age}` : ''}</div>
+                    <div className={styles.reactionTooltipHexaco}>O:{r.hexaco?.O} C:{r.hexaco?.C} E:{r.hexaco?.E} A:{r.hexaco?.A} Em:{r.hexaco?.Em} HH:{r.hexaco?.HH}</div>
+                    <div className={styles.reactionTooltipHealth}>Bone: {r.boneDensity}% · Radiation: {r.radiation}mSv · Psych: {r.psychScore}</div>
+                    <div className={styles.reactionTooltipQuote}>&ldquo;{r.quote}&rdquo;</div>
+                    <div
+                      className={styles.reactionTooltipMoodLine}
+                      style={{ '--mood-color': moodColors[r.mood] || 'var(--text-3)' } as CSSProperties}
+                    >
+                      {String(r.mood || '').toUpperCase()} · intensity {r.intensity?.toFixed?.(2) || '?'}
+                    </div>
+                    {r.memory?.beliefs?.length > 0 && (
+                      <div className={styles.reactionTooltipBeliefs}>
+                        Beliefs: {r.memory.beliefs.slice(0, 2).join('; ')}
+                      </div>
+                    )}
                   </div>
                 }>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', fontSize: 'var(--font-xs)', padding: '3px 0', cursor: 'pointer', borderBottom: i < Math.min(reactions.length, 4) - 1 ? '1px solid rgba(48,42,34,.3)' : 'none' }}>
-                    <span style={{ fontWeight: 700, color: sideColor, flexShrink: 0, minWidth: '90px' }}>{r.name}</span>
-                    <span style={{ flex: 1, color: 'var(--text-2)', fontStyle: 'italic', lineHeight: 1.4, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div className={[styles.reactionRow, i < Math.min(reactions.length, 4) - 1 ? styles.notLast : ''].filter(Boolean).join(' ')}>
+                    <span className={styles.reactionRowName} style={sideStyle}>{r.name}</span>
+                    <span className={styles.reactionRowQuote}>
                       &ldquo;{String(r.quote || '')}&rdquo;
                     </span>
-                    <span style={{
-                      fontSize: 'var(--font-3xs)', fontWeight: 800, flexShrink: 0, fontFamily: 'var(--mono)',
-                      padding: '1px 5px', borderRadius: '3px', whiteSpace: 'nowrap',
-                      color: moodColors[r.mood] || 'var(--text-3)',
-                      background: `color-mix(in srgb, ${moodColors[r.mood] || 'var(--text-3)'} 12%, transparent)`,
-                    }}>
+                    <span
+                      className={styles.reactionRowMoodPill}
+                      style={{ '--mood-color': moodColors[r.mood] || 'var(--text-3)' } as CSSProperties}
+                    >
                       {String(r.mood || '').toUpperCase()}
                     </span>
                   </div>
@@ -645,19 +596,25 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
       if (!posts.length) return null;
 
       return (
-        <div style={{ margin: '0 8px 4px' }}>
+        <div className={styles.bulletinWrap}>
           {posts.slice(0, 3).map((p, i) => (
             <Tooltip key={i} dot content={
               <div>
-                <b style={{ color: sideColor }}>{p.name}</b> <span style={{ color: 'var(--text-3)', fontSize: 'var(--font-xs)' }}>{p.role} {p.department}</span>
-                <div style={{ marginTop: '6px', lineHeight: 1.6, color: 'var(--text-1)' }}>{p.post}</div>
-                <div style={{ marginTop: '4px', fontSize: 'var(--font-xs)', color: moodColors[p.mood] || 'var(--text-3)' }}>{String(p.mood || '').toUpperCase()} · {p.likes || 0} likes · {p.replies || 0} replies</div>
+                <b className={styles.bulletinTooltipName} style={sideStyle}>{p.name}</b>{' '}
+                <span className={styles.bulletinTooltipRole}>{p.role} {p.department}</span>
+                <div className={styles.bulletinTooltipBody}>{p.post}</div>
+                <div
+                  className={styles.bulletinTooltipMood}
+                  style={{ '--mood-color': moodColors[p.mood] || 'var(--text-3)' } as CSSProperties}
+                >
+                  {String(p.mood || '').toUpperCase()} · {p.likes || 0} likes · {p.replies || 0} replies
+                </div>
               </div>
             }>
-              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', fontSize: 'var(--font-xs)', padding: '2px 0', cursor: 'pointer' }}>
-                <span style={{ fontWeight: 700, color: sideColor, flexShrink: 0 }}>{p.name}</span>
-                <span style={{ flex: 1, color: 'var(--text-2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{String(p.post || '')}</span>
-                <span style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-3)', flexShrink: 0 }}>&hearts;{p.likes || 0}</span>
+              <div className={styles.bulletinRow}>
+                <span className={styles.bulletinName} style={sideStyle}>{p.name}</span>
+                <span className={styles.bulletinPost}>{String(p.post || '')}</span>
+                <span className={styles.bulletinLikes}>&hearts;{p.likes || 0}</span>
               </div>
             </Tooltip>
           ))}
@@ -667,12 +624,7 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
 
     case 'turn_done':
       return (
-        <div style={{
-          textAlign: 'center', padding: '5px 0', fontSize: 'var(--font-xs)', color: 'var(--text-3)',
-          fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px',
-          borderTop: '1px solid var(--border)', marginTop: '3px',
-          fontFamily: 'var(--mono)',
-        }}>
+        <div className={styles.turnDone}>
           Turn {String(dd.turn)} complete
         </div>
       );
@@ -683,39 +635,17 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
       const preview = String(dd.rawTextPreview || '');
       return (
         <div
-          style={{
-            margin: '0 8px 4px',
-            borderRadius: '4px',
-            padding: '6px 10px',
-            background: 'rgba(232, 180, 74, 0.08)',
-            border: '1px solid var(--amber-dim, #8a6a2a)',
-            borderLeft: `3px solid ${sideColor}`,
-            fontSize: 'var(--font-xs)',
-            color: 'var(--text-2)',
-            fontFamily: 'var(--mono)',
-          }}
+          className={styles.fallbackBox}
+          style={sideStyle}
           role="status"
           aria-label={`Schema fallback on ${schemaName}`}
         >
-          <div style={{ fontWeight: 700, color: 'var(--amber)', marginBottom: '2px' }}>
-            ⚠ SCHEMA FALLBACK — {schemaName}
-          </div>
-          <div style={{ color: 'var(--text-3)', fontSize: 'var(--font-2xs)' }}>
-            site: {site || 'n/a'}
-          </div>
+          <div className={styles.fallbackTitle}>⚠ SCHEMA FALLBACK — {schemaName}</div>
+          <div className={styles.fallbackSite}>site: {site || 'n/a'}</div>
           {preview && (
-            <details style={{ marginTop: '3px' }}>
-              <summary style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', cursor: 'pointer' }}>
-                Raw output preview
-              </summary>
-              <pre style={{
-                margin: '3px 0 0', padding: '4px 6px',
-                background: 'var(--bg-card)', border: '1px solid var(--border)',
-                borderRadius: '3px', fontSize: 'var(--font-2xs)', whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-              }}>
-                {preview}
-              </pre>
+            <details className={styles.fallbackPreviewWrap}>
+              <summary className={styles.fallbackPreviewSummary}>Raw output preview</summary>
+              <pre className={styles.fallbackPreviewPre}>{preview}</pre>
             </details>
           )}
         </div>
@@ -750,54 +680,24 @@ function ToolDetailModal({ entry, fallbackName, onClose }: {
       aria-modal="true"
       aria-label={`Tool detail · ${entry?.name || fallbackName}`}
       onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 100000,
-        background: 'rgba(10,8,6,0.78)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 20,
-      }}
+      className={styles.modalBackdrop}
     >
-      <div
-        onClick={e => e.stopPropagation()}
-        style={{
-          background: 'var(--bg-panel)',
-          border: '1px solid var(--border)',
-          borderTop: '3px solid var(--amber)',
-          borderRadius: 10,
-          padding: '16px 20px',
-          maxWidth: 720, width: '100%', maxHeight: '85vh',
-          display: 'flex', flexDirection: 'column',
-          boxShadow: '0 12px 60px rgba(0,0,0,0.6)',
-          fontFamily: 'var(--sans)', color: 'var(--text-1)',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 'var(--font-3xs)', fontFamily: 'var(--mono)', fontWeight: 800, letterSpacing: '0.12em', color: 'var(--amber)', textTransform: 'uppercase', marginBottom: 4 }}>
-              FORGED TOOL [{entry?.n ?? '?'}]
-            </div>
-            <div style={{ fontSize: 'var(--font-xl)', fontWeight: 800, fontFamily: 'var(--mono)', color: 'var(--text-1)', marginBottom: 4 }}>
-              {entry?.name || fallbackName}
-            </div>
+      <div onClick={e => e.stopPropagation()} className={styles.modalDialog}>
+        <div className={styles.modalHeader}>
+          <div className={styles.modalHeaderLeft}>
+            <div className={styles.modalKicker}>FORGED TOOL [{entry?.n ?? '?'}]</div>
+            <div className={styles.modalTitle}>{entry?.name || fallbackName}</div>
             {entry?.description && entry.description !== entry.name && (
-              <div style={{ fontSize: 'var(--font-md)', color: 'var(--text-2)', lineHeight: 1.5 }}>
-                {entry.description}
-              </div>
+              <div className={styles.modalDescription}>{entry.description}</div>
             )}
           </div>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            style={{ background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer', fontSize: 'var(--font-2xl)', lineHeight: 1, padding: 4, marginLeft: 12 }}
-          >
-            ×
-          </button>
+          <button onClick={onClose} aria-label="Close" className={styles.modalCloseBtn}>×</button>
         </div>
 
-        <div style={{ overflowY: 'auto', flex: 1, padding: '4px 2px' }}>
+        <div className={styles.modalScroll}>
           {entry ? (
             <>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12, fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)' }}>
+              <div className={styles.modalPills}>
                 <Pill label={`${entry.mode}`} color="var(--text-3)" />
                 <Pill label={entry.approved ? `PASS ${entry.confidence.toFixed(2)}` : 'FAIL'} color={entry.approved ? 'var(--green)' : 'var(--rust)'} />
                 <Pill label={`first forged T${entry.firstForgedTurn} · ${entry.firstForgedDepartment}`} color="var(--amber)" />
@@ -807,19 +707,19 @@ function ToolDetailModal({ entry, fallbackName, onClose }: {
 
               {entry.inputSchema && (
                 <ModalSection title="INPUT SCHEMA">
-                  <pre style={preStyle}>{JSON.stringify(entry.inputSchema, null, 2)}</pre>
+                  <pre className={styles.codePre}>{JSON.stringify(entry.inputSchema, null, 2)}</pre>
                 </ModalSection>
               )}
               {entry.outputSchema && (
                 <ModalSection title="OUTPUT SCHEMA">
-                  <pre style={preStyle}>{JSON.stringify(entry.outputSchema, null, 2)}</pre>
+                  <pre className={styles.codePre}>{JSON.stringify(entry.outputSchema, null, 2)}</pre>
                 </ModalSection>
               )}
               {!entry.inputSchema && !entry.outputSchema && (entry.inputFields.length > 0 || entry.outputFields.length > 0) && (
                 <ModalSection title="FIELDS (DERIVED)">
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)' }}>
-                    {entry.inputFields.length > 0 && <div><span style={{ color: 'var(--teal)' }}>in:</span> {entry.inputFields.join(', ')}</div>}
-                    {entry.outputFields.length > 0 && <div><span style={{ color: 'var(--green)' }}>out:</span> {entry.outputFields.join(', ')}</div>}
+                  <div className={styles.fieldsBlock}>
+                    {entry.inputFields.length > 0 && <div><span className={styles.fieldsLabelIn}>in:</span> {entry.inputFields.join(', ')}</div>}
+                    {entry.outputFields.length > 0 && <div><span className={styles.fieldsLabelOut}>out:</span> {entry.outputFields.join(', ')}</div>}
                   </div>
                 </ModalSection>
               )}
@@ -830,56 +730,52 @@ function ToolDetailModal({ entry, fallbackName, onClose }: {
                   existing tool. */}
               {entry.history && entry.history.length > 0 && (
                 <ModalSection title={`USAGE HISTORY · ${entry.history.length} invocation${entry.history.length === 1 ? '' : 's'}`}>
-                  <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {entry.history.map((h, i) => (
-                      <li
-                        key={i}
-                        style={{
-                          padding: '6px 8px', borderRadius: 4,
-                          background: 'var(--bg-deep)', border: '1px solid var(--border)',
-                          borderLeft: `3px solid ${
-                            h.rejected ? 'var(--rust)' : h.isReforge ? 'var(--amber)' : 'var(--green)'
-                          }`,
-                          fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)', lineHeight: 1.5,
-                        }}
-                      >
-                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
-                          <span style={{ color: 'var(--amber)', fontWeight: 800 }}>T{h.turn}</span>
-                          <span style={{ color: 'var(--text-3)' }}>{h.time}</span>
-                          <span style={{ color: 'var(--text-2)', fontWeight: 700 }}>{h.department}</span>
-                          <span style={{ color: 'var(--text-3)' }}>· {h.eventTitle}</span>
-                          <span style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
-                            <span style={{
-                              padding: '1px 6px', borderRadius: 2, fontSize: 'var(--font-3xs)', fontWeight: 800,
-                              color: h.rejected ? 'var(--rust)' : h.isReforge ? 'var(--amber)' : 'var(--green)',
-                              background: 'color-mix(in srgb, ' + (h.rejected ? 'var(--rust)' : h.isReforge ? 'var(--amber)' : 'var(--green)') + ' 12%, transparent)',
-                            }}>
-                              {h.rejected ? 'JUDGE REJECTED' : h.isReforge ? 'RE-FORGE' : i === 0 ? 'FORGE' : 'REUSE'}
+                  <ol className={styles.usageList}>
+                    {entry.history.map((h, i) => {
+                      const accent = h.rejected ? 'var(--rust)' : h.isReforge ? 'var(--amber)' : 'var(--green)';
+                      return (
+                        <li
+                          key={i}
+                          className={styles.usageItem}
+                          style={{ '--usage-accent': accent } as CSSProperties}
+                        >
+                          <div className={styles.usageHeader}>
+                            <span className={styles.usageTurn}>T{h.turn}</span>
+                            <span className={styles.usageTime}>{h.time}</span>
+                            <span className={styles.usageDept}>{h.department}</span>
+                            <span className={styles.usageEvent}>· {h.eventTitle}</span>
+                            <span className={styles.usageStatus}>
+                              <span
+                                className={styles.usageStatusBadge}
+                                style={{ '--status-color': accent } as CSSProperties}
+                              >
+                                {h.rejected ? 'JUDGE REJECTED' : h.isReforge ? 'RE-FORGE' : i === 0 ? 'FORGE' : 'REUSE'}
+                              </span>
+                              {typeof h.confidence === 'number' && (
+                                <span className={styles.usageConf}>conf {h.confidence.toFixed(2)}</span>
+                              )}
                             </span>
-                            {typeof h.confidence === 'number' && (
-                              <span style={{ color: 'var(--text-3)', fontSize: 'var(--font-3xs)' }}>conf {h.confidence.toFixed(2)}</span>
-                            )}
-                          </span>
-                        </div>
-                        {h.output && (
-                          <div style={{ color: 'var(--text-2)', marginTop: 3, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 'var(--font-2xs)' }}>
-                            {h.output.length > 200 ? h.output.slice(0, 200) + '…' : h.output}
                           </div>
-                        )}
-                      </li>
-                    ))}
+                          {h.output && (
+                            <div className={styles.usageOutput}>
+                              {h.output.length > 200 ? h.output.slice(0, 200) + '…' : h.output}
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ol>
                 </ModalSection>
               )}
 
               {entry.sampleOutput && (
                 <ModalSection title="LATEST OUTPUT">
-                  <pre style={preStyle}>{entry.sampleOutput}</pre>
+                  <pre className={styles.codePre}>{entry.sampleOutput}</pre>
                 </ModalSection>
               )}
             </>
           ) : (
-            <div style={{ fontSize: 'var(--font-sm)', color: 'var(--text-3)', fontStyle: 'italic' }}>
+            <div className={styles.modalEmpty}>
               Tool entry not yet in the registry — the specialist_done summary
               for this forge hasn't arrived yet. Try again in a moment.
             </div>
@@ -890,21 +786,9 @@ function ToolDetailModal({ entry, fallbackName, onClose }: {
   );
 }
 
-const preStyle: React.CSSProperties = {
-  margin: '4px 0 0', padding: 10, fontSize: 'var(--font-xs)', lineHeight: 1.5,
-  fontFamily: 'var(--mono)', color: 'var(--text-2)',
-  background: 'var(--bg-deep)', border: '1px solid var(--border)', borderRadius: 4,
-  whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 280, overflow: 'auto',
-};
-
 function Pill({ label, color }: { label: string; color: string }) {
   return (
-    <span style={{
-      padding: '2px 8px', borderRadius: 3,
-      color, background: `color-mix(in srgb, ${color} 12%, transparent)`,
-      border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`,
-      fontWeight: 700, fontSize: 'var(--font-2xs)', letterSpacing: '0.04em',
-    }}>
+    <span className={styles.pill} style={{ '--pill-color': color } as CSSProperties}>
       {label}
     </span>
   );
@@ -912,14 +796,8 @@ function Pill({ label, color }: { label: string; color: string }) {
 
 function ModalSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 14 }}>
-      <div style={{
-        fontSize: 'var(--font-3xs)', fontFamily: 'var(--mono)', fontWeight: 800,
-        color: 'var(--amber)', letterSpacing: '0.08em',
-        textTransform: 'uppercase', marginBottom: 6,
-      }}>
-        {title}
-      </div>
+    <div className={styles.modalSection}>
+      <div className={styles.modalSectionTitle}>{title}</div>
       {children}
     </div>
   );
@@ -947,47 +825,43 @@ function SchemaBlock({ label, color, schema, fields }: {
   if (!props) {
     if (!fields || fields.length === 0) return null;
     return (
-      <div style={{ marginBottom: 4 }}>
-        <span style={{ fontWeight: 700, color, fontFamily: 'var(--mono)', fontSize: 'var(--font-3xs)', letterSpacing: '0.5px' }}>
+      <div className={styles.schemaBlock}>
+        <span
+          className={styles.schemaFieldsLabel}
+          style={{ '--field-color': color } as CSSProperties}
+        >
           {label} FIELDS:{' '}
         </span>
-        <span style={{ color: 'var(--text-2)', fontFamily: 'var(--mono)' }}>
-          {fields.join(', ')}
-        </span>
+        <span className={styles.schemaFieldsList}>{fields.join(', ')}</span>
       </div>
     );
   }
 
   const entries = Object.entries(props as Record<string, any>).slice(0, 12);
   return (
-    <div style={{ marginBottom: 4 }}>
-      <div style={{
-        fontWeight: 700, color, fontFamily: 'var(--mono)', fontSize: 'var(--font-3xs)',
-        letterSpacing: '0.5px', marginBottom: 2,
-      }}>
+    <div className={styles.schemaBlock}>
+      <div
+        className={styles.schemaTitle}
+        style={{ '--field-color': color } as CSSProperties}
+      >
         {label} SCHEMA
       </div>
-      <table style={{
-        borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)',
-        width: '100%', tableLayout: 'fixed',
-      }}>
+      <table className={styles.schemaTable}>
         <tbody>
           {entries.map(([key, def]) => {
             const type = String(def?.type ?? 'any');
             const desc = typeof def?.description === 'string' ? def.description : '';
             const isRequired = required.includes(key);
             return (
-              <tr key={key} style={{ borderTop: '1px solid var(--border)' }}>
-                <td style={{ padding: '2px 6px 2px 0', color: 'var(--text-1)', fontWeight: 700, width: '32%', verticalAlign: 'top' }}>
+              <tr key={key} className={styles.schemaRow}>
+                <td className={styles.schemaKeyCell}>
                   {key}
-                  {isRequired && <span style={{ color: 'var(--rust)', marginLeft: 2 }}>*</span>}
+                  {isRequired && <span className={styles.schemaRequired}>*</span>}
                 </td>
-                <td style={{ padding: '2px 6px', color: color, width: '20%', verticalAlign: 'top' }}>
+                <td className={styles.schemaTypeCell} style={{ '--field-color': color } as CSSProperties}>
                   {type}
                 </td>
-                <td style={{ padding: '2px 0', color: 'var(--text-3)', verticalAlign: 'top', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {desc}
-                </td>
+                <td className={styles.schemaDescCell}>{desc}</td>
               </tr>
             );
           })}
