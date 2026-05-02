@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import type { CellSnapshot, TurnSnapshot } from '../viz-types.js';
 import { HexacoRadar } from '../HexacoRadar.js';
 import { useMediaQuery, PHONE_QUERY } from './useMediaQuery.js';
+import styles from './ClickPopover.module.scss';
 
 interface HexacoShape { O: number; C: number; E: number; A: number; Em: number; HH: number }
 
@@ -123,83 +124,31 @@ export function ClickPopover(props: ClickPopoverProps) {
     return `Gen ${g}`;
   })();
 
+  const popStyle = {
+    '--side-color': sideColor,
+    '--pop-left': `${left}px`,
+    '--pop-top': `${top}px`,
+    '--pop-width': `${POP_W}px`,
+    '--pop-max-height': `${containerH - margin * 2}px`,
+  } as CSSProperties;
+
   return (
     <>
-      <div
-        onClick={onClose}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'transparent',
-          zIndex: 10,
-        }}
-      />
+      <div onClick={onClose} className={styles.backdrop} />
       <div
         ref={rootRef}
         role="dialog"
         aria-label={`${cell.name} drilldown`}
-        style={{
-          position: 'absolute',
-          left,
-          top,
-          width: POP_W,
-          maxHeight: containerH - margin * 2,
-          overflow: 'auto',
-          background: 'var(--bg-panel)',
-          border: `1px solid ${sideColor}66`,
-          borderRadius: 6,
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)',
-          fontFamily: 'var(--mono)',
-          fontSize: 'var(--font-2xs)',
-          color: 'var(--text-2)',
-          zIndex: 11,
-        }}
+        className={styles.popover}
+        style={popStyle}
       >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '8px 10px',
-            borderBottom: `1px solid ${sideColor}33`,
-            background: `linear-gradient(0deg, transparent, ${sideColor}11)`,
-          }}
-        >
+        <div className={styles.headerRow}>
           <div>
-            <div
-              style={{
-                color: sideColor,
-                fontWeight: 800,
-                fontSize: 'var(--font-md)',
-                fontFamily: 'var(--sans)',
-                letterSpacing: '0.02em',
-              }}
-            >
-              {cell.name}
-            </div>
-            <div
-              style={{
-                color: 'var(--text-3)',
-                fontSize: 'var(--font-3xs)',
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-              }}
-            >
+            <div className={styles.headerName}>{cell.name}</div>
+            <div className={styles.headerSubline}>
               {cell.role} · {cell.rank}
               {cell.featured && (
-                <span
-                  style={{
-                    marginLeft: 6,
-                    padding: '1px 4px',
-                    background: `${sideColor}33`,
-                    color: sideColor,
-                    borderRadius: 2,
-                    fontSize: 'var(--font-3xs)',
-                    letterSpacing: '0.1em',
-                  }}
-                >
-                  FEATURED
-                </span>
+                <span className={styles.featuredPill}>FEATURED</span>
               )}
             </div>
           </div>
@@ -207,76 +156,45 @@ export function ClickPopover(props: ClickPopoverProps) {
             type="button"
             onClick={onClose}
             aria-label="Close drilldown"
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--border)',
-              borderRadius: 3,
-              color: 'var(--text-3)',
-              cursor: 'pointer',
-              width: 22,
-              height: 22,
-              fontSize: 'var(--font-xs)',
-              lineHeight: 1,
-              padding: 0,
-            }}
+            className={styles.closeBtn}
           >
             ×
           </button>
         </div>
 
-        <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)' }}>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '4px 12px',
-              fontSize: 'var(--font-2xs)',
-            }}
-          >
-            <span style={{ color: 'var(--text-3)' }}>DEPT</span>
-            <span style={{ color: 'var(--text-1)', textTransform: 'uppercase' }}>
-              {cell.department}
-            </span>
-            <span style={{ color: 'var(--text-3)' }}>AGE</span>
-            <span style={{ color: 'var(--text-1)' }}>{cell.age ?? '—'}</span>
-            <span style={{ color: 'var(--text-3)' }}>MOOD</span>
-            <span style={{ color: 'var(--text-1)' }}>{cell.mood}</span>
+        <div className={styles.section}>
+          <div className={styles.statsGrid}>
+            <span className={styles.statKey}>DEPT</span>
+            <span className={styles.statValueUpper}>{cell.department}</span>
+            <span className={styles.statKey}>AGE</span>
+            <span className={styles.statValue}>{cell.age ?? '—'}</span>
+            <span className={styles.statKey}>MOOD</span>
+            <span className={styles.statValue}>{cell.mood}</span>
             {morale !== null && (
               <>
-                <span style={{ color: 'var(--text-3)' }}>PSYCH</span>
-                <span style={{ color: 'var(--text-1)' }}>{morale}%</span>
+                <span className={styles.statKey}>PSYCH</span>
+                <span className={styles.statValue}>{morale}%</span>
               </>
             )}
-            <span style={{ color: 'var(--text-3)' }}>ORIGIN</span>
-            <span style={{ color: 'var(--text-1)' }}>{generationLabel}</span>
-            <span style={{ color: 'var(--text-3)' }}>PARTNER</span>
-            <span style={{ color: 'var(--text-1)' }}>
+            <span className={styles.statKey}>ORIGIN</span>
+            <span className={styles.statValue}>{generationLabel}</span>
+            <span className={styles.statKey}>PARTNER</span>
+            <span className={styles.statValue}>
               {cell.partnerId ? 'yes' : '—'}
             </span>
-            <span style={{ color: 'var(--text-3)' }}>CHILDREN</span>
-            <span style={{ color: 'var(--text-1)' }}>{cell.childrenIds?.length ?? 0}</span>
+            <span className={styles.statKey}>CHILDREN</span>
+            <span className={styles.statValue}>{cell.childrenIds?.length ?? 0}</span>
           </div>
         </div>
 
         {hexaco && (
-          <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)' }}>
-            <div
-              style={{
-                color: 'var(--text-3)',
-                fontSize: 'var(--font-3xs)',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                marginBottom: 6,
-                fontWeight: 700,
-              }}
-            >
-              HEXACO
-            </div>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <div style={{ flexShrink: 0 }}>
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>HEXACO</div>
+            <div className={styles.hexacoRow}>
+              <div className={styles.hexacoRadarWrap}>
                 <HexacoRadar profile={hexaco} size={120} />
               </div>
-              <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-3)', lineHeight: 1.5 }}>
+              <div className={styles.hexacoTopAxes}>
                 {topHexacoAxes(hexaco)}
               </div>
             </div>
@@ -284,34 +202,11 @@ export function ClickPopover(props: ClickPopoverProps) {
         )}
 
         {memoryQuotes.length > 0 && (
-          <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)' }}>
-            <div
-              style={{
-                color: 'var(--text-3)',
-                fontSize: 'var(--font-3xs)',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                marginBottom: 6,
-                fontWeight: 700,
-              }}
-            >
-              Recent memory
-            </div>
-            <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>Recent memory</div>
+            <ul className={styles.memoryList}>
               {memoryQuotes.map((q, i) => (
-                <li
-                  key={i}
-                  style={{
-                    padding: '3px 0',
-                    color: 'var(--text-2)',
-                    fontSize: 'var(--font-2xs)',
-                    fontStyle: 'italic',
-                    fontFamily: 'var(--sans)',
-                    borderLeft: `2px solid ${sideColor}44`,
-                    paddingLeft: 8,
-                    marginBottom: 4,
-                  }}
-                >
+                <li key={i} className={styles.memoryItem}>
                   "{q}"
                 </li>
               ))}
@@ -320,24 +215,11 @@ export function ClickPopover(props: ClickPopoverProps) {
         )}
 
         {onOpenChat && (
-          <div style={{ padding: '8px 10px' }}>
+          <div className={styles.sectionLast}>
             <button
               type="button"
               onClick={() => onOpenChat(cell.name)}
-              style={{
-                width: '100%',
-                padding: '6px 8px',
-                background: sideColor,
-                color: 'var(--bg-deep)',
-                border: 'none',
-                borderRadius: 3,
-                cursor: 'pointer',
-                fontFamily: 'var(--mono)',
-                fontSize: 'var(--font-2xs)',
-                fontWeight: 800,
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-              }}
+              className={styles.chatBtn}
             >
               Open chat with {cell.name.split(' ')[0]}
             </button>

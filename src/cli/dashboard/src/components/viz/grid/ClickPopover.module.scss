@@ -1,0 +1,151 @@
+// Migrated from inline `style={{}}`. Side color flows in via --side-color
+// CSS custom property; left/top/width are positional and stay inline.
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  z-index: 10;
+}
+
+.popover {
+  position: absolute;
+  // --pop-left, --pop-top, --pop-width set inline (positional).
+  left: var(--pop-left, 0);
+  top: var(--pop-top, 0);
+  width: var(--pop-width, 320px);
+  max-height: var(--pop-max-height, 320px);
+  overflow: auto;
+  background: var(--bg-panel);
+  // --side-color set inline.
+  border: 1px solid color-mix(in srgb, var(--side-color, var(--amber)) 40%, transparent);
+  border-radius: 6px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  font-family: var(--mono);
+  font-size: var(--font-2xs);
+  color: var(--text-2);
+  z-index: 11;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--side-color, var(--amber)) 20%, transparent);
+  background: linear-gradient(0deg, transparent, color-mix(in srgb, var(--side-color, var(--amber)) 7%, transparent));
+}
+
+.headerName {
+  color: var(--side-color, var(--amber));
+  font-weight: 800;
+  font-size: var(--font-md);
+  font-family: var(--sans);
+  letter-spacing: 0.02em;
+}
+
+.headerSubline {
+  color: var(--text-3);
+  font-size: var(--font-3xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.featuredPill {
+  margin-left: 6px;
+  padding: 1px 4px;
+  background: color-mix(in srgb, var(--side-color, var(--amber)) 20%, transparent);
+  color: var(--side-color, var(--amber));
+  border-radius: 2px;
+  font-size: var(--font-3xs);
+  letter-spacing: 0.1em;
+}
+
+.closeBtn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-3);
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  font-size: var(--font-xs);
+  line-height: 1;
+  padding: 0;
+}
+
+.section {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sectionLast { padding: 8px 10px; }
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+  font-size: var(--font-2xs);
+}
+
+.statKey { color: var(--text-3); }
+.statValue { color: var(--text-1); }
+.statValueUpper {
+  color: var(--text-1);
+  text-transform: uppercase;
+}
+
+.sectionLabel {
+  color: var(--text-3);
+  font-size: var(--font-3xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.hexacoRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.hexacoRadarWrap { flex-shrink: 0; }
+
+.hexacoTopAxes {
+  font-size: var(--font-3xs);
+  color: var(--text-3);
+  line-height: 1.5;
+}
+
+.memoryList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.memoryItem {
+  padding: 3px 0;
+  color: var(--text-2);
+  font-size: var(--font-2xs);
+  font-style: italic;
+  font-family: var(--sans);
+  border-left: 2px solid color-mix(in srgb, var(--side-color, var(--amber)) 25%, transparent);
+  padding-left: 8px;
+  margin-bottom: 4px;
+}
+
+.chatBtn {
+  width: 100%;
+  padding: 6px 8px;
+  background: var(--side-color, var(--amber));
+  color: var(--bg-deep);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: var(--font-2xs);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
