@@ -227,9 +227,9 @@
     --rust: #a83810;       /* deep terracotta */
     --rust-dim: #6a2808;
     --rust-glow: rgba(168, 56, 16, 0.12);
-    --amber: #7a5200;      /* burnt gold */
-    --amber-dim: #523800;
-    --amber-glow: rgba(122, 82, 0, 0.1);
+    --amber: #6b4700;      /* burnt gold — bumped from #7a5200 for 4.5:1 AA on sepia bg */
+    --amber-dim: #463000;
+    --amber-glow: rgba(107, 71, 0, 0.1);
     --teal: #186060;       /* deep ocean */
     --teal-dim: #0e4040;
     --teal-glow: rgba(24, 96, 96, 0.1);
@@ -243,8 +243,9 @@
     --border-subtle: #c8bca0;
     --border-interactive: var(--border-hl);
 
-    /* Side colors — AA compliant on sepia */
-    --vis: #7a5200;
+    /* Side colors — AA compliant on sepia (4.5:1 minimum). Bumped
+       --vis from #7a5200 (4.28:1) to #6b4700 to clear the threshold. */
+    --vis: #6b4700;
     --eng: #186060;
 
     /* Shadows — warm-tinted */

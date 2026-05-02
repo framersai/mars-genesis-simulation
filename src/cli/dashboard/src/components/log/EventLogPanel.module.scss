@@ -57,10 +57,13 @@
 }
 
 .index {
-  color: var(--text-3);
+  // Was --text-3 at opacity 0.5 which dropped effective contrast to
+  // 2.51:1 against --bg-deep — failed WCAG AA 4.5:1 for the small
+  // 12px index number. Use --text-4 directly (no opacity) so the
+  // index reads as subtle but still passes axe color-contrast.
+  color: var(--text-4);
   min-width: 28px;
   text-align: right;
-  opacity: 0.5;
 }
 
 .type {

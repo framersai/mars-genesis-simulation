@@ -78,7 +78,12 @@ function outcomeBadge(outcome?: string) {
       className={styles.outcomeBadge}
       style={{
         '--status-color': color,
-        '--status-bg': isSuccess ? 'rgba(106,173,72,.15)' : 'rgba(224,101,48,.15)',
+        // Was rgba(...,.15) tint background which dropped rust-on-tint
+        // contrast to 4.21:1 (failed WCAG AA 4.5:1 for the 9px badge).
+        // Transparent background lets the rust text sit on the parent
+        // dark surface directly (~6.5:1), and the colored border still
+        // signals the outcome state.
+        '--status-bg': 'transparent',
       } as CSSProperties}
     >
       {short}
