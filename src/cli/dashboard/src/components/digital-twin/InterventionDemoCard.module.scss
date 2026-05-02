@@ -152,8 +152,13 @@
 .formLegend {
   @include typo.card-title;
   color: var(--text-3);
-  padding: 0 8px;
-  margin-left: -8px;
+  // Override browser-default legend behavior (overlapping the fieldset
+  // top border) so the heading sits cleanly inside the card with the
+  // same horizontal alignment as the field labels below it.
+  display: block;
+  width: 100%;
+  padding: 0;
+  margin: 0 0 8px;
 }
 
 .field {
