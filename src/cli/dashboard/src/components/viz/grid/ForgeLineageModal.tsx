@@ -1,6 +1,7 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, type CSSProperties } from 'react';
 import { useFocusTrap } from '../../../hooks/useFocusTrap';
 import type { ForgeAttempt, ReuseCall } from './useGridState.js';
+import styles from './ForgeLineageModal.module.scss';
 
 export interface ForgeLineagePayload {
   toolName: string;
@@ -61,86 +62,44 @@ export function ForgeLineageModal({
   const dialogRef = useFocusTrap<HTMLDivElement>(!!payload);
   if (!payload || !data) return null;
 
+  const sideStyle = { '--side-color': payload.sideColor } as CSSProperties;
+
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-label={`Forge lineage for ${payload.toolName}`}
       onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0, 0, 0, 0.7)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        padding: 16,
-      }}
+      className={styles.backdrop}
     >
       <div
         ref={dialogRef}
         tabIndex={-1}
         onClick={e => e.stopPropagation()}
-        style={{
-          background: 'var(--bg-panel)',
-          border: '1px solid var(--border)',
-          borderLeft: `3px solid ${payload.sideColor}`,
-          borderRadius: 6,
-          padding: 18,
-          maxWidth: 520,
-          width: '100%',
-          maxHeight: '82vh',
-          overflow: 'auto',
-          fontFamily: 'var(--mono)',
-          color: 'var(--text-2)',
-          boxShadow: '0 10px 32px rgba(0, 0, 0, 0.6)',
-          outline: 'none',
-        }}
+        className={styles.dialog}
+        style={sideStyle}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div className={styles.headerRow}>
           <div>
-            <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            <div className={styles.kicker}>
               Forge Lineage · {payload.side.toUpperCase()}
             </div>
-            <div style={{ fontSize: 'var(--font-xl)', fontWeight: 800, color: payload.sideColor, fontFamily: 'var(--sans)' }}>
-              {payload.toolName}
-            </div>
+            <div className={styles.title}>{payload.toolName}</div>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close lineage"
-            style={{
-              width: 24,
-              height: 24,
-              padding: 0,
-              background: 'transparent',
-              color: 'var(--text-3)',
-              border: '1px solid var(--border)',
-              borderRadius: 3,
-              cursor: 'pointer',
-              fontSize: 'var(--font-sm)',
-              lineHeight: 1,
-            }}
+            className={styles.closeBtn}
           >
             ×
           </button>
         </div>
 
         {data.firstApproved && (
-          <div
-            style={{
-              padding: '6px 10px',
-              background: 'var(--bg-deep)',
-              border: '1px solid var(--border)',
-              borderRadius: 3,
-              marginBottom: 12,
-              fontSize: 'var(--font-xs)',
-            }}
-          >
+          <div className={styles.firstForged}>
             First forged in{' '}
-            <span style={{ color: payload.sideColor, fontWeight: 800 }}>
+            <span className={styles.firstDept}>
               {data.firstApproved.department.toUpperCase()}
             </span>{' '}
             on T{data.firstApproved.turn}
@@ -150,132 +109,68 @@ export function ForgeLineageModal({
           </div>
         )}
 
-        <div style={{ marginBottom: 12 }}>
-          <div
-            style={{
-              fontSize: 'var(--font-3xs)',
-              letterSpacing: '0.1em',
-              color: 'var(--text-4)',
-              textTransform: 'uppercase',
-              marginBottom: 6,
-              fontWeight: 800,
-            }}
-          >
+        <div className={styles.section}>
+          <div className={styles.sectionLabel}>
             Attempts ({data.mine.length})
           </div>
           {data.mine.length === 0 ? (
-            <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-4)', fontStyle: 'italic' }}>
-              no forge records
-            </div>
+            <div className={styles.empty}>no forge records</div>
           ) : (
-            <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {data.mine.map((att, i) => (
-                <li
-                  key={`${att.turn}-${att.eventIndex}-${i}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '4px 8px',
-                    background: 'var(--bg-card)',
-                    borderLeft: `2px solid ${att.approved ? 'var(--green)' : 'var(--rust)'}`,
-                    borderRadius: 2,
-                    fontSize: 'var(--font-2xs)',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 'var(--font-3xs)',
-                      fontWeight: 800,
-                      letterSpacing: '0.08em',
-                      color: att.approved ? 'var(--green)' : 'var(--rust)',
-                      textTransform: 'uppercase',
-                      minWidth: 60,
-                    }}
+            <ul className={styles.list}>
+              {data.mine.map((att, i) => {
+                const statusColor = att.approved ? 'var(--green)' : 'var(--rust)';
+                const statusStyle = { '--status-color': statusColor } as CSSProperties;
+                return (
+                  <li
+                    key={`${att.turn}-${att.eventIndex}-${i}`}
+                    className={styles.attemptItem}
+                    style={statusStyle}
                   >
-                    {att.approved ? '\u2713 Forged' : '\u2717 Rejected'}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => onJumpToTurn?.(Math.max(0, att.turn - 1))}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: 'var(--amber)',
-                      fontFamily: 'var(--mono)',
-                      fontSize: 'var(--font-2xs)',
-                      cursor: onJumpToTurn ? 'pointer' : 'default',
-                      padding: 0,
-                      textDecoration: onJumpToTurn ? 'underline dotted' : 'none',
-                    }}
-                    title={onJumpToTurn ? `Jump to T${att.turn}` : undefined}
-                  >
-                    T{att.turn}
-                  </button>
-                  <span style={{ color: 'var(--text-3)', textTransform: 'uppercase', fontSize: 'var(--font-3xs)' }}>
-                    {att.department}
-                  </span>
-                  {typeof att.confidence === 'number' && (
-                    <span style={{ color: 'var(--text-3)', marginLeft: 'auto', fontSize: 'var(--font-3xs)' }}>
-                      conf {att.confidence.toFixed(2)}
+                    <span className={styles.statusLabel}>
+                      {att.approved ? '✓ Forged' : '✗ Rejected'}
                     </span>
-                  )}
-                </li>
-              ))}
+                    <button
+                      type="button"
+                      onClick={() => onJumpToTurn?.(Math.max(0, att.turn - 1))}
+                      className={[styles.jumpBtn, onJumpToTurn ? styles.clickable : ''].filter(Boolean).join(' ')}
+                      title={onJumpToTurn ? `Jump to T${att.turn}` : undefined}
+                    >
+                      T{att.turn}
+                    </button>
+                    <span className={styles.deptLabel}>{att.department}</span>
+                    {typeof att.confidence === 'number' && (
+                      <span className={styles.confLabel}>
+                        conf {att.confidence.toFixed(2)}
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
 
         <div>
-          <div
-            style={{
-              fontSize: 'var(--font-3xs)',
-              letterSpacing: '0.1em',
-              color: 'var(--text-4)',
-              textTransform: 'uppercase',
-              marginBottom: 6,
-              fontWeight: 800,
-            }}
-          >
+          <div className={styles.sectionLabel}>
             Cross-dept reuses ({data.mineReuses.length})
           </div>
           {data.mineReuses.length === 0 ? (
-            <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-4)', fontStyle: 'italic' }}>
-              never reused across departments
-            </div>
+            <div className={styles.empty}>never reused across departments</div>
           ) : (
-            <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <ul className={styles.list}>
               {data.mineReuses.map((r, i) => (
                 <li
                   key={`${r.turn}-${r.callingDept}-${i}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '4px 8px',
-                    background: 'var(--bg-card)',
-                    borderLeft: '2px solid var(--amber)',
-                    borderRadius: 2,
-                    fontSize: 'var(--font-2xs)',
-                  }}
+                  className={styles.reuseItem}
                 >
                   <button
                     type="button"
                     onClick={() => onJumpToTurn?.(Math.max(0, r.turn - 1))}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: 'var(--amber)',
-                      fontFamily: 'var(--mono)',
-                      fontSize: 'var(--font-2xs)',
-                      cursor: onJumpToTurn ? 'pointer' : 'default',
-                      padding: 0,
-                      textDecoration: onJumpToTurn ? 'underline dotted' : 'none',
-                    }}
+                    className={[styles.jumpBtn, onJumpToTurn ? styles.clickable : ''].filter(Boolean).join(' ')}
                   >
                     T{r.turn}
                   </button>
-                  <span style={{ color: 'var(--text-3)', textTransform: 'uppercase', fontSize: 'var(--font-3xs)' }}>
+                  <span className={styles.deptLabel}>
                     {r.originDept} → {r.callingDept}
                   </span>
                 </li>
