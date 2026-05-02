@@ -171,6 +171,10 @@ export function StatsBar({ actors, crisisText, toolRegistry }: StatsBarProps) {
       className={`stats-bar ${styles.bar}`}
       role="region"
       aria-label="Leader statistics"
+      // tabIndex=0 so keyboard users can focus + horizontally scroll
+      // the stats row. The bar overflows on narrow viewports when many
+      // metric pills are present (axe `scrollable-region-focusable`).
+      tabIndex={0}
       style={{
         ['--actor-color-a' as string]: colorA,
         ['--actor-color-b' as string]: colorB,

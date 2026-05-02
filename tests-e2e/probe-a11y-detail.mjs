@@ -26,6 +26,11 @@ if (subtab) {
   await page.getByRole('tab', { name: new RegExp(`^${subtab}$`, 'i') }).first().click({ force: true }).catch(() => {});
   await page.waitForTimeout(1000);
 }
+const scrollY = parseInt(process.env.PROBE_SCROLL ?? '0', 10);
+if (scrollY > 0) {
+  await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), scrollY);
+  await page.waitForTimeout(500);
+}
 await page.addScriptTag({ url: 'https://cdn.jsdelivr.net/npm/axe-core@4.11.2/axe.min.js' });
 const rules = process.env.PROBE_RULES?.split(',') ?? ['nested-interactive', 'svg-img-alt'];
 const result = await page.evaluate(async (rules) => {

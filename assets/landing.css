@@ -934,10 +934,19 @@ a:hover { text-decoration: underline; }
 .contact-card:hover { border-color: var(--amber-d); }
 .contact-card h3 { font-family: var(--mono); font-size: var(--font-lg); font-weight: 700; color: var(--t1); margin-bottom: 6px; }
 
-/* Underline links inside the #world-models prose so they read as
+/* Underline ALL inline links inside prose paragraphs so they read as
    actionable when CSS color alone fails (a11y rule
-   `link-in-text-block`). Other inline-icon links keep their treatment. */
-#world-models p a { text-decoration: underline; text-underline-offset: 2px; }
+   `link-in-text-block`). The .nav, .footer, .cta, and similar
+   icon-link patterns reset text-decoration to none in their own
+   scopes, so this only hits actual prose paragraphs.
+   `.sec-desc` covers the world-models section explainer copy
+   that still inherits .sec-desc styling outside #world-models. */
+section p a,
+.sec-desc a,
+.faq-body a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 .contact-card p { font-size: var(--font-md); color: var(--t2); margin-bottom: 12px; line-height: 1.6; }
 .contact-card a { font-weight: 600; }
 
