@@ -6,7 +6,8 @@
  * A floating card annotates each highlighted section.
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, type CSSProperties } from 'react';
+import styles from './GuidedTour.module.scss';
 
 export type TourTab = 'quickstart' | 'studio' | 'sim' | 'viz' | 'chat' | 'reports' | 'library' | 'settings';
 
@@ -203,29 +204,11 @@ export function GuidedTour({ activeTab, chatEnabled = true, onTabChange, onClose
   }, [step, onTabChange, steps]);
 
   // Highlight target element and measure its rect.
-  //
-  // Tab content for Quickstart / Studio / Library / Settings + heavy
-  // single-tab views (SwarmViz) is mounted conditionally on activeTab.
-  // The Viz tab in particular runs ~200ms of canvas + Conway grid setup
-  // on first mount, well past a flat polling budget. We combine three
-  // strategies so the highlight lands the moment the target appears:
-  //
-  //   1) Synchronous initial check (zero-cost when tab is already
-  //      mounted, e.g. switching between sim sub-targets).
-  //   2) Retry polling at 100ms intervals (cheap, covers most cases).
-  //   3) MutationObserver on document.body that fires the moment the
-  //      target node appears in DOM, regardless of how long the parent
-  //      took to mount — needed for SwarmViz and similar.
-  //
-  // Both 2 and 3 race; whichever finds the element first wins. Both
-  // tear down once the target is found OR when measure() is called
-  // again for the next step (cleanup via attemptCancelRef).
   const attemptCancelRef = useRef<(() => void) | null>(null);
   const measure = useCallback(() => {
     const s = steps[step];
     if (!s) return;
 
-    // Cancel any in-flight target lookup from a previous step.
     attemptCancelRef.current?.();
 
     cancelAnimationFrame(rafRef.current);
@@ -284,27 +267,12 @@ export function GuidedTour({ activeTab, chatEnabled = true, onTabChange, onClose
         observer?.disconnect();
       };
     });
-  }, [step, onTabChange]);
+  }, [step, steps]);
 
-  // Re-run measure() whenever:
-  //   - the step changes (drives onTabChange + new target lookup)
-  //   - activeTab catches up to what the step expects (so the highlight
-  //     observer/poll race only starts AFTER the new tab actually mounts)
-  //
-  // Without the activeTab dep, measure ran in the same render pass that
-  // requested the tab change, querying DOM before React had committed
-  // the activeTab state update. The MutationObserver caught it eventually
-  // on heavy panels (SwarmViz / SettingsPanel) but the moment varied
-  // depending on how quickly the new tab's tree painted, so the user
-  // saw flicker. Gating on activeTab makes the lookup deterministic.
   useEffect(() => {
     measure();
     let resizeRaf = 0;
     const h = () => {
-      // Coalesce bursts of resize events (mobile chrome show/hide,
-      // virtual keyboard, orientation animation) into a single
-      // measure() call per frame. Without this, every pixel-level
-      // resize fired a re-measure and the card visibly hopped around.
       cancelAnimationFrame(resizeRaf);
       resizeRaf = requestAnimationFrame(() => {
         setViewportW(window.innerWidth);
@@ -336,81 +304,48 @@ export function GuidedTour({ activeTab, chatEnabled = true, onTabChange, onClose
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [step, handleClose]);
+  }, [step, handleClose, steps.length]);
 
   if (!current) return null;
 
   const vw = viewportW;
-  const vh = window.innerHeight;
-  // Below this viewport width, drop the floating-positioned card entirely
-  // and pin a fixed bottom strip so the card doesn't grow past the screen
-  // on phone-sized viewports. Long descriptions scroll within the strip.
+  const vh = typeof window === 'undefined' ? 768 : window.innerHeight;
   const isMobile = vw < 640;
 
-  const card: React.CSSProperties = isMobile
-    ? {
-        position: 'fixed',
-        zIndex: 100001,
-        left: 8,
-        right: 8,
-        bottom: 8,
-        maxHeight: 'min(60vh, 480px)',
-        overflowY: 'auto',
-        background: 'var(--bg-panel)',
-        border: '2px solid var(--amber)',
-        borderRadius: '10px',
-        padding: '12px 14px',
-        boxShadow: '0 8px 32px rgba(0,0,0,.45)',
-        fontFamily: 'var(--sans)',
-      }
-    : {
-        position: 'fixed',
-        zIndex: 100001,
-        background: 'var(--bg-panel)',
-        border: '2px solid var(--amber)',
-        borderRadius: '10px',
-        padding: '18px 22px',
-        maxWidth: `${CARD_W}px`,
-        width: 'calc(100vw - 32px)',
-        boxShadow: '0 8px 32px rgba(0,0,0,.45)',
-        fontFamily: 'var(--sans)',
-        // Smooth the card's position update when the highlight target
-        // changes between steps. Without this, a step that targets the
-        // opposite side of the viewport (e.g. divergence rail → viz) made
-        // the card visibly teleport, which read as a "jump."
-        transition: 'top 0.25s ease, left 0.25s ease, bottom 0.25s ease, right 0.25s ease',
-      };
-
+  // Compute card position via CSS custom properties so the static styles
+  // live in the SCSS module while runtime values flow through inline.
+  const cardVars: CSSProperties = {};
   if (!isMobile && rect) {
     const below = vh - (rect.top + rect.height + 10);
     const above = rect.top - 10;
     const right = vw - (rect.left + rect.width + 10);
 
     if (below >= 200) {
-      card.top = rect.top + rect.height + 16;
-      card.left = Math.max(16, Math.min(rect.left, vw - CARD_W - 16));
+      (cardVars as Record<string, string>)['--card-top'] = `${rect.top + rect.height + 16}px`;
+      (cardVars as Record<string, string>)['--card-left'] = `${Math.max(16, Math.min(rect.left, vw - CARD_W - 16))}px`;
     } else if (above >= 200) {
-      card.bottom = vh - rect.top + 16;
-      card.left = Math.max(16, Math.min(rect.left, vw - CARD_W - 16));
+      (cardVars as Record<string, string>)['--card-bottom'] = `${vh - rect.top + 16}px`;
+      (cardVars as Record<string, string>)['--card-left'] = `${Math.max(16, Math.min(rect.left, vw - CARD_W - 16))}px`;
     } else if (right >= CARD_W + 24) {
-      card.left = rect.left + rect.width + 16;
-      card.top = Math.max(16, rect.top);
+      (cardVars as Record<string, string>)['--card-left'] = `${rect.left + rect.width + 16}px`;
+      (cardVars as Record<string, string>)['--card-top'] = `${Math.max(16, rect.top)}px`;
     } else {
-      card.bottom = 24;
-      card.right = 24;
+      (cardVars as Record<string, string>)['--card-bottom'] = '24px';
+      (cardVars as Record<string, string>)['--card-right'] = '24px';
     }
   } else if (!isMobile) {
-    card.bottom = 24;
-    card.right = 24;
+    (cardVars as Record<string, string>)['--card-bottom'] = '24px';
+    (cardVars as Record<string, string>)['--card-right'] = '24px';
   }
 
   const pad = 10;
+  const cardCls = [styles.card, isMobile ? styles.mobile : ''].filter(Boolean).join(' ');
 
   return (
     <>
       {/* Dim overlay with cutout around highlighted element */}
-      <div data-tour-overlay style={{ position: 'fixed', inset: 0, zIndex: 99997, pointerEvents: 'none' }}>
-        <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
+      <div data-tour-overlay className={styles.svgOverlay}>
+        <svg width="100%" height="100%" className={styles.svgFill}>
           <defs>
             <mask id="tour-mask">
               <rect width="100%" height="100%" fill="white" />
@@ -428,54 +363,32 @@ export function GuidedTour({ activeTab, chatEnabled = true, onTabChange, onClose
       </div>
 
       {/* Click-away layer */}
-      <div
-        data-tour-overlay
-        style={{ position: 'fixed', inset: 0, zIndex: 99999 }}
-        onClick={handleClose}
-      />
+      <div data-tour-overlay className={styles.clickAway} onClick={handleClose} />
 
       {/* Tour card */}
-      <div data-tour-overlay style={card} onClick={e => e.stopPropagation()} role="dialog" aria-label="Guided tour">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap: 8 }}>
-          <span style={{ fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', color: 'var(--text-3)', letterSpacing: '1px' }}>
+      <div data-tour-overlay className={cardCls} style={cardVars} onClick={e => e.stopPropagation()} role="dialog" aria-label="Guided tour">
+        <div className={styles.cardHeader}>
+          <span className={styles.stepCount}>
             {step + 1} / {steps.length}
           </span>
-          <span
-            aria-label={`Active tab: ${current.tab}`}
-            style={{
-              fontSize: 'var(--font-3xs)',
-              fontFamily: 'var(--mono)',
-              fontWeight: 700,
-              color: 'var(--amber)',
-              background: 'var(--bg-card)',
-              border: '1px solid var(--amber)',
-              borderRadius: '3px',
-              padding: '2px 6px',
-              letterSpacing: '1px',
-              textTransform: 'uppercase',
-            }}
-          >
+          <span aria-label={`Active tab: ${current.tab}`} className={styles.tabBadge}>
             {current.tab}
           </span>
-          <button
-            onClick={handleClose}
-            style={{ background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer', fontSize: 'var(--font-2xl)', padding: '0 2px', lineHeight: 1, marginLeft: 'auto' }}
-            aria-label="Close tour"
-          >&times;</button>
+          <button onClick={handleClose} className={styles.closeBtn} aria-label="Close tour">&times;</button>
         </div>
 
-        <h3 style={{ fontSize: isMobile ? '13px' : '15px', fontWeight: 700, color: 'var(--amber)', margin: '0 0 6px', fontFamily: 'var(--mono)' }}>
+        <h3 className={[styles.title, isMobile ? styles.mobile : ''].filter(Boolean).join(' ')}>
           {current.title}
         </h3>
-        <p style={{ fontSize: isMobile ? '12px' : '13px', color: 'var(--text-2)', lineHeight: 1.6, margin: '0 0 12px' }}>
+        <p className={[styles.description, isMobile ? styles.mobile : ''].filter(Boolean).join(' ')}>
           {current.description}
         </p>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
-          <button onClick={handleClose} style={isMobile ? compactSkipBtn : skipBtn}>Skip</button>
-          <div style={{ display: 'flex', gap: '6px' }}>
+        <div className={styles.actions}>
+          <button onClick={handleClose} className={[styles.skipBtn, isMobile ? styles.compact : ''].filter(Boolean).join(' ')}>Skip</button>
+          <div className={styles.actionsRight}>
             {step > 0 && (
-              <button onClick={() => setStep(s => s - 1)} style={isMobile ? compactNavBtn : navBtn}>
+              <button onClick={() => setStep(s => s - 1)} className={[styles.navBtn, isMobile ? styles.compact : ''].filter(Boolean).join(' ')}>
                 Back
               </button>
             )}
@@ -488,26 +401,23 @@ export function GuidedTour({ activeTab, chatEnabled = true, onTabChange, onClose
                   onRun?.();
                 }
               }}
-              style={isMobile
-                ? compactPrimaryBtn
-                : step === steps.length - 1 ? { ...primaryBtn, padding: '6px 22px', fontSize: 'var(--font-sm)' } : primaryBtn}
+              className={[
+                styles.primaryBtn,
+                isMobile ? styles.compact : '',
+                !isMobile && step === steps.length - 1 ? styles.final : '',
+              ].filter(Boolean).join(' ')}
             >
               {step < steps.length - 1 ? 'Next' : isMobile ? 'Start →' : 'Start Your Simulation'}
             </button>
           </div>
         </div>
 
-        {/* Thin progress bar (mobile) or dot row (desktop). 14 dots wrap
-            awkwardly below ~440px wide; the bar scales cleanly. */}
+        {/* Thin progress bar (mobile) or dot row (desktop). */}
         {isMobile ? (
-          <div style={{ marginTop: '10px', height: 3, background: 'var(--border)', borderRadius: 2, overflow: 'hidden' }}>
+          <div className={styles.progressBar}>
             <div
-              style={{
-                width: `${((step + 1) / steps.length) * 100}%`,
-                height: '100%',
-                background: 'var(--amber)',
-                transition: 'width 0.25s ease',
-              }}
+              className={styles.progressBarFill}
+              style={{ '--progress-pct': `${((step + 1) / steps.length) * 100}%` } as CSSProperties}
               role="progressbar"
               aria-valuenow={step + 1}
               aria-valuemin={1}
@@ -516,16 +426,15 @@ export function GuidedTour({ activeTab, chatEnabled = true, onTabChange, onClose
             />
           </div>
         ) : (
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '5px', marginTop: '12px', flexWrap: 'wrap' }}>
+          <div className={styles.dotRow}>
             {steps.map((_, i) => (
               <button
                 key={i} onClick={() => setStep(i)}
+                className={styles.dot}
                 style={{
-                  width: i === step ? 16 : 6, height: 6, borderRadius: 3,
-                  border: 'none', padding: 0, cursor: 'pointer',
-                  background: i === step ? 'var(--amber)' : i < step ? 'var(--text-3)' : 'var(--border)',
-                  transition: 'all 0.25s ease',
-                }}
+                  '--dot-width': i === step ? '16px' : '6px',
+                  '--dot-bg': i === step ? 'var(--amber)' : i < step ? 'var(--text-3)' : 'var(--border)',
+                } as CSSProperties}
                 aria-label={`Step ${i + 1}`}
               />
             ))}
@@ -533,33 +442,9 @@ export function GuidedTour({ activeTab, chatEnabled = true, onTabChange, onClose
         )}
 
         {!isMobile && (
-          <div style={{ textAlign: 'center', marginTop: '6px', fontSize: 'var(--font-3xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', opacity: 0.7 }}>
-            Arrow keys / Esc
-          </div>
+          <div className={styles.kbHint}>Arrow keys / Esc</div>
         )}
       </div>
     </>
   );
 }
-
-const skipBtn: React.CSSProperties = {
-  background: 'none', border: '1px solid var(--border)', color: 'var(--text-3)',
-  padding: '5px 14px', borderRadius: '5px', fontSize: 'var(--font-xs)', cursor: 'pointer',
-  fontFamily: 'var(--sans)', fontWeight: 600,
-};
-const navBtn: React.CSSProperties = {
-  background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-2)',
-  padding: '5px 14px', borderRadius: '5px', fontSize: 'var(--font-xs)', cursor: 'pointer',
-  fontFamily: 'var(--sans)', fontWeight: 600,
-};
-const primaryBtn: React.CSSProperties = {
-  background: 'linear-gradient(135deg, var(--rust), #c44a1e)', color: '#fff',
-  border: 'none', padding: '5px 18px', borderRadius: '5px', fontSize: 'var(--font-xs)',
-  cursor: 'pointer', fontFamily: 'var(--sans)', fontWeight: 700,
-};
-// Compact button variants for the mobile card. Slightly smaller padding
-// and font keep the three-button row on a single line at viewports as
-// narrow as ~340px without forcing wrap.
-const compactSkipBtn: React.CSSProperties = { ...skipBtn, padding: '4px 10px', fontSize: 'var(--font-2xs)' };
-const compactNavBtn: React.CSSProperties = { ...navBtn, padding: '4px 10px', fontSize: 'var(--font-2xs)' };
-const compactPrimaryBtn: React.CSSProperties = { ...primaryBtn, padding: '4px 12px', fontSize: 'var(--font-2xs)' };
