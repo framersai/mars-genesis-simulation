@@ -887,7 +887,7 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
             '--btn-border': rosterOpen ? 'var(--amber)' : 'var(--border)',
           } as CSSProperties}
         >
-          \u2630
+          {'\u2630'}
         </button>
         {onToggleFocus && (
           <button

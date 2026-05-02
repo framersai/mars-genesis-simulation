@@ -1155,7 +1155,7 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
             aria-label={`Jump to latest turn (T${maxTurn})`}
             className={styles.jumpLatest}
           >
-            \u2193 Latest · T{maxTurn}
+            {'\u2193'} Latest · T{maxTurn}
             <span className={styles.jumpLatestBehind}>
               ({maxTurn - 1 - currentTurn} turn{maxTurn - 1 - currentTurn === 1 ? '' : 's'} behind)
             </span>
