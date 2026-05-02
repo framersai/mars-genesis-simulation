@@ -1,0 +1,127 @@
+// Migrated from inline `style={{}}`. Hover state moved to CSS :hover
+// instead of mouse-event handlers that mutated inline styles.
+
+.card {
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  // Border shorthand FIRST, then border-left override.
+  border-left: 3px solid var(--amber);
+  border-radius: 8px;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card.empty {
+  border-left-color: var(--border-hl);
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.kicker {
+  font-size: var(--font-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--amber);
+  font-family: var(--mono);
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+.kicker.empty { color: var(--text-3); }
+
+.lead {
+  font-size: var(--font-md);
+  color: var(--text-1);
+  font-family: var(--sans);
+}
+
+.lead.empty { color: var(--text-2); }
+
+.leadMuted { color: var(--text-3); }
+
+.leadCount { color: var(--amber); }
+
+.refreshBtn {
+  padding: 4px 10px;
+  background: var(--bg-card);
+  color: var(--text-3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: var(--font-3xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 8px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  color: var(--text-1);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: var(--font-xs);
+  text-align: left;
+  transition: border-color 120ms, background 120ms;
+}
+
+.tile:hover {
+  border-color: var(--amber);
+  background: var(--bg-elevated);
+}
+
+.tileTitle {
+  font-size: var(--font-sm);
+  font-weight: 700;
+  color: var(--text-1);
+  font-family: var(--sans);
+}
+
+.tileMeta {
+  font-size: var(--font-3xs);
+  color: var(--text-3);
+  margin-top: 3px;
+}
+
+.tileCost {
+  font-size: var(--font-3xs);
+  color: var(--text-4);
+  margin-top: 1px;
+}
+
+.tileCta {
+  margin-top: 6px;
+  font-size: var(--font-3xs);
+  color: var(--amber);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.moreNote {
+  font-size: var(--font-2xs);
+  color: var(--text-4);
+  font-style: italic;
+}
