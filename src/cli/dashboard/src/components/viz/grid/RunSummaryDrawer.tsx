@@ -1,6 +1,7 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, type CSSProperties } from 'react';
 import type { TurnSnapshot } from '../viz-types.js';
 import { useScenarioLabels } from '../../../hooks/useScenarioLabels.js';
+import styles from './RunSummaryDrawer.module.scss';
 
 interface RunSummaryDrawerProps {
   open: boolean;
@@ -84,25 +85,11 @@ export function RunSummaryDrawer(props: RunSummaryDrawerProps) {
   if (!open) return null;
 
   const cell = (label: string, val: string, valColor?: string) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <div className={styles.cell}>
+      <span className={styles.cellLabel}>{label}</span>
       <span
-        style={{
-          fontSize: 'var(--font-3xs)',
-          color: 'var(--text-4)',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          fontFamily: 'var(--mono)',
-        }}
-      >
-        {label}
-      </span>
-      <span
-        style={{
-          fontSize: 'var(--font-lg)',
-          fontWeight: 800,
-          fontFamily: 'var(--mono)',
-          color: valColor || 'var(--text-1)',
-        }}
+        className={styles.cellValue}
+        style={valColor ? ({ '--val-color': valColor } as CSSProperties) : undefined}
       >
         {val}
       </span>
@@ -117,37 +104,12 @@ export function RunSummaryDrawer(props: RunSummaryDrawerProps) {
     reuseCount: number,
   ) => (
     <div
-      style={{
-        flex: 1,
-        minWidth: 0,
-        padding: 14,
-        background: 'var(--bg-deep)',
-        border: `1px solid ${color}66`,
-        borderLeft: `3px solid ${color}`,
-        borderRadius: 4,
-      }}
+      className={styles.sideBlock}
+      style={{ '--side-color': color } as CSSProperties}
     >
-      <div
-        style={{
-          fontSize: 'var(--font-xs)',
-          fontWeight: 800,
-          color,
-          letterSpacing: '0.08em',
-          textTransform: 'uppercase',
-          marginBottom: 10,
-          fontFamily: 'var(--mono)',
-        }}
-      >
-        {name}
-      </div>
+      <div className={styles.sideName}>{name}</div>
       {s ? (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '10px 14px',
-          }}
-        >
+        <div className={styles.statsGrid}>
           {cell('Turns', `${s.turns}`)}
           {cell('Final pop', `${s.finalPop}`, color)}
           {cell('Peak pop', `${s.peakPop}`)}
@@ -160,7 +122,7 @@ export function RunSummaryDrawer(props: RunSummaryDrawerProps) {
           {cell('Tool reuses', `${reuseCount}`, 'var(--amber)')}
         </div>
       ) : (
-        <div style={{ color: 'var(--text-4)', fontSize: 'var(--font-xs)' }}>No snapshots yet.</div>
+        <div className={styles.empty}>No snapshots yet.</div>
       )}
     </div>
   );
@@ -171,107 +133,34 @@ export function RunSummaryDrawer(props: RunSummaryDrawerProps) {
       aria-modal="true"
       aria-label="Run summary"
       onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0, 0, 0, 0.75)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        padding: 24,
-      }}
+      className={styles.backdrop}
     >
-      <div
-        onClick={e => e.stopPropagation()}
-        style={{
-          background: 'var(--bg-panel)',
-          border: '1px solid var(--border)',
-          borderRadius: 8,
-          padding: 24,
-          maxWidth: 820,
-          width: '100%',
-          maxHeight: '92vh',
-          overflow: 'auto',
-          boxShadow: '0 12px 48px rgba(0, 0, 0, 0.75)',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 16,
-          }}
-        >
-          <h2
-            style={{
-              margin: 0,
-              fontSize: 'var(--font-lg)',
-              fontWeight: 800,
-              color: 'var(--amber)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              fontFamily: 'var(--mono)',
-            }}
-          >
+      <div onClick={e => e.stopPropagation()} className={styles.dialog}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>
             Run Summary · {props.snapsA.length || props.snapsB.length} turns
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close run summary"
-            style={{
-              width: 26,
-              height: 26,
-              background: 'transparent',
-              color: 'var(--text-3)',
-              border: '1px solid var(--border)',
-              borderRadius: 3,
-              cursor: 'pointer',
-              fontSize: 'var(--font-md)',
-              lineHeight: 1,
-              padding: 0,
-            }}
+            className={styles.closeBtn}
           >
             ×
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: 14, marginBottom: 14, flexWrap: 'wrap' }}>
+        <div className={styles.sidesRow}>
           {sideBlock(props.actorNameA, 'var(--vis)', a, props.forgeApprovedA, props.reuseCountA)}
           {sideBlock(props.actorNameB, 'var(--eng)', b, props.forgeApprovedB, props.reuseCountB)}
         </div>
 
-        <div
-          style={{
-            padding: 12,
-            background: 'var(--bg-deep)',
-            border: '1px solid var(--border)',
-            borderLeft: '3px solid var(--amber)',
-            borderRadius: 4,
-            display: 'flex',
-            gap: 20,
-            alignItems: 'center',
-            fontFamily: 'var(--mono)',
-          }}
-        >
+        <div className={styles.divergenceBox}>
           <div>
-            <div
-              style={{
-                fontSize: 'var(--font-3xs)',
-                color: 'var(--text-4)',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-              }}
-            >
-              Divergence
-            </div>
-            <div style={{ fontSize: 'var(--font-2xl)', fontWeight: 800, color: 'var(--amber)' }}>
-              {props.divergedCount}
-            </div>
+            <div className={styles.divergenceLabel}>Divergence</div>
+            <div className={styles.divergenceCount}>{props.divergedCount}</div>
           </div>
-          <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-3)', lineHeight: 1.5 }}>
+          <div className={styles.divergenceCopy}>
             {labels.People} alive on one side but dead on the other at the final snapshot — a measure
             of how much the two leaders' decisions diverged the outcomes.
           </div>

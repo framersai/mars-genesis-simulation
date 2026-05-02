@@ -1,0 +1,147 @@
+// Migrated from inline `style={{}}`. Side color and per-cell value
+// color flow in via CSS custom properties.
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal-top);
+  padding: 24px;
+}
+
+.dialog {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 820px;
+  width: 100%;
+  max-height: 92vh;
+  overflow: auto;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.75);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-lg);
+  font-weight: 800;
+  color: var(--amber);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: var(--mono);
+}
+
+.closeBtn {
+  width: 26px;
+  height: 26px;
+  background: transparent;
+  color: var(--text-3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: var(--font-md);
+  line-height: 1;
+  padding: 0;
+}
+
+.sidesRow {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.sideBlock {
+  flex: 1;
+  min-width: 0;
+  padding: 14px;
+  background: var(--bg-deep);
+  // Border shorthand FIRST, then border-left override.
+  border: 1px solid color-mix(in srgb, var(--side-color, var(--amber)) 40%, transparent);
+  border-left: 3px solid var(--side-color, var(--amber));
+  border-radius: 4px;
+}
+
+.sideName {
+  font-size: var(--font-xs);
+  font-weight: 800;
+  color: var(--side-color, var(--amber));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  font-family: var(--mono);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cellLabel {
+  font-size: var(--font-3xs);
+  color: var(--text-4);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: var(--mono);
+}
+
+.cellValue {
+  font-size: var(--font-lg);
+  font-weight: 800;
+  font-family: var(--mono);
+  // --val-color set inline.
+  color: var(--val-color, var(--text-1));
+}
+
+.empty {
+  color: var(--text-4);
+  font-size: var(--font-xs);
+}
+
+.divergenceBox {
+  padding: 12px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--amber);
+  border-radius: 4px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  font-family: var(--mono);
+}
+
+.divergenceLabel {
+  font-size: var(--font-3xs);
+  color: var(--text-4);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.divergenceCount {
+  font-size: var(--font-2xl);
+  font-weight: 800;
+  color: var(--amber);
+}
+
+.divergenceCopy {
+  font-size: var(--font-xs);
+  color: var(--text-3);
+  line-height: 1.5;
+}
