@@ -1,4 +1,6 @@
+import type { CSSProperties } from 'react';
 import { useMediaQuery, PHONE_QUERY } from '../viz/grid/useMediaQuery';
+import styles from './Footer.module.scss';
 
 interface FooterAbortReason {
   reason: string;
@@ -24,17 +26,6 @@ interface FooterProps {
     chatUSD?: number;
     chatCalls?: number;
   };
-  /**
-   * Mirrors the TopBar status pill so the user sees the run state at
-   * the bottom of the page too. Driven by the same three booleans the
-   * TopBar reads (isComplete, isAborted, connection status) so the
-   * colour + text stay in lockstep between the two surfaces.
-   *
-   * `abortReason` and `providerError` mirror the TopBar tooltip
-   * derivation so hovering the Footer chip explains WHY the run was
-   * interrupted (quota, disconnect, user cancel) instead of only
-   * showing the "Interrupted" label with no context.
-   */
   simStatus?: {
     isRunning: boolean;
     isComplete: boolean;
@@ -77,11 +68,7 @@ function StatusChip({ s }: { s: NonNullable<FooterProps['simStatus']> }) {
     : s.connectionStatus === 'error'
     ? 'Reconnecting'
     : 'Connecting';
-  const glyph = s.isRunning && !s.isComplete && !s.isAborted ? '\u25CF' : '\u25CB';
-  // Same derivation the TopBar uses so both pills explain an interrupted
-  // run identically. Mentioning providerError first keeps the actionable
-  // cause (top up credits / fix key) visible even when the orchestrator
-  // did not emit a sim_aborted for the underlying quota/auth failure.
+  const glyph = s.isRunning && !s.isComplete && !s.isAborted ? '●' : '○';
   const title = s.isAborted
     ? (() => {
         if (s.providerError) {
@@ -105,11 +92,8 @@ function StatusChip({ s }: { s: NonNullable<FooterProps['simStatus']> }) {
     : 'Connecting to the simulation server.';
   return (
     <span
-      style={{
-        display: 'inline-flex', alignItems: 'center', gap: 4,
-        color, fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)', fontWeight: 700,
-        cursor: 'help',
-      }}
+      className={styles.statusChip}
+      style={{ '--status-color': color } as CSSProperties}
       role="status"
       aria-live="polite"
       aria-label={`Simulation status: ${text}. ${title}`}
@@ -142,54 +126,32 @@ function buildCostTooltip(
 }
 
 export function Footer({ cost, costBreakdown, simStatus }: FooterProps) {
-  // Below 480px the footer's four flex items (nav, status, cost, brand)
-  // wrap to 3-4 lines and steal ~80px from the visible content area —
-  // Timeline cards in SimView render under the footer's space. Hide
-  // the link nav and the brand line on phone; the same nav lives in
-  // the TopBar (GitHub icon, ⋯ menu) so we don't lose any path.
   const isPhone = useMediaQuery(PHONE_QUERY);
+  const cls = ['shrink-0', styles.footer, isPhone ? styles.phone : ''].filter(Boolean).join(' ');
   return (
-    <footer
-      className="shrink-0"
-      role="contentinfo"
-      style={{
-        padding: isPhone ? '3px 12px' : '4px 16px',
-        background: 'var(--bg-deep)',
-        borderTop: '1px solid var(--border)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '8px',
-        fontSize: 'var(--font-2xs)',
-        color: 'var(--text-3)',
-      }}
-    >
+    <footer className={cls} role="contentinfo">
       {!isPhone && (
-        <nav aria-label="Footer links" style={{ display: 'flex', gap: '12px' }}>
-          <a href="https://agentos.sh/en" target="_blank" rel="noopener" style={{ color: 'var(--rust)', fontWeight: 600 }}>agentos.sh</a>
-          <a href="https://github.com/framersai/paracosm" target="_blank" rel="noopener" style={{ color: 'var(--rust)', fontWeight: 600 }}>github</a>
-          <a href="https://www.npmjs.com/package/paracosm" target="_blank" rel="noopener" style={{ color: 'var(--rust)', fontWeight: 600 }}>npm</a>
-          <a href="/docs" style={{ color: 'var(--rust)', fontWeight: 600 }}>docs</a>
-          <a href="https://agentos.sh/blog" target="_blank" rel="noopener" style={{ color: 'var(--rust)', fontWeight: 600 }}>blog</a>
+        <nav aria-label="Footer links" className={styles.nav}>
+          <a href="https://agentos.sh/en" target="_blank" rel="noopener" className={styles.navLink}>agentos.sh</a>
+          <a href="https://github.com/framersai/paracosm" target="_blank" rel="noopener" className={styles.navLink}>github</a>
+          <a href="https://www.npmjs.com/package/paracosm" target="_blank" rel="noopener" className={styles.navLink}>npm</a>
+          <a href="/docs" className={styles.navLink}>docs</a>
+          <a href="https://agentos.sh/blog" target="_blank" rel="noopener" className={styles.navLink}>blog</a>
         </nav>
       )}
 
       {simStatus && <StatusChip s={simStatus} />}
 
       {cost && (cost.totalTokens > 0 || cost.llmCalls > 0) && (
-        <span
-          style={{ display: 'flex', alignItems: 'baseline', gap: '6px', fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)', cursor: 'help' }}
-          title={buildCostTooltip(cost, costBreakdown)}
-        >
-          <span style={{ color: 'var(--green)', fontWeight: 800, fontSize: 'var(--font-xs)' }}>
+        <span className={styles.cost} title={buildCostTooltip(cost, costBreakdown)}>
+          <span className={styles.costAmount}>
             ${cost.totalCostUSD < 0.01 ? cost.totalCostUSD.toFixed(4) : cost.totalCostUSD.toFixed(2)}
           </span>
-          <span style={{ color: 'var(--text-3)' }}>
+          <span className={styles.costMuted}>
             {(cost.totalTokens / 1000).toFixed(0)}k tokens
           </span>
           {cost.llmCalls > 0 && (
-            <span style={{ color: 'var(--text-3)' }}>
+            <span className={styles.costMuted}>
               {cost.llmCalls} calls
             </span>
           )}
@@ -198,8 +160,8 @@ export function Footer({ cost, costBreakdown, simStatus }: FooterProps) {
 
       {!isPhone && (
         <span>
-          <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, letterSpacing: '.08em', fontSize: 'var(--font-2xs)' }}>PARA<span style={{ color: 'var(--amber)' }}>COSM</span></span>
-          {' '}&middot; Apache-2.0 &middot; <a href="https://manic.agency" target="_blank" rel="noopener" style={{ color: 'var(--text-3)' }}>Manic Agency</a> / <a href="https://frame.dev" target="_blank" rel="noopener" style={{ color: 'var(--text-3)' }}>Frame.dev</a>
+          <span className={styles.brand}>PARA<span className={styles.brandAccent}>COSM</span></span>
+          {' '}&middot; Apache-2.0 &middot; <a href="https://manic.agency" target="_blank" rel="noopener" className={styles.brandLink}>Manic Agency</a> / <a href="https://frame.dev" target="_blank" rel="noopener" className={styles.brandLink}>Frame.dev</a>
         </span>
       )}
     </footer>
