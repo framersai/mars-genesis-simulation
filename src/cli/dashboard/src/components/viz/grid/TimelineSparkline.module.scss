@@ -1,0 +1,79 @@
+// Migrated from inline `style={{}}`. The hover-tooltip x-position flows
+// in via --hover-left as a calc string.
+
+.wrap {
+  position: relative;
+  padding: 4px 10px 2px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.legend {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: var(--font-3xs);
+  font-family: var(--mono);
+  color: var(--text-4);
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+}
+
+.legendRight { display: flex; gap: 10px; }
+
+.legendA { color: var(--vis); }
+.legendB { color: var(--eng); }
+.legendKey { color: var(--text-3); }
+
+.svg {
+  display: block;
+  width: 100%;
+  cursor: pointer;
+  background: var(--bg-deep);
+  border-radius: 2px;
+}
+
+.tooltip {
+  position: absolute;
+  // --hover-left set inline as calc(...).
+  left: var(--hover-left, 0);
+  bottom: 6px;
+  min-width: 150px;
+  max-width: 200px;
+  padding: 5px 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: var(--font-3xs);
+  color: var(--text-2);
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  z-index: 6;
+  // --hover-translate flips to translateX(-100%) when near the right edge.
+  transform: var(--hover-translate, none);
+}
+
+.tooltipTurn {
+  font-size: var(--font-3xs);
+  font-weight: 800;
+  color: var(--amber);
+  letter-spacing: 0.08em;
+  margin-bottom: 3px;
+}
+
+.tooltipRowA {
+  color: var(--vis);
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tooltipRowB {
+  color: var(--eng);
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tooltipBold { font-weight: 800; }
