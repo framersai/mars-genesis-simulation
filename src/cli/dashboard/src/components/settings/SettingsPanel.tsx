@@ -424,7 +424,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
             session API key above to lift the caps.
           </div>
         )}
-        <div className={`responsive-grid-4 ${styles.grid4}`}>
+        <div className={`responsive-grid-4 ${styles.simRow5}`}>
           <div>
             <label htmlFor="turns-input" style={SETTINGS_LABEL_STYLE}>
               Turns
