@@ -1,0 +1,83 @@
+// Migrated from inline `style={{}}`. Hover state moved to :hover.
+
+.anchor { position: relative; }
+
+.trigger {
+  padding: 0 10px;
+  background: var(--bg-card);
+  color: var(--text-3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: var(--font-2xs);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.trigger.open {
+  background: var(--amber);
+  color: var(--bg-deep);
+  border-color: var(--amber);
+}
+
+.recDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--rust);
+  animation: paracosm-rec-pulse 1.2s ease-in-out infinite;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 180px;
+  padding: 4px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 10px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: var(--font-2xs);
+  color: var(--text-2);
+  letter-spacing: 0.05em;
+}
+
+.item:hover { background: var(--bg-card); }
+
+.item.recording { color: var(--rust); }
+
+.itemKey {
+  color: var(--amber);
+  font-weight: 800;
+  min-width: 32px;
+}
+
+.itemKey.recordingActive { color: var(--rust); }
+
+.itemDesc {
+  color: var(--text-3);
+  font-size: var(--font-3xs);
+}

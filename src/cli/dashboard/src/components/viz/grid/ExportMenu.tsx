@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import styles from './ExportMenu.module.scss';
 
 interface ExportMenuProps {
   recording: boolean;
@@ -40,24 +41,8 @@ export function ExportMenu({
     };
   }, [open]);
 
-  const itemStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    width: '100%',
-    padding: '5px 10px',
-    background: 'transparent',
-    border: 'none',
-    textAlign: 'left',
-    cursor: 'pointer',
-    fontFamily: 'var(--mono)',
-    fontSize: 'var(--font-2xs)',
-    color: 'var(--text-2)',
-    letterSpacing: '0.05em',
-  };
-
   return (
-    <div ref={rootRef} style={{ position: 'relative' }}>
+    <div ref={rootRef} className={styles.anchor}>
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
@@ -65,56 +50,13 @@ export function ExportMenu({
         aria-haspopup="menu"
         aria-label="Export options"
         title={recording ? 'Recording in progress — click for options' : 'Export options'}
-        style={{
-          padding: '0 10px',
-          background: open ? 'var(--amber)' : 'var(--bg-card)',
-          color: open ? 'var(--bg-deep)' : 'var(--text-3)',
-          border: `1px solid ${open ? 'var(--amber)' : 'var(--border)'}`,
-          borderRadius: 3,
-          cursor: 'pointer',
-          fontFamily: 'var(--mono)',
-          fontSize: 'var(--font-2xs)',
-          fontWeight: 800,
-          letterSpacing: '0.08em',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 5,
-        }}
+        className={[styles.trigger, open ? styles.open : ''].filter(Boolean).join(' ')}
       >
-        {recording && (
-          <span
-            aria-hidden="true"
-            style={{
-              display: 'inline-block',
-              width: 6,
-              height: 6,
-              borderRadius: 999,
-              background: 'var(--rust)',
-              animation: 'paracosm-rec-pulse 1.2s ease-in-out infinite',
-            }}
-          />
-        )}
-        EXPORT {'\u25BC'}
+        {recording && <span aria-hidden="true" className={styles.recDot} />}
+        EXPORT ▼
       </button>
       {open && (
-        <div
-          role="menu"
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 4px)',
-            right: 0,
-            minWidth: 180,
-            padding: 4,
-            background: 'var(--bg-panel)',
-            border: '1px solid var(--border)',
-            borderRadius: 4,
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
-            zIndex: 30,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 1,
-          }}
-        >
+        <div role="menu" className={styles.menu}>
           <button
             type="button"
             role="menuitem"
@@ -122,12 +64,10 @@ export function ExportMenu({
               setOpen(false);
               onExportPng();
             }}
-            style={itemStyle}
-            onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-card)')}
-            onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = 'transparent')}
+            className={styles.item}
           >
-            <span style={{ color: 'var(--amber)', fontWeight: 800, minWidth: 32 }}>PNG</span>
-            <span style={{ color: 'var(--text-3)', fontSize: 'var(--font-3xs)' }}>Current frame</span>
+            <span className={styles.itemKey}>PNG</span>
+            <span className={styles.itemDesc}>Current frame</span>
           </button>
           <button
             type="button"
@@ -136,23 +76,12 @@ export function ExportMenu({
               setOpen(false);
               onToggleRecording();
             }}
-            style={{
-              ...itemStyle,
-              color: recording ? 'var(--rust)' : 'var(--text-2)',
-            }}
-            onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-card)')}
-            onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = 'transparent')}
+            className={[styles.item, recording ? styles.recording : ''].filter(Boolean).join(' ')}
           >
-            <span
-              style={{
-                color: recording ? 'var(--rust)' : 'var(--amber)',
-                fontWeight: 800,
-                minWidth: 32,
-              }}
-            >
+            <span className={[styles.itemKey, recording ? styles.recordingActive : ''].filter(Boolean).join(' ')}>
               {recording ? 'STOP' : 'REC'}
             </span>
-            <span style={{ color: 'var(--text-3)', fontSize: 'var(--font-3xs)' }}>
+            <span className={styles.itemDesc}>
               {recording ? 'End recording & download' : 'Timelapse to webm'}
             </span>
           </button>
@@ -163,12 +92,10 @@ export function ExportMenu({
               setOpen(false);
               onExportJson();
             }}
-            style={itemStyle}
-            onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-card)')}
-            onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = 'transparent')}
+            className={styles.item}
           >
-            <span style={{ color: 'var(--amber)', fontWeight: 800, minWidth: 32 }}>JSON</span>
-            <span style={{ color: 'var(--text-3)', fontSize: 'var(--font-3xs)' }}>Replay snapshot</span>
+            <span className={styles.itemKey}>JSON</span>
+            <span className={styles.itemDesc}>Replay snapshot</span>
           </button>
         </div>
       )}
