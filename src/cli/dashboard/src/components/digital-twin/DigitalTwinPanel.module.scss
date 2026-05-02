@@ -325,3 +325,99 @@
     color: var(--amber);
   }
 }
+
+// DigitalTwinPlayback — sub-component playback controls migrated from
+// inline styles. Per-swatch color flows in via --swatch-color.
+
+.legendSwatchInline {
+  // --swatch-color set inline.
+  background: var(--swatch-color, var(--amber));
+}
+
+.playbackControls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.playbackPlayBtn {
+  background: var(--amber);
+  color: #1a1a1a;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-family: var(--mono);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.playbackResetBtn {
+  background: var(--bg-card);
+  color: var(--text-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: var(--mono);
+  font-size: var(--font-xs);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.playbackSlider {
+  flex: 1;
+  min-width: 200px;
+  accent-color: #ffd970;
+}
+
+.playbackList {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  padding: 10px;
+  max-height: 240px;
+  overflow-y: auto;
+  font-family: var(--mono);
+  font-size: var(--font-xs);
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.playbackHint {
+  color: var(--text-3);
+  font-style: italic;
+  padding: 8px;
+}
+
+.playbackEvent {
+  display: grid;
+  grid-template-columns: 40px 110px 1fr;
+  gap: 8px;
+  padding: 4px 6px;
+  align-items: baseline;
+}
+
+.playbackTurn {
+  color: var(--text-3);
+  font-size: var(--font-2xs);
+}
+
+.playbackType {
+  color: var(--amber);
+  font-size: var(--font-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.playbackBody {
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

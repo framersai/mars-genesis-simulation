@@ -18,7 +18,7 @@
  *
  * @module paracosm/dashboard/digital-twin/DigitalTwinPanel
  */
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect, useRef, type CSSProperties } from 'react';
 import type { RunArtifact } from '../../../../../engine/schema/index.js';
 import type { GameState } from '../../hooks/useGameState';
 import styles from './DigitalTwinPanel.module.scss';
@@ -367,7 +367,10 @@ export function DigitalTwinPanel({ artifact, state, onDismiss }: DigitalTwinPane
             <div className={styles.chartLegend}>
               {chartData.series.map(series => (
                 <span key={series.metric} className={styles.legendItem}>
-                  <span className={styles.legendSwatch} style={{ background: CHART_COLORS[series.metric] }} />
+                  <span
+                    className={`${styles.legendSwatch} ${styles.legendSwatchInline}`}
+                    style={{ '--swatch-color': CHART_COLORS[series.metric] } as CSSProperties}
+                  />
                   {METRIC_LABELS[series.metric] ?? series.metric}
                 </span>
               ))}
@@ -451,27 +454,11 @@ function DigitalTwinPlayback({ state }: { state?: GameState }) {
   return (
     <div className={styles.section}>
       <h3 className={styles.sectionTitle}>Playback · {position} / {totalEvents} events</h3>
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-        <button
-          onClick={() => setPlaying(!playing)}
-          style={{
-            background: 'var(--amber)', color: '#1a1a1a', border: 'none',
-            borderRadius: 6, padding: '6px 14px', fontFamily: 'var(--mono)',
-            fontSize: 'var(--font-xs)', fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase',
-            cursor: 'pointer',
-          }}
-        >
+      <div className={styles.playbackControls}>
+        <button onClick={() => setPlaying(!playing)} className={styles.playbackPlayBtn}>
           {playing ? 'Pause' : (position >= totalEvents ? 'Replay' : 'Play')}
         </button>
-        <button
-          onClick={() => { setPosition(0); setPlaying(false); }}
-          style={{
-            background: 'var(--bg-card)', color: 'var(--text-2)',
-            border: '1px solid var(--border-soft)', borderRadius: 6,
-            padding: '6px 12px', fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)',
-            letterSpacing: 0.5, textTransform: 'uppercase', cursor: 'pointer',
-          }}
-        >
+        <button onClick={() => { setPosition(0); setPlaying(false); }} className={styles.playbackResetBtn}>
           Reset
         </button>
         <input
@@ -480,37 +467,24 @@ function DigitalTwinPlayback({ state }: { state?: GameState }) {
           max={totalEvents}
           value={position}
           onChange={(e) => { setPosition(Number(e.target.value)); setPlaying(false); }}
-          style={{ flex: 1, minWidth: 200, accentColor: '#ffd970' }}
+          className={styles.playbackSlider}
         />
       </div>
-      <div
-        style={{
-          background: 'var(--bg-card)', border: '1px solid var(--border-soft)',
-          borderRadius: 6, padding: 10, maxHeight: 240, overflowY: 'auto',
-          fontFamily: 'var(--mono)', fontSize: 'var(--font-xs)', lineHeight: 1.5,
-          display: 'flex', flexDirection: 'column', gap: 4,
-        }}
-      >
+      <div className={styles.playbackList}>
         {visibleEvents.length === 0 ? (
-          <div style={{ color: 'var(--text-3)', fontStyle: 'italic', padding: 8 }}>
+          <div className={styles.playbackHint}>
             Drag the slider or press Play to step through the run.
           </div>
         ) : (
           visibleEvents.map((event) => (
-            <div
-              key={event.id}
-              style={{
-                display: 'grid', gridTemplateColumns: '40px 110px 1fr',
-                gap: 8, padding: '4px 6px', alignItems: 'baseline',
-              }}
-            >
-              <span style={{ color: 'var(--text-3)', fontSize: 'var(--font-2xs)' }}>
+            <div key={event.id} className={styles.playbackEvent}>
+              <span className={styles.playbackTurn}>
                 {event.turn != null ? `T${event.turn}` : ''}
               </span>
-              <span style={{ color: 'var(--amber)', fontSize: 'var(--font-2xs)', fontWeight: 700, textTransform: 'uppercase' }}>
+              <span className={styles.playbackType}>
                 {EVENT_LABELS[event.type] ?? event.type}
               </span>
-              <span style={{ color: 'var(--text-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span className={styles.playbackBody}>
                 {eventBody(event)}
               </span>
             </div>
