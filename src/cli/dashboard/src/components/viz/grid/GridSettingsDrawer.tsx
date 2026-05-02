@@ -5,6 +5,7 @@ import {
   SETTINGS_SECTION_HEADER_STYLE,
   SETTINGS_RESET_BUTTON_STYLE,
 } from '../../settings/shared/settingsStyles';
+import styles from './GridSettingsDrawer.module.scss';
 
 export interface GridSettings {
   /** RD animation speed multiplier applied to stepsPerFrame. */
@@ -90,62 +91,21 @@ export function GridSettingsDrawer({ open, settings, onChange, onClose }: Drawer
 
   return (
     <>
-      <div
-        onClick={onClose}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'transparent',
-          zIndex: 40,
-        }}
-      />
+      <div onClick={onClose} className={styles.backdrop} />
       <div
         ref={rootRef}
         role="dialog"
         aria-label="Grid viz settings"
         tabIndex={-1}
-        style={{
-          position: 'absolute',
-          top: 52,
-          right: 10,
-          width: 260,
-          padding: '10px 12px',
-          background: 'var(--bg-panel)',
-          border: '1px solid var(--border)',
-          borderRadius: 6,
-          boxShadow: '0 10px 32px rgba(0, 0, 0, 0.6)',
-          fontFamily: 'var(--mono)',
-          fontSize: 'var(--font-2xs)',
-          color: 'var(--text-2)',
-          zIndex: 41,
-          outline: 'none',
-        }}
+        className={styles.drawer}
       >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 8,
-          }}
-        >
+        <div className={styles.header}>
           <span style={SETTINGS_SECTION_HEADER_STYLE}>Viz Settings</span>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close settings"
-            style={{
-              width: 20,
-              height: 20,
-              border: '1px solid var(--border)',
-              borderRadius: 3,
-              background: 'transparent',
-              color: 'var(--text-3)',
-              cursor: 'pointer',
-              fontSize: 'var(--font-xs)',
-              lineHeight: 1,
-              padding: 0,
-            }}
+            className={styles.closeBtn}
           >
             ×
           </button>
@@ -205,7 +165,8 @@ export function GridSettingsDrawer({ open, settings, onChange, onClose }: Drawer
         <button
           type="button"
           onClick={() => onChange(DEFAULT_GRID_SETTINGS)}
-          style={{ ...SETTINGS_RESET_BUTTON_STYLE, marginTop: 10 }}
+          style={SETTINGS_RESET_BUTTON_STYLE}
+          className={styles.resetBtn}
         >
           Reset defaults
         </button>
@@ -216,17 +177,9 @@ export function GridSettingsDrawer({ open, settings, onChange, onClose }: Drawer
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 8,
-        marginBottom: 6,
-      }}
-    >
-      <span style={{ ...SETTINGS_LABEL_STYLE, display: 'inline', marginBottom: 0 }}>{label}</span>
-      <div style={{ display: 'flex', gap: 0 }}>{children}</div>
+    <div className={styles.row}>
+      <span style={SETTINGS_LABEL_STYLE} className={styles.rowLabel}>{label}</span>
+      <div className={styles.pillRow}>{children}</div>
     </div>
   );
 }
@@ -244,18 +197,7 @@ function Pill({
     <button
       type="button"
       onClick={onClick}
-      style={{
-        padding: '3px 10px',
-        background: active ? 'var(--amber)' : 'var(--bg-card)',
-        color: active ? 'var(--bg-deep)' : 'var(--text-3)',
-        border: '1px solid var(--border)',
-        cursor: 'pointer',
-        fontFamily: 'var(--mono)',
-        fontSize: 'var(--font-3xs)',
-        fontWeight: 800,
-        letterSpacing: '0.08em',
-        textTransform: 'uppercase',
-      }}
+      className={[styles.pill, active ? styles.pillActive : ''].filter(Boolean).join(' ')}
     >
       {label}
     </button>

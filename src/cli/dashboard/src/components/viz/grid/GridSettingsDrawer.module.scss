@@ -1,0 +1,82 @@
+// Migrated from inline `style={{}}`.
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  z-index: 40;
+}
+
+.drawer {
+  position: absolute;
+  top: 52px;
+  right: 10px;
+  width: 260px;
+  padding: 10px 12px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.6);
+  font-family: var(--mono);
+  font-size: var(--font-2xs);
+  color: var(--text-2);
+  z-index: 41;
+  outline: none;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.closeBtn {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  font-size: var(--font-xs);
+  line-height: 1;
+  padding: 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.rowLabel {
+  display: inline;
+  margin-bottom: 0;
+}
+
+.pillRow { display: flex; gap: 0; }
+
+.pill {
+  padding: 3px 10px;
+  background: var(--bg-card);
+  color: var(--text-3);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: var(--font-3xs);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pillActive {
+  background: var(--amber);
+  color: var(--bg-deep);
+}
+
+.resetBtn {
+  margin-top: 10px;
+}
