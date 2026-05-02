@@ -15,18 +15,15 @@ export function RunCard(props: RunCardProps): JSX.Element {
   return (
     <article
       className={[styles.card, variant === 'compact' ? styles.compact : ''].filter(Boolean).join(' ')}
-      role="article"
-      tabIndex={0}
+      // Pointer ergonomics: clicking anywhere on the card opens the
+      // run. Keyboard / screen-reader users land on the inner Open
+      // and Replay buttons (see below) which are the explicit
+      // affordances. The previous setup gave the article a tabIndex
+      // and key handler too, which axe flagged as nested-interactive.
       aria-label={`Run ${record.scenarioId} by ${record.actorName ?? 'unknown leader'}`}
       data-run-card
       data-run-id={record.runId}
       onClick={onOpen}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onOpen();
-        }
-      }}
     >
       <header className={styles.head}>
         <span className={styles.modeBadge} data-mode={record.mode ?? 'unknown'}>{record.mode ?? 'unknown'}</span>
