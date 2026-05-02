@@ -262,7 +262,7 @@
   <div class="code-sec">
     <div class="code-block" style="margin-bottom:14px">
       <div class="code-header"><span>Install (npm, pnpm, or bun)</span><button class="code-copy" onclick="copyCode(this,'npm install paracosm')">Copy</button></div>
-      <div class="code-body" id="install-code"><span class="cm"># ESM + subpath exports. Node 20+, Bun 1.x, or any TS runner with import-attributes.</span>
+      <div tabindex="0" class="code-body" id="install-code"><span class="cm"># ESM + subpath exports. Node 20+, Bun 1.x, or any TS runner with import-attributes.</span>
 npm install paracosm
 pnpm add paracosm
 bun add paracosm
@@ -291,7 +291,7 @@ npm install -g paracosm</div>
       <div class="tab-panel active" role="tabpanel" data-panel="quickstart">
         <div class="code-block" style="border:none;border-radius:0;margin:0">
           <div class="code-header"><span>Three lines: brief to running simulation</span><button class="code-copy" onclick="copyCode(this, document.getElementById('quickstart-code').textContent)">Copy</button></div>
-          <div class="code-body" id="quickstart-code"><span class="cm">// Free-text brief in. Compiled scenario, 3 HEXACO leaders, 3 RunArtifacts out.</span>
+          <div tabindex="0" class="code-body" id="quickstart-code"><span class="cm">// Free-text brief in. Compiled scenario, 3 HEXACO leaders, 3 RunArtifacts out.</span>
 <span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm/world-model'</span>;
 
 <span class="kw">const</span> wm = <span class="kw">await</span> WorldModel.<span class="fn">fromPrompt</span>({
@@ -308,7 +308,7 @@ artifacts.<span class="fn">forEach</span>((a, i) =&gt; console.<span class="fn">
       <div class="tab-panel" role="tabpanel" data-panel="manual" style="display:none">
         <div class="code-block" style="border:none;border-radius:0;margin:0;border-bottom:1px solid var(--border)">
           <div class="code-header"><span>my-world.json (durable contract)</span><button class="code-copy" onclick="copyCode(this, document.getElementById('manual-json-code').textContent)">Copy</button></div>
-          <div class="code-body" id="manual-json-code"><span class="cm">// Hand-written contract. Departments + metrics + nouns + setup.</span>
+          <div tabindex="0" class="code-body" id="manual-json-code"><span class="cm">// Hand-written contract. Departments + metrics + nouns + setup.</span>
 {
   <span class="str">"id"</span>: <span class="str">"submarine-habitat"</span>,
   <span class="str">"labels"</span>: {
@@ -332,7 +332,7 @@ artifacts.<span class="fn">forEach</span>((a, i) =&gt; console.<span class="fn">
         </div>
         <div class="code-block" style="border:none;border-radius:0;margin:0">
           <div class="code-header"><span>Compile + run</span><button class="code-copy" onclick="copyCode(this, document.getElementById('manual-ts-code').textContent)">Copy</button></div>
-          <div class="code-body" id="manual-ts-code"><span class="kw">import</span> { compileScenario } <span class="kw">from</span> <span class="str">'paracosm/compiler'</span>;
+          <div tabindex="0" class="code-body" id="manual-ts-code"><span class="kw">import</span> { compileScenario } <span class="kw">from</span> <span class="str">'paracosm/compiler'</span>;
 <span class="kw">import</span> { runSimulation } <span class="kw">from</span> <span class="str">'paracosm/runtime'</span>;
 <span class="kw">import</span> worldJson <span class="kw">from</span> <span class="str">'./my-world.json'</span> <span class="kw">with</span> { type: <span class="str">'json'</span> };
 
@@ -345,7 +345,7 @@ artifacts.<span class="fn">forEach</span>((a, i) =&gt; console.<span class="fn">
       <div class="tab-panel" role="tabpanel" data-panel="granular" style="display:none">
         <div class="code-block" style="border:none;border-radius:0;margin:0">
           <div class="code-header"><span>All knobs: per-role models, cost preset, snapshots, custom events, abort</span><button class="code-copy" onclick="copyCode(this, document.getElementById('granular-code').textContent)">Copy</button></div>
-          <div class="code-body" id="granular-code"><span class="kw">import</span> { createParacosmClient } <span class="kw">from</span> <span class="str">'paracosm'</span>;
+          <div tabindex="0" class="code-body" id="granular-code"><span class="kw">import</span> { createParacosmClient } <span class="kw">from</span> <span class="str">'paracosm'</span>;
 
 <span class="cm">// Pin defaults once, override per-call.</span>
 <span class="kw">const</span> client = <span class="fn">createParacosmClient</span>({
@@ -392,7 +392,7 @@ setTimeout(() =&gt; ctrl.<span class="fn">abort</span>(), <span class="num">120_
       <div class="tab-panel" role="tabpanel" data-panel="counterfactuals" style="display:none">
         <div class="code-block" style="border:none;border-radius:0;margin:0">
           <div class="code-header"><span>Fork at turn N, replay deterministic, model an intervention on a digital twin</span><button class="code-copy" onclick="copyCode(this, document.getElementById('counterfactuals-code').textContent)">Copy</button></div>
-          <div class="code-body" id="counterfactuals-code"><span class="cm">// One run, three counterfactual surfaces: fork, replay, simulateIntervention.</span>
+          <div tabindex="0" class="code-body" id="counterfactuals-code"><span class="cm">// One run, three counterfactual surfaces: fork, replay, simulateIntervention.</span>
 <span class="cm">// Same scenario, same kernel, same seed -- only the leader / decision changes.</span>
 <span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm/world-model'</span>;
 <span class="kw">import</span> { runSimulation } <span class="kw">from</span> <span class="str">'paracosm/runtime'</span>;
@@ -435,7 +435,7 @@ console.<span class="fn">log</span>(<span class="str">'twin under disruption:'</
       <div class="tab-panel" role="tabpanel" data-panel="trait-models" style="display:none">
         <div class="code-block" style="border:none;border-radius:0;margin:0;border-bottom:1px solid var(--border)">
           <div class="code-header"><span>Pluggable trait models: HEXACO for humans, ai-agent for AI systems, custom for anything</span><button class="code-copy" onclick="copyCode(this, document.getElementById('trait-models-code').textContent)">Copy</button></div>
-          <div class="code-body" id="trait-models-code"><span class="cm">// Leaders aren't just people. Same engine, different decision-maker shapes.</span>
+          <div tabindex="0" class="code-body" id="trait-models-code"><span class="cm">// Leaders aren't just people. Same engine, different decision-maker shapes.</span>
 <span class="kw">import</span> { runSimulation } <span class="kw">from</span> <span class="str">'paracosm/runtime'</span>;
 
 <span class="cm">// Path A: legacy HEXACO leader (humans, councils, archetypes).</span>
@@ -476,7 +476,7 @@ console.<span class="fn">log</span>(<span class="str">'twin under disruption:'</
         </div>
         <div class="code-block" style="border:none;border-radius:0;margin:0">
           <div class="code-header"><span>Or register your own model. Any axis ids, any drift table.</span><button class="code-copy" onclick="copyCode(this, document.getElementById('trait-models-custom-code').textContent)">Copy</button></div>
-          <div class="code-body" id="trait-models-custom-code"><span class="kw">import</span> { traitModelRegistry } <span class="kw">from</span> <span class="str">'paracosm'</span>;
+          <div tabindex="0" class="code-body" id="trait-models-custom-code"><span class="kw">import</span> { traitModelRegistry } <span class="kw">from</span> <span class="str">'paracosm'</span>;
 
 traitModelRegistry.<span class="fn">register</span>({
   id: <span class="str">'governing-council'</span>,
@@ -501,7 +501,7 @@ traitModelRegistry.<span class="fn">register</span>({
       <div class="tab-panel" role="tabpanel" data-panel="http" style="display:none">
         <div class="code-block" style="border:none;border-radius:0;margin:0">
           <div class="code-header"><span>One-shot HTTP endpoint (curl, Python, third-party dashboards)</span><button class="code-copy" onclick="copyCode(this, document.getElementById('http-code').textContent)">Copy</button></div>
-          <div class="code-body" id="http-code"><span class="cm"># Boot the server with the endpoint enabled.</span>
+          <div tabindex="0" class="code-body" id="http-code"><span class="cm"># Boot the server with the endpoint enabled.</span>
 PARACOSM_ENABLE_SIMULATE_ENDPOINT=true paracosm dashboard
 
 <span class="cm"># In another shell:</span>
@@ -525,7 +525,7 @@ curl -X POST http://localhost:3456/simulate \
       <div class="tab-panel" role="tabpanel" data-panel="cli" style="display:none">
         <div class="code-block" style="border:none;border-radius:0;margin:0">
           <div class="code-header"><span>One umbrella binary, four subcommands. `--help` works on every level.</span><button class="code-copy" onclick="copyCode(this, document.getElementById('cli-code').textContent)">Copy</button></div>
-          <div class="code-body" id="cli-code"><span class="cm"># Discoverability first.</span>
+          <div tabindex="0" class="code-body" id="cli-code"><span class="cm"># Discoverability first.</span>
 paracosm --help                          <span class="cm"># lists every subcommand</span>
 paracosm run --help                      <span class="cm"># per-command help</span>
 paracosm --version                       <span class="cm"># prints "paracosm 0.7.x"</span>
@@ -557,7 +557,7 @@ paracosm init my-app --domain <span class="str">"AI lab Q4 release pressure"</sp
 
     <div class="code-block" style="margin-top:18px">
       <div class="code-header"><span>End-to-end runner (real input/output captured)</span><button class="code-copy" onclick="copyCode(this, 'npx tsx scripts/cookbook-e2e.ts')">Copy</button></div>
-      <div class="code-body" id="api-code"><span class="cm">// Save as index.ts next to my-world.json, then:</span>
+      <div tabindex="0" class="code-body" id="api-code"><span class="cm">// Save as index.ts next to my-world.json, then:</span>
 <span class="cm">//   npm install paracosm   (or: pnpm add paracosm / bun add paracosm)</span>
 <span class="cm">//   export OPENAI_API_KEY=sk-...          # or ANTHROPIC_API_KEY=sk-ant-...</span>
 <span class="cm">//   npx tsx index.ts       (or: bun index.ts)</span>
@@ -624,7 +624,7 @@ paracosm init my-app --domain <span class="str">"AI lab Q4 release pressure"</sp
     </div>
     <div class="code-block">
       <div class="code-header"><span>Or: quick start with the dashboard</span><button class="code-copy" onclick="copyCode(this, document.getElementById('dash-code').textContent)">Copy</button></div>
-      <div class="code-body" id="dash-code">git clone https://github.com/framersai/paracosm
+      <div tabindex="0" class="code-body" id="dash-code">git clone https://github.com/framersai/paracosm
 cd paracosm && npm install
 cp .env.example .env  <span class="cm"># add your OpenAI or Anthropic key</span>
 npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
@@ -824,7 +824,7 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
 
     <div class="code-block rv" style="margin:20px 0 0">
       <div class="code-header"><span>Worked example · Maria Chen, T2D, 12-week GLP-1 + lifestyle protocol</span></div>
-      <div class="code-body"><span class="kw">import</span> { DigitalTwin } <span class="kw">from</span> <span class="str">'paracosm/digital-twin'</span>;
+      <div tabindex="0" class="code-body"><span class="kw">import</span> { DigitalTwin } <span class="kw">from</span> <span class="str">'paracosm/digital-twin'</span>;
 
 <span class="kw">const</span> twin = <span class="kw">await</span> DigitalTwin.fromJson(scenarioJson);
 
@@ -985,20 +985,20 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
     <div class="code-sec">
       <div class="code-block">
         <div class="code-header"><span>Prompt to running simulation, three lines</span><button class="code-copy" onclick="copyCode(this, document.getElementById('cb-quickstart').textContent)">Copy</button></div>
-        <div class="code-body" id="cb-quickstart"><span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm/world-model'</span>;
+        <div tabindex="0" class="code-body" id="cb-quickstart"><span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm/world-model'</span>;
 
 <span class="kw">const</span> wm = <span class="kw">await</span> WorldModel.<span class="fn">fromPrompt</span>({ seedText, domainHint: <span class="str">'AI safety lab leadership decision'</span> });
 <span class="kw">const</span> { leaders, artifacts } = <span class="kw">await</span> wm.<span class="fn">quickstart</span>({ leaderCount: <span class="num">3</span> });</div>
       </div>
       <div class="code-block">
         <div class="code-header"><span>Branch at turn 1 with a different leader</span><button class="code-copy" onclick="copyCode(this, document.getElementById('cb-fork').textContent)">Copy</button></div>
-        <div class="code-body" id="cb-fork"><span class="kw">const</span> branchWm = <span class="kw">await</span> wm.<span class="fn">forkFromArtifact</span>(artifacts[<span class="num">0</span>], <span class="num">1</span>);
+        <div tabindex="0" class="code-body" id="cb-fork"><span class="kw">const</span> branchWm = <span class="kw">await</span> wm.<span class="fn">forkFromArtifact</span>(artifacts[<span class="num">0</span>], <span class="num">1</span>);
 <span class="kw">const</span> branch = <span class="kw">await</span> branchWm.<span class="fn">simulate</span>(leaders[<span class="num">1</span>], { maxTurns: <span class="num">3</span>, seed: <span class="num">42</span> });
 <span class="cm">// branch.metadata.forkedFrom = { parentRunId, atTurn: 1 }</span></div>
       </div>
       <div class="code-block">
         <div class="code-header"><span>One-shot HTTP endpoint with curl</span><button class="code-copy" onclick="copyCode(this, document.getElementById('cb-curl').textContent)">Copy</button></div>
-        <div class="code-body" id="cb-curl"><span class="cm"># PARACOSM_ENABLE_SIMULATE_ENDPOINT=true paracosm dashboard</span>
+        <div tabindex="0" class="code-body" id="cb-curl"><span class="cm"># PARACOSM_ENABLE_SIMULATE_ENDPOINT=true paracosm dashboard</span>
 curl -X POST http://localhost:3456/simulate \
   -H <span class="str">'Content-Type: application/json'</span> \
   -H <span class="str">'X-OpenAI-Key: sk-...'</span> \
