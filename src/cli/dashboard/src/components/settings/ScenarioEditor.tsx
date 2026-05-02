@@ -1,7 +1,8 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, type CSSProperties } from 'react';
 import { emitScenarioUpdated, subscribeScenarioUpdates } from '../../scenario-sync';
 import { buildScenarioCompileRequest } from './scenarioCompileRequest';
 import { SETTINGS_LABEL_STYLE } from './shared/settingsStyles';
+import styles from './ScenarioEditor.module.scss';
 
 interface AdminConfig {
   adminWrite: boolean;
@@ -231,35 +232,27 @@ export function ScenarioEditor() {
   const byteSize = new Blob([jsonText]).size;
 
   return (
-    <div style={{
-      background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: '8px',
-      marginBottom: '16px', boxShadow: 'var(--card-shadow)', overflow: 'hidden',
-    }}>
+    <div className={styles.card}>
       {/* Header */}
-      <div style={{
-        padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        borderBottom: '1px solid var(--border)', flexWrap: 'wrap', gap: '8px',
-      }}>
+      <div className={styles.header}>
         <div>
-          <h3 style={{ fontFamily: 'var(--mono)', fontSize: 'var(--font-lg)', fontWeight: 700, color: 'var(--text-1)', margin: 0 }}>
-            Scenario Editor
-          </h3>
-          <p style={{ fontSize: 'var(--font-xs)', color: 'var(--text-3)', margin: '4px 0 0' }}>
+          <h3 className={styles.title}>Scenario Editor</h3>
+          <p className={styles.lead}>
             Write or import a scenario JSON draft. Add seed text or a URL to ground it, then compile or export.
             {!adminConfig.adminWrite && ' Disk saves are disabled on this instance.'}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-          <button onClick={loadActiveScenario} style={{ ...btnStyle, color: 'var(--amber)', borderColor: 'var(--amber-dim, var(--border))' }} aria-label="Load active scenario JSON">Load Active</button>
-          <button onClick={loadExample} style={btnStyle} aria-label="Load example scenario">Template</button>
-          <button onClick={importFile} style={btnStyle} aria-label="Import JSON file">Import</button>
-          <button onClick={exportFile} style={btnStyle} disabled={!jsonText.trim() || !!parseError} aria-label="Export as JSON file">Export</button>
-          <input ref={fileInputRef} type="file" accept=".json,application/json" onChange={handleFileImport} style={{ display: 'none' }} />
+        <div className={styles.btnRow}>
+          <button onClick={loadActiveScenario} className={[styles.btn, styles.amber].join(' ')} aria-label="Load active scenario JSON">Load Active</button>
+          <button onClick={loadExample} className={styles.btn} aria-label="Load example scenario">Template</button>
+          <button onClick={importFile} className={styles.btn} aria-label="Import JSON file">Import</button>
+          <button onClick={exportFile} className={styles.btn} disabled={!jsonText.trim() || !!parseError} aria-label="Export as JSON file">Export</button>
+          <input ref={fileInputRef} type="file" accept=".json,application/json" onChange={handleFileImport} className={styles.fileInput} />
         </div>
       </div>
 
       {/* Editor */}
-      <div style={{ position: 'relative' }}>
+      <div className={styles.editorWrap}>
         <textarea
           ref={editorRef}
           value={jsonText}
@@ -267,43 +260,36 @@ export function ScenarioEditor() {
           placeholder='{\n  "id": "my-scenario",\n  "labels": { "name": "My World" },\n  "departments": [...]\n}'
           spellCheck={false}
           aria-label="Scenario JSON editor"
-          style={{
-            width: '100%', minHeight: '240px', maxHeight: '500px', resize: 'vertical',
-            padding: '14px 16px', margin: 0, border: 'none', borderBottom: '1px solid var(--border)',
-            background: 'var(--bg-deep)', color: 'var(--text-1)',
-            fontFamily: 'var(--mono)', fontSize: 'var(--font-sm)', lineHeight: 1.6,
-            outline: 'none',
-          }}
+          className={styles.editor}
         />
         {/* Status bar */}
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', padding: '6px 16px',
-          background: 'var(--bg-elevated)', fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)',
-          color: parseError ? 'var(--rust)' : 'var(--text-3)',
-        }}>
+        <div
+          className={styles.statusBar}
+          style={{ '--status-color': parseError ? 'var(--rust)' : 'var(--text-3)' } as CSSProperties}
+        >
           <span>{parseError || (jsonText.trim() ? 'Valid JSON' : 'Empty')}</span>
           <span>{lineCount} lines, {(byteSize / 1024).toFixed(1)}KB</span>
         </div>
       </div>
 
       {/* Seed enrichment */}
-      <details style={{ borderBottom: '1px solid var(--border)' }}>
-        <summary style={{ padding: '10px 16px', fontSize: 'var(--font-sm)', fontWeight: 600, cursor: 'pointer', color: 'var(--text-2)' }}>
+      <details className={styles.seedDetails}>
+        <summary className={styles.seedSummary}>
           Seed Enrichment (optional)
         </summary>
-        <div style={{ padding: '0 16px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className={styles.seedBody}>
           <div>
             <label style={SETTINGS_LABEL_STYLE}>Seed Text</label>
             <textarea
               value={seedText}
               onChange={e => setSeedText(e.target.value)}
               placeholder="Paste a prompt, notes, a brief, or source text to turn into research facts and category mapping."
-              style={{ ...inputStyle, minHeight: '96px', resize: 'vertical' }}
+              className={styles.textarea}
             />
           </div>
           <div>
             <label style={SETTINGS_LABEL_STYLE}>Seed URL (fetched via Firecrawl)</label>
-            <input value={seedUrl} onChange={e => setSeedUrl(e.target.value)} placeholder="https://example.com/article" style={inputStyle} />
+            <input value={seedUrl} onChange={e => setSeedUrl(e.target.value)} placeholder="https://example.com/article" className={styles.input} />
           </div>
           <div>
             <label style={SETTINGS_LABEL_STYLE}>Max Web Searches</label>
@@ -312,7 +298,7 @@ export function ScenarioEditor() {
               onChange={e => setMaxSearches(e.target.value)}
               inputMode="numeric"
               placeholder="5"
-              style={inputStyle}
+              className={styles.input}
             />
           </div>
           <div>
@@ -321,7 +307,7 @@ export function ScenarioEditor() {
               value={compileProvider}
               onChange={e => setCompileProvider(e.target.value)}
               placeholder="anthropic or openai (optional)"
-              style={inputStyle}
+              className={styles.input}
             />
           </div>
           <div>
@@ -330,14 +316,14 @@ export function ScenarioEditor() {
               value={compileModel}
               onChange={e => setCompileModel(e.target.value)}
               placeholder="gpt-5.4-mini, claude-sonnet-4-6, etc. (optional)"
-              style={inputStyle}
+              className={styles.input}
             />
           </div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-sm)', color: 'var(--text-2)' }}>
+          <label className={styles.checkboxLabel}>
             <input type="checkbox" checked={webSearch} onChange={e => setWebSearch(e.target.checked)} />
             Web search enrichment (requires Serper/Tavily/Firecrawl API keys)
           </label>
-          <p style={{ fontSize: 'var(--font-xs)', color: 'var(--text-3)', margin: 0, lineHeight: 1.6 }}>
+          <p className={styles.fineprint}>
             If both seed text and a seed URL are provided, the URL takes precedence and the compiler ingests the fetched page.
           </p>
         </div>
@@ -345,12 +331,12 @@ export function ScenarioEditor() {
 
       {/* Compile progress */}
       {progress.length > 0 && (
-        <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
+        <div className={styles.progressWrap}>
           {progress.map(p => (
-            <div key={p.hook} style={{ fontSize: 'var(--font-xs)', fontFamily: 'var(--mono)', display: 'flex', gap: '8px', padding: '2px 0', color: 'var(--text-2)' }}>
-              <span>{p.status === 'done' ? '\u2714' : p.status === 'generating' ? '\u23F3' : p.status === 'cached' ? '\u2714' : '\u2022'}</span>
+            <div key={p.hook} className={styles.progressRow}>
+              <span>{p.status === 'done' ? '✔' : p.status === 'generating' ? '⏳' : p.status === 'cached' ? '✔' : '•'}</span>
               <span>{p.hook}</span>
-              <span style={{ color: 'var(--text-3)' }}>{p.status}</span>
+              <span className={styles.progressStatus}>{p.status}</span>
             </div>
           ))}
         </div>
@@ -358,21 +344,23 @@ export function ScenarioEditor() {
 
       {/* Result message */}
       {result && (
-        <div style={{
-          padding: '10px 16px', fontSize: 'var(--font-sm)', borderBottom: '1px solid var(--border)',
-          color: result.success ? 'var(--green)' : 'var(--rust)',
-          background: result.success ? 'rgba(106,173,72,.06)' : 'rgba(224,101,48,.06)',
-        }}>
+        <div
+          className={styles.result}
+          style={{
+            '--result-color': result.success ? 'var(--green)' : 'var(--rust)',
+            '--result-bg': result.success ? 'rgba(106,173,72,.06)' : 'rgba(224,101,48,.06)',
+          } as CSSProperties}
+        >
           {result.message}
         </div>
       )}
 
       {/* Actions */}
-      <div style={{ padding: '12px 16px', display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className={styles.actions}>
         <button
           onClick={storeInMemory}
           disabled={!jsonText.trim() || !!parseError || storing}
-          style={{ ...actionBtnStyle, background: 'var(--bg-card)', color: 'var(--text-1)', border: '1px solid var(--border)' }}
+          className={styles.actionBtn}
           aria-label="Store scenario in memory"
         >
           {storing ? 'Storing...' : 'Store in Memory'}
@@ -380,7 +368,7 @@ export function ScenarioEditor() {
         <button
           onClick={compile}
           disabled={!jsonText.trim() || !!parseError || compiling}
-          style={{ ...actionBtnStyle, background: 'linear-gradient(135deg, var(--rust), #c44a1e)', color: '#fff', border: 'none' }}
+          className={[styles.actionBtn, styles.primary].join(' ')}
           aria-label="Compile scenario"
         >
           {compiling ? 'Compiling...' : 'Compile Scenario'}
@@ -389,15 +377,15 @@ export function ScenarioEditor() {
           <button
             onClick={saveToDisk}
             disabled={!jsonText.trim() || !!parseError}
-            style={{ ...actionBtnStyle, background: 'var(--bg-card)', color: 'var(--amber)', border: '1px solid var(--amber-dim, var(--border))' }}
+            className={[styles.actionBtn, styles.amber].join(' ')}
             aria-label="Save scenario to disk"
           >
             Save to Disk
           </button>
         )}
-        <span style={{ flex: 1 }} />
+        <span className={styles.spacer} />
         {adminConfig.memoryScenarios.length > 0 && (
-          <span style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
+          <span className={styles.memCount}>
             {adminConfig.memoryScenarios.length} in memory
           </span>
         )}
@@ -405,21 +393,3 @@ export function ScenarioEditor() {
     </div>
   );
 }
-
-const btnStyle: React.CSSProperties = {
-  background: 'var(--bg-card)', color: 'var(--text-2)', border: '1px solid var(--border)',
-  padding: '4px 12px', borderRadius: '4px', fontSize: 'var(--font-xs)', cursor: 'pointer',
-  fontWeight: 600, fontFamily: 'var(--mono)', transition: 'all .2s',
-};
-
-const actionBtnStyle: React.CSSProperties = {
-  padding: '8px 20px', borderRadius: '6px', fontSize: 'var(--font-md)', fontWeight: 700,
-  cursor: 'pointer', fontFamily: 'var(--sans)', transition: 'all .2s',
-  opacity: 1,
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%', background: 'var(--bg-card)', color: 'var(--text-1)',
-  border: '1px solid var(--border)', padding: '6px 10px', borderRadius: '4px',
-  fontFamily: 'var(--sans)', fontSize: 'var(--font-sm)',
-};
