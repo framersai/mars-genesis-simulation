@@ -3,6 +3,7 @@ import type { CitationRegistry } from '../../hooks/useCitationRegistry';
 import type { ToolRegistry } from '../../hooks/useToolRegistry';
 import { ReferencesList } from '../shared/ReferencesSection';
 import { ToolboxSection } from '../shared/ToolboxSection';
+import styles from './SimFooterBar.module.scss';
 
 interface SimFooterBarProps {
   citationRegistry: CitationRegistry;
@@ -14,15 +15,11 @@ interface SimFooterBarProps {
  * modal CTAs instead of inline blocks. Keeps the events column tall
  * (the user reported that the inline sections were eating vertical
  * space and making timeline events hard to scan).
- *
- * Each pill shows the count and opens a centered modal with the full
- * data. The bar collapses into icon-only on phones via global CSS.
  */
 export function SimFooterBar({ citationRegistry, toolRegistry }: SimFooterBarProps) {
   const [open, setOpen] = useState<null | 'refs' | 'tools'>(null);
   const close = useCallback(() => setOpen(null), []);
 
-  // Esc closes whichever modal is open
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
@@ -37,24 +34,8 @@ export function SimFooterBar({ citationRegistry, toolRegistry }: SimFooterBarPro
 
   return (
     <>
-      <div
-        role="region"
-        aria-label="Simulation evidence"
-        style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '6px 12px',
-          background: 'var(--bg-panel)',
-          borderTop: '1px solid var(--border)',
-          flexShrink: 0,
-        }}
-      >
-        <span style={{
-          fontSize: 'var(--font-3xs)', fontFamily: 'var(--mono)', fontWeight: 800,
-          color: 'var(--text-3)', letterSpacing: '0.08em',
-          textTransform: 'uppercase',
-        }}>
-          Evidence
-        </span>
+      <div role="region" aria-label="Simulation evidence" className={styles.bar}>
+        <span className={styles.label}>Evidence</span>
         {refsCount > 0 && (
           <FooterCta
             label="References"
@@ -71,12 +52,8 @@ export function SimFooterBar({ citationRegistry, toolRegistry }: SimFooterBarPro
             ariaLabel={`Open Forged Toolbox (${toolsCount} tools)`}
           />
         )}
-        <span style={{ flex: 1 }} />
-        <span style={{
-          fontSize: 'var(--font-3xs)', fontFamily: 'var(--mono)', color: 'var(--text-3)', fontStyle: 'italic',
-        }}>
-          Click any inline [N] pill to jump to its source.
-        </span>
+        <span className={styles.spacer} />
+        <span className={styles.hint}>Click any inline [N] pill to jump to its source.</span>
       </div>
 
       {open === 'refs' && (
@@ -148,14 +125,7 @@ function ExportButton({ label, filename, data }: { label: string; filename: stri
         a.click();
         URL.revokeObjectURL(a.href);
       }}
-      style={{
-        fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', fontWeight: 700,
-        padding: '4px 10px', borderRadius: 4,
-        border: '1px solid var(--border)',
-        background: 'var(--bg-card)',
-        color: 'var(--text-2)',
-        cursor: 'pointer', letterSpacing: '0.05em',
-      }}
+      className={styles.exportBtn}
     >
       {label}
     </button>
@@ -164,38 +134,9 @@ function ExportButton({ label, filename, data }: { label: string; filename: stri
 
 function FooterCta({ label, count, onClick, ariaLabel }: { label: string; count: number; onClick: () => void; ariaLabel: string }) {
   return (
-    <button
-      onClick={onClick}
-      aria-label={ariaLabel}
-      style={{
-        display: 'inline-flex', alignItems: 'center', gap: 6,
-        padding: '3px 10px', borderRadius: 4,
-        background: 'var(--bg-card)',
-        border: '1px solid var(--border)',
-        color: 'var(--text-2)',
-        fontFamily: 'var(--mono)', fontSize: 'var(--font-2xs)', fontWeight: 700,
-        letterSpacing: '0.05em', cursor: 'pointer',
-        transition: 'border-color 0.15s, color 0.15s, background 0.15s',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.borderColor = 'var(--amber)';
-        e.currentTarget.style.color = 'var(--amber)';
-        e.currentTarget.style.background = 'rgba(232,180,74,0.06)';
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.borderColor = 'var(--border)';
-        e.currentTarget.style.color = 'var(--text-2)';
-        e.currentTarget.style.background = 'var(--bg-card)';
-      }}
-    >
+    <button onClick={onClick} aria-label={ariaLabel} className={styles.cta}>
       <span>{label.toUpperCase()}</span>
-      <span style={{
-        padding: '0 6px', borderRadius: 8,
-        background: 'rgba(232,180,74,0.12)', color: 'var(--amber)',
-        fontSize: 'var(--font-2xs)', fontWeight: 800,
-      }}>
-        {count}
-      </span>
+      <span className={styles.ctaCount}>{count}</span>
     </button>
   );
 }
@@ -206,55 +147,14 @@ function FooterCta({ label, count, onClick, ariaLabel }: { label: string; count:
  */
 function Modal({ title, onClose, children, extraActions }: { title: string; onClose: () => void; children: ReactNode; extraActions?: ReactNode }) {
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
-      onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 100000,
-        background: 'rgba(10,8,6,0.78)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 20,
-      }}
-    >
-      <div
-        onClick={e => e.stopPropagation()}
-        style={{
-          background: 'var(--bg-panel)',
-          border: '1px solid var(--border)',
-          borderTop: '3px solid var(--amber)',
-          borderRadius: 10,
-          padding: '16px 20px',
-          maxWidth: 960, width: '100%', maxHeight: '85vh',
-          display: 'flex', flexDirection: 'column',
-          boxShadow: '0 12px 60px rgba(0,0,0,0.6)',
-          fontFamily: 'var(--sans)', color: 'var(--text-1)',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexShrink: 0, gap: 8 }}>
-          <h2 style={{
-            fontFamily: 'var(--mono)', fontSize: 'var(--font-lg)', fontWeight: 800,
-            color: 'var(--amber)', letterSpacing: '0.06em',
-            textTransform: 'uppercase', margin: 0, flex: 1, minWidth: 0,
-          }}>
-            {title}
-          </h2>
+    <div role="dialog" aria-modal="true" aria-label={title} onClick={onClose} className={styles.modalBackdrop}>
+      <div onClick={e => e.stopPropagation()} className={styles.modalDialog}>
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>{title}</h2>
           {extraActions}
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            style={{
-              background: 'none', border: 'none', color: 'var(--text-3)',
-              cursor: 'pointer', fontSize: 'var(--font-2xl)', lineHeight: 1, padding: 4,
-            }}
-          >
-            ×
-          </button>
+          <button onClick={onClose} aria-label="Close" className={styles.modalClose}>×</button>
         </div>
-        <div style={{ overflowY: 'auto', flex: 1, padding: '4px 2px' }}>
-          {children}
-        </div>
+        <div className={styles.modalBody}>{children}</div>
       </div>
     </div>
   );
