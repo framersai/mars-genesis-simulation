@@ -394,7 +394,8 @@ setTimeout(() =&gt; ctrl.<span class="fn">abort</span>(), <span class="num">120_
           <div class="code-header"><span>Fork at turn N, replay deterministic, model an intervention on a digital twin</span><button class="code-copy" onclick="copyCode(this, document.getElementById('counterfactuals-code').textContent)">Copy</button></div>
           <div class="code-body" id="counterfactuals-code"><span class="cm">// One run, three counterfactual surfaces: fork, replay, simulateIntervention.</span>
 <span class="cm">// Same scenario, same kernel, same seed -- only the leader / decision changes.</span>
-<span class="kw">import</span> { WorldModel, runSimulation } <span class="kw">from</span> <span class="str">'paracosm'</span>;
+<span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm/world-model'</span>;
+<span class="kw">import</span> { runSimulation } <span class="kw">from</span> <span class="str">'paracosm/runtime'</span>;
 
 <span class="kw">const</span> wm = WorldModel.<span class="fn">fromScenario</span>(scenario);
 
@@ -435,7 +436,7 @@ console.<span class="fn">log</span>(<span class="str">'twin under disruption:'</
         <div class="code-block" style="border:none;border-radius:0;margin:0;border-bottom:1px solid var(--border)">
           <div class="code-header"><span>Pluggable trait models: HEXACO for humans, ai-agent for AI systems, custom for anything</span><button class="code-copy" onclick="copyCode(this, document.getElementById('trait-models-code').textContent)">Copy</button></div>
           <div class="code-body" id="trait-models-code"><span class="cm">// Leaders aren't just people. Same engine, different decision-maker shapes.</span>
-<span class="kw">import</span> { runSimulation } <span class="kw">from</span> <span class="str">'paracosm'</span>;
+<span class="kw">import</span> { runSimulation } <span class="kw">from</span> <span class="str">'paracosm/runtime'</span>;
 
 <span class="cm">// Path A: legacy HEXACO leader (humans, councils, archetypes).</span>
 <span class="kw">const</span> humanLeader = {
@@ -475,7 +476,7 @@ console.<span class="fn">log</span>(<span class="str">'twin under disruption:'</
         </div>
         <div class="code-block" style="border:none;border-radius:0;margin:0">
           <div class="code-header"><span>Or register your own model. Any axis ids, any drift table.</span><button class="code-copy" onclick="copyCode(this, document.getElementById('trait-models-custom-code').textContent)">Copy</button></div>
-          <div class="code-body" id="trait-models-custom-code"><span class="kw">import</span> { traitModelRegistry } <span class="kw">from</span> <span class="str">'paracosm/trait-models'</span>;
+          <div class="code-body" id="trait-models-custom-code"><span class="kw">import</span> { traitModelRegistry } <span class="kw">from</span> <span class="str">'paracosm'</span>;
 
 traitModelRegistry.<span class="fn">register</span>({
   id: <span class="str">'governing-council'</span>,

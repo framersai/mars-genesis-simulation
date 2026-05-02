@@ -117,6 +117,24 @@ const [a, b] = await Promise.all(
 console.log(a.fingerprint, b.fingerprint); // diverges visibly within two turns
 ```
 
+### Inspecting the agent swarm
+
+Each run carries a swarm of ~100 personality-typed agents (cells with departments, roles, mood, family edges, and persistent memory) on `RunArtifact.finalSwarm`. The dedicated `paracosm/swarm` subpath ships pure-projection helpers for the common shapes:
+
+```typescript
+import { getSwarm, swarmByDepartment, moodHistogram, departmentHeadcount } from 'paracosm/swarm';
+
+const swarm = getSwarm(a);
+if (swarm) {
+  console.log(`T${swarm.turn} · ${swarm.population} alive · ${Math.round((swarm.morale ?? 0) * 100)}% morale`);
+  console.log(moodHistogram(swarm));        // { focused: 12, anxious: 5, ... }
+  console.log(departmentHeadcount(swarm));  // { engineering: 18, agriculture: 22, ... }
+  console.log(swarmByDepartment(a));        // org chart with full roster per dept
+}
+```
+
+Same data is on `WorldModel.swarm(artifact)` if you already have the WorldModel façade imported, and at `GET /api/v1/runs/:runId/swarm` for HTTP consumers. The dashboard's living-swarm grid streams the same shape per-turn via SSE.
+
 Six turns is enough to surface the contrast. The fingerprint is a stable hash over the trajectory, decisions, and final metrics, so two runs are easy to diff.
 
 ---
@@ -319,7 +337,7 @@ Actors are not always human. Paracosm ships a `TraitModel` registry with two bui
 | `ai-agent`  | exploration, verification-rigor, deference, risk-tolerance, transparency, instruction-following    | Frontier-lab release directors, autonomous coordinators, eval subs |
 
 ```typescript
-import { runSimulation } from 'paracosm';
+import { runSimulation } from 'paracosm/runtime';
 
 const releaseDirector = {
   name: 'Atlas-Bot Release Director',
