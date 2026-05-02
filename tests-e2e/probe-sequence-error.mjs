@@ -1,0 +1,13 @@
+import playwright from '/Users/johnn/Documents/git/voice-chat-assistant/node_modules/.pnpm/playwright@1.59.1/node_modules/playwright/index.js';
+const browser = await playwright.chromium.launch({ headless: true });
+const ctx = await browser.newContext({ viewport: { width: 768, height: 1024 } });
+await ctx.addInitScript(() => { try { localStorage.setItem('paracosm:tourSeen', '1'); } catch {} });
+const page = await ctx.newPage();
+const errors = [];
+page.on('pageerror', err => errors.push({ msg: err.message, stack: err.stack }));
+await page.goto('https://paracosm.agentos.sh/sim', { waitUntil: 'domcontentloaded' });
+await page.waitForTimeout(2000);
+await page.getByRole('tab', { name: /^library$/i }).first().click({ force: true }).catch(() => {});
+await page.waitForTimeout(3000);
+console.log(JSON.stringify(errors, null, 2));
+await browser.close();

@@ -234,6 +234,12 @@ const SURFACES = [
 ];
 
 const consoleErrors = [];
+const a11yViolations = [];
+
+// axe-core CDN URL pinned to a recent stable. Loaded once per context
+// via addScriptTag; runs only on dashboard surfaces (not landing) to
+// keep the matrix lean and focus the report on application-side a11y.
+const AXE_CDN = 'https://cdn.jsdelivr.net/npm/axe-core@4.11.2/axe.min.js';
 
 async function captureSurface(browser, surface, viewportName) {
   const ctx = await browser.newContext({
@@ -338,10 +344,49 @@ async function captureSurface(browser, surface, viewportName) {
 
   const file = resolve(SHOTS, `${surface.name}.${viewportName}.png`);
   await page.screenshot({ path: file, fullPage: false });
-  console.log(`  ✓ ${surface.name}.${viewportName} (${status ?? 'no-status'}) → ${file}`);
+
+  // a11y audit: run axe-core on every desktop+tablet capture (skip
+  // mobile to halve runtime; mobile shares the same DOM modulo
+  // breakpoint rules so most violations replicate at the wider size).
+  // Skip outright on tour/scenario surfaces — they have transient
+  // overlays that intercept role queries and produce noise.
+  let violations = 0;
+  if (
+    !surface.skipTourSeen &&
+    surface.name !== 'settings-scenario-picker-open' &&
+    viewportName !== 'mobile'
+  ) {
+    try {
+      await page.addScriptTag({ url: AXE_CDN });
+      const result = await page.evaluate(async () => {
+        // eslint-disable-next-line no-undef
+        const axe = window.axe;
+        if (!axe) return { violations: [] };
+        return await axe.run(document, {
+          // Surface only the impacts that block production accessibility.
+          runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa'] },
+          resultTypes: ['violations'],
+        });
+      });
+      const vs = (result?.violations ?? []).map(v => ({
+        id: v.id,
+        impact: v.impact,
+        help: v.help,
+        nodes: v.nodes.length,
+      }));
+      violations = vs.length;
+      for (const v of vs) {
+        a11yViolations.push({ surface: surface.name, viewport: viewportName, ...v });
+      }
+    } catch (err) {
+      console.warn(`  [warn] a11y skipped for ${surface.name}.${viewportName}: ${err.message?.slice(0, 100)}`);
+    }
+  }
+
+  console.log(`  ✓ ${surface.name}.${viewportName} (${status ?? 'no-status'}, a11y violations: ${violations}) → ${file}`);
 
   await ctx.close();
-  return { surface: surface.name, viewport: viewportName, status, file };
+  return { surface: surface.name, viewport: viewportName, status, file, a11yViolations: violations };
 }
 
 async function main() {
@@ -367,7 +412,11 @@ async function main() {
   const reportPath = resolve(SHOTS, '_report.json');
   writeFileSync(
     reportPath,
-    JSON.stringify({ baseUrl: BASE_URL, results, consoleErrors, durationMs: Date.now() - started }, null, 2),
+    JSON.stringify(
+      { baseUrl: BASE_URL, results, consoleErrors, a11yViolations, durationMs: Date.now() - started },
+      null,
+      2,
+    ),
   );
   console.log(`\nDone in ${((Date.now() - started) / 1000).toFixed(1)}s. Report: ${reportPath}`);
   console.log(`Console errors: ${consoleErrors.length}`);
@@ -375,6 +424,25 @@ async function main() {
     for (const e of consoleErrors.slice(0, 20)) {
       console.log(`  · [${e.surface}.${e.viewport}] ${e.kind}: ${e.message.slice(0, 200)}`);
     }
+  }
+  // Aggregate a11y violations by rule id so the operator sees the
+  // failure modes instead of a flat per-surface list.
+  if (a11yViolations.length > 0) {
+    const byRule = new Map();
+    for (const v of a11yViolations) {
+      const key = `${v.id} (${v.impact})`;
+      const entry = byRule.get(key) ?? { rule: key, help: v.help, surfaces: [], totalNodes: 0 };
+      entry.surfaces.push(`${v.surface}.${v.viewport}`);
+      entry.totalNodes += v.nodes;
+      byRule.set(key, entry);
+    }
+    console.log(`\nA11y violations across surfaces: ${a11yViolations.length} occurrences`);
+    for (const e of [...byRule.values()].sort((a, b) => b.totalNodes - a.totalNodes)) {
+      console.log(`  · ${e.rule}: ${e.totalNodes} nodes across ${e.surfaces.length} surfaces`);
+      console.log(`    ${e.help}`);
+    }
+  } else {
+    console.log(`A11y: no violations across audited surfaces.`);
   }
 }
 

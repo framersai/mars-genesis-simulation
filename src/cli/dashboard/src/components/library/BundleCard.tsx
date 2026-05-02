@@ -14,18 +14,16 @@ export function BundleCard({ entry, onOpen }: BundleCardProps): JSX.Element {
   return (
     <article
       className={styles.card}
-      role="article"
-      tabIndex={0}
+      // The card is a passive container; the Compare button below is
+      // the keyboard-reachable activator. Whole-card click stays for
+      // pointer ergonomics but neither tabIndex nor a key handler are
+      // set so screen-reader / keyboard users land directly on the
+      // button (the previous setup nested an interactive button inside
+      // an interactive card, failing axe `nested-interactive`).
       aria-label={`Bundle ${entry.bundleId} · ${entry.memberCount} actors against ${entry.scenarioId}`}
       data-bundle-card
       data-bundle-id={entry.bundleId}
       onClick={onOpen}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onOpen();
-        }
-      }}
     >
       <header className={styles.head}>
         <span className={styles.bundleBadge}>BUNDLE</span>
