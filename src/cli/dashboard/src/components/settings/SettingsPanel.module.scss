@@ -1,0 +1,231 @@
+// Migrated from inline `style={{}}` per the no-inline-styles convention.
+
+.root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-deep);
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 24px;
+  background: var(--bg-deep);
+}
+
+.scenarioRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--card-shadow);
+}
+
+.scenarioLabel {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.scenarioSelect {
+  background: var(--bg-card);
+  color: var(--text-1);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: var(--font-lg);
+  font-family: var(--sans);
+  flex: 1;
+}
+
+.scenarioActiveTag {
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+  font-family: var(--mono);
+}
+
+.scenarioActiveValue { color: var(--amber); }
+
+.h2 {
+  font-size: var(--font-2xl);
+  color: var(--amber);
+  font-family: var(--mono);
+  margin-bottom: 12px;
+}
+
+.lead {
+  font-size: var(--font-md);
+  color: var(--text-2);
+  margin-bottom: 16px;
+}
+
+.leadHint {
+  font-size: var(--font-sm);
+  color: var(--text-3);
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.leadStrong { color: var(--text-1); }
+
+.leadersGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.fieldset {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--card-shadow);
+}
+
+.legend { padding: 0 8px; }
+
+.demoBanner {
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: rgba(232, 180, 74, 0.08);
+  border: 1px solid var(--amber-dim);
+  font-size: var(--font-xs);
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.demoBannerLabel { color: var(--amber); }
+
+.grid4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.input {
+  width: 100%;
+  background: var(--bg-card);
+  color: var(--text-1);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: var(--sans);
+  font-size: var(--font-lg);
+  box-sizing: border-box;
+}
+
+.input.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lockTag {
+  color: var(--amber);
+  font-size: var(--font-3xs);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+.fieldHint {
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+.keysIntro {
+  font-size: var(--font-xs);
+  color: var(--text-2);
+  margin-bottom: 12px;
+  line-height: 1.7;
+}
+
+.keysIntroPara { margin-bottom: 6px; }
+.keysIntroParaLast { margin: 0; }
+
+.keysIntroBoldNeutral { color: var(--text-1); }
+.keysIntroBoldGreen { color: var(--green); }
+.keysIntroBoldAmber { color: var(--amber); }
+.keysIntroBoldRust { color: var(--rust); }
+
+.keyEnvTag {
+  color: var(--color-success, #6aad48);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 6px;
+}
+
+.modelTiersIntro {
+  font-size: var(--font-xs);
+  color: var(--text-2);
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.demoMode {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: var(--font-sm);
+  color: var(--text-2);
+}
+
+.demoModeStrong { color: var(--amber); }
+
+.launchRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.launchBtn {
+  background: linear-gradient(135deg, var(--rust), #c44a1e);
+  color: white;
+  border: none;
+  padding: 12px 36px;
+  border-radius: 6px;
+  font-size: var(--font-xl);
+  font-weight: 800;
+  cursor: pointer;
+  font-family: var(--sans);
+  box-shadow: 0 4px 16px rgba(224, 101, 48, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: wait;
+  }
+}
+
+.launchStatus {
+  font-size: var(--font-md);
+  color: var(--text-3);
+}

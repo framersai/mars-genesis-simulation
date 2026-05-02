@@ -9,13 +9,6 @@ import { SubTabNav } from '../shared/SubTabNav';
 import { getDashboardTabFromHref, resolveSetupRedirectHref, setSubTabUrlParam } from '../../tab-routing';
 import { subscribeScenarioUpdates } from '../../scenario-sync';
 import type { SimEvent } from '../../hooks/useSSE';
-
-type SettingsSubTab = 'config' | 'log';
-
-const SETTINGS_SUB_TABS = [
-  { id: 'config' as const, label: 'Settings' },
-  { id: 'log' as const, label: 'Event Log' },
-];
 import {
   ECONOMICS_PROFILE_OPTIONS,
   describeServerMode,
@@ -26,6 +19,14 @@ import {
   SETTINGS_LABEL_STYLE,
   SETTINGS_SECTION_HEADER_STYLE,
 } from './shared/settingsStyles';
+import styles from './SettingsPanel.module.scss';
+
+type SettingsSubTab = 'config' | 'log';
+
+const SETTINGS_SUB_TABS = [
+  { id: 'config' as const, label: 'Settings' },
+  { id: 'log' as const, label: 'Event Log' },
+];
 
 const DEFAULT_HEXACO: Record<string, number> = {
   openness: 0.5, conscientiousness: 0.5, extraversion: 0.5,
@@ -91,12 +92,6 @@ function defaultLeader(idx: number): ActorFormData {
     hexaco: { ...DEFAULT_HEXACO },
   };
 }
-
-const inputStyle = {
-  width: '100%', background: 'var(--bg-card)', color: 'var(--text-1)',
-  border: '1px solid var(--border)', padding: '8px 12px', borderRadius: '6px',
-  fontFamily: 'var(--sans)', fontSize: 'var(--font-lg)', boxSizing: 'border-box' as const,
-};
 
 export interface SettingsPanelProps {
   /** SSE events to feed the embedded EventLogPanel sub-tab. Optional
@@ -238,6 +233,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
   const effectiveEconomicsProfile: DashboardEconomicsProfileId =
     hostedDemo && !hasSessionLlmKey ? 'economy' : economicsProfile;
   const serverModeInfo = describeServerMode(serverMode);
+  const isLocked = hostedDemo && !hasSessionLlmKey;
 
   const refreshScenarioCatalog = useCallback(() => {
     fetch('/scenarios')
@@ -345,8 +341,11 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
     }
   }, [leaderA, leaderB, turns, seed, startTime, timePerTurn, population, provider, liveSearch, navigateTab, scenario, keyOverrides, tierModels, hasUserLlmKey, effectiveEconomicsProfile]);
 
+  const inputCls = (locked: boolean) =>
+    [styles.input, locked ? styles.locked : ''].filter(Boolean).join(' ');
+
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg-deep)' }}>
+    <div className={styles.root}>
       <SubTabNav
         options={SETTINGS_SUB_TABS}
         active={subTab}
@@ -355,7 +354,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
       />
       {subTab === 'log' && <EventLogPanel events={events} />}
       {subTab === 'config' && (
-    <div className="settings-content" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '20px 24px', background: 'var(--bg-deep)' }}>
+    <div className={`settings-content ${styles.content}`}>
       {/* Prior-runs CTA — surfaces saved sessions at the top so users
           who don't want to spend credits can replay an existing run
           turn-by-turn without touching any API keys. Hides itself when
@@ -363,23 +362,15 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
       <LoadPriorRunsCTA />
       {/* Scenario Selector */}
       {scenarios.length > 0 && (
-        <div className="responsive-stack" style={{
-          display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px',
-          padding: '12px 16px', background: 'var(--bg-panel)', border: '1px solid var(--border)',
-          borderRadius: '8px', boxShadow: 'var(--card-shadow)',
-        }}>
-          <label htmlFor="scenario-select" style={{ ...SETTINGS_LABEL_STYLE, marginBottom: 0, flexShrink: 0 }}>
+        <div className={`responsive-stack ${styles.scenarioRow}`}>
+          <label htmlFor="scenario-select" style={SETTINGS_LABEL_STYLE} className={styles.scenarioLabel}>
             Scenario
           </label>
           <select
             id="scenario-select"
-            className="pc-select"
+            className={`pc-select ${styles.scenarioSelect}`}
             value={activeId}
             onChange={e => switchScenario(e.target.value)}
-            style={{
-              background: 'var(--bg-card)', color: 'var(--text-1)', border: '1px solid var(--border)',
-              padding: '8px 12px', borderRadius: '6px', fontSize: 'var(--font-lg)', fontFamily: 'var(--sans)', flex: 1,
-            }}
           >
             {scenarios.map(s => {
               const sourceTag = s.description?.includes('(memory)')
@@ -391,81 +382,68 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
                 : '';
               return (
                 <option key={s.id} value={s.id}>
-                  {s.id === activeId ? '\u25CF ' : ''}{s.name} ({s.departments} depts){sourceTag}
+                  {s.id === activeId ? '● ' : ''}{s.name} ({s.departments} depts){sourceTag}
                 </option>
               );
             })}
           </select>
-          <span style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
-            Active: <strong style={{ color: 'var(--amber)' }}>{activeId}</strong>
+          <span className={styles.scenarioActiveTag}>
+            Active: <strong className={styles.scenarioActiveValue}>{activeId}</strong>
           </span>
         </div>
       )}
 
-      <h2 style={{ fontSize: 'var(--font-2xl)', color: 'var(--amber)', fontFamily: 'var(--mono)', marginBottom: '12px' }}>
-        {scenario.labels.name}
-      </h2>
-      <p style={{ fontSize: 'var(--font-md)', color: 'var(--text-2)', marginBottom: '16px' }}>
+      <h2 className={styles.h2}>{scenario.labels.name}</h2>
+      <p className={styles.lead}>
         Configure two leaders and launch. {scenario.departments.length} departments: {scenario.departments.map(d => d.label).join(', ')}.
       </p>
-      <p style={{ fontSize: 'var(--font-sm)', color: 'var(--text-3)', marginBottom: '16px', lineHeight: 1.6 }}>
-        Server mode: <strong style={{ color: 'var(--text-1)' }}>{serverModeInfo.label}</strong>. {serverModeInfo.description}
+      <p className={styles.leadHint}>
+        Server mode: <strong className={styles.leadStrong}>{serverModeInfo.label}</strong>. {serverModeInfo.description}
       </p>
 
       {/* Leaders grid */}
-      <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+      <div className={`responsive-grid-2 ${styles.leadersGrid}`}>
         <ActorConfig label="Commander A" sideColor="var(--vis)" data={leaderA} onChange={setLeaderA} />
         <ActorConfig label="Commander B" sideColor="var(--eng)" data={leaderB} onChange={setLeaderB} />
       </div>
 
       {/* Simulation config */}
-      <fieldset style={{
-        background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: '8px',
-        padding: '16px', marginBottom: '16px', boxShadow: 'var(--card-shadow)',
-      }}>
-        <legend style={{ ...SETTINGS_SECTION_HEADER_STYLE, padding: '0 8px' }}>
+      <fieldset className={styles.fieldset}>
+        <legend style={SETTINGS_SECTION_HEADER_STYLE} className={styles.legend}>
           Simulation
         </legend>
         {/* Demo-mode cap hint: rendered inline with the Simulation
             fieldset so users see what values the server will force
             before they hit Launch. Mirrors applyDemoCaps on the
             backend. Disappears once a session LLM key is entered. */}
-        {hostedDemo && !hasSessionLlmKey && (
-          <div style={{
-            marginBottom: 12, padding: '8px 10px', borderRadius: 4,
-            background: 'rgba(232,180,74,.08)', border: '1px solid var(--amber-dim)',
-            fontSize: 'var(--font-xs)', color: 'var(--text-2)', lineHeight: 1.5,
-          }}>
-            <strong style={{ color: 'var(--amber)' }}>Demo caps will apply:</strong>{' '}
+        {isLocked && (
+          <div className={styles.demoBanner}>
+            <strong className={styles.demoBannerLabel}>Demo caps will apply:</strong>{' '}
             turns clamped to {demoCaps.maxTurns}, population to {demoCaps.maxPopulation}, active departments to {demoCaps.maxActiveDepartments}.
             Values you enter below are honored up to those ceilings. Add a
             session API key above to lift the caps.
           </div>
         )}
-        <div className="responsive-grid-4" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '12px' }}>
+        <div className={`responsive-grid-4 ${styles.grid4}`}>
           <div>
             <label htmlFor="turns-input" style={SETTINGS_LABEL_STYLE}>
               Turns
-              {hostedDemo && !hasSessionLlmKey && (
-                <span style={{ color: 'var(--amber)', fontSize: 'var(--font-3xs)', fontWeight: 400, marginLeft: 4 }} title={`Hosted demo caps turns at ${demoCaps.maxTurns}. Add a session API key to unlock.`}>
-                  {'\u{1F512}'} demo:{demoCaps.maxTurns}
+              {isLocked && (
+                <span className={styles.lockTag} title={`Hosted demo caps turns at ${demoCaps.maxTurns}. Add a session API key to unlock.`}>
+                  🔒 demo:{demoCaps.maxTurns}
                 </span>
               )}
             </label>
             <input
               id="turns-input"
               type="number"
-              value={hostedDemo && !hasSessionLlmKey ? demoCaps.maxTurns : turns}
+              value={isLocked ? demoCaps.maxTurns : turns}
               onChange={e => setTurns(parseInt(e.target.value) || 12)}
               min={1}
               max={20}
-              disabled={hostedDemo && !hasSessionLlmKey}
-              style={{
-                ...inputStyle,
-                opacity: hostedDemo && !hasSessionLlmKey ? 0.5 : 1,
-                cursor: hostedDemo && !hasSessionLlmKey ? 'not-allowed' : 'auto',
-              }}
-              title={hostedDemo && !hasSessionLlmKey ? `Locked at ${demoCaps.maxTurns} in hosted demo mode. Add your own OpenAI or Anthropic key above to unlock full scope.` : ''}
+              disabled={isLocked}
+              className={inputCls(isLocked)}
+              title={isLocked ? `Locked at ${demoCaps.maxTurns} in hosted demo mode. Add your own OpenAI or Anthropic key above to unlock full scope.` : ''}
             />
           </div>
           <div>
@@ -479,52 +457,48 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
               max={50}
               placeholder="auto"
               title={`${labels.Times} per turn. 0 = accelerating schedule (default). 1 = 1 ${labels.time} per turn. 5 = 5 ${labels.times} per turn.`}
-              style={inputStyle}
+              className={styles.input}
             />
           </div>
           <div>
             <label htmlFor="seed-input" style={SETTINGS_LABEL_STYLE}>Seed</label>
-            <input id="seed-input" type="number" value={seed} onChange={e => setSeed(parseInt(e.target.value) || 950)} style={inputStyle} />
+            <input id="seed-input" type="number" value={seed} onChange={e => setSeed(parseInt(e.target.value) || 950)} className={styles.input} />
           </div>
           <div>
             <label htmlFor="time-input" style={SETTINGS_LABEL_STYLE}>Start {labels.Time}</label>
-            <input id="time-input" type="number" value={startTime} onChange={e => setStartTime(parseInt(e.target.value) || 2035)} style={inputStyle} />
+            <input id="time-input" type="number" value={startTime} onChange={e => setStartTime(parseInt(e.target.value) || 2035)} className={styles.input} />
           </div>
           <div>
             <label htmlFor="pop-input" style={SETTINGS_LABEL_STYLE}>
               Population
-              {hostedDemo && !hasSessionLlmKey && (
-                <span style={{ color: 'var(--amber)', fontSize: 'var(--font-3xs)', fontWeight: 400, marginLeft: 4 }} title="Hosted demo caps population at 30. Add a session API key to unlock.">
-                  {'\u{1F512}'} demo:30
+              {isLocked && (
+                <span className={styles.lockTag} title="Hosted demo caps population at 30. Add a session API key to unlock.">
+                  🔒 demo:30
                 </span>
               )}
             </label>
             <input
               id="pop-input"
               type="number"
-              value={hostedDemo && !hasSessionLlmKey ? 30 : population}
+              value={isLocked ? 30 : population}
               onChange={e => setPopulation(parseInt(e.target.value) || 100)}
-              disabled={hostedDemo && !hasSessionLlmKey}
-              style={{
-                ...inputStyle,
-                opacity: hostedDemo && !hasSessionLlmKey ? 0.5 : 1,
-                cursor: hostedDemo && !hasSessionLlmKey ? 'not-allowed' : 'auto',
-              }}
-              title={hostedDemo && !hasSessionLlmKey ? 'Locked at 30 in hosted demo mode. Add your own OpenAI or Anthropic key above to unlock full scope.' : ''}
+              disabled={isLocked}
+              className={inputCls(isLocked)}
+              title={isLocked ? 'Locked at 30 in hosted demo mode. Add your own OpenAI or Anthropic key above to unlock full scope.' : ''}
             />
           </div>
         </div>
-        <div className="responsive-grid-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginTop: '12px' }}>
+        <div className={`responsive-grid-3 ${styles.grid3}`}>
           <div>
             <label htmlFor="provider-select" style={SETTINGS_LABEL_STYLE}>Provider</label>
-            <select id="provider-select" className="pc-select" value={provider} onChange={e => setProvider(e.target.value)} style={inputStyle}>
+            <select id="provider-select" className={`pc-select ${styles.input}`} value={provider} onChange={e => setProvider(e.target.value)}>
               <option value="openai">OpenAI</option>
               <option value="anthropic">Anthropic</option>
             </select>
           </div>
           <div>
             <label htmlFor="search-select" style={SETTINGS_LABEL_STYLE}>Live Search</label>
-            <select id="search-select" className="pc-select" value={String(liveSearch)} onChange={e => setLiveSearch(e.target.value === 'true')} style={inputStyle}>
+            <select id="search-select" className={`pc-select ${styles.input}`} value={String(liveSearch)} onChange={e => setLiveSearch(e.target.value === 'true')}>
               <option value="false">Off</option>
               <option value="true">On (requires search API keys)</option>
             </select>
@@ -532,23 +506,14 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
           <div>
             <label htmlFor="economics-select" style={SETTINGS_LABEL_STYLE}>
               Economics
-              {hostedDemo && !hasSessionLlmKey && (
-                <span style={{ color: 'var(--amber)', fontSize: 'var(--font-3xs)', fontWeight: 400, marginLeft: 4 }}>
-                  {'\u{1F512}'} forced:economy
-                </span>
-              )}
+              {isLocked && <span className={styles.lockTag}>🔒 forced:economy</span>}
             </label>
             <select
               id="economics-select"
-              className="pc-select"
+              className={`pc-select ${inputCls(isLocked)}`}
               value={effectiveEconomicsProfile}
               onChange={e => setEconomicsProfile(e.target.value as DashboardEconomicsProfileId)}
-              disabled={hostedDemo && !hasSessionLlmKey}
-              style={{
-                ...inputStyle,
-                opacity: hostedDemo && !hasSessionLlmKey ? 0.5 : 1,
-                cursor: hostedDemo && !hasSessionLlmKey ? 'not-allowed' : 'auto',
-              }}
+              disabled={isLocked}
               title={ECONOMICS_PROFILE_OPTIONS.find(option => option.value === effectiveEconomicsProfile)?.description}
             >
               {ECONOMICS_PROFILE_OPTIONS.map(option => (
@@ -557,7 +522,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
                 </option>
               ))}
             </select>
-            <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', marginTop: '3px', lineHeight: 1.4 }}>
+            <div className={styles.fieldHint}>
               {ECONOMICS_PROFILE_OPTIONS.find(option => option.value === effectiveEconomicsProfile)?.description}
             </div>
           </div>
@@ -565,34 +530,31 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
       </fieldset>
 
       {/* API Keys */}
-      <fieldset style={{
-        background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: '8px',
-        padding: '16px', marginBottom: '16px', boxShadow: 'var(--card-shadow)',
-      }}>
-        <legend style={{ ...SETTINGS_SECTION_HEADER_STYLE, padding: '0 8px' }}>
+      <fieldset className={styles.fieldset}>
+        <legend style={SETTINGS_SECTION_HEADER_STYLE} className={styles.legend}>
           API Keys
         </legend>
-        <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-2)', marginBottom: '12px', lineHeight: 1.7 }}>
-          <p style={{ marginBottom: '6px' }}>
-            <strong style={{ color: 'var(--text-1)' }}>How key resolution works:</strong> The server checks for keys in this order:
+        <div className={styles.keysIntro}>
+          <p className={styles.keysIntroPara}>
+            <strong className={styles.keysIntroBoldNeutral}>How key resolution works:</strong> The server checks for keys in this order:
             your session overrides below, then the server .env file. If a key exists in either place, it's used. Values entered here are never displayed back.
           </p>
-          <p style={{ marginBottom: '6px' }}>
-            <strong style={{ color: 'var(--green)' }}>Rate limiting:</strong> The hosted demo limits simulations per IP per day when using the server's API keys.
+          <p className={styles.keysIntroPara}>
+            <strong className={styles.keysIntroBoldGreen}>Rate limiting:</strong> The hosted demo limits simulations per IP per day when using the server's API keys.
             Provide your own <strong>OpenAI</strong> or <strong>Anthropic</strong> key to bypass the rate limit and run unlimited simulations.
             Only one LLM provider key is required. If both are provided, the simulation uses whichever you select as the provider.
           </p>
-          <p style={{ marginBottom: '6px' }}>
-            <strong style={{ color: 'var(--amber)' }}>Research and citations:</strong> Live web search requires at least one search key (Serper, Firecrawl, Tavily).
+          <p className={styles.keysIntroPara}>
+            <strong className={styles.keysIntroBoldAmber}>Research and citations:</strong> Live web search requires at least one search key (Serper, Firecrawl, Tavily).
             Without any search key, departments fall back to the scenario's built-in research bundle. Cohere enables neural reranking of search results for higher-quality citations.
             These are optional enhancements, not required to run a simulation.
           </p>
-          <p style={{ margin: 0 }}>
-            <strong style={{ color: 'var(--rust)' }}>No keys at all?</strong> If neither a server .env key nor a session override exists for any LLM provider,
+          <p className={styles.keysIntroParaLast}>
+            <strong className={styles.keysIntroBoldRust}>No keys at all?</strong> If neither a server .env key nor a session override exists for any LLM provider,
             the simulation cannot run. You need at least one OpenAI or Anthropic key configured somewhere.
           </p>
         </div>
-        <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div className={`responsive-grid-2 ${styles.grid2}`}>
           {([
             ['openai', 'OpenAI', 'Required (or Anthropic). Powers commander, departments, crisis director.'],
             ['anthropic', 'Anthropic', 'Required (or OpenAI). Alternative LLM provider for all simulation roles.'],
@@ -604,11 +566,7 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
             <div key={key}>
               <label htmlFor={`key-${key}`} style={SETTINGS_LABEL_STYLE}>
                 {label}
-                {envKeys[key] && (
-                  <span style={{ color: 'var(--color-success, #6aad48)', fontWeight: 400, textTransform: 'none', letterSpacing: 0, marginLeft: '6px' }}>
-                    (.env active)
-                  </span>
-                )}
+                {envKeys[key] && <span className={styles.keyEnvTag}>(.env active)</span>}
               </label>
               <input
                 id={`key-${key}`}
@@ -617,9 +575,9 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
                 value={keyOverrides[key]}
                 onChange={e => setKeyOverrides(prev => ({ ...prev, [key]: e.target.value }))}
                 placeholder={envKeys[key] ? 'Using .env value' : 'Not configured'}
-                style={inputStyle}
+                className={styles.input}
               />
-              <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', marginTop: '3px', lineHeight: 1.4 }}>{desc}</div>
+              <div className={styles.fieldHint}>{desc}</div>
             </div>
           ))}
         </div>
@@ -631,19 +589,16 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
           dev). Matches the server-side contract: in hosted-demo mode,
           applyDemoCaps overwrites whatever models the client posts. */}
       {canPickModels && (provider === 'openai' || provider === 'anthropic') && (
-        <fieldset style={{
-          background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: '8px',
-          padding: '16px', marginBottom: '16px', boxShadow: 'var(--card-shadow)',
-        }}>
-          <legend style={{ ...SETTINGS_SECTION_HEADER_STYLE, padding: '0 8px' }}>
+        <fieldset className={styles.fieldset}>
+          <legend style={SETTINGS_SECTION_HEADER_STYLE} className={styles.legend}>
             Model Tiers
           </legend>
-          <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-2)', marginBottom: '12px', lineHeight: 1.6 }}>
+          <div className={styles.modelTiersIntro}>
             Assign a model to each agent tier. Departments do the forging and benefit most from the flagship class.
             Agent reactions fan out to hundreds of parallel calls per turn and should be the cheapest class available.
             These overrides are only used when you run against your own API key.
           </div>
-          <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className={`responsive-grid-2 ${styles.grid2}`}>
             {(Object.keys(TIER_LABELS) as ModelTier[]).map(tier => (
               <div key={tier}>
                 <label htmlFor={`model-${tier}`} style={SETTINGS_LABEL_STYLE}>
@@ -651,16 +606,15 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
                 </label>
                 <select
                   id={`model-${tier}`}
-                  className="pc-select"
+                  className={`pc-select ${styles.input}`}
                   value={tierModels[tier]}
                   onChange={e => setTierModels(prev => ({ ...prev, [tier]: e.target.value }))}
-                  style={inputStyle}
                 >
                   {MODEL_OPTIONS[provider as 'openai' | 'anthropic'].map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
-                <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', marginTop: '3px', lineHeight: 1.4 }}>
+                <div className={styles.fieldHint}>
                   {TIER_LABELS[tier].help}
                 </div>
               </div>
@@ -670,11 +624,8 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
       )}
 
       {!canPickModels && (
-        <div style={{
-          background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: '8px',
-          padding: '12px 16px', marginBottom: '16px', fontSize: 'var(--font-sm)', color: 'var(--text-2)',
-        }}>
-          <strong style={{ color: 'var(--amber)' }}>Demo mode.</strong>{' '}
+        <div className={styles.demoMode}>
+          <strong className={styles.demoModeStrong}>Demo mode.</strong>{' '}
           {hostedDemo
             ? `Runs against the host API keys are capped to ${demoCaps.maxTurns} turns, ${demoCaps.maxPopulation} colonists, ${demoCaps.maxActiveDepartments} departments, and the cheapest model class. Add your own OpenAI or Anthropic key above to unlock full scope and per-tier model selection.`
             : 'No API key configured. Add an OpenAI or Anthropic key above or set one in .env to enable simulations and the per-tier model picker.'}
@@ -685,23 +636,16 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
       <ScenarioEditor />
 
       {/* Launch */}
-      <div className="responsive-stack" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+      <div className={`responsive-stack ${styles.launchRow}`}>
         <button
           onClick={launch}
           disabled={launching}
           aria-label={launching ? 'Simulation running' : 'Launch simulation'}
-          style={{
-            background: 'linear-gradient(135deg, var(--rust), #c44a1e)',
-            color: 'white', border: 'none', padding: '12px 36px', borderRadius: '6px',
-            fontSize: 'var(--font-xl)', fontWeight: 800, cursor: 'pointer', fontFamily: 'var(--sans)',
-            opacity: launching ? 0.5 : 1,
-            boxShadow: '0 4px 16px rgba(224, 101, 48, 0.3)',
-            transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-          }}
+          className={styles.launchBtn}
         >
           {launching ? 'Running...' : 'Launch Simulation'}
         </button>
-        {status && <span role="status" style={{ fontSize: 'var(--font-md)', color: 'var(--text-3)' }}>{status}</span>}
+        {status && <span role="status" className={styles.launchStatus}>{status}</span>}
       </div>
     </div>
       )}
