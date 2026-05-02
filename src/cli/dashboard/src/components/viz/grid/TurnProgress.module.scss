@@ -1,0 +1,51 @@
+// Migrated from inline `style={{}}`. Side color and bar percentage flow
+// in via --side-color and --bar-pct CSS custom properties.
+
+.bar {
+  display: flex;
+  gap: 12px;
+  padding: 4px 10px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-3xs);
+  font-family: var(--mono);
+  color: var(--text-3);
+  letter-spacing: 0.06em;
+}
+
+.label {
+  // --side-color set inline.
+  color: var(--side-color, var(--amber));
+  font-weight: 800;
+}
+
+.track {
+  flex: 1;
+  min-width: 40px;
+  height: 3px;
+  background: var(--bg-deep);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.fill {
+  // --bar-pct set inline as percentage.
+  width: var(--bar-pct, 0%);
+  height: 100%;
+  background: var(--side-color, var(--amber));
+  transition: width 300ms ease;
+}
+
+.count {
+  color: var(--text-4);
+  min-width: 36px;
+  text-align: right;
+}

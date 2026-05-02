@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, type CSSProperties } from 'react';
+import styles from './TurnProgress.module.scss';
 
 type Event = { type: string; turn?: number; data?: Record<string, unknown> };
 
@@ -70,40 +71,18 @@ export function TurnProgress({
     const pct = Math.min(100, (p.deptsReported.size / denom) * 100);
     return (
       <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          flex: 1,
-          minWidth: 0,
-          fontSize: 'var(--font-3xs)',
-          fontFamily: 'var(--mono)',
-          color: 'var(--text-3)',
-          letterSpacing: '0.06em',
-        }}
+        className={styles.row}
+        style={{ '--side-color': color } as CSSProperties}
       >
-        <span style={{ color, fontWeight: 800 }}>{label}</span>
+        <span className={styles.label}>{label}</span>
         <span>T{p.inFlightTurn}</span>
-        <div
-          style={{
-            flex: 1,
-            minWidth: 40,
-            height: 3,
-            background: 'var(--bg-deep)',
-            borderRadius: 2,
-            overflow: 'hidden',
-          }}
-        >
+        <div className={styles.track}>
           <div
-            style={{
-              width: `${pct}%`,
-              height: '100%',
-              background: color,
-              transition: 'width 300ms ease',
-            }}
+            className={styles.fill}
+            style={{ '--bar-pct': `${pct}%` } as CSSProperties}
           />
         </div>
-        <span style={{ color: 'var(--text-4)', minWidth: 36, textAlign: 'right' }}>
+        <span className={styles.count}>
           {p.deptsReported.size}/{denom}
         </span>
       </div>
@@ -111,16 +90,7 @@ export function TurnProgress({
   };
 
   return (
-    <div
-      aria-live="polite"
-      style={{
-        display: 'flex',
-        gap: 12,
-        padding: '4px 10px',
-        background: 'var(--bg-panel)',
-        borderBottom: '1px solid var(--border)',
-      }}
-    >
+    <div aria-live="polite" className={styles.bar}>
       {row('A', 'var(--vis)', a)}
       {row('B', 'var(--eng)', b)}
     </div>
