@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import type { GameState, ActorSideState } from '../../hooks/useGameState';
 import { getActorColorVar } from '../../hooks/useGameState';
 import { Tooltip } from '../shared/Tooltip';
+import styles from './Timeline.module.scss';
 
 interface TimelineProps {
   state: GameState;
@@ -69,11 +70,17 @@ function outcomeLabel(outcome?: string): { label: string; color: string } {
 
 function outcomeBadge(outcome?: string) {
   if (!outcome) return null;
-  const { label, color } = outcomeLabel(outcome);
+  const { color } = outcomeLabel(outcome);
   const isSuccess = outcome.includes('success');
   const short = outcome.includes('risky') ? (isSuccess ? 'RS' : 'RF') : (isSuccess ? 'CS' : 'CF');
   return (
-    <span style={{ fontSize: 'var(--font-3xs)', fontWeight: 800, fontFamily: 'var(--mono)', padding: '1px 4px', borderRadius: '2px', background: `${isSuccess ? 'rgba(106,173,72,.15)' : 'rgba(224,101,48,.15)'}`, color, border: `1px solid ${color}` }}>
+    <span
+      className={styles.outcomeBadge}
+      style={{
+        '--status-color': color,
+        '--status-bg': isSuccess ? 'rgba(106,173,72,.15)' : 'rgba(224,101,48,.15)',
+      } as CSSProperties}
+    >
       {short}
     </span>
   );
@@ -81,36 +88,25 @@ function outcomeBadge(outcome?: string) {
 
 function TurnTooltipContent({ t, sideColor }: { t: TurnEntry; sideColor: string }) {
   const { label, color } = outcomeLabel(t.outcome);
+  const sideStyle = { '--side-color': sideColor } as CSSProperties;
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-        <b style={{ color: sideColor, fontSize: 'var(--font-lg)' }}>Turn {t.turn}</b>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 'var(--font-sm)', color: 'var(--text-2)' }}>Y{t.time}</span>
-        {t.category && (
-          <span style={{ fontSize: 'var(--font-2xs)', padding: '1px 6px', borderRadius: '3px', background: 'var(--bg-deep)', color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
-            {t.category}
-          </span>
-        )}
-        {t.emergent && (
-          <span style={{ fontSize: 'var(--font-3xs)', fontWeight: 800, color: 'var(--rust)', fontFamily: 'var(--mono)' }}>EMERGENT</span>
-        )}
+      <div className={styles.tooltipHeader}>
+        <b className={styles.tooltipTurn} style={sideStyle}>Turn {t.turn}</b>
+        <span className={styles.tooltipTime}>Y{t.time}</span>
+        {t.category && <span className={styles.tooltipCategory}>{t.category}</span>}
+        {t.emergent && <span className={styles.tooltipEmergent}>EMERGENT</span>}
       </div>
-      <div style={{ fontSize: 'var(--font-lg)', fontWeight: 700, color: 'var(--text-1)', marginBottom: '6px' }}>
-        {t.title}
-      </div>
-      {t.summary && (
-        <div style={{ fontSize: 'var(--font-sm)', color: 'var(--text-2)', lineHeight: 1.6, marginBottom: '8px' }}>
-          {t.summary}
-        </div>
-      )}
+      <div className={styles.tooltipTitle}>{t.title}</div>
+      {t.summary && <div className={styles.tooltipSummary}>{t.summary}</div>}
       {t.decision && (
-        <div style={{ fontSize: 'var(--font-sm)', color: 'var(--text-2)', lineHeight: 1.6, marginBottom: '8px', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
-          <span style={{ fontWeight: 700, color: sideColor, fontSize: 'var(--font-2xs)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Decision: </span>
+        <div className={styles.tooltipDecision}>
+          <span className={styles.tooltipDecisionLabel} style={sideStyle}>Decision: </span>
           {t.decision}
         </div>
       )}
       {t.outcome && (
-        <div style={{ fontSize: 'var(--font-sm)', fontWeight: 800, fontFamily: 'var(--mono)', color, marginTop: '4px' }}>
+        <div className={styles.tooltipOutcome} style={{ '--outcome-color': color } as CSSProperties}>
           {label}
         </div>
       )}
@@ -120,6 +116,7 @@ function TurnTooltipContent({ t, sideColor }: { t: TurnEntry; sideColor: string 
 
 function SideTimeline({ turns, actorIndex }: { turns: TurnEntry[]; actorIndex: number }) {
   const sideColor = getActorColorVar(actorIndex);
+  const sideStyle = { '--side-color': sideColor } as CSSProperties;
   // Same tail-to-bottom pattern as the Sim column and Event Log:
   // auto-scroll when pinned, release on user scroll-up.
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -136,51 +133,35 @@ function SideTimeline({ turns, actorIndex }: { turns: TurnEntry[]; actorIndex: n
   }, [turns.length]);
 
   return (
-    <div ref={scrollRef} onScroll={onScroll} style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', gap: '3px', minWidth: 0 }}>
+    <div ref={scrollRef} onScroll={onScroll} className={styles.side}>
       {turns.map(t => (
         <Tooltip key={t.turn} dot content={<TurnTooltipContent t={t} sideColor={sideColor} />}>
-          <div style={{
-            padding: '5px 8px', background: 'var(--bg-card)', border: '1px solid var(--border)',
-            borderRadius: '4px', cursor: 'pointer', overflow: 'hidden', width: '100%', boxSizing: 'border-box' as const,
-            borderLeft: `3px solid ${sideColor}`,
-            animation: t.current ? 'glow 2s infinite' : undefined,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-xs)', minWidth: 0 }}>
-              <span style={{ fontWeight: 800, fontFamily: 'var(--mono)', color: sideColor, flexShrink: 0, fontSize: 'var(--font-2xs)' }}>
+          <div
+            className={[styles.entry, t.current ? styles.current : ''].filter(Boolean).join(' ')}
+            style={sideStyle}
+          >
+            <div className={styles.entryHead}>
+              <span className={styles.entryTurn} style={sideStyle}>
                 T{t.turn} {t.time}
               </span>
-              <span style={{ flex: 1, color: 'var(--text-1)', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
-                {t.title}
-              </span>
-              {t.category && (
-                <span style={{ fontSize: 'var(--font-3xs)', padding: '0 4px', borderRadius: '2px', background: 'var(--bg-deep)', color: 'var(--text-3)', fontFamily: 'var(--mono)', flexShrink: 0 }}>
-                  {t.category}
-                </span>
-              )}
-              {t.emergent && (
-                <span style={{ fontSize: 'var(--font-3xs)', fontWeight: 800, color: 'var(--rust)', fontFamily: 'var(--mono)', flexShrink: 0 }}>EMERGENT</span>
-              )}
+              <span className={styles.entryTitle}>{t.title}</span>
+              {t.category && <span className={styles.entryCategory}>{t.category}</span>}
+              {t.emergent && <span className={styles.entryEmergent}>EMERGENT</span>}
               {outcomeBadge(t.outcome)}
             </div>
-            {t.summary && (
-              <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', marginTop: '2px', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, fontStyle: 'italic' }}>
-                {t.summary}
-              </div>
-            )}
+            {t.summary && <div className={styles.entrySummary}>{t.summary}</div>}
             {t.subEvents && t.subEvents.length > 1 && (
-              <div style={{ fontSize: 'var(--font-3xs)', color: 'var(--text-3)', marginTop: '2px', lineHeight: 1.3 }}>
+              <div className={styles.entrySubEvents}>
                 {t.subEvents.map((se, i) => (
-                  <div key={i} style={{ display: 'flex', gap: '4px' }}>
-                    <span style={{ color: 'var(--rust)', fontFamily: 'var(--mono)', fontWeight: 700, flexShrink: 0 }}>{se.index + 1}.</span>
+                  <div key={i} className={styles.entrySubEventRow}>
+                    <span className={styles.entrySubIdx}>{se.index + 1}.</span>
                     <span>{se.title}</span>
                   </div>
                 ))}
               </div>
             )}
             {t.decision && !t.subEvents?.length && (
-              <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-2)', marginTop: '2px', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>
-                {t.decision}
-              </div>
+              <div className={styles.entryDecision}>{t.decision}</div>
             )}
           </div>
         </Tooltip>
@@ -200,11 +181,7 @@ export function Timeline({ state }: TimelineProps) {
   if (!turnsA.length && !turnsB.length) return null;
 
   return (
-    <div className="timeline-row" role="region" aria-label="Turn timeline" style={{
-      borderTop: '1px solid var(--border)', background: 'var(--bg-panel)',
-      display: 'flex', gap: '4px', height: '200px', overflow: 'hidden', flexShrink: 0,
-      padding: '4px 8px', minWidth: 0, maxWidth: '100%',
-    }}>
+    <div className={`timeline-row ${styles.timelineRow}`} role="region" aria-label="Turn timeline">
       <SideTimeline turns={turnsA} actorIndex={0} />
       <SideTimeline turns={turnsB} actorIndex={1} />
     </div>
