@@ -1,0 +1,71 @@
+// Migrated from inline `style={{}}`.
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 6px;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 8px;
+  font-size: var(--font-sm);
+  line-height: 1.55;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+
+.itemNumber {
+  font-family: var(--mono);
+  font-weight: 800;
+  color: var(--amber);
+  text-align: right;
+}
+
+.itemLink {
+  color: var(--text-1);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.itemText { color: var(--text-1); }
+
+.itemMeta {
+  font-size: var(--font-2xs);
+  color: var(--text-3);
+  font-family: var(--mono);
+  margin-top: 2px;
+}
+
+.title {
+  font-size: var(--font-md);
+  font-family: var(--mono);
+  font-weight: 800;
+  color: var(--amber);
+  letter-spacing: 0.06em;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+.wrap {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-deep);
+}
+
+.summary {
+  font-size: var(--font-md);
+  font-family: var(--mono);
+  font-weight: 800;
+  color: var(--amber);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}

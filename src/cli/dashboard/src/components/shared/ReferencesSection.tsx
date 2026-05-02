@@ -1,4 +1,5 @@
 import type { CitationRegistry } from '../../hooks/useCitationRegistry';
+import styles from './ReferencesSection.module.scss';
 
 interface ReferencesSectionProps {
   registry: CitationRegistry;
@@ -12,6 +13,32 @@ interface ReferencesSectionProps {
   onToggle?: (open: boolean) => void;
 }
 
+type Entry = CitationRegistry['list'][number];
+
+function renderEntry(entry: Entry) {
+  const depts = [...entry.departments].join(', ');
+  const sidesLabel = [...entry.actorNames].join(' · ');
+  return (
+    <li key={entry.n} id={`cite-${entry.n}`} className={styles.item}>
+      <span className={styles.itemNumber}>[{entry.n}]</span>
+      <span>
+        {entry.url ? (
+          <a href={entry.url} target="_blank" rel="noopener noreferrer" className={styles.itemLink}>
+            {entry.text}
+          </a>
+        ) : (
+          <span className={styles.itemText}>{entry.text}</span>
+        )}
+        <div className={styles.itemMeta}>
+          {entry.doi && <>DOI:{entry.doi} · </>}
+          {depts && <>cited by {depts} · </>}
+          <span title="Which leader's run referenced this source">leader {sidesLabel}</span>
+        </div>
+      </span>
+    </li>
+  );
+}
+
 /**
  * Numbered references list rendered at the bottom of a report or shown
  * inside a modal. Each entry's number matches the inline `[N]` pill
@@ -23,82 +50,16 @@ interface ReferencesSectionProps {
 export function ReferencesSection({ registry, title = 'References', collapsible = false, defaultOpen = false, onToggle }: ReferencesSectionProps) {
   if (registry.list.length === 0) return null;
 
-  const inner = (
-    <ol style={{
-      margin: 0, padding: 0, listStyle: 'none',
-      // Two-column layout matches the side-by-side leader columns above.
-      // Drops to one column on narrow screens.
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-      gap: 6,
-    }}>
-      {registry.list.map(entry => {
-        const depts = [...entry.departments].join(', ');
-        const sidesLabel = [...entry.actorNames].join(' · ');
-        return (
-          <li
-            key={entry.n}
-            id={`cite-${entry.n}`}
-            style={{
-              display: 'grid', gridTemplateColumns: '28px 1fr', gap: 8,
-              fontSize: 'var(--font-sm)', lineHeight: 1.55,
-              padding: '6px 8px', borderRadius: 4,
-              background: 'var(--bg-card)', border: '1px solid var(--border)',
-            }}
-          >
-            <span style={{
-              fontFamily: 'var(--mono)', fontWeight: 800, color: 'var(--amber)',
-              textAlign: 'right',
-            }}>
-              [{entry.n}]
-            </span>
-            <span>
-              {entry.url ? (
-                <a
-                  href={entry.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: 'var(--text-1)', textDecoration: 'underline', textUnderlineOffset: 2 }}
-                >
-                  {entry.text}
-                </a>
-              ) : (
-                <span style={{ color: 'var(--text-1)' }}>{entry.text}</span>
-              )}
-              <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginTop: 2 }}>
-                {entry.doi && <>DOI:{entry.doi} · </>}
-                {depts && <>cited by {depts} · </>}
-                <span title="Which leader's run referenced this source">leader {sidesLabel}</span>
-              </div>
-            </span>
-          </li>
-        );
-      })}
-    </ol>
-  );
-
-  const header = (
-    <h3 style={{
-      fontSize: 'var(--font-md)', fontFamily: 'var(--mono)', fontWeight: 800,
-      color: 'var(--amber)', letterSpacing: '0.06em',
-      margin: '0 0 8px', textTransform: 'uppercase',
-    }}>
-      {title} · {registry.list.length}
-    </h3>
-  );
+  const inner = <ol className={styles.list}>{registry.list.map(renderEntry)}</ol>;
 
   if (collapsible) {
     return (
       <details
         open={defaultOpen}
         onToggle={onToggle ? (e) => onToggle((e.currentTarget as HTMLDetailsElement).open) : undefined}
-        style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', background: 'var(--bg-deep)' }}
+        className={styles.wrap}
       >
-        <summary style={{
-          fontSize: 'var(--font-md)', fontFamily: 'var(--mono)', fontWeight: 800,
-          color: 'var(--amber)', letterSpacing: '0.06em',
-          cursor: 'pointer', textTransform: 'uppercase', marginBottom: 8,
-        }}>
+        <summary className={styles.summary}>
           {title} · {registry.list.length}
         </summary>
         {inner}
@@ -107,8 +68,8 @@ export function ReferencesSection({ registry, title = 'References', collapsible 
   }
 
   return (
-    <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', background: 'var(--bg-deep)' }}>
-      {header}
+    <div className={styles.wrap}>
+      <h3 className={styles.title}>{title} · {registry.list.length}</h3>
       {inner}
     </div>
   );
@@ -117,50 +78,5 @@ export function ReferencesSection({ registry, title = 'References', collapsible 
 /** Just the inner numbered list — for embedding inside a modal. */
 export function ReferencesList({ registry }: { registry: CitationRegistry }) {
   if (registry.list.length === 0) return null;
-  return (
-    <ol style={{
-      margin: 0, padding: 0, listStyle: 'none',
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-      gap: 6,
-    }}>
-      {registry.list.map(entry => {
-        const depts = [...entry.departments].join(', ');
-        const sidesLabel = [...entry.actorNames].join(' · ');
-        return (
-          <li
-            key={entry.n}
-            id={`cite-${entry.n}`}
-            style={{
-              display: 'grid', gridTemplateColumns: '28px 1fr', gap: 8,
-              fontSize: 'var(--font-sm)', lineHeight: 1.55,
-              padding: '6px 8px', borderRadius: 4,
-              background: 'var(--bg-card)', border: '1px solid var(--border)',
-            }}
-          >
-            <span style={{
-              fontFamily: 'var(--mono)', fontWeight: 800, color: 'var(--amber)',
-              textAlign: 'right',
-            }}>
-              [{entry.n}]
-            </span>
-            <span>
-              {entry.url ? (
-                <a href={entry.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-1)', textDecoration: 'underline', textUnderlineOffset: 2 }}>
-                  {entry.text}
-                </a>
-              ) : (
-                <span style={{ color: 'var(--text-1)' }}>{entry.text}</span>
-              )}
-              <div style={{ fontSize: 'var(--font-2xs)', color: 'var(--text-3)', fontFamily: 'var(--mono)', marginTop: 2 }}>
-                {entry.doi && <>DOI:{entry.doi} · </>}
-                {depts && <>cited by {depts} · </>}
-                <span>leader {sidesLabel}</span>
-              </div>
-            </span>
-          </li>
-        );
-      })}
-    </ol>
-  );
+  return <ol className={styles.list}>{registry.list.map(renderEntry)}</ol>;
 }
