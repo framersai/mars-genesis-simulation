@@ -5,7 +5,9 @@
  *
  * @module paracosm/dashboard/reports/MetricSparklines
  */
+import type { CSSProperties } from 'react';
 import type { MetricSeries } from './reports-shared';
+import styles from './MetricSparklines.module.scss';
 
 export interface MetricSparklinesProps {
   metrics: MetricSeries[];
@@ -53,21 +55,10 @@ function SparkCard({ metric, sideAColor, sideBColor }: CardProps) {
   const bLast = metric.b[metric.b.length - 1]?.value;
 
   return (
-    <div
-      aria-label={`${metric.label} sparkline`}
-      style={{
-        background: 'var(--bg-card)',
-        border: '1px solid var(--border)',
-        borderRadius: 4,
-        padding: '8px 10px',
-        fontFamily: 'var(--mono)',
-        fontSize: 'var(--font-2xs)',
-        color: 'var(--text-2)',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
-        <span style={{ fontWeight: 700, color: 'var(--text-1)' }}>{metric.label}</span>
-        <span style={{ color: 'var(--text-3)' }}>T{minTurn} → T{maxTurn}</span>
+    <div aria-label={`${metric.label} sparkline`} className={styles.card}>
+      <div className={styles.cardHeader}>
+        <span className={styles.cardLabel}>{metric.label}</span>
+        <span className={styles.cardRange}>T{minTurn} → T{maxTurn}</span>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img">
         <line x1={padX} y1={H / 2} x2={W - padX} y2={H / 2} stroke="var(--border)" strokeWidth="0.5" strokeDasharray="2,3" />
@@ -78,11 +69,11 @@ function SparkCard({ metric, sideAColor, sideBColor }: CardProps) {
           <polyline points={bPoints} fill="none" stroke={sideBColor} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" opacity={0.9} />
         )}
       </svg>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 'var(--font-2xs)' }}>
-        <span style={{ color: sideAColor, fontWeight: 700 }}>
+      <div className={styles.cardFooter}>
+        <span className={styles.lastA}>
           {aLast != null ? formatValue(aLast, metric.unit) : '·'}
         </span>
-        <span style={{ color: sideBColor, fontWeight: 700 }}>
+        <span className={styles.lastB}>
           {bLast != null ? formatValue(bLast, metric.unit) : '·'}
         </span>
       </div>
@@ -97,39 +88,22 @@ export function MetricSparklines(props: MetricSparklinesProps) {
   const populated = metrics.filter(m => m.a.length > 0 || m.b.length > 0);
   if (populated.length === 0) return null;
 
+  const themeStyle = {
+    '--side-a-color': sideAColor,
+    '--side-b-color': sideBColor,
+  } as CSSProperties;
+
   return (
-    <section
-      aria-label="Metric sparklines"
-      style={{
-        background: 'var(--bg-panel)',
-        border: '1px solid var(--border)',
-        borderRadius: 8,
-        padding: '12px 14px',
-        marginBottom: 16,
-        boxShadow: 'var(--card-shadow)',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-        <span style={{
-          fontSize: 'var(--font-xs)', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
-          color: 'var(--amber)', fontFamily: 'var(--mono)',
-        }}>
-          Metric Trajectories
-        </span>
-        <span style={{ fontSize: 'var(--font-2xs)', fontFamily: 'var(--mono)', color: 'var(--text-3)' }}>
-          <span style={{ color: sideAColor, fontWeight: 700 }}>{leaderAName}</span>
+    <section aria-label="Metric sparklines" className={styles.section} style={themeStyle}>
+      <div className={styles.sectionHeader}>
+        <span className={styles.sectionTitle}>Metric Trajectories</span>
+        <span className={styles.legend}>
+          <span className={styles.legendA}>{leaderAName}</span>
           {' · '}
-          <span style={{ color: sideBColor, fontWeight: 700 }}>{leaderBName}</span>
+          <span className={styles.legendB}>{leaderBName}</span>
         </span>
       </div>
-      <div
-        className="responsive-grid-3"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: 10,
-        }}
-      >
+      <div className={`responsive-grid-3 ${styles.grid}`}>
         {populated.map(m => (
           <SparkCard key={m.id} metric={m} sideAColor={sideAColor} sideBColor={sideBColor} />
         ))}

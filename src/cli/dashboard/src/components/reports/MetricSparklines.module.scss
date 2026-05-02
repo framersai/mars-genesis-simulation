@@ -1,0 +1,90 @@
+// Migrated from inline `style={{}}`. Per-side colors flow in via
+// --side-a-color / --side-b-color CSS custom properties.
+
+.section {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  box-shadow: var(--card-shadow);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.sectionTitle {
+  font-size: var(--font-xs);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--amber);
+  font-family: var(--mono);
+}
+
+.legend {
+  font-size: var(--font-2xs);
+  font-family: var(--mono);
+  color: var(--text-3);
+}
+
+.legendA {
+  color: var(--side-a-color, var(--vis));
+  font-weight: 700;
+}
+
+.legendB {
+  color: var(--side-b-color, var(--eng));
+  font-weight: 700;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-family: var(--mono);
+  font-size: var(--font-2xs);
+  color: var(--text-2);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.cardLabel {
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.cardRange { color: var(--text-3); }
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: var(--font-2xs);
+}
+
+.lastA {
+  color: var(--side-a-color, var(--vis));
+  font-weight: 700;
+}
+
+.lastB {
+  color: var(--side-b-color, var(--eng));
+  font-weight: 700;
+}
