@@ -19,7 +19,7 @@ export interface RenderedEmail {
   text: string;
 }
 
-const FRAME_LOGO_URL = 'https://frame.dev/icon-192.png';
+const PARACOSM_LOGO_URL = 'https://paracosm.agentos.sh/brand/favicons/favicon-192.png';
 const PARACOSM_REPO = 'https://github.com/framersai/paracosm';
 const PARACOSM_NPM = 'https://npmjs.com/package/paracosm';
 const PARACOSM_DEMO = 'https://paracosm.agentos.sh';
@@ -55,7 +55,7 @@ export function renderWaitlistConfirmation(input: WaitlistConfirmationInput): Re
 <tr><td style="padding:32px 40px 16px 40px;border-bottom:1px solid #2a1f18;">
 <table role="presentation" cellspacing="0" cellpadding="0">
 <tr>
-<td style="vertical-align:middle;padding-right:14px;"><img src="${FRAME_LOGO_URL}" width="40" height="40" alt="Frame.dev" style="display:block;border-radius:6px;"></td>
+<td style="vertical-align:middle;padding-right:14px;"><img src="${PARACOSM_LOGO_URL}" width="40" height="40" alt="Paracosm" style="display:block;border-radius:6px;"></td>
 <td style="vertical-align:middle;font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:${ACCENT_AMBER};letter-spacing:1px;">PARACOSM</td>
 </tr>
 </table>
@@ -74,7 +74,7 @@ export function renderWaitlistConfirmation(input: WaitlistConfirmationInput): Re
 </table>
 
 <p style="margin:0 0 16px 0;font-size:16px;line-height:1.6;color:${TEXT_PRIMARY};">Reply to this email if you want to chat about a specific use case ${safeUseCase ? `&mdash; you mentioned: <em style="color:${TEXT_MUTED};">&quot;${safeUseCase}&quot;</em>` : '&mdash; agent-society research, decision rehearsal for an enterprise process, custom scenario authoring, or anything else'}.</p>
-<p style="margin:0 0 32px 0;font-size:16px;line-height:1.6;color:${TEXT_PRIMARY};">&mdash; The Paracosm team @ Frame.dev</p>
+<p style="margin:0 0 32px 0;font-size:16px;line-height:1.6;color:${TEXT_PRIMARY};">&mdash; The Paracosm team</p>
 </td></tr>
 
 <tr><td style="padding:24px 40px;border-top:1px solid #2a1f18;font-size:12px;color:${TEXT_MUTED};">
@@ -102,7 +102,7 @@ export function renderWaitlistConfirmation(input: WaitlistConfirmationInput): Re
       ? `Reply to this email if you want to chat -- you mentioned: "${input.useCase}".`
       : 'Reply to this email if you want to chat about a specific use case.',
     '',
-    '-- The Paracosm team @ Frame.dev',
+    '-- The Paracosm team',
     '',
     `Sent to ${input.email} from ${SUPPORT_EMAIL}.`,
     'frame.dev | agentos.sh | manic.agency',
