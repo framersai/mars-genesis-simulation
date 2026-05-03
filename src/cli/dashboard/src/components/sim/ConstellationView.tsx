@@ -13,8 +13,10 @@
 import * as React from 'react';
 import styles from './ConstellationView.module.scss';
 import { computeHexacoDistances } from './computeHexacoDistances.js';
+import { extractNodeStats } from './constellation-stats.js';
 import { getActorColorVar } from '../../hooks/useGameState.js';
 import type { GameState } from '../../hooks/useGameState.js';
+import { useScenarioContext } from '../../App';
 
 export interface ConstellationViewProps {
   state: GameState;
@@ -23,6 +25,9 @@ export interface ConstellationViewProps {
 
 const NODE_RADIUS = 18;
 const LABEL_MARGIN = 80;
+/** Hide per-edge HEXACO distance labels at this many actors or above.
+ *  N=9 → 36 edges; labels start to visually pile up beyond that. */
+const EDGE_LABEL_CAP = 9;
 
 /** Polar layout. Actor 0 sits at 12 o'clock; rest fan clockwise. */
 function computePositions(actorCount: number): Array<{ cx: number; cy: number; angle: number }> {
@@ -71,6 +76,12 @@ export function ConstellationView({ state, onActorClick }: ConstellationViewProp
     return m;
   }, [distances]);
 
+  const scenario = useScenarioContext();
+  const nodeStats = React.useMemo(
+    () => actorIds.map(id => extractNodeStats(state, id)),
+    [actorIds, state],
+  );
+
   if (actorIds.length === 0) {
     return (
       <div className={styles.empty}>
@@ -97,18 +108,34 @@ export function ConstellationView({ state, onActorClick }: ConstellationViewProp
           if (!pa || !pb) return null;
           const norm = pairLookup.get(`${idA}|${idB}`) ?? 0;
           const opacity = Math.max(0.06, Math.min(0.95, 1 - norm));
+          const showLabel = actorIds.length < EDGE_LABEL_CAP;
+          const mx = (pa.cx + pb.cx) / 2;
+          const my = (pa.cy + pb.cy) / 2;
           return (
-            <line
-              key={`${idA}|${idB}`}
-              data-edge={`${idA}|${idB}`}
-              className={styles.edge}
-              x1={pa.cx}
-              y1={pa.cy}
-              x2={pb.cx}
-              y2={pb.cy}
-              strokeOpacity={opacity}
-              strokeWidth={1.5}
-            />
+            <React.Fragment key={`${idA}|${idB}`}>
+              <line
+                data-edge={`${idA}|${idB}`}
+                className={styles.edge}
+                x1={pa.cx}
+                y1={pa.cy}
+                x2={pb.cx}
+                y2={pb.cy}
+                strokeOpacity={opacity}
+                strokeWidth={1.5}
+              />
+              {showLabel && (
+                <text
+                  className={styles.edgeLabel}
+                  x={mx}
+                  y={my}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  aria-hidden="true"
+                >
+                  {norm.toFixed(2)}
+                </text>
+              )}
+            </React.Fragment>
           );
         }))}
 
@@ -156,9 +183,78 @@ export function ConstellationView({ state, onActorClick }: ConstellationViewProp
               >
                 {id}
               </text>
+              {(() => {
+                const stats = nodeStats[i];
+                if (!stats) return null;
+                const lineGap = 14;
+                const popMoraleText = stats.pop !== null && stats.morale !== null
+                  ? `POP ${Math.round(stats.pop)} · MORALE ${Math.round(stats.morale * 100)}%`
+                  : '';
+                const glyph = stats.latestOutcome === 'success' ? '✓' : stats.latestOutcome === 'failure' ? '⚠' : '…';
+                const glyphClass =
+                  stats.latestOutcome === 'success' ? styles.outcomeSuccess
+                  : stats.latestOutcome === 'failure' ? styles.outcomeFailure
+                  : styles.outcomePending;
+                const showMortality = stats.deaths >= 5;
+                return (
+                  <>
+                    {popMoraleText && (
+                      <text
+                        className={styles.statLine}
+                        x={lx}
+                        y={ly + lineGap}
+                        textAnchor={anchor}
+                        dominantBaseline="middle"
+                      >
+                        {popMoraleText}
+                      </text>
+                    )}
+                    <text
+                      className={styles.statBadge}
+                      x={lx}
+                      y={ly + lineGap * 2}
+                      textAnchor={anchor}
+                      dominantBaseline="middle"
+                    >
+                      {`D${stats.decisions} · F${stats.tools} `}
+                      <tspan className={`${styles.outcomeGlyph} ${glyphClass}`}>{glyph}</tspan>
+                      {showMortality && (
+                        <tspan className={styles.statBadgeMortality}>{` · ${stats.deaths}†`}</tspan>
+                      )}
+                    </text>
+                  </>
+                );
+              })()}
             </g>
           );
         })}
+        {(() => {
+          const cx = size / 2;
+          const cy = size / 2;
+          const actorNoun = scenario.labels.actorNounPlural ?? 'actors';
+          return (
+            <g className={styles.centerChip} role="presentation">
+              <text
+                className={styles.centerChipTurn}
+                x={cx}
+                y={cy - 6}
+                textAnchor="middle"
+                dominantBaseline="middle"
+              >
+                T{state.turn}/{state.maxTurns}
+              </text>
+              <text
+                className={styles.centerChipScenario}
+                x={cx}
+                y={cy + 10}
+                textAnchor="middle"
+                dominantBaseline="middle"
+              >
+                {scenario.labels.shortName} · {actorIds.length} {actorNoun}
+              </text>
+            </g>
+          );
+        })()}
       </svg>
     </div>
   );

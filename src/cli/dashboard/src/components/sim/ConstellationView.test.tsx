@@ -3,9 +3,26 @@ import assert from 'node:assert/strict';
 import { renderToString } from 'react-dom/server';
 import * as React from 'react';
 import { ConstellationView } from './ConstellationView.js';
+import { ScenarioContext } from '../../App.js';
 import type { GameState } from '../../hooks/useGameState.js';
 
 const baseHexaco = { openness: 0.5, conscientiousness: 0.5, extraversion: 0.5, agreeableness: 0.5, emotionality: 0.5, honestyHumility: 0.5 };
+
+const stubScenario = {
+  id: 'mars',
+  version: '3.0.0',
+  labels: { name: 'Mars Genesis', shortName: 'mars', populationNoun: 'colonists', settlementNoun: 'colony', currency: 'credits', actorNounPlural: 'actors' },
+  theme: { primaryColor: '#dc2626', accentColor: '#f97316', cssVariables: {} },
+  setup: { defaultTurns: 6, defaultSeed: 950, defaultStartTime: 2035, defaultPopulation: 100 },
+  departments: [],
+  presets: [],
+  ui: { headerMetrics: [], tooltipFields: [], reportSections: [], departmentIcons: {}, setupSections: [] },
+  policies: { toolForging: true, bulletin: true, characterChat: true },
+} as unknown as React.ContextType<typeof ScenarioContext>;
+
+function withScenario(node: React.ReactNode) {
+  return <ScenarioContext.Provider value={stubScenario}>{node}</ScenarioContext.Provider>;
+}
 
 function makeState(actorNames: string[]): GameState {
   const actors: Record<string, unknown> = {};
@@ -30,7 +47,7 @@ function makeState(actorNames: string[]): GameState {
 }
 
 test('ConstellationView: 3 actors → 3 nodes + 3 edges (full graph)', () => {
-  const html = renderToString(<ConstellationView state={makeState(['a', 'b', 'c'])} onActorClick={() => {}} />);
+  const html = renderToString(withScenario(<ConstellationView state={makeState(['a', 'b', 'c'])} onActorClick={() => {}} />));
   const nodes = html.match(/<circle[^>]*data-actor=/g) ?? [];
   const edges = html.match(/<line[^>]*data-edge=/g) ?? [];
   assert.equal(nodes.length, 3);
@@ -38,7 +55,7 @@ test('ConstellationView: 3 actors → 3 nodes + 3 edges (full graph)', () => {
 });
 
 test('ConstellationView: 5 actors → 5 nodes + 10 edges', () => {
-  const html = renderToString(<ConstellationView state={makeState(['a', 'b', 'c', 'd', 'e'])} onActorClick={() => {}} />);
+  const html = renderToString(withScenario(<ConstellationView state={makeState(['a', 'b', 'c', 'd', 'e'])} onActorClick={() => {}} />));
   const nodes = html.match(/<circle[^>]*data-actor=/g) ?? [];
   const edges = html.match(/<line[^>]*data-edge=/g) ?? [];
   assert.equal(nodes.length, 5);
@@ -47,7 +64,7 @@ test('ConstellationView: 5 actors → 5 nodes + 10 edges', () => {
 
 test('ConstellationView: 50 actors → 50 nodes + 1225 edges (perf sanity)', () => {
   const names = Array.from({ length: 50 }, (_, i) => `actor-${i}`);
-  const html = renderToString(<ConstellationView state={makeState(names)} onActorClick={() => {}} />);
+  const html = renderToString(withScenario(<ConstellationView state={makeState(names)} onActorClick={() => {}} />));
   const nodes = html.match(/<circle[^>]*data-actor=/g) ?? [];
   const edges = html.match(/<line[^>]*data-edge=/g) ?? [];
   assert.equal(nodes.length, 50);
@@ -55,13 +72,13 @@ test('ConstellationView: 50 actors → 50 nodes + 1225 edges (perf sanity)', () 
 });
 
 test('ConstellationView: 0 actors → empty-state placeholder, no SVG', () => {
-  const html = renderToString(<ConstellationView state={makeState([])} onActorClick={() => {}} />);
+  const html = renderToString(withScenario(<ConstellationView state={makeState([])} onActorClick={() => {}} />));
   assert.match(html, /Constellation will appear/);
   assert.ok(!html.includes('<svg'));
 });
 
 test('ConstellationView: 1 actor → 1 node, 0 edges', () => {
-  const html = renderToString(<ConstellationView state={makeState(['solo'])} onActorClick={() => {}} />);
+  const html = renderToString(withScenario(<ConstellationView state={makeState(['solo'])} onActorClick={() => {}} />));
   const nodes = html.match(/<circle[^>]*data-actor=/g) ?? [];
   const edges = html.match(/<line[^>]*data-edge=/g) ?? [];
   assert.equal(nodes.length, 1);
@@ -69,8 +86,56 @@ test('ConstellationView: 1 actor → 1 node, 0 edges', () => {
 });
 
 test('ConstellationView: each node carries its actor name on data-actor', () => {
-  const html = renderToString(<ConstellationView state={makeState(['Aria', 'Bob', 'Cleo'])} onActorClick={() => {}} />);
+  const html = renderToString(withScenario(<ConstellationView state={makeState(['Aria', 'Bob', 'Cleo'])} onActorClick={() => {}} />));
   assert.match(html, /data-actor="Aria"/);
   assert.match(html, /data-actor="Bob"/);
   assert.match(html, /data-actor="Cleo"/);
+});
+
+test('ConstellationView: 3-actor renders POP/MORALE stat lines for each actor', () => {
+  const state = makeState(['A', 'B', 'C']);
+  // makeState's actors are typed as `unknown`; reach in to populate
+  // history values for the per-node stat overlay.
+  const a = state.actors['A'] as unknown as { popHistory: number[]; moraleHistory: number[] };
+  const b = state.actors['B'] as unknown as { popHistory: number[]; moraleHistory: number[] };
+  const c = state.actors['C'] as unknown as { popHistory: number[]; moraleHistory: number[] };
+  a.popHistory = [30]; a.moraleHistory = [0.86];
+  b.popHistory = [28]; b.moraleHistory = [0.79];
+  c.popHistory = [32]; c.moraleHistory = [0.92];
+  const html = renderToString(withScenario(<ConstellationView state={state} onActorClick={() => {}} />));
+  assert.match(html, /POP 30 · MORALE 86%/);
+  assert.match(html, /POP 28 · MORALE 79%/);
+  assert.match(html, /POP 32 · MORALE 92%/);
+});
+
+test('ConstellationView: 3-actor renders 3 edge labels (one per pair)', () => {
+  const state = makeState(['a', 'b', 'c']);
+  const html = renderToString(withScenario(<ConstellationView state={state} onActorClick={() => {}} />));
+  const matches = html.match(/class="edgeLabel"/g) ?? [];
+  assert.equal(matches.length, 3);
+});
+
+test('ConstellationView: 9-actor renders zero edge labels (cap)', () => {
+  const names = Array.from({ length: 9 }, (_, i) => `actor-${i}`);
+  const state = makeState(names);
+  const html = renderToString(withScenario(<ConstellationView state={state} onActorClick={() => {}} />));
+  const matches = html.match(/class="edgeLabel"/g) ?? [];
+  assert.equal(matches.length, 0);
+});
+
+test('ConstellationView: center chip renders T{turn}/{maxTurns} + scenario shortName + actor count', () => {
+  const state = makeState(['a', 'b', 'c']);
+  state.turn = 4;
+  state.maxTurns = 6;
+  const html = renderToString(withScenario(<ConstellationView state={state} onActorClick={() => {}} />));
+  // React inserts <!-- --> between adjacent text+expression segments
+  // in the rendered SSR output. Each part of the chip survives in
+  // order; assert their presence individually rather than try to
+  // match across the comment boundary.
+  assert.match(html, /class="centerChipTurn"/);
+  assert.ok(html.includes('>T<!-- -->4<!-- -->/<!-- -->6<'), 'turn chip text');
+  assert.match(html, /class="centerChipScenario"/);
+  assert.ok(html.includes('mars'), 'scenario shortName present');
+  assert.ok(html.includes('3'), 'actor count present');
+  assert.ok(html.includes('actors'), 'actor noun present');
 });
