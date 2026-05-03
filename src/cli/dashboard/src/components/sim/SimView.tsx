@@ -249,13 +249,6 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
 
   return (
     <div className={styles.root}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
-        <SimLayoutToggle
-          layout={layout}
-          actorCount={state.actorIds.length}
-          onChange={setLayoutWithOverride}
-        />
-      </div>
       {layout === 'constellation' ? (
         <ConstellationView
           state={state}
@@ -402,7 +395,17 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
 
       {/* End-of-sim evidence bar: small pills that open References and
           Forged Toolbox in modals. */}
-      <SimFooterBar citationRegistry={citationRegistry} toolRegistry={toolRegistry} />
+      <SimFooterBar
+        citationRegistry={citationRegistry}
+        toolRegistry={toolRegistry}
+        layoutToggle={
+          <SimLayoutToggle
+            layout={layout}
+            actorCount={state.actorIds.length}
+            onChange={setLayoutWithOverride}
+          />
+        }
+      />
 
       {/* Re-run-with-seed+1 epilogue. Extracted to its own file in F4
           batch 2 to satisfy audit finding F8 (modular concerns). */}

@@ -8,6 +8,11 @@ import styles from './SimFooterBar.module.scss';
 interface SimFooterBarProps {
   citationRegistry: CitationRegistry;
   toolRegistry: ToolRegistry;
+  /** Optional inline slot rendered after the FORGED TOOLBOX CTA, before
+   *  the spacer/hint. Used by SimView to host the SIM layout toggle
+   *  (side-by-side / constellation) so it sits with the bottom evidence
+   *  bar instead of taking its own row above the leaders. */
+  layoutToggle?: ReactNode;
 }
 
 /**
@@ -16,7 +21,7 @@ interface SimFooterBarProps {
  * (the user reported that the inline sections were eating vertical
  * space and making timeline events hard to scan).
  */
-export function SimFooterBar({ citationRegistry, toolRegistry }: SimFooterBarProps) {
+export function SimFooterBar({ citationRegistry, toolRegistry, layoutToggle }: SimFooterBarProps) {
   const [open, setOpen] = useState<null | 'refs' | 'tools'>(null);
   const close = useCallback(() => setOpen(null), []);
 
@@ -30,7 +35,11 @@ export function SimFooterBar({ citationRegistry, toolRegistry }: SimFooterBarPro
   const refsCount = citationRegistry.list.length;
   const toolsCount = toolRegistry.list.length;
 
-  if (refsCount === 0 && toolsCount === 0) return null;
+  // Hide the bar entirely only when there's no content AND no layout
+  // toggle to host. The toggle is always useful (lets the user switch
+  // layouts even before any decisions land), so when SimView passes
+  // it in, render the bar.
+  if (refsCount === 0 && toolsCount === 0 && !layoutToggle) return null;
 
   return (
     <>
@@ -52,6 +61,7 @@ export function SimFooterBar({ citationRegistry, toolRegistry }: SimFooterBarPro
             ariaLabel={`Open Forged Toolbox (${toolsCount} tools)`}
           />
         )}
+        {layoutToggle}
         <span className={styles.spacer} />
         <span className={styles.hint}>Click any inline [N] pill to jump to its source.</span>
       </div>
