@@ -76,7 +76,7 @@
     "compile": "npx tsx src/cli/compile.ts",
     "check:dashboard": "node --check src/cli/dashboard/main.legacy.js",
     "typecheck:dashboard": "tsc -p src/cli/dashboard",
-    "test": "npm run typecheck:dashboard && node --import tsx --import ./scripts/test-css-stub.mjs --test 'tests/**/*.test.ts' 'src/cli/dashboard/src/**/*.test.ts' 'src/cli/dashboard/src/**/*.test.tsx'",
+    "test": "npm run typecheck:dashboard && node --import tsx --import ./scripts/test-css-stub.mjs --test 'tests/**/*.test.ts' 'src/cli/**/*.test.ts' 'src/cli/dashboard/src/**/*.test.tsx'",
     "docs": "typedoc && cp assets/docs-theme/paracosm-override.css docs/api/assets/paracosm-override.css",
     "changelog": "node scripts/generate-changelog.mjs",
     "export:json-schema": "npx tsx scripts/export-json-schema.ts",
@@ -90,6 +90,7 @@
     "@framers/sql-storage-adapter": "^0.6.4",
     "better-sqlite3": "^12.9.0",
     "pdfjs-dist": "^5.7.284",
+    "resend": "^4.8.0",
     "zod": "^4.4.1"
   },
   "devDependencies": {
