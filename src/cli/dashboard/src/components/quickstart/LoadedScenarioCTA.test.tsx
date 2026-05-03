@@ -52,6 +52,23 @@ test('LoadedScenarioCTA: renders fallback line when scenario has no presets', ()
   assert.match(html, /~30s for actor generation/);
 });
 
+test('LoadedScenarioCTA: prefers presets[0].leaders (engine-side field) when present', () => {
+  const stubWithLeaders = {
+    ...stubScenarioWithPreset,
+    presets: [{
+      id: 'default',
+      label: 'Default leaders',
+      leaders: [
+        { name: 'Aria Chen', archetype: 'Visionary', hexaco: { openness: 0.95 }, instructions: '' },
+        { name: 'Liam Park', archetype: 'Pragmatist', hexaco: { openness: 0.4 }, instructions: '' },
+      ],
+    }],
+  } as unknown as React.ContextType<typeof ScenarioContext>;
+  const html = renderToString(withScenario(stubWithLeaders, <LoadedScenarioCTA onRunStart={() => {}} />));
+  assert.match(html, /Aria Chen \(Visionary\) vs Liam Park \(Pragmatist\)/);
+  assert.match(html, /Same scenario, fresh seed/);
+});
+
 test('LoadedScenarioCTA: disabled prop disables the button + slider, sets aria-busy=false (not launching)', () => {
   const html = renderToString(withScenario(stubScenarioWithPreset, <LoadedScenarioCTA onRunStart={() => {}} disabled />));
   assert.match(html, /<button[^>]*disabled[^>]*>/);

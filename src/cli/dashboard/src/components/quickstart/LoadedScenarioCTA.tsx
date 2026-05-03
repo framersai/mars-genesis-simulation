@@ -32,7 +32,11 @@ export function LoadedScenarioCTA({
   const [actorCount, setActorCount] = useState<number>(initialActorCount);
   const [launching, setLaunching] = useState<boolean>(false);
 
-  const presetActors = scenario.presets[0]?.actors ?? [];
+  // Server projects ScenarioPreset.leaders (engine-side field name)
+  // through unchanged; older compile-from-seed paths used `actors`.
+  // Read both so the CTA picks up presets regardless of which field
+  // the server chose to populate.
+  const presetActors = scenario.presets[0]?.leaders ?? scenario.presets[0]?.actors ?? [];
   const presetCount = presetActors.length;
   const hasPreset = presetCount >= 2;
   const sliderMax = Math.max(2, presetCount || 2);

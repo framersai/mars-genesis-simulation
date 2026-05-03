@@ -105,7 +105,7 @@ export function QuickstartView({ sse, sessionId, onRunStarted, onInterventionRes
     setErrorBanner(null);
     onRunStarted?.();
 
-    const presetActors = scenario.presets[0]?.actors ?? [];
+    const presetActors = scenario.presets[0]?.leaders ?? scenario.presets[0]?.actors ?? [];
     const presetCount = presetActors.length;
 
     // Fast path: scenario has enough presets to fill the requested
@@ -141,6 +141,15 @@ export function QuickstartView({ sse, sessionId, onRunStarted, onInterventionRes
           const body = await setupRes.json().catch(() => ({} as { error?: string }));
           throw new Error(body.error ?? `Setup failed: HTTP ${setupRes.status}`);
         }
+        // /setup returns { redirect: '/sim', ... } so the dashboard
+        // can navigate to the running simulation. Mirror RerunPanel's
+        // window.location.href flip — without it the user stays on
+        // Quickstart while the sim runs in the background.
+        const setupData = (await setupRes.json().catch(() => ({}))) as { redirect?: string };
+        if (setupData.redirect) {
+          window.location.href = setupData.redirect;
+          return;
+        }
       } catch (err) {
         setPhase({ kind: 'input' });
         const raw = (err as Error)?.message ?? String(err);
@@ -163,7 +172,11 @@ export function QuickstartView({ sse, sessionId, onRunStarted, onInterventionRes
         const body = await actorsRes.json().catch(() => ({} as { error?: string }));
         throw new Error(body.error ?? `Actor generation failed: HTTP ${actorsRes.status}`);
       }
-      const { actors } = await actorsRes.json() as { actors: ActorConfig[] };
+      const actorsData = (await actorsRes.json().catch(() => null)) as { actors?: ActorConfig[] } | null;
+      const actors = actorsData?.actors;
+      if (!actors || actors.length < 2) {
+        throw new Error('Actor generation returned no actors');
+      }
       setPhase({ kind: 'progress', stage: 'running' });
 
       sse.reset();
@@ -181,6 +194,11 @@ export function QuickstartView({ sse, sessionId, onRunStarted, onInterventionRes
       if (!setupRes.ok) {
         const body = await setupRes.json().catch(() => ({} as { error?: string }));
         throw new Error(body.error ?? `Setup failed: HTTP ${setupRes.status}`);
+      }
+      const setupData = (await setupRes.json().catch(() => ({}))) as { redirect?: string };
+      if (setupData.redirect) {
+        window.location.href = setupData.redirect;
+        return;
       }
     } catch (err) {
       setPhase({ kind: 'input' });

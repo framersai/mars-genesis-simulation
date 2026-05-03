@@ -40,6 +40,12 @@ export interface ScenarioClientPayload {
   presets: Array<{
     id: string;
     label: string;
+    /** Engine-side ScenarioPreset uses `leaders`. Server's
+     *  projectScenarioForClient passes presets through unchanged, so
+     *  the dashboard receives `leaders`, not `actors`. The legacy
+     *  `actors` alias is preserved as optional so older code paths
+     *  that expected it still typecheck while we migrate. */
+    leaders?: Array<{ name: string; archetype: string; hexaco: Record<string, number>; instructions: string }>;
     actors?: Array<{ name: string; archetype: string; hexaco: Record<string, number>; instructions: string }>;
     personnel?: Array<{ name: string; department: string; role: string; specialization: string; age: number; featured: boolean }>;
   }>;
