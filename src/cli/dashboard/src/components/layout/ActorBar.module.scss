@@ -156,3 +156,50 @@
 .tooltipTraitValue {
   color: var(--actor-color);
 }
+
+// Compact ActorBar — single-line sticky-header form for the SIM tab's
+// TurnGrid. `--actor-color` is the only inline custom property (the
+// per-side band color).
+
+.compact {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px 8px 8px;
+  font-family: var(--mono);
+  font-size: var(--font-xs);
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+  position: relative;
+}
+
+.compactBand {
+  width: 3px;
+  align-self: stretch;
+  background: var(--actor-color, var(--amber));
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.compactName {
+  color: var(--actor-color, var(--amber));
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.compactSep {
+  color: var(--text-4);
+  flex-shrink: 0;
+}
+
+.compactStat {
+  color: var(--text-2);
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}

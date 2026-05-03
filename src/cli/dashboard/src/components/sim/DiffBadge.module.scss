@@ -1,0 +1,47 @@
+// Per-turn diff badge for TurnRow. One pill, color-keyed to the
+// classification. Lives at the top of each turn-row inside TurnGrid.
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: var(--font-3xs);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.same {
+  color: var(--text-3);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+}
+
+.differentOutcome {
+  color: var(--amber);
+  background: rgba(232, 180, 74, 0.08);
+  border: 1px solid color-mix(in srgb, var(--amber) 30%, transparent);
+}
+
+.differentEvent {
+  color: var(--rust);
+  background: rgba(224, 101, 48, 0.08);
+  border: 1px solid color-mix(in srgb, var(--rust) 30%, transparent);
+}
+
+.pending {
+  color: var(--text-3);
+  background: transparent;
+  border: 1px dashed var(--border);
+  font-style: italic;
+}
+
+.oneSided {
+  color: var(--text-4);
+  background: transparent;
+  border: 1px dotted var(--border);
+}

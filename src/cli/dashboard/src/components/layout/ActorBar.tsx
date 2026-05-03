@@ -19,6 +19,11 @@ interface ActorBarProps {
    * in flight or before verdict generation finished.
    */
   verdictPlacement?: 'winner' | 'second' | 'tie' | null;
+  /** Single-line sticky-header form for use inside the SIM TurnGrid.
+   *  Drops archetype, sparklines, hexaco, and the verdict chip in
+   *  favor of a tight `▌Name · POP N · MORALE M%` row. The non-compact
+   *  default is unchanged for all other surfaces. */
+  compact?: boolean;
 }
 
 /** Render HEXACO bar: "O ████░ .95" */
@@ -29,12 +34,40 @@ function traitStr(label: string, val: number): string {
   return `${label} ${bar} ${num}`;
 }
 
-export function ActorBar({ actorIndex, leader, popHistory, moraleHistory, verdictPlacement }: ActorBarProps) {
+export function ActorBar({ actorIndex, leader, popHistory, moraleHistory, verdictPlacement, compact = false }: ActorBarProps) {
   const sideColor = getActorColorVar(actorIndex);
   const sideBg = actorIndex === 0 ? 'rgba(232,180,74,.12)' : 'rgba(76,168,168,.12)';
   const sideBorder = actorIndex === 0 ? 'var(--amber-dim)' : 'var(--teal-dim)';
   const fallbackLabel = `Leader ${String.fromCharCode(65 + actorIndex)}`;
   const name = leader?.name || fallbackLabel;
+
+  if (compact) {
+    const pop = popHistory.length > 0 ? popHistory[popHistory.length - 1] : null;
+    const morale = moraleHistory.length > 0 ? moraleHistory[moraleHistory.length - 1] : null;
+    return (
+      <div
+        className={styles.compact}
+        style={{ ['--actor-color' as string]: sideColor }}
+        aria-label={`${name} compact summary`}
+      >
+        <span className={styles.compactBand} aria-hidden="true" />
+        <span className={styles.compactName}>{name}</span>
+        {pop !== null && (
+          <>
+            <span className={styles.compactSep}>·</span>
+            <span className={styles.compactStat}>POP {Math.round(pop)}</span>
+          </>
+        )}
+        {morale !== null && (
+          <>
+            <span className={styles.compactSep}>·</span>
+            <span className={styles.compactStat}>MORALE {Math.round(morale * 100)}%</span>
+          </>
+        )}
+      </div>
+    );
+  }
+
   const archetype = leader?.archetype || '';
   const unit = leader?.unit || '';
   const h = leader?.hexaco || {};
