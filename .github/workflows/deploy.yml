@@ -148,6 +148,7 @@ jobs:
             docs/api/
             assets/
             scenarios/
+            scripts/
             package.json
             package-lock.json
             src/
