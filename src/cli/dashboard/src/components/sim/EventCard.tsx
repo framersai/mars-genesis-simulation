@@ -128,45 +128,44 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
 
       return (
         <>
-        <button
-          type="button"
-          onClick={() => setInspectingTool(name)}
-          aria-label={`Inspect forged tool ${name}`}
-          className={styles.forgeBtn}
-          style={forgeStyle}
-        >
-          <div className={styles.forgeRow}>
-            <span className={styles.forgeBadge}>
-              {approved ? '✦ FORGED TOOL' : '✗ FORGED TOOL'}
+        <details className={styles.forgeDetails} style={forgeStyle}>
+          <summary className={styles.forgeSummary}>
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setInspectingTool(name); }}
+              aria-label={`Inspect forged tool ${name}`}
+              className={styles.forgeInspectInline}
+            >
+              INSPECT
+            </button>
+            <span className={styles.forgeRow}>
+              <span className={styles.forgeBadge}>
+                {approved ? '✦ FORGED TOOL' : '✗ FORGED TOOL'}
+              </span>
+              <span className={styles.forgeDept}>{dept}</span>
+              <span className={styles.forgeDescription}>{description}</span>
+              <span className={styles.forgeName}>{name} ({mode})</span>
+              <span className={approved ? styles.forgeVerdictPass : styles.forgeVerdictFail}>
+                {approved ? `PASS ${confidence.toFixed(2)}` : 'FAIL'}
+              </span>
             </span>
-            <span className={styles.forgeDept}>{dept}</span>
-            <span className={styles.forgeDescription}>{description}</span>
-            <span className={styles.forgeName}>{name} ({mode})</span>
-            {/* Static PASS/FAIL pill. Full judge reasoning lives in the
-                ToolDetailModal opened by the inspect button below and in
-                the Forged Toolbox section at the bottom of the sim,
-                both of which now render the inline expandable
-                "Why it passed / Why it failed" block. Keeping the pill
-                non-interactive avoids the hover-popover UX issues on
-                touch + keeps visual rhythm consistent with the toolbox. */}
-            <span className={approved ? styles.forgeVerdictPass : styles.forgeVerdictFail}>
-              {approved ? `PASS ${confidence.toFixed(2)}` : 'FAIL'}
-            </span>
+          </summary>
+          <div className={styles.forgeBody}>
+            {(inputFields.length > 0 || outputFields.length > 0) && (
+              <div className={styles.forgeFieldsRow}>
+                {inputFields.length > 0 && (
+                  <span><span className={styles.fieldsLabelIn}>in:</span> {inputFields.join(', ')}</span>
+                )}
+                {outputFields.length > 0 && (
+                  <span><span className={styles.fieldsLabelOut}>out:</span> {outputFields.join(', ')}</span>
+                )}
+              </div>
+            )}
+            {!approved && errorReason && (
+              <div className={styles.forgeError}>{errorReason}</div>
+            )}
           </div>
-          {(inputFields.length > 0 || outputFields.length > 0) && (
-            <div className={styles.forgeFieldsRow}>
-              {inputFields.length > 0 && (
-                <span><span className={styles.fieldsLabelIn}>in:</span> {inputFields.join(', ')}</span>
-              )}
-              {outputFields.length > 0 && (
-                <span><span className={styles.fieldsLabelOut}>out:</span> {outputFields.join(', ')}</span>
-              )}
-            </div>
-          )}
-          {!approved && errorReason && (
-            <div className={styles.forgeError}>{errorReason}</div>
-          )}
-        </button>
+        </details>
         {inspectingTool && (
           <ToolDetailModal
             entry={toolRegistry.getEntry(inspectingTool)}
@@ -225,9 +224,8 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
       return (
         <>
         <div className={styles.specWrap}>
-          <div className={styles.specCard} style={cardStyle}>
-            {/* Header: dept name, tool count, severity badge, inline citation pills */}
-            <div className={styles.specHeader}>
+          <details className={styles.specDetails} style={cardStyle}>
+            <summary className={styles.specSummaryRow}>
               <span className={styles.specHeaderDept}>
                 {scenario.ui.departmentIcons[dept] || ''} {dept}
               </span>
@@ -242,59 +240,54 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
                   {severity.toUpperCase()} RISK
                 </span>
               )}
-              {/* Inline citation pills — same row as the header so the
-                  card stays compact and scannable. Hover for full source. */}
               <CitationPills
                 citations={(dd.citationList as Array<Record<string, string>>) || []}
                 inline
                 label=""
               />
+            </summary>
+            <div className={styles.specBody}>
+              {summary ? (
+                <div className={styles.specSummary}>{summary}</div>
+              ) : (risks.length === 0 && recs.length === 0) && (citeCount > 0 || allTools.length > 0) ? (
+                <div className={styles.specSummaryEmpty}>
+                  Department analysis complete &mdash; no narrative summary returned, but
+                  {citeCount > 0 && ` ${citeCount} source${citeCount === 1 ? '' : 's'} surveyed`}
+                  {citeCount > 0 && allTools.length > 0 && ' and '}
+                  {allTools.length > 0 && ` ${allTools.length} tool${allTools.length === 1 ? '' : 's'} forged`}
+                  .
+                </div>
+              ) : null}
+
+              {risks.length > 0 && (
+                <div className={styles.specRisks}>
+                  <div className={styles.specRisksLabel}>RISKS</div>
+                  {risks.slice(0, 3).map((r: any, i: number) => (
+                    <div key={i} className={styles.specRiskRow}>
+                      <span
+                        className={styles.specRiskSeverity}
+                        style={{
+                          '--risk-color': (r.severity === 'critical' || r.severity === 'high') ? 'var(--rust)' : 'var(--amber)',
+                        } as CSSProperties}
+                      >
+                        {String(r.severity || 'med').toUpperCase()}
+                      </span>
+                      <span>{String(r.description || '')}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {recs.length > 0 && (
+                <div className={styles.specRecs}>
+                  <div className={styles.specRecsLabel}>RECOMMENDATIONS</div>
+                  {recs.slice(0, 3).map((rec, i) => (
+                    <div key={i} className={styles.specRecRow}>{rec}</div>
+                  ))}
+                </div>
+              )}
             </div>
-
-            {/* Summary — falls back to a compact inventory line when the
-                LLM returned a sparse report so the card never looks empty. */}
-            {summary ? (
-              <div className={styles.specSummary}>{summary}</div>
-            ) : (risks.length === 0 && recs.length === 0) && (citeCount > 0 || allTools.length > 0) ? (
-              <div className={styles.specSummaryEmpty}>
-                Department analysis complete &mdash; no narrative summary returned, but
-                {citeCount > 0 && ` ${citeCount} source${citeCount === 1 ? '' : 's'} surveyed`}
-                {citeCount > 0 && allTools.length > 0 && ' and '}
-                {allTools.length > 0 && ` ${allTools.length} tool${allTools.length === 1 ? '' : 's'} forged`}
-                .
-              </div>
-            ) : null}
-
-            {/* Risks */}
-            {risks.length > 0 && (
-              <div className={styles.specRisks}>
-                <div className={styles.specRisksLabel}>RISKS</div>
-                {risks.slice(0, 3).map((r: any, i: number) => (
-                  <div key={i} className={styles.specRiskRow}>
-                    <span
-                      className={styles.specRiskSeverity}
-                      style={{
-                        '--risk-color': (r.severity === 'critical' || r.severity === 'high') ? 'var(--rust)' : 'var(--amber)',
-                      } as CSSProperties}
-                    >
-                      {String(r.severity || 'med').toUpperCase()}
-                    </span>
-                    <span>{String(r.description || '')}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Recommended Actions */}
-            {recs.length > 0 && (
-              <div className={styles.specRecs}>
-                <div className={styles.specRecsLabel}>RECOMMENDATIONS</div>
-                {recs.slice(0, 3).map((rec, i) => (
-                  <div key={i} className={styles.specRecRow}>{rec}</div>
-                ))}
-              </div>
-            )}
-          </div>
+          </details>
 
           {/* Tool cards. First-forge gets a bright amber pulse +
               "FORGED TOOL" badge to make emergent capabilities obvious;
@@ -531,8 +524,8 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
       }));
 
       return (
-        <div className={styles.reactionsCard}>
-          <div className={styles.reactionsHead}>
+        <details className={styles.reactionsDetails}>
+          <summary className={styles.reactionsSummary}>
             <span className={styles.reactionsLabel} style={sideStyle}>{total} VOICES</span>
             <div className={styles.reactionsBar}>
               {segments.map(m => (
@@ -544,7 +537,11 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
                 />
               ))}
             </div>
-          </div>
+            <span className={styles.reactionsTopMood}>
+              {segments[0] ? `${segments[0].pct}% ${segments[0].mood}` : ''}
+            </span>
+          </summary>
+          <div className={styles.reactionsBody}>
           <div className={styles.reactionsLegend}>
             {segments.slice(0, 3).map(m => (
               <span key={m.mood} className={styles.reactionsLegendItem}>
@@ -598,7 +595,8 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
               ))}
             </div>
           </details>
-        </div>
+          </div>
+        </details>
       );
     }
 
@@ -607,29 +605,38 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
       if (!posts.length) return null;
 
       return (
-        <div className={styles.bulletinWrap}>
-          {posts.slice(0, 3).map((p, i) => (
-            <Tooltip key={i} dot content={
-              <div>
-                <b className={styles.bulletinTooltipName} style={sideStyle}>{p.name}</b>{' '}
-                <span className={styles.bulletinTooltipRole}>{p.role} {p.department}</span>
-                <div className={styles.bulletinTooltipBody}>{p.post}</div>
-                <div
-                  className={styles.bulletinTooltipMood}
-                  style={{ '--mood-color': moodColors[p.mood] || 'var(--text-3)' } as CSSProperties}
-                >
-                  {String(p.mood || '').toUpperCase()} · {p.likes || 0} likes · {p.replies || 0} replies
+        <details className={styles.bulletinDetails}>
+          <summary className={styles.bulletinSummary}>
+            <span className={styles.bulletinSummaryLabel}>{posts.length} POSTS</span>
+            <span className={styles.bulletinSummaryNames}>
+              {posts.slice(0, 2).map(p => String(p.name ?? '').split(' ')[0]).filter(Boolean).join(' · ')}
+              {posts.length > 2 ? ` +${posts.length - 2}` : ''}
+            </span>
+          </summary>
+          <div className={styles.bulletinBody}>
+            {posts.slice(0, 3).map((p, i) => (
+              <Tooltip key={i} dot content={
+                <div>
+                  <b className={styles.bulletinTooltipName} style={sideStyle}>{p.name}</b>{' '}
+                  <span className={styles.bulletinTooltipRole}>{p.role} {p.department}</span>
+                  <div className={styles.bulletinTooltipBody}>{p.post}</div>
+                  <div
+                    className={styles.bulletinTooltipMood}
+                    style={{ '--mood-color': moodColors[p.mood] || 'var(--text-3)' } as CSSProperties}
+                  >
+                    {String(p.mood || '').toUpperCase()} · {p.likes || 0} likes · {p.replies || 0} replies
+                  </div>
                 </div>
-              </div>
-            }>
-              <div className={styles.bulletinRow}>
-                <span className={styles.bulletinName} style={sideStyle}>{p.name}</span>
-                <span className={styles.bulletinPost}>{String(p.post || '')}</span>
-                <span className={styles.bulletinLikes}>&hearts;{p.likes || 0}</span>
-              </div>
-            </Tooltip>
-          ))}
-        </div>
+              }>
+                <div className={styles.bulletinRow}>
+                  <span className={styles.bulletinName} style={sideStyle}>{p.name}</span>
+                  <span className={styles.bulletinPost}>{String(p.post || '')}</span>
+                  <span className={styles.bulletinLikes}>&hearts;{p.likes || 0}</span>
+                </div>
+              </Tooltip>
+            ))}
+          </div>
+        </details>
       );
     }
 
@@ -645,21 +652,21 @@ export function EventCard({ event, actorIndex }: EventCardProps) {
       const site = String(dd.site || '');
       const preview = String(dd.rawTextPreview || '');
       return (
-        <div
-          className={styles.fallbackBox}
+        <details
+          className={styles.fallbackDetails}
           style={sideStyle}
-          role="status"
-          aria-label={`Schema fallback on ${schemaName}`}
         >
-          <div className={styles.fallbackTitle}>⚠ SCHEMA FALLBACK — {schemaName}</div>
-          <div className={styles.fallbackSite}>site: {site || 'n/a'}</div>
+          <summary className={styles.fallbackSummary}>
+            <span className={styles.fallbackTitle}>⚠ SCHEMA FALLBACK — {schemaName}</span>
+            <span className={styles.fallbackSite}>site: {site || 'n/a'}</span>
+          </summary>
           {preview && (
             <details className={styles.fallbackPreviewWrap}>
               <summary className={styles.fallbackPreviewSummary}>Raw output preview</summary>
               <pre className={styles.fallbackPreviewPre}>{preview}</pre>
             </details>
           )}
-        </div>
+        </details>
       );
     }
 

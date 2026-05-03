@@ -1178,6 +1178,184 @@
   text-overflow: ellipsis;
 }
 
+// Collapse-by-default for forge_attempt cards. Inherits the existing
+// per-side tinting (--bg-tint, --border-tint, --accent) from forgeStyle.
+
+.forgeDetails {
+  display: block;
+  margin: 0 8px 4px;
+  border: 1px solid var(--border-tint, var(--border));
+  border-left: 3px solid var(--accent, var(--rust));
+  border-radius: 4px;
+  background: var(--bg-tint, transparent);
+  box-shadow: var(--shadow-tint, var(--card-shadow));
+  font-size: var(--font-xs);
+}
+
+.forgeSummary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.forgeSummary::-webkit-details-marker { display: none; }
+.forgeSummary::marker { content: ''; }
+
+.forgeInspectInline {
+  font-size: var(--font-3xs);
+  font-family: var(--mono);
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(232, 180, 74, 0.35);
+  background: rgba(232, 180, 74, 0.06);
+  color: var(--amber);
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.forgeBody {
+  padding: 6px 10px 8px;
+  border-top: 1px solid var(--border-tint, var(--border));
+}
+
+// Collapse-by-default for specialist_done cards.
+
+.specDetails {
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: var(--font-xs);
+  background: var(--card-bg, var(--bg-card));
+  border: 1px solid var(--card-border, var(--border));
+  border-left: 3px solid var(--card-accent, var(--teal));
+}
+
+.specSummaryRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  cursor: pointer;
+  list-style: none;
+}
+
+.specSummaryRow::-webkit-details-marker { display: none; }
+.specSummaryRow::marker { content: ''; }
+
+.specBody {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--card-border, var(--border));
+}
+
+// Collapse-by-default for agent_reactions cards.
+
+.reactionsDetails {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--card-shadow);
+  margin: 0 8px 4px;
+}
+
+.reactionsSummary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.reactionsSummary::-webkit-details-marker { display: none; }
+.reactionsSummary::marker { content: ''; }
+
+.reactionsTopMood {
+  font-size: var(--font-2xs);
+  color: var(--text-2);
+  font-family: var(--mono);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.reactionsBody {
+  padding: 6px 10px 8px;
+  border-top: 1px solid var(--border);
+}
+
+// Collapse-by-default for bulletin cards.
+
+.bulletinDetails {
+  margin: 0 8px 4px;
+}
+
+.bulletinSummary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  cursor: pointer;
+  list-style: none;
+  font-size: var(--font-xs);
+}
+
+.bulletinSummary::-webkit-details-marker { display: none; }
+.bulletinSummary::marker { content: ''; }
+
+.bulletinSummaryLabel {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  font-size: var(--font-3xs);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.bulletinSummaryNames {
+  color: var(--text-2);
+  font-style: italic;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bulletinBody {
+  padding: 4px 10px 6px;
+}
+
+// Collapse-by-default for validation_fallback cards.
+
+.fallbackDetails {
+  margin: 0 8px 4px;
+  border-radius: 4px;
+  background: rgba(232, 180, 74, 0.08);
+  border: 1px solid var(--amber-dim, #8a6a2a);
+  border-left: 3px solid var(--side-color, var(--amber));
+  font-size: var(--font-xs);
+  color: var(--text-2);
+  font-family: var(--mono);
+}
+
+.fallbackSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.fallbackSummary::-webkit-details-marker { display: none; }
+.fallbackSummary::marker { content: ''; }
+
 // -- Narrow viewports --------------------------------------------------
 //
 // On phones the SimView column flips to a single stacked column
