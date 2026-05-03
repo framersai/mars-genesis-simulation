@@ -230,6 +230,101 @@
 
   <p class="hero-sub" style="max-width:740px;margin:24px auto 0">Same world, three actors — see how each one's traits drive identical state to different futures. Seven entry points, one engine: brief, JSON contract, granular client, fork-and-replay counterfactuals, pluggable trait models, HTTP, CLI. Every path returns the same Zod-validated RunArtifact.</p>
 
+  <section id="waitlist" class="waitlist-section">
+    <div class="waitlist-inner">
+      <div class="waitlist-eyebrow">Enterprise access · Q3 2026</div>
+      <h2 class="waitlist-heading">Request enterprise access</h2>
+      <p class="waitlist-sub">Join the waitlist for the hosted dashboard, fleet orchestration, and team workspaces. We'll reach out as features ship.</p>
+      <form id="waitlist-form" class="waitlist-form" novalidate>
+        <label class="waitlist-field">
+          <span>Work email <span class="waitlist-required">*</span></span>
+          <input type="email" name="email" required maxlength="254" autocomplete="email" placeholder="you@company.com">
+        </label>
+        <label class="waitlist-field">
+          <span>Name (optional)</span>
+          <input type="text" name="name" maxlength="120" autocomplete="name" placeholder="Your name">
+        </label>
+        <label class="waitlist-field">
+          <span>Use case (optional)</span>
+          <textarea name="useCase" maxlength="2000" rows="3" placeholder="What problem are you trying to solve with agent simulation?"></textarea>
+        </label>
+        <button type="submit" class="waitlist-submit">Join waitlist <svg><use href="#i-arrow"/></svg></button>
+        <p class="waitlist-fineprint">No spam. One confirmation email from <code>team@frame.dev</code>. Unsubscribe anytime.</p>
+      </form>
+      <div id="waitlist-success" class="waitlist-success" hidden>
+        <div class="waitlist-success-icon">✓</div>
+        <h3>You're on the list</h3>
+        <p id="waitlist-success-msg"></p>
+      </div>
+      <div id="waitlist-error" class="waitlist-error" hidden role="alert">
+        <strong>Something went wrong.</strong>
+        <span id="waitlist-error-msg"></span>
+      </div>
+    </div>
+  </section>
+
+  <script>
+  (function () {
+    var form = document.getElementById('waitlist-form');
+    if (!form) return;
+    var successEl = document.getElementById('waitlist-success');
+    var successMsg = document.getElementById('waitlist-success-msg');
+    var errorEl = document.getElementById('waitlist-error');
+    var errorMsg = document.getElementById('waitlist-error-msg');
+
+    function getSource() {
+      try {
+        var p = new URLSearchParams(window.location.search);
+        var s = p.get('utm_source') || '';
+        return s.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40) || null;
+      } catch (_) { return null; }
+    }
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      errorEl.hidden = true;
+      var btn = form.querySelector('button[type=submit]');
+      var originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+      try {
+        var fd = new FormData(form);
+        var payload = {
+          email: String(fd.get('email') || '').trim(),
+          name: String(fd.get('name') || '').trim() || undefined,
+          useCase: String(fd.get('useCase') || '').trim() || undefined,
+          source: getSource() || undefined,
+        };
+        var res = await fetch('/api/waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        var data = {};
+        try { data = await res.json(); } catch (_) {}
+        if (!res.ok) {
+          var msg = (data && data.error) ? data.error : ('HTTP ' + res.status);
+          if (res.status === 429) msg = 'You already signed up recently. Check your inbox or try again in a few minutes.';
+          throw new Error(msg);
+        }
+        var pos = data.position || '?';
+        var sentLine = data.emailSent
+          ? 'You’re #' + pos + '. Check your inbox for confirmation from team@frame.dev.'
+          : 'You’re #' + pos + '. Email confirmation is delayed; we’ll be in touch.';
+        if (data.alreadyOnList) sentLine = 'You’re already on the list at #' + pos + '. We’ll be in touch.';
+        successMsg.textContent = sentLine;
+        form.hidden = true;
+        successEl.hidden = false;
+      } catch (err) {
+        errorMsg.textContent = (err && err.message) ? err.message : 'Network error. Please try again.';
+        errorEl.hidden = false;
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+    });
+  })();
+  </script>
+
   <div class="world-model-explainer" id="world-models" style="max-width:960px;margin:64px auto 0;padding:24px 28px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);text-align:left;scroll-margin-top:80px">
     <div style="font-family:var(--mono);font-size: var(--font-xs);font-weight:700;letter-spacing:2px;color:var(--rust);text-transform:uppercase;margin-bottom:12px;text-align:center">What's a world model?</div>
     <p style="color:var(--t2);font-size: var(--font-lg);line-height:1.7;margin:0 0 14px">A world model is software that represents how some slice of reality changes over time. AI agents need them to test decisions before making them: rehearse the move, watch what unfolds, decide whether to commit.</p>
