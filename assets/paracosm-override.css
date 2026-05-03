@@ -146,6 +146,14 @@ body { padding-top: 44px !important; }
   align-items: center;
   gap: 12px;
 }
+/* Orbital logo SVG inherits color from this anchor so the orbit lines
+   (stroke="currentColor") stay visible across light + dark themes. The
+   colored hub/orbit-dots inside the SVG are hardcoded brand colors and
+   ignore this. Sepia mode without this fix renders the lines as
+   #f5f0e4 cream-on-cream — effectively invisible. */
+.paracosm-docs-header .pdh-left > a[aria-label="Paracosm home"] {
+  color: var(--color-text-aside);
+}
 .paracosm-docs-header .pdh-brand {
   font-family: 'JetBrains Mono', monospace;
   font-size: 14px;
