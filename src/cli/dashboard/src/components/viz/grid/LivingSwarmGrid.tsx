@@ -998,6 +998,32 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
               ) : (
                 <div className={styles.tileAmbient}>ambient CA cell</div>
               )}
+              {/* Per-cell GoL state — distinguishes physically distinct
+                  cells that share the same nearest-colonist attribution.
+                  Without this, hovering different live cells in the
+                  same Conway pattern shows identical colonist data and
+                  the tooltip looks duplicated. */}
+              {hoveredTile.kind === 'life' && (() => {
+                const gol = golStateRef.current;
+                const cols = gol.cols;
+                const rows = gol.rows;
+                const age = gol.grid[hoveredTile.row * cols + hoveredTile.col] ?? 0;
+                let neighbors = 0;
+                for (let dr = -1; dr <= 1; dr++) {
+                  for (let dc = -1; dc <= 1; dc++) {
+                    if (dr === 0 && dc === 0) continue;
+                    const r = hoveredTile.row + dr;
+                    const c = hoveredTile.col + dc;
+                    if (r < 0 || r >= rows || c < 0 || c >= cols) continue;
+                    if (gol.grid[r * cols + c] >= 1) neighbors++;
+                  }
+                }
+                return (
+                  <div className={styles.tileNearestPattern}>
+                    age {age} · {neighbors} neighbors alive
+                  </div>
+                );
+              })()}
             </div>
           );
         })()}
