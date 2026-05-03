@@ -563,9 +563,12 @@
     .responsive-hide { display: none !important; }
     .responsive-full { width: 100% !important; }
 
-    /* SimView columns stack */
-    .sim-columns { flex-direction: column !important; }
-    .sim-columns > div { min-height: 200px; }
+    /* SimView grid: TurnGrid now owns the .sim-columns className, but
+       the grid itself is already a vertical flex (header above scroll).
+       The previous `flex-direction: column !important` rule is a no-op
+       here and the `min-height: 200px` per-column rule is irrelevant
+       (no per-leader columns exist any more). TurnRow handles its own
+       internal stacking via its own media query in TurnRow.module.scss. */
 
     /* Leaders stack into two rows, each full width. The 280px floor
        on each panel exists for the VIZ canvas (Conway grid / RD field /

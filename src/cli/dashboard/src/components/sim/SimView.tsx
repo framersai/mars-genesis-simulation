@@ -1,6 +1,5 @@
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
-import type { GameState, ActorSideState, LeaderInfo } from '../../hooks/useGameState';
-import { getActorColorVar } from '../../hooks/useGameState';
+import type { GameState, LeaderInfo } from '../../hooks/useGameState';
 import { useScenarioContext } from '../../App';
 import { DigitalTwinPanel } from '../digital-twin/DigitalTwinPanel';
 import { DigitalTwinProgress } from '../digital-twin/DigitalTwinProgress';
@@ -9,10 +8,9 @@ import { useCitationContext } from '../../hooks/useCitationRegistry';
 import { useToolContext } from '../../hooks/useToolRegistry';
 import { ActorBar } from '../layout/ActorBar';
 import { StatsBar } from '../layout/StatsBar';
-import { TurnEventHeader } from './TurnEventHeader';
-import { EventCard } from './EventCard';
 import { DivergenceRail } from './DivergenceRail';
 import { Timeline } from './Timeline';
+import { TurnGrid } from './TurnGrid';
 import { SimFooterBar } from './SimFooterBar';
 import { RerunPanel } from './RerunPanel';
 import { LoadPriorRunsCTA } from '../settings/LoadPriorRunsCTA';
@@ -62,74 +60,10 @@ interface SimViewProps {
   forceLayout?: SimLayout;
 }
 
-function LeaderColumn({ actorIndex, sideState, state }: { actorIndex: number; sideState: ActorSideState; state: GameState }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const pinnedRef = useRef(true);
-  const onScroll = () => {
-    const el = scrollRef.current;
-    if (!el) return;
-    pinnedRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
-  };
-
-  useEffect(() => {
-    if (!pinnedRef.current) return;
-    const el = scrollRef.current;
-    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-  }, [sideState.events.length]);
-
-  const isWaiting = !sideState.leader && !state.isRunning;
-  const sideColor = getActorColorVar(actorIndex);
-  const sideLabel = `Leader ${String.fromCharCode(65 + actorIndex)}`;
-
-  return (
-    <section
-      className={styles.leaderColumn}
-      style={{ ['--actor-color' as string]: sideColor }}
-      aria-label={`${sideState.leader?.name || sideLabel} events`}
-    >
-      <TurnEventHeader actorIndex={actorIndex} event={sideState.event} />
-
-      <div ref={scrollRef} onScroll={onScroll} className={styles.leaderColumnScroll}>
-        {!isWaiting && sideState.events.length === 0 && state.isRunning && (
-          <div className={styles.leaderColumnGeneratingBlock} role="status">
-            <div className={styles.leaderColumnGeneratingHead}>
-              <span className={`spinner ${styles.leaderColumnGeneratingSpinner}`} />
-              <span className={styles.leaderColumnGeneratingLabel}>Generating event...</span>
-            </div>
-            <div className={styles.leaderColumnGeneratingCopy}>
-              The Event Director is reading simulation state to generate an event targeting current weaknesses.
-            </div>
-          </div>
-        )}
-        {(() => {
-          const deptsByTurn = new Map<number, typeof sideState.events>();
-          const renderedDeptTurns = new Set<number>();
-          for (const e of sideState.events) {
-            if (e.type === 'specialist_done' && e.turn != null) {
-              if (!deptsByTurn.has(e.turn)) deptsByTurn.set(e.turn, []);
-              deptsByTurn.get(e.turn)!.push(e);
-            }
-          }
-
-          return sideState.events.map(event => {
-            if (event.type === 'specialist_start') return null;
-            if (event.type === 'specialist_done' && event.turn != null) {
-              if (renderedDeptTurns.has(event.turn)) return null;
-              renderedDeptTurns.add(event.turn);
-              const group = deptsByTurn.get(event.turn) || [event];
-              return (
-                <div key={`depts-${event.turn}`} className={styles.deptsRow}>
-                  {group.map(e => <EventCard key={e.id} event={e} actorIndex={actorIndex} />)}
-                </div>
-              );
-            }
-            return <EventCard key={event.id} event={event} actorIndex={actorIndex} />;
-          });
-        })()}
-      </div>
-    </section>
-  );
-}
+// LeaderColumn (the per-leader scrolling-column helper) was removed
+// when SimView switched to TurnGrid for the side-by-side layout. The
+// turn-aligned grid groups events by turn across both leaders so the
+// per-leader column is no longer a meaningful unit.
 
 /**
  * Compact introduction bar. The old full-paragraph version took three
@@ -455,11 +389,9 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
         </div>
       )}
 
-      {/* Two columns (only show when there are events or sim is running) */}
-      <div className={`sim-columns ${styles.simColumns} ${columnsVisible ? '' : styles.simColumnsHidden}`}>
-        {sideA && <LeaderColumn actorIndex={0} sideState={sideA} state={state} />}
-        {sideB && <LeaderColumn actorIndex={1} sideState={sideB} state={state} />}
-      </div>
+      {/* Turn-aligned grid with sticky compact-ActorBar header.
+          Replaces the previous per-leader scrolling columns. */}
+      {columnsVisible && <TurnGrid state={state} />}
 
       {/* Verdict surfaces as a global top banner (App.tsx) and inline
           on the Reports tab. */}

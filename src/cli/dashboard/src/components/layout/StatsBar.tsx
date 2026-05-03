@@ -162,7 +162,13 @@ export function StatsBar({ actors, crisisText, toolRegistry }: StatsBarProps) {
     return null;
   }
 
-  const metrics = scenario.ui.headerMetrics.slice(0, 4);
+  // POP/MORALE moved to the sticky compact ActorBar at the top of the
+  // SIM TurnGrid. The shared StatsBar now carries only the genuinely
+  // comparative cross-leader stats (deaths, tools, reuse, cites,
+  // statuses, env).
+  const metrics = scenario.ui.headerMetrics
+    .filter(m => m.id !== 'population' && m.id !== 'morale')
+    .slice(0, 4);
   const colorA = getActorColorVar(0);
   const colorB = getActorColorVar(1);
 

@@ -10,8 +10,8 @@
   align-items: center;
   justify-content: center;
   flex-wrap: nowrap;
-  padding: 3px 8px;
-  gap: 8px;
+  padding: 2px 8px;
+  gap: 6px;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
@@ -22,6 +22,11 @@
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   font-family: var(--mono);
+  // POP/MORALE moved to the sticky compact ActorBar; what's left here
+  // is comparative-only (deaths/tools/reuse/cites). Drop visual weight
+  // so the bar reads as an at-a-glance comparator, not the primary
+  // information surface.
+  opacity: 0.85;
 }
 
 .crisis {
@@ -59,7 +64,7 @@
 }
 
 .value {
-  font-size: var(--font-sm);
+  font-size: var(--font-xs);
   font-weight: 800;
 }
 
