@@ -1628,37 +1628,73 @@ footer { padding: 28px 24px; border-top: 1px solid var(--border); background: va
    Waitlist section
    ═══════════════════════════════════════════════════════════════════════════ */
 .waitlist-section {
-  padding: 96px 24px 64px;
-  border-top: 1px solid rgba(232, 180, 74, 0.08);
-  background: linear-gradient(180deg, rgba(224, 101, 48, 0.04) 0%, transparent 60%);
+  position: relative;
+  padding: 96px 24px 72px;
+  border-top: 1px solid rgba(232, 180, 74, 0.12);
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(224, 101, 48, 0.10) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 100%, rgba(76, 168, 168, 0.08) 0%, transparent 55%),
+    linear-gradient(180deg, rgba(232, 180, 74, 0.04) 0%, transparent 60%);
   scroll-margin-top: 80px;
+  overflow: hidden;
+}
+/* Subtle paracosm orbit-line accent — top hairline, gradient amber→rust→teal */
+.waitlist-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(80%, 480px);
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--rust) 25%,
+    var(--amber) 50%,
+    var(--teal) 75%,
+    transparent 100%);
+  opacity: 0.5;
 }
 .waitlist-inner {
+  position: relative;
   max-width: 640px;
   margin: 0 auto;
   text-align: center;
 }
 .waitlist-eyebrow {
+  display: inline-block;
   font-family: var(--mono);
   font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: 2px;
   color: var(--rust);
   text-transform: uppercase;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  padding: 6px 14px;
+  border: 1px solid rgba(224, 101, 48, 0.3);
+  border-radius: 999px;
+  background: rgba(224, 101, 48, 0.06);
 }
 .waitlist-heading {
-  font-size: clamp(28px, 4vw, 40px);
-  font-weight: 700;
-  margin: 0 0 12px;
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 800;
+  margin: 0 0 14px;
   color: var(--t1);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.waitlist-heading-accent {
+  background: linear-gradient(135deg, var(--rust), var(--amber));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 .waitlist-sub {
   font-size: 17px;
-  line-height: 1.55;
+  line-height: 1.6;
   color: var(--t2);
-  margin: 0 auto 32px;
+  margin: 0 auto 36px;
   max-width: 520px;
 }
 .waitlist-form {
@@ -1683,21 +1719,67 @@ footer { padding: 28px 24px; border-top: 1px solid var(--border); background: va
   color: var(--rust);
 }
 .waitlist-field input,
-.waitlist-field textarea {
-  background: rgba(0, 0, 0, 0.3);
+.waitlist-field textarea,
+.waitlist-field select {
+  background: var(--waitlist-input-bg, rgba(0, 0, 0, 0.28));
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 12px 14px;
+  border-radius: 8px;
+  padding: 13px 16px;
   font-size: 15px;
   color: var(--t1);
   font-family: inherit;
-  transition: border-color 120ms ease;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
   resize: vertical;
 }
+/* Light mode: input fields go to a clean off-white card-style background
+   so they don't blend into the sepia section bg the way the dark-mode
+   "blackish overlay" does. */
+html.light .waitlist-field input,
+html.light .waitlist-field textarea,
+html.light .waitlist-field select {
+  background: #fbf7ee;
+  box-shadow: 0 1px 0 rgba(60, 40, 10, 0.04) inset;
+}
+html.light .waitlist-field input:hover,
+html.light .waitlist-field textarea:hover,
+html.light .waitlist-field select:hover {
+  background: #fff;
+}
+html.light .waitlist-field input:focus,
+html.light .waitlist-field textarea:focus,
+html.light .waitlist-field select:focus {
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(142, 44, 12, 0.12);
+}
+.waitlist-field input::placeholder,
+.waitlist-field textarea::placeholder {
+  color: var(--t3);
+  opacity: 0.7;
+}
+.waitlist-field input:hover,
+.waitlist-field textarea:hover,
+.waitlist-field select:hover {
+  border-color: var(--border-hl);
+}
 .waitlist-field input:focus,
-.waitlist-field textarea:focus {
+.waitlist-field textarea:focus,
+.waitlist-field select:focus {
   outline: none;
   border-color: var(--amber);
+  box-shadow: 0 0 0 3px rgba(232, 180, 74, 0.15);
+  background: rgba(0, 0, 0, 0.18);
+}
+.waitlist-field select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--t3) 50%),
+    linear-gradient(135deg, var(--t3) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 36px;
+  cursor: pointer;
 }
 .waitlist-submit {
   background: linear-gradient(135deg, var(--rust), var(--amber));

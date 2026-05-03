@@ -39,6 +39,7 @@ function makeDeps(over: Partial<WaitlistRouteDeps> = {}): WaitlistRouteDeps {
       insertOrGetExisting: async () => ({ id: 1, position: 1, alreadyExisted: false }),
       count: async () => 1,
       findByEmail: async () => null,
+      listAll: async () => [],
     },
     sendEmail: async () => true,
     rateLimiter: {
@@ -65,6 +66,7 @@ test('POST /api/waitlist returns 200 + alreadyOnList on dedup, no email sent', a
       insertOrGetExisting: async () => ({ id: 1, position: 1, alreadyExisted: true }),
       count: async () => 1,
       findByEmail: async () => null,
+      listAll: async () => [],
     },
     sendEmail: async () => { sendEmailCalls++; return true; },
   });

@@ -206,7 +206,7 @@
 
   <div class="hero-ctas">
     <a href="/sim" class="cta cta-pulse">Try Live Demo <svg><use href="#i-arrow"/></svg></a>
-    <a href="#waitlist" class="cta cta-secondary">Request Enterprise Access</a>
+    <a href="#waitlist" class="cta cta-secondary">Request Early Access</a>
     <a href="https://github.com/framersai/paracosm" target="_blank" rel="noopener" class="btn-ghost">★ Star Paracosm</a>
   </div>
 
@@ -232,8 +232,8 @@
 
   <section id="waitlist" class="waitlist-section">
     <div class="waitlist-inner">
-      <div class="waitlist-eyebrow">Enterprise access · Q3 2026</div>
-      <h2 class="waitlist-heading">Request enterprise access</h2>
+      <div class="waitlist-eyebrow">Early access · shipping Q3 2026</div>
+      <h2 class="waitlist-heading">Request <span class="waitlist-heading-accent">early access</span></h2>
       <p class="waitlist-sub">Join the waitlist for the hosted dashboard, fleet orchestration, and team workspaces. We'll reach out as features ship.</p>
       <form id="waitlist-form" class="waitlist-form" novalidate>
         <label class="waitlist-field">
@@ -243,6 +243,19 @@
         <label class="waitlist-field">
           <span>Name (optional)</span>
           <input type="text" name="name" maxlength="120" autocomplete="name" placeholder="Your name">
+        </label>
+        <label class="waitlist-field">
+          <span>I'm a (optional)</span>
+          <select name="userType" class="waitlist-select">
+            <option value="hobbyist" selected>Hobbyist</option>
+            <option value="developer">Developer</option>
+            <option value="researcher">Researcher</option>
+            <option value="professional">Professional user</option>
+            <option value="enterprise">Enterprise</option>
+            <option value="vc">VC</option>
+            <option value="investor">Investor</option>
+            <option value="other">Other</option>
+          </select>
         </label>
         <label class="waitlist-field">
           <span>Use case (optional)</span>
@@ -293,6 +306,7 @@
           email: String(fd.get('email') || '').trim(),
           name: String(fd.get('name') || '').trim() || undefined,
           useCase: String(fd.get('useCase') || '').trim() || undefined,
+          userType: String(fd.get('userType') || '').trim() || undefined,
           source: getSource() || undefined,
         };
         var res = await fetch('/api/waitlist', {

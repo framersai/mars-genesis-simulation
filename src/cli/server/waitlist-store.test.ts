@@ -58,4 +58,30 @@ test('insert handles all-null optional fields', async () => {
   assert.equal(found?.useCase, null);
   assert.equal(found?.source, null);
   assert.equal(found?.ip, null);
+  // userType defaults to 'hobbyist' when not supplied.
+  assert.equal(found?.userType, 'hobbyist');
+});
+
+test('userType is persisted when supplied', async () => {
+  const store = freshStore();
+  await store.insertOrGetExisting({ email: 'vc@x.co', userType: 'vc' });
+  await store.insertOrGetExisting({ email: 'dev@x.co', userType: 'developer' });
+  const vc = await store.findByEmail('vc@x.co');
+  const dev = await store.findByEmail('dev@x.co');
+  assert.equal(vc?.userType, 'vc');
+  assert.equal(dev?.userType, 'developer');
+});
+
+test('listAll returns rows in insertion order', async () => {
+  const store = freshStore();
+  await store.insertOrGetExisting({ email: 'a@x.co', userType: 'investor' });
+  await store.insertOrGetExisting({ email: 'b@x.co', userType: 'developer' });
+  await store.insertOrGetExisting({ email: 'c@x.co' });
+  const all = await store.listAll();
+  assert.equal(all.length, 3);
+  assert.deepEqual(
+    all.map((e) => e.email),
+    ['a@x.co', 'b@x.co', 'c@x.co'],
+  );
+  assert.equal(all[2].userType, 'hobbyist');
 });

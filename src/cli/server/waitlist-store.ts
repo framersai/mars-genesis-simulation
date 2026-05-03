@@ -11,12 +11,31 @@ import { createDatabase, type StorageAdapter, type DatabaseOptions } from '@fram
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 
+/**
+ * Allowed values for the `user_type` column. The form's <select>
+ * defaults to `hobbyist`; the route layer enforces this set via Zod
+ * so anything stored in the column is one of these literals.
+ */
+export const WAITLIST_USER_TYPES = [
+  'vc',
+  'investor',
+  'developer',
+  'enterprise',
+  'professional',
+  'researcher',
+  'hobbyist',
+  'other',
+] as const;
+
+export type WaitlistUserType = typeof WAITLIST_USER_TYPES[number];
+
 export interface WaitlistEntry {
   id: number;
   email: string;
   name: string | null;
   useCase: string | null;
   source: string | null;
+  userType: WaitlistUserType;
   ip: string | null;
   createdAt: string;
   confirmedAt: string | null;
@@ -27,6 +46,7 @@ export interface InsertWaitlistInput {
   name?: string | null;
   useCase?: string | null;
   source?: string | null;
+  userType?: WaitlistUserType;
   ip?: string | null;
 }
 
@@ -40,6 +60,7 @@ export interface WaitlistStore {
   insertOrGetExisting(input: InsertWaitlistInput): Promise<InsertWaitlistResult>;
   count(): Promise<number>;
   findByEmail(email: string): Promise<WaitlistEntry | null>;
+  listAll(): Promise<WaitlistEntry[]>;
 }
 
 export interface CreateWaitlistStoreOptions {
@@ -55,9 +76,38 @@ interface WaitlistRow {
   name: string | null;
   use_case: string | null;
   source: string | null;
+  user_type: string | null;
   ip: string | null;
   created_at: string;
   confirmed_at: string | null;
+}
+
+function isSqliteAdapter(adapter: StorageAdapter): boolean {
+  return adapter.kind === 'better-sqlite3' || adapter.kind === 'sqljs';
+}
+
+/**
+ * Idempotent column-add migration. SQLite raises "duplicate column name"
+ * when the column already exists; we swallow that and propagate any other
+ * error. SQLite-only — Postgres tenants get the new columns inline in the
+ * CREATE TABLE.
+ */
+async function ensureWaitlistColumns(adapter: StorageAdapter): Promise<void> {
+  if (!isSqliteAdapter(adapter)) return;
+  const newCols: ReadonlyArray<readonly [string, string]> = [
+    // Free-form classification of what the visitor identifies as. Default
+    // 'hobbyist' so existing rows from before this migration pick up a
+    // sensible value without triggering NOT NULL violations.
+    ['user_type', "TEXT NOT NULL DEFAULT 'hobbyist'"],
+  ];
+  for (const [name, type] of newCols) {
+    try {
+      await adapter.exec(`ALTER TABLE waitlist ADD COLUMN ${name} ${type};`);
+    } catch (err) {
+      const msg = String((err as Error).message ?? err);
+      if (!msg.includes('duplicate column name')) throw err;
+    }
+  }
 }
 
 async function bootstrap(adapter: StorageAdapter): Promise<void> {
@@ -68,21 +118,27 @@ async function bootstrap(adapter: StorageAdapter): Promise<void> {
       name TEXT,
       use_case TEXT,
       source TEXT,
+      user_type TEXT NOT NULL DEFAULT 'hobbyist',
       ip TEXT,
       created_at TEXT NOT NULL,
       confirmed_at TEXT
     );
   `);
   await adapter.exec(`CREATE INDEX IF NOT EXISTS waitlist_created_idx ON waitlist(created_at);`);
+  await ensureWaitlistColumns(adapter);
 }
 
 function rowToEntry(row: WaitlistRow): WaitlistEntry {
+  const userType = (row.user_type && (WAITLIST_USER_TYPES as readonly string[]).includes(row.user_type)
+    ? (row.user_type as WaitlistUserType)
+    : 'hobbyist');
   return {
     id: row.id,
     email: row.email,
     name: row.name,
     useCase: row.use_case,
     source: row.source,
+    userType,
     ip: row.ip,
     createdAt: row.created_at,
     confirmedAt: row.confirmed_at,
@@ -130,13 +186,14 @@ export function createWaitlistStore(options: CreateWaitlistStoreOptions): Waitli
       }
       const createdAt = new Date().toISOString();
       await adapter.run(
-        `INSERT INTO waitlist (email, name, use_case, source, ip, created_at)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO waitlist (email, name, use_case, source, user_type, ip, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           normalized,
           input.name ?? null,
           input.useCase ?? null,
           input.source ?? null,
+          input.userType ?? 'hobbyist',
           input.ip ?? null,
           createdAt,
         ],
@@ -170,6 +227,14 @@ export function createWaitlistStore(options: CreateWaitlistStoreOptions): Waitli
         [email.trim().toLowerCase()],
       );
       return row ? rowToEntry(row) : null;
+    },
+
+    async listAll() {
+      const adapter = await getAdapter();
+      const rows = await adapter.all<WaitlistRow>(
+        `SELECT * FROM waitlist ORDER BY id ASC`,
+      );
+      return rows.map(rowToEntry);
     },
   };
 }

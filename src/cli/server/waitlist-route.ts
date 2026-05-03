@@ -9,7 +9,7 @@
  */
 import { z } from 'zod';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { WaitlistStore } from './waitlist-store.js';
+import { type WaitlistStore, WAITLIST_USER_TYPES } from './waitlist-store.js';
 import type { SendEmailParams } from './email.js';
 import { renderWaitlistConfirmation } from './email-templates.js';
 
@@ -34,6 +34,13 @@ const WaitlistBodySchema = z.object({
     .regex(/^[a-zA-Z0-9_-]+$/)
     .optional()
     .or(z.literal('').transform(() => undefined)),
+  // Self-classification ('hobbyist' if omitted). Strict enum so the column
+  // never receives unexpected values; the store enforces the same set.
+  userType: z
+    .enum(WAITLIST_USER_TYPES)
+    .optional()
+    .or(z.literal('').transform(() => undefined))
+    .default('hobbyist'),
 });
 
 export interface RateLimitDecisionLike {
@@ -87,7 +94,7 @@ export async function handleWaitlist(
     return;
   }
 
-  const { email, name, useCase, source } = parsed.data;
+  const { email, name, useCase, source, userType } = parsed.data;
   let result;
   try {
     result = await deps.waitlistStore.insertOrGetExisting({
@@ -95,6 +102,7 @@ export async function handleWaitlist(
       name: name ?? null,
       useCase: useCase ?? null,
       source: source ?? null,
+      userType,
       ip,
     });
   } catch (err) {
