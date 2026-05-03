@@ -44,6 +44,9 @@ import { createRunRecord, hashActorConfig } from './server/run-record.js';
 import { enrichRunRecordFromArtifact } from './server/enrich-run-record.js';
 import { createNoopRunHistoryStore, type RunHistoryStore } from './server/run-history-store.js';
 import { createSqliteRunHistoryStore } from './server/sqlite-run-history-store.js';
+import { createWaitlistStore, type WaitlistStore } from './server/waitlist-store.js';
+import { handleWaitlist } from './server/waitlist-route.js';
+import { sendEmail } from './server/email.js';
 import { handlePublicDemoRoute } from './server/routes/public-demo.js';
 import { handlePlatformApiRoute } from './server/routes/platform-api.js';
 import { validateForkSetupPreconditions } from './fork-preconditions.js';
@@ -570,6 +573,12 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
     console.log(`  [sessions] Failed to open session store: ${err}`);
   }
   const runHistoryStore = options.runHistoryStore ?? resolveRunHistoryStore(env);
+
+  // Waitlist store for enterprise-access signups on the landing page.
+  // Sync factory; SQLite adapter is built lazily on first POST.
+  const waitlistDbPath = resolve(env.APP_DIR || '.', 'data', 'waitlist.db');
+  const waitlistStore: WaitlistStore = createWaitlistStore({ dbPath: waitlistDbPath });
+  const waitlistFrom = env['WAITLIST_FROM'] || 'Paracosm <team@frame.dev>';
 
   // Coalesce disk writes so a burst of broadcasts (e.g. 50 forge_attempt
   // events during a turn) only triggers one persist call. 500ms debounce
@@ -1197,6 +1206,29 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       } catch (err) {
         writeJsonError(res, err);
       }
+      return;
+    }
+
+    // Landing-page enterprise-access waitlist. Captures email, sends a
+    // branded confirmation via Resend, dedupes per-email, rate-limits
+    // 1 submission / IP / 5 min. When `rateLimiter` is null (self-hosted
+    // unlimited mode), fall through to allow-all — there's only one
+    // user so abuse mitigation is unnecessary. See
+    // docs/superpowers/specs/2026-05-03-paracosm-waitlist-design.md.
+    if (req.url === '/api/waitlist' && req.method === 'POST') {
+      const body = await readBody(req, maxRequestBodyBytes);
+      await handleWaitlist(req, res, body, {
+        waitlistStore,
+        sendEmail,
+        rateLimiter: {
+          consumeWaitlist: (ip) =>
+            rateLimiter
+              ? rateLimiter.consumeWaitlist(ip)
+              : { allowed: true, remaining: 0, resetAt: Date.now() + 1, limit: 1 },
+          getClientIp: (r) => IpRateLimiter.getIp(r),
+        },
+        waitlistFrom,
+      });
       return;
     }
 
