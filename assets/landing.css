@@ -1173,6 +1173,18 @@ footer { padding: 28px 24px; border-top: 1px solid var(--border); background: va
 }
 
 .rv.vis { opacity: 1; transform: translateY(0); }
+
+/* No-JS fallback: without IntersectionObserver firing, every .rv element
+   would stay opacity:0 and the page would look blank to crawlers,
+   screenshot tools, OpenGraph previewers, screen readers that don't
+   trigger scroll, and visitors with JS disabled. The HEAD inline-script
+   below adds a `js` class to <html> on page boot; if that script never
+   runs (no-JS), the `:not(.js)` rule wins and content is visible. */
+html:not(.js) .rv {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
 .rv-d1 { transition-delay: .1s; }
 .rv-d2 { transition-delay: .2s; }
 .rv-d3 { transition-delay: .25s; }
@@ -1888,5 +1900,32 @@ html.light .waitlist-field select:focus {
   }
   .hero-prompts > div:first-child {
     display: none;
+  }
+
+  /* Mobile code-block readability — desktop uses `white-space: pre` +
+     overflow-x:auto, which on a 375px phone forces 3-4 horizontal swipes
+     per line for typical TypeScript examples. Wrap on mobile so visitors
+     can read top-to-bottom without swiping; keep the monospace + syntax
+     colors so it still reads as code. Indentation alignment suffers
+     slightly when wrapped lines flow back to column 0, but readability
+     wins on a phone screen. */
+  .code-body {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    font-size: 12.5px;
+    line-height: 1.6;
+    padding: 12px 14px;
+  }
+  /* Long URLs and JSON keys can still cause unbreakable runs; force-break
+     anywhere as a safety net so they never push the parent page wide. */
+  .code-body .str,
+  .code-body a {
+    word-break: break-all;
+  }
+  /* Tighten copy buttons on mobile so the header doesn't waste a row */
+  .code-header {
+    font-size: 10.5px;
+    padding: 6px 12px;
   }
 }

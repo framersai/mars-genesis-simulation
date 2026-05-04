@@ -31,6 +31,12 @@
       var t = localStorage.getItem('paracosm-theme') || 'dark';
       if (t === 'light') document.documentElement.classList.add('light');
     } catch (e) {}
+    // Mark JS as available so CSS can opt-in to scroll-reveal animations.
+    // Without this flag, every .rv element stays opacity:0 in environments
+    // where IntersectionObserver never fires (no-JS, OG/Twitter crawlers,
+    // screenshot tools that don't scroll, slow JS execution). The CSS rule
+    // `html:not(.js) .rv` defaults to visible.
+    document.documentElement.classList.add('js');
   })();
 </script>
 <link rel="icon" href="/favicon.png" sizes="32x32">
@@ -1274,11 +1280,27 @@ curl -X POST http://localhost:3456/simulate \
 </footer>
 
 <script>
-// Intersection Observer for scroll-triggered reveals
-const obs = new IntersectionObserver(entries => {
-  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
-}, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
-document.querySelectorAll('.rv').forEach(el => obs.observe(el));
+// Intersection Observer for scroll-triggered reveals.
+// Falls back gracefully: if IntersectionObserver isn't supported (very
+// old browser) or never fires (puppeteer-headless without scroll, some
+// OG-preview crawlers, prerender-as-image tools), the safety timeout
+// below force-reveals everything after 1.5s so the page never sits with
+// permanently-invisible content.
+if (typeof IntersectionObserver === 'function') {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
+  }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+  document.querySelectorAll('.rv').forEach(el => obs.observe(el));
+}
+// Safety net: 1.5s after page load, force-reveal anything still hidden.
+// Long enough that scroll-triggered reveals on visible elements still
+// animate naturally; short enough that crawlers + screenshot tools don't
+// snapshot a half-blank page.
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.querySelectorAll('.rv:not(.vis)').forEach(el => el.classList.add('vis'));
+  }, 1500);
+});
 
 // Animate flow line when How It Works section is visible
 const flowObs = new IntersectionObserver(entries => {
