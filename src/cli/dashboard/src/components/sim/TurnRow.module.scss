@@ -96,6 +96,28 @@
   padding: 8px 0;
 }
 
+// In-flight placeholder for cells whose only events are start/pending
+// markers (department analyzing, decision queued). Without this the
+// row's grid stretches to the taller side and the short cell renders
+// empty whitespace, making parallel-run timing variance look like a
+// sync bug.
+.cellPending {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-3);
+  font-size: var(--font-xs);
+  font-family: var(--mono);
+  padding: 10px 4px;
+  letter-spacing: 0.3px;
+}
+
+.cellPendingSpinner {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
 @media (max-width: 768px) {
   .cells {
     grid-template-columns: 1fr;

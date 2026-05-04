@@ -108,7 +108,7 @@ function mapLaunchErrorToMessage(raw: string): string {
   // function', etc.) are developer-facing — a user seeing them can't
   // act on the message. Translate to actionable copy and keep the
   // raw text in the console for debugging.
-  if (/^TypeError|^ReferenceError|Cannot read propert|is not a function|is not iterable/i.test(raw)) {
+  if (/TypeError|ReferenceError|Cannot read propert|is not a function|is not iterable/i.test(raw)) {
     if (typeof console !== 'undefined') console.error('[quickstart] launch error:', raw);
     return 'Something went wrong starting the run. Refresh the page and try again — if it keeps happening, drop a note in the GitHub issues with what you clicked just before.';
   }
@@ -275,6 +275,10 @@ export function QuickstartView({ sse, sessionId, onRunStarted, onInterventionRes
       }
       const setupData = (await setupRes.json().catch(() => ({}))) as { redirect?: string };
       if (setupData.redirect) {
+        // Mirror the preset fast-path: hand off launching state across
+        // the page reload so the Sim tab shows "Launching simulation…"
+        // instead of "No simulation running" during the SSE-connect window.
+        try { window.localStorage.setItem('paracosm:launchPending', '1'); } catch { /* private mode */ }
         window.location.href = resolveSetupRedirectHref(window.location.href, setupData.redirect);
         return;
       }

@@ -9,6 +9,29 @@ import styles from './TurnRow.module.scss';
 
 void React;
 
+/** Event types that filter to `null` in the cell render. They represent
+ *  in-flight work (department analyzing, decision pending) that gets
+ *  superseded by their `_done` counterparts. We need to know if a cell
+ *  has *only* these so we can show "Working…" instead of an empty cell. */
+const PENDING_TYPES = new Set(['turn_start', 'specialist_start', 'decision_pending']);
+
+function summarizePending(events: ProcessedEvent[]): string {
+  const depts = new Set<string>();
+  let waitingDecision = false;
+  for (const e of events) {
+    if (e.type === 'specialist_start') {
+      const dept = (e.data as { department?: string })?.department;
+      if (typeof dept === 'string' && dept.length > 0) depts.add(dept);
+    } else if (e.type === 'decision_pending') {
+      waitingDecision = true;
+    }
+  }
+  const parts: string[] = [];
+  if (depts.size > 0) parts.push(`${[...depts].join(', ')} analyzing`);
+  if (waitingDecision) parts.push('awaiting decision');
+  return parts.length > 0 ? parts.join(' · ') + '…' : 'Working on this turn…';
+}
+
 interface TurnRowProps {
   entry: TurnDiffEntry;
   eventsA: ProcessedEvent[];
@@ -44,38 +67,30 @@ export function TurnRow({ entry, eventsA, eventsB }: TurnRowProps) {
       </h3>
 
       <div className={styles.cells}>
-        <div
-          className={styles.cell}
-          style={{ ['--cell-color' as string]: getActorColorVar(0) } as CSSProperties}
-          aria-label="Leader A events for this turn"
-        >
-          <span className={styles.cellBand} aria-hidden="true" />
-          {eventsA.length === 0 ? (
-            <div className={styles.cellEmpty}>(no events yet)</div>
-          ) : (
-            eventsA.map(e => (
-              e.type === 'turn_start' || e.type === 'specialist_start' || e.type === 'decision_pending'
-                ? null
-                : <EventCard key={e.id} event={e} actorIndex={0} />
-            ))
-          )}
-        </div>
-        <div
-          className={styles.cell}
-          style={{ ['--cell-color' as string]: getActorColorVar(1) } as CSSProperties}
-          aria-label="Leader B events for this turn"
-        >
-          <span className={styles.cellBand} aria-hidden="true" />
-          {eventsB.length === 0 ? (
-            <div className={styles.cellEmpty}>(no events yet)</div>
-          ) : (
-            eventsB.map(e => (
-              e.type === 'turn_start' || e.type === 'specialist_start' || e.type === 'decision_pending'
-                ? null
-                : <EventCard key={e.id} event={e} actorIndex={1} />
-            ))
-          )}
-        </div>
+        {[eventsA, eventsB].map((cellEvents, idx) => {
+          const renderable = cellEvents.filter(e => !PENDING_TYPES.has(e.type));
+          const allPending = cellEvents.length > 0 && renderable.length === 0;
+          return (
+            <div
+              key={idx}
+              className={styles.cell}
+              style={{ ['--cell-color' as string]: getActorColorVar(idx) } as CSSProperties}
+              aria-label={`Leader ${idx === 0 ? 'A' : 'B'} events for this turn`}
+            >
+              <span className={styles.cellBand} aria-hidden="true" />
+              {cellEvents.length === 0 ? (
+                <div className={styles.cellEmpty}>(no events yet)</div>
+              ) : allPending ? (
+                <div className={styles.cellPending} aria-live="polite">
+                  <span className={`spinner ${styles.cellPendingSpinner}`} />
+                  {summarizePending(cellEvents)}
+                </div>
+              ) : (
+                renderable.map(e => <EventCard key={e.id} event={e} actorIndex={idx as 0 | 1} />)
+              )}
+            </div>
+          );
+        })}
       </div>
     </section>
   );

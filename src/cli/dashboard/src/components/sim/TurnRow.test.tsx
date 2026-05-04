@@ -53,3 +53,24 @@ test('TurnRow: empty cell renders the placeholder text', () => {
   const matches = html.match(/\(no events yet\)/g) ?? [];
   assert.equal(matches.length, 2);
 });
+
+test('TurnRow: cell with only specialist_start + decision_pending shows in-flight summary, not blank', () => {
+  // Reproduces the production sync-bug-that-isn't: parallel runs where
+  // Side A is still mid-turn (departments analyzing, decision pending)
+  // while Side B has finished. Without the pending-summary placeholder
+  // the cell rendered empty whitespace beside Side B's full event list,
+  // which the user reported as "WTF is wrong with the syncing of events".
+  const pendingEvents: ProcessedEvent[] = [
+    { id: 'evt-1', type: 'specialist_start', leader: 'A', turn: 1, time: 0, data: { department: 'engineering' } },
+    { id: 'evt-2', type: 'specialist_start', leader: 'A', turn: 1, time: 0, data: { department: 'medical' } },
+    { id: 'evt-3', type: 'decision_pending', leader: 'A', turn: 1, time: 0, data: {} },
+  ];
+  const html = renderToString(<TurnRow entry={sameEntry} eventsA={pendingEvents} eventsB={noEvents} />);
+  // Side A: in-flight summary visible.
+  assert.match(html, /engineering, medical analyzing/);
+  assert.match(html, /awaiting decision/);
+  // Side B: still empty placeholder (control: only Side A is mid-flight).
+  assert.match(html, /\(no events yet\)/);
+  // Spinner element renders.
+  assert.match(html, /spinner/);
+});

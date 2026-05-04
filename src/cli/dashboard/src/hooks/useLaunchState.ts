@@ -46,9 +46,19 @@ export function useLaunchState({
   // window.location.href flip once the launching state resolves. Without
   // this, a subsequent /sim reload or hot-mount would re-hydrate
   // launching=true even though no fresh launch is pending.
+  //
+  // Guard the removeItem call with a getItem === '1' check so the no-op
+  // first-mount case (no flag set, launching=false default) doesn't fire
+  // a write, and so a multi-tab race (tab A pinned the flag, tab B's
+  // SimView mounts already-running and would otherwise clear it) leaves
+  // tab A's pending flag intact.
   useEffect(() => {
     if (launching) return;
-    try { window.localStorage.removeItem('paracosm:launchPending'); } catch { /* private mode */ }
+    try {
+      if (window.localStorage.getItem('paracosm:launchPending') === '1') {
+        window.localStorage.removeItem('paracosm:launchPending');
+      }
+    } catch { /* private mode */ }
   }, [launching]);
 
   // Safety timeout: if /setup succeeded but no events arrived in 30s,
