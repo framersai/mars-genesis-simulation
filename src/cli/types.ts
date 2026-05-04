@@ -5,7 +5,9 @@ export interface ActorConfig {
   name: string;
   archetype: string;
   unit: string;
-  hexaco: HexacoProfile;
+  /** Optional in v0.9: ai-agent and other non-HEXACO trait models can
+   * omit this if they supply `traitProfile` instead. */
+  hexaco?: HexacoProfile;
   instructions: string;
 }
 
