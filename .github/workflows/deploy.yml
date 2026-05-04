@@ -112,12 +112,12 @@ jobs:
       - name: Check doc examples compile against package
         run: npm run check:doc-examples
 
-      # The build job's checkout has the dev-floor version (0.8.0) from
-      # package.json. The publish job auto-bumps to 0.8.${run_number} in
+      # The build job's checkout has the dev-floor version (0.9.0) from
+      # package.json. The publish job auto-bumps to 0.9.${run_number} in
       # its own checkout, so the build job never sees the published
       # version. typedoc has `includeVersion: true` and reads
-      # package.json directly, which is why every docs.agentos.sh
-      # deploy advertised "v0.8.0" while npm shipped 0.8.${prev_run_number}.
+      # package.json directly, which is why early v0.8 deploys advertised
+      # "v0.8.0" while npm shipped 0.8.${prev_run_number}.
       #
       # Query the npm registry for the latest published version and use
       # it for typedoc. Most commits are UI-only (publish skipped) — for
@@ -125,12 +125,12 @@ jobs:
       # by exactly one publish (build runs npm view BEFORE publish bumps
       # the patch), and the next workflow run converges. Falling back to
       # the run-number form when npm is unreachable so the docs deploy
-      # never produces a literal "0.8.0" again.
+      # never produces a literal "0.9.0" again.
       - name: Sync version for docs
         run: |
           LATEST=$(npm view paracosm version 2>/dev/null || true)
           if [ -z "$LATEST" ]; then
-            LATEST="0.8.${{ github.run_number }}"
+            LATEST="0.9.${{ github.run_number }}"
             echo "npm view failed; falling back to ${LATEST}"
           fi
           node -e "const p=require('./package.json'); p.version='${LATEST}'; require('fs').writeFileSync('./package.json', JSON.stringify(p, null, 2) + '\n')"
