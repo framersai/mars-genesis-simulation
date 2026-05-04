@@ -40,7 +40,7 @@ The product is the contrast. Same compiled world, same crises, same kernel: swap
 A world model that can be forked needs three things: a deterministic substrate that can be rewound, an LLM reasoner that can be replayed against the same state, and a contract for what state actually means. Paracosm carries all three. Snapshots are JSON, the kernel round-trips through `JSON.stringify`, and every fork resumes from the captured state without recomputing the prefix.
 
 ```typescript
-import { WorldModel } from 'paracosm/world-model';
+import { WorldModel } from 'paracosm';
 import worldJson from './my-world.json' with { type: 'json' };
 
 const wm = await WorldModel.fromJson(worldJson);
@@ -86,14 +86,14 @@ Two simulation runs against an identical compiled scenario, starting from the sa
 Actors do not need to be people. The same authoring contract handles colony commanders, ship captains, AI release directors, governing councils, faction leaders, autonomous coordinators, or any entity whose decisions shape the world after a chain of inputs. Paracosm does not care what an actor represents. It cares how the actor decides.
 
 ```typescript
-import { compileScenario } from 'paracosm/compiler';
-import { runSimulation } from 'paracosm/runtime';
+import { compileScenario, WorldModel } from 'paracosm';
 import worldJson from './my-world.json' with { type: 'json' };
 
 const scenario = await compileScenario(worldJson, {
   provider: 'anthropic',
   model: 'claude-sonnet-4-6',
 });
+const wm = WorldModel.fromScenario(scenario);
 
 const reyes = {
   name: 'Captain Reyes', archetype: 'The Pragmatist', unit: 'Station Alpha',
@@ -111,7 +111,7 @@ const okafor = {
 
 const [a, b] = await Promise.all(
   [reyes, okafor].map((actor) =>
-    runSimulation(actor, [], { scenario, maxTurns: 6, seed: 42 }),
+    wm.simulate({ actor, maxTurns: 6, seed: 42 }),
   ),
 );
 console.log(a.fingerprint, b.fingerprint); // diverges visibly within two turns
@@ -144,7 +144,7 @@ Six turns is enough to surface the contrast. The fingerprint is a stable hash ov
 `WorldModel.fromPrompt` compiles a scenario from seed source material (paste, URL, or extracted PDF text), and `wm.quickstart` then generates N contextual HEXACO actors and runs them in parallel. Both paths validate against `DraftScenarioSchema` and route into `compileScenario`. The canonical `ScenarioPackage` contract is never bypassed.
 
 ```typescript
-import { WorldModel } from 'paracosm/world-model';
+import { WorldModel } from 'paracosm';
 
 const wm = await WorldModel.fromPrompt({
   seedText: 'Q3 board brief: the company must decide between...',
@@ -155,7 +155,7 @@ const { actors, artifacts } = await wm.quickstart({ actorCount: 3 });
 artifacts.forEach((a, i) => console.log(actors[i].name, a.fingerprint));
 ```
 
-In the dashboard, Quickstart is the default landing tab. A user pastes a brief, drops a PDF, or supplies a URL, and three streaming actors arrive within a minute of first click. A curated library of ten HEXACO archetypes ships under `paracosm/leader-presets` for programmatic `runBatch` sweeps.
+In the dashboard, Quickstart is the default landing tab. A user pastes a brief, drops a PDF, or supplies a URL, and three streaming actors arrive within a minute of first click. A curated library of HEXACO archetypes ships at `paracosm.ACTOR_PRESETS` for programmatic `wm.batch` sweeps.
 
 ---
 
@@ -165,7 +165,7 @@ In the dashboard, Quickstart is the default landing tab. A user pastes a brief, 
 npm install paracosm   # also: pnpm add paracosm · bun add paracosm
 ```
 
-Paracosm ships as pure ESM with subpath exports (`paracosm/compiler`, `paracosm/runtime`, `paracosm/mars`, `paracosm/lunar`, `paracosm/core`, `paracosm/schema`, `paracosm/world-model`, `paracosm/digital-twin`). Node 20+, Bun 1.x, and any TypeScript runner with ESM and import-attributes support resolve them out of the box.
+Paracosm ships as pure ESM. The root export covers most use cases (`run`, `runMany`, `WorldModel`, `compileScenario`, `marsScenario`, `lunarScenario`, `ACTOR_PRESETS`, all public types). Subpath escape hatches are kept for power users: `paracosm/compiler`, `paracosm/schema`, `paracosm/swarm`, `paracosm/digital-twin`, `paracosm/core`. Node 20+, Bun 1.x, and any TypeScript runner with ESM and import-attributes support resolve them out of the box.
 
 ---
 
@@ -219,8 +219,7 @@ Time is unit-agnostic. `setup.defaultTimePerTurn` and `setup.defaultStartTime` a
 ## Compile and run
 
 ```typescript
-import { compileScenario } from 'paracosm/compiler';
-import { runSimulation } from 'paracosm/runtime';
+import { compileScenario, WorldModel } from 'paracosm';
 import worldJson from './my-world.json' with { type: 'json' };
 
 // First compile is roughly $0.10 and caches to disk; reruns are free
@@ -228,9 +227,10 @@ const scenario = await compileScenario(worldJson, {
   provider: 'anthropic',
   model: 'claude-sonnet-4-6',
 });
+const wm = WorldModel.fromScenario(scenario);
 
-const result = await runSimulation(actor, [], {
-  scenario,
+const result = await wm.simulate({
+  actor,
   maxTurns: 6,
   seed: 42,
   // costPreset: 'economy',  // ~5-10× cheaper iteration on OpenAI
@@ -244,7 +244,7 @@ console.log('forged tools ', result.forgedTools?.length ?? 0);
 console.log('citations    ', result.citations?.length ?? 0);
 ```
 
-Each call to `runSimulation` takes one actor. Run one, two, or twenty. The dashboard runs two side-by-side for comparison; the API has no limit.
+Each call to `wm.simulate` takes one actor. Run one, two, or twenty. The dashboard runs two side-by-side for comparison; the API has no limit.
 
 ### Or use the dashboard
 
@@ -280,7 +280,8 @@ Every simulation returns a `RunArtifact`: one Zod-validated shape exported from 
 ```typescript
 import { RunArtifactSchema, type RunArtifact } from 'paracosm/schema';
 
-const artifact: RunArtifact = await runSimulation(actor, [], { scenario, maxTurns: 6 });
+const wm = WorldModel.fromScenario(scenario);
+const artifact: RunArtifact = await wm.simulate({ actor, maxTurns: 6 });
 const parsed = RunArtifactSchema.parse(artifact);   // optional dev-mode validation
 
 switch (artifact.metadata.mode) {
@@ -320,7 +321,7 @@ const intervention = InterventionConfigSchema.parse({
   adherenceProfile: { expected: 0.7 },
 });
 
-const artifact = await twin.simulateIntervention(subject, intervention, actor);
+const artifact = await twin.intervene({ subject, intervention, actor });
 ```
 
 `DigitalTwin` is an alias of `WorldModel`. The subpath names the use case in the import path. `RunArtifact.subject` and `RunArtifact.intervention` carry through to any consumer.
@@ -337,15 +338,14 @@ Actors are not always human. Paracosm ships a `TraitModel` registry with two bui
 | `ai-agent`  | exploration, verification-rigor, deference, risk-tolerance, transparency, instruction-following    | Frontier-lab release directors, autonomous coordinators, eval subs |
 
 ```typescript
-import { runSimulation } from 'paracosm/runtime';
+import { runSimulation } from 'paracosm';
 
 const releaseDirector = {
   name: 'Atlas-Bot Release Director',
   archetype: 'Aggressive AI Release Optimizer',
   unit: 'Frontier Lab',
-  // The 0.7 schema still asks for a representative HEXACO snapshot; removal scheduled for 0.9.
-  hexaco: { openness: 0.6, conscientiousness: 0.3, extraversion: 0.5,
-            agreeableness: 0.3, emotionality: 0.2, honestyHumility: 0.3 },
+  // hexaco is optional in v0.9 when traitProfile is set; supplying a
+  // representative snapshot is still accepted for back-compat.
   traitProfile: {
     modelId: 'ai-agent',
     traits: {
@@ -360,7 +360,8 @@ const releaseDirector = {
   instructions: 'You weight time-to-market. Verification is overhead.',
 };
 
-await runSimulation(releaseDirector, [], { scenario, maxTurns: 6, seed: 42 });
+const wmAi = WorldModel.fromScenario(scenario);
+await wmAi.simulate({ actor: releaseDirector, maxTurns: 6, seed: 42 });
 ```
 
 The orchestrator's `normalizeActorConfig` accepts either shape. End-to-end captures and full surface live in [`docs/COOKBOOK.md`](docs/COOKBOOK.md).
@@ -443,7 +444,7 @@ The pipeline runs eight steps: extract topics and search queries from the seed, 
 | Mars Genesis  | 100 colonists, 6 turns over 48 years. 5 departments, emergent dust storms, water crises, first Marsborn generation. |
 | Lunar Outpost | 50-person crew at the south pole. Mining, life support, comms. Regolith toxicity, 1/6g atrophy.                    |
 
-Both ship as `paracosm/mars` and `paracosm/lunar` exports and serve as references for building custom scenarios.
+Both ship as `marsScenario` and `lunarScenario` named exports from the `paracosm` root and serve as references for building custom scenarios.
 
 ---
 
@@ -451,15 +452,14 @@ Both ship as `paracosm/mars` and `paracosm/lunar` exports and serve as reference
 
 | Import                              | Surface                                                                                                  |
 |-------------------------------------|-----------------------------------------------------------------------------------------------------------|
-| `paracosm/compiler`                 | `compileScenario`, `ingestSeed`, `ingestFromUrl`, `CompileOptions`                                        |
-| `paracosm/runtime`                  | `runSimulation`, `runBatch`, `EventDirector`, `generateAgentReactions`, `buildEventSummary`, memory helpers |
-| `paracosm`                          | `createParacosmClient`, `ProviderKeyMissingError`, `SeededRng`, `SimulationKernel`, all `Scenario*` types |
-| `paracosm/core`                     | Kernel state types: `Agent`, `WorldState`, `HexacoProfile`                                                |
-| `paracosm/world-model`              | `WorldModel` for fork / replay / snapshot use cases                                                       |
-| `paracosm/digital-twin`             | `DigitalTwin` alias plus `simulateIntervention` sugar                                                     |
-| `paracosm/mars`, `paracosm/lunar`   | Pre-built `ScenarioPackage` constants                                                                    |
+| `paracosm` (root)                   | `run`, `runMany`, `WorldModel`, `compileScenario`, `marsScenario`, `lunarScenario`, `ACTOR_PRESETS`, `createParacosmClient`, all public types |
+| `paracosm/compiler`                 | `compileScenario`, `ingestSeed`, `ingestFromUrl`, `CompileOptions` (deep authoring path)                  |
+| `paracosm/schema`                   | Zod runtime validators: `RunArtifactSchema`, `StreamEventSchema`, etc.                                    |
+| `paracosm/swarm`                    | Post-run swarm inspection helpers                                                                         |
+| `paracosm/digital-twin`             | `DigitalTwin` (alias of `WorldModel`) and digital-twin schemas                                            |
+| `paracosm/core`                     | Kernel internals: `SimulationKernel`, `SeededRng`, `generateInitialPopulation`, kernel state types        |
 
-`createParacosmClient` pins `provider`, `costPreset`, per-role `models`, and compile-time options once, then hands back `runSimulation`, `runBatch`, and `compileScenario` methods that inherit those defaults. Per-call overrides still win, merged at the per-role level so `models: { departments: 'gpt-5.4' }` at the client and `models: { judge: 'gpt-5.4' }` at the call combine to pin both. Env vars feed the same defaults; explicit args win over env, env wins over library defaults.
+`createParacosmClient` pins `provider`, `costPreset`, per-role `models`, and compile-time options once, then hands back methods that inherit those defaults. Per-call overrides still win, merged at the per-role level. Env vars feed the same defaults; explicit args win over env, env wins over library defaults.
 
 ```bash
 PARACOSM_PROVIDER=anthropic \
