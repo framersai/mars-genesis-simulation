@@ -11,8 +11,8 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/engine/index.js",
-      "types": "./dist/engine/index.d.ts"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
     "./mars": {
       "import": "./dist/engine/mars/index.js",
