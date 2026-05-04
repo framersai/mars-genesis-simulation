@@ -411,16 +411,14 @@ npm install -g paracosm</div>
       <div class="tab-panel active" role="tabpanel" data-panel="quickstart">
         <div class="code-block" style="border:none;border-radius:0;margin:0">
           <div class="code-header"><span>Three lines: brief to running simulation</span><button class="code-copy" onclick="copyCode(this, document.getElementById('quickstart-code').textContent)">Copy</button></div>
-          <div tabindex="0" class="code-body" id="quickstart-code"><span class="cm">// Free-text brief in. Compiled scenario, 3 HEXACO actors, 3 RunArtifacts out.</span>
-<span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm'</span>;
+          <div tabindex="0" class="code-body" id="quickstart-code"><span class="cm">// Free-text brief in. 3 HEXACO actors, 3 RunArtifacts out — one line.</span>
+<span class="kw">import</span> { runMany } <span class="kw">from</span> <span class="str">'paracosm'</span>;
 
-<span class="kw">const</span> wm = <span class="kw">await</span> WorldModel.<span class="fn">fromPrompt</span>({
-  seedText: <span class="str">'Q3 board brief: lab is preparing to release Atlas-7...'</span>,
-  domainHint: <span class="str">'AI safety lab leadership decision'</span>,
-});
-
-<span class="kw">const</span> { actors, artifacts } = <span class="kw">await</span> wm.<span class="fn">quickstart</span>({ actorCount: <span class="num">3</span> });
-artifacts.<span class="fn">forEach</span>((a, i) =&gt; console.<span class="fn">log</span>(actors[i].name, a.fingerprint));</div>
+<span class="kw">const</span> { runs } = <span class="kw">await</span> <span class="fn">runMany</span>(
+  <span class="str">'Q3 board brief: lab is preparing to release Atlas-7...'</span>,
+  { count: <span class="num">3</span> },
+);
+runs.<span class="fn">forEach</span>(({ actor, artifact }) =&gt; console.<span class="fn">log</span>(actor.name, artifact.fingerprint));</div>
         </div>
       </div>
 
@@ -1096,10 +1094,10 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
     <div class="code-sec">
       <div class="code-block">
         <div class="code-header"><span>Prompt to running simulation, three lines</span><button class="code-copy" onclick="copyCode(this, document.getElementById('cb-quickstart').textContent)">Copy</button></div>
-        <div tabindex="0" class="code-body" id="cb-quickstart"><span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm'</span>;
+        <div tabindex="0" class="code-body" id="cb-quickstart"><span class="kw">import</span> { runMany } <span class="kw">from</span> <span class="str">'paracosm'</span>;
 
-<span class="kw">const</span> wm = <span class="kw">await</span> WorldModel.<span class="fn">fromPrompt</span>({ seedText, domainHint: <span class="str">'AI safety lab leadership decision'</span> });
-<span class="kw">const</span> { actors, artifacts } = <span class="kw">await</span> wm.<span class="fn">quickstart</span>({ actorCount: <span class="num">3</span> });</div>
+<span class="kw">const</span> { runs } = <span class="kw">await</span> <span class="fn">runMany</span>(seedText, { count: <span class="num">3</span> });
+runs.<span class="fn">forEach</span>(({ actor, artifact }) =&gt; console.<span class="fn">log</span>(actor.name, artifact.fingerprint));</div>
       </div>
       <div class="code-block">
         <div class="code-header"><span>Branch at turn 1 with a different leader</span><button class="code-copy" onclick="copyCode(this, document.getElementById('cb-fork').textContent)">Copy</button></div>
