@@ -48,12 +48,7 @@
 <meta name="twitter:image" content="https://paracosm.agentos.sh/brand/social/paracosm-social-1200x630.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- Non-blocking font load — preload as style + swap to stylesheet on load.
-     Without this, fonts.googleapis.com blocks first paint by ~700ms on mobile
-     (PSI 2026-05-04: render-blocking-insight). The noscript fallback ensures
-     text still gets the right typeface for crawlers + JS-disabled visitors. -->
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"></noscript>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Paracosm","description":"Agent swarm simulation for structured world modeling with LLMs. Open-source TypeScript framework: ground prompts, briefs, URLs, or scenario JSON drafts into typed ScenarioPackages, then run deterministic multi-agent simulations with HEXACO leaders, LLM events, sandboxed runtime tool forging, and universal forkable RunArtifacts. Built on AgentOS.","applicationCategory":"Simulation","applicationSubCategory":"Agent Swarm Simulation / Structured World Model","operatingSystem":"Cross-platform","programmingLanguage":"TypeScript","license":"https://opensource.org/licenses/Apache-2.0","url":"https://paracosm.agentos.sh","downloadUrl":"https://www.npmjs.com/package/paracosm","softwareVersion":"__PARACOSM_VERSION__","author":{"@type":"Organization","name":"Manic Agency / Frame.dev","url":"https://frame.dev"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"codeRepository":"https://github.com/framersai/paracosm","runtimePlatform":"Node.js"}
 </script>
