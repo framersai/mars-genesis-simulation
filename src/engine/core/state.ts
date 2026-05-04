@@ -236,3 +236,14 @@ export interface SimulationState {
   environment: Record<string, number | string | boolean>;
   eventLog: TurnEvent[];
 }
+
+// ─── Kernel internals re-exports ────────────────────────────────────
+// The simulation kernel + RNG + initial-population generator live in
+// sibling files; surface them through this module so the public
+// `paracosm/core` entry point exposes the full low-level kit. The root
+// `paracosm` export DROPS these in v0.9.0 — power users importing them
+// from root must migrate to `import { SimulationKernel } from 'paracosm/core'`.
+export { SimulationKernel } from './kernel.js';
+export { SeededRng } from './rng.js';
+export { generateInitialPopulation } from './agent-generator.js';
+export type { KeyPersonnel } from './agent-generator.js';
