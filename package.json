@@ -14,18 +14,6 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./mars": {
-      "import": "./dist/engine/mars/index.js",
-      "types": "./dist/engine/mars/index.d.ts"
-    },
-    "./runtime": {
-      "import": "./dist/runtime/index.js",
-      "types": "./dist/runtime/index.d.ts"
-    },
-    "./lunar": {
-      "import": "./dist/engine/lunar/index.js",
-      "types": "./dist/engine/lunar/index.d.ts"
-    },
     "./core": {
       "import": "./dist/engine/core/state.js",
       "types": "./dist/engine/core/state.d.ts"
@@ -38,10 +26,6 @@
       "import": "./dist/engine/schema/index.js",
       "types": "./dist/engine/schema/index.d.ts"
     },
-    "./world-model": {
-      "import": "./dist/runtime/world-model/index.js",
-      "types": "./dist/runtime/world-model/index.d.ts"
-    },
     "./swarm": {
       "import": "./dist/runtime/swarm/index.js",
       "types": "./dist/runtime/swarm/index.d.ts"
@@ -49,10 +33,6 @@
     "./digital-twin": {
       "import": "./dist/engine/digital-twin/index.js",
       "types": "./dist/engine/digital-twin/index.d.ts"
-    },
-    "./leader-presets": {
-      "import": "./dist/engine/leader-presets.js",
-      "types": "./dist/engine/leader-presets.d.ts"
     }
   },
   "files": [
