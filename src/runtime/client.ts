@@ -154,7 +154,7 @@ function readEnvClientOptions(): ParacosmClientOptions {
  *
  * @example
  * ```typescript
- * import { createParacosmClient } from 'paracosm/runtime';
+ * import { createParacosmClient } from 'paracosm';
  *
  * const client = createParacosmClient({
  *   provider: 'openai',

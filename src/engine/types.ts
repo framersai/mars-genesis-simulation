@@ -408,7 +408,7 @@ export interface SimulationModelConfig {
  * @example
  * ```typescript
  * import type { ScenarioPackage } from 'paracosm';
- * import { marsScenario } from 'paracosm/mars';
+ * import { marsScenario } from 'paracosm';
  *
  * const myScenario: ScenarioPackage = { ... };
  * ```

@@ -14,7 +14,7 @@
  * the runtime:
  *
  * ```ts
- * import { WorldModel } from 'paracosm/world-model';
+ * import { WorldModel } from 'paracosm';
  *
  * const wm = await WorldModel.fromJson(worldJson, { provider: 'anthropic' });
  * const result = await wm.simulate(leader, { maxTurns: 6, seed: 42 });
@@ -175,7 +175,7 @@ export interface ForkOptions {
  *
  * @example Single-leader simulation
  * ```ts
- * import { WorldModel } from 'paracosm/world-model';
+ * import { WorldModel } from 'paracosm';
  * import worldJson from './my-world.json' with { type: 'json' };
  *
  * const wm = await WorldModel.fromJson(worldJson, { provider: 'anthropic' });
@@ -196,8 +196,8 @@ export interface ForkOptions {
  *
  * @example Pre-compiled scenario
  * ```ts
- * import { marsScenario } from 'paracosm/mars';
- * import { WorldModel } from 'paracosm/world-model';
+ * import { marsScenario } from 'paracosm';
+ * import { WorldModel } from 'paracosm';
  *
  * const wm = WorldModel.fromScenario(marsScenario);
  * const artifact = await wm.simulate(leader, { maxTurns: 8 });
@@ -436,7 +436,7 @@ export class WorldModel {
    *
    * @example
    * ```ts
-   * import { WorldModel } from 'paracosm/world-model';
+   * import { WorldModel } from 'paracosm';
    *
    * const wm = await WorldModel.fromJson(scenarioJson);
    * const artifact = await wm.intervene({

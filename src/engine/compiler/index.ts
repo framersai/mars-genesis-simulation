@@ -11,7 +11,7 @@
  * @example
  * ```typescript
  * import { compileScenario } from 'paracosm/compiler';
- * import { runSimulation } from 'paracosm/runtime';
+ * import { runSimulation } from 'paracosm';
  *
  * // Defaults to OpenAI (gpt-5.4-mini). Pass provider: 'anthropic' to switch.
  * const scenario = await compileScenario(submarineJson);
