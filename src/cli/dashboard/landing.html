@@ -411,7 +411,7 @@ npm install -g paracosm</div>
       <div class="tab-panel active" role="tabpanel" data-panel="quickstart">
         <div class="code-block" style="border:none;border-radius:0;margin:0">
           <div class="code-header"><span>Three lines: brief to running simulation</span><button class="code-copy" onclick="copyCode(this, document.getElementById('quickstart-code').textContent)">Copy</button></div>
-          <div tabindex="0" class="code-body" id="quickstart-code"><span class="cm">// Free-text brief in. Compiled scenario, 3 HEXACO leaders, 3 RunArtifacts out.</span>
+          <div tabindex="0" class="code-body" id="quickstart-code"><span class="cm">// Free-text brief in. Compiled scenario, 3 HEXACO actors, 3 RunArtifacts out.</span>
 <span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm/world-model'</span>;
 
 <span class="kw">const</span> wm = <span class="kw">await</span> WorldModel.<span class="fn">fromPrompt</span>({
@@ -419,8 +419,8 @@ npm install -g paracosm</div>
   domainHint: <span class="str">'AI safety lab leadership decision'</span>,
 });
 
-<span class="kw">const</span> { leaders, artifacts } = <span class="kw">await</span> wm.<span class="fn">quickstart</span>({ leaderCount: <span class="num">3</span> });
-artifacts.<span class="fn">forEach</span>((a, i) =&gt; console.<span class="fn">log</span>(leaders[i].name, a.fingerprint));</div>
+<span class="kw">const</span> { actors, artifacts } = <span class="kw">await</span> wm.<span class="fn">quickstart</span>({ actorCount: <span class="num">3</span> });
+artifacts.<span class="fn">forEach</span>((a, i) =&gt; console.<span class="fn">log</span>(actors[i].name, a.fingerprint));</div>
         </div>
       </div>
 
@@ -536,18 +536,20 @@ console.<span class="fn">log</span>(<span class="str">'fork(reyes -&gt; okafor):
 console.<span class="fn">log</span>(<span class="str">'replay matches:'</span>, matches);  <span class="cm">// true</span>
 <span class="kw">if</span> (!matches) console.<span class="fn">error</span>(<span class="str">'first divergence at:'</span>, divergence.path);
 
-<span class="cm">// 4. Run an intervention (digital-twin what-if) at turn 4: an external event</span>
-<span class="cm">//    not in the original timeline, then re-resolve the rest of the run.</span>
-<span class="kw">const</span> twin = <span class="kw">await</span> wm.<span class="fn">simulateIntervention</span>(baseline, {
-  atTurn: <span class="num">4</span>,
-  customEvent: { title: <span class="str">'Supply convoy delayed 60 days'</span>,
-                 description: <span class="str">'External supply chain disruption.'</span> },
-  newLeader: reyes,
+<span class="cm">// 4. Inject an event at turn 4 by forking and running forward with a custom</span>
+<span class="cm">//    event in the queue. Same scenario+seed up to t=4, then a new event the</span>
+<span class="cm">//    original timeline never saw.</span>
+<span class="kw">const</span> branchAt4 = <span class="kw">await</span> wm.<span class="fn">forkFromArtifact</span>(baseline, <span class="num">4</span>);
+<span class="kw">const</span> twin = <span class="kw">await</span> branchAt4.<span class="fn">simulate</span>(reyes, {
+  maxTurns: <span class="num">5</span>,
+  customEvents: [{ turn: <span class="num">5</span>, title: <span class="str">'Supply convoy delayed 60 days'</span>,
+                   description: <span class="str">'External supply chain disruption.'</span> }],
 });
 console.<span class="fn">log</span>(<span class="str">'twin under disruption:'</span>, twin.fingerprint);
 
-<span class="cm">// All four artifacts have the same Zod-validated RunArtifact shape.</span>
-<span class="cm">// Compare them with diff-on-canonical-JSON for any pair.</span></div>
+<span class="cm">// (For digital-twin runs against a *subject* + *intervention* — e.g.</span>
+<span class="cm">// "company X under a 25% RIF policy" — see wm.simulateIntervention(</span>
+<span class="cm">// subject, intervention, leader, opts) in docs/COOKBOOK.md.)</span></div>
         </div>
       </div>
 
@@ -571,11 +573,16 @@ console.<span class="fn">log</span>(<span class="str">'twin under disruption:'</
 
 <span class="cm">// Path B: ai-agent leader. Six axes calibrated to AI-system decisions:</span>
 <span class="cm">//   exploration, verification-rigor, deference, risk-tolerance,</span>
-<span class="cm">//   transparency, instruction-following.</span>
+<span class="cm">//   transparency, instruction-following. (hexaco is still required</span>
+<span class="cm">//   alongside traitProfile until 0.9.0; supply a representative</span>
+<span class="cm">//   snapshot — the runtime ignores it once traitProfile is set.)</span>
 <span class="kw">const</span> aiLeader = {
   name: <span class="str">'Atlas-Bot Release Director'</span>,
   archetype: <span class="str">'AI safety lab autopilot'</span>,
   unit: <span class="str">'Atlas-7 Release Team'</span>,
+  hexaco: { openness: <span class="num">0.85</span>, conscientiousness: <span class="num">0.20</span>,
+            extraversion: <span class="num">0.5</span>,  agreeableness: <span class="num">0.20</span>,
+            emotionality: <span class="num">0.30</span>, honestyHumility: <span class="num">0.40</span> },
   traitProfile: {
     modelId: <span class="str">'ai-agent'</span>,
     traits: {
@@ -668,7 +675,7 @@ paracosm compile scenarios/lunar.json \
   --max-searches 5
 
 <span class="cm"># Scaffold a starter project from a free-text brief.</span>
-paracosm init my-app --domain <span class="str">"AI lab Q4 release pressure"</span> --leaders 3
+paracosm init my-app --domain <span class="str">"AI lab Q4 release pressure"</span> --actors 3
 
 <span class="cm"># Back-compat: paracosm-dashboard still works (alias for `paracosm dashboard`).</span></div>
         </div>
@@ -1094,7 +1101,7 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
         <div tabindex="0" class="code-body" id="cb-quickstart"><span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm/world-model'</span>;
 
 <span class="kw">const</span> wm = <span class="kw">await</span> WorldModel.<span class="fn">fromPrompt</span>({ seedText, domainHint: <span class="str">'AI safety lab leadership decision'</span> });
-<span class="kw">const</span> { leaders, artifacts } = <span class="kw">await</span> wm.<span class="fn">quickstart</span>({ leaderCount: <span class="num">3</span> });</div>
+<span class="kw">const</span> { actors, artifacts } = <span class="kw">await</span> wm.<span class="fn">quickstart</span>({ actorCount: <span class="num">3</span> });</div>
       </div>
       <div class="code-block">
         <div class="code-header"><span>Branch at turn 1 with a different leader</span><button class="code-copy" onclick="copyCode(this, document.getElementById('cb-fork').textContent)">Copy</button></div>
