@@ -20,7 +20,7 @@ export type {
 // ─── Mid-level: WorldModel class ────────────────────────────────────
 export { WorldModel, WorldModelReplayError, generateQuickstartActors } from './runtime/world-model/index.js';
 export type {
-  WorldModelSnapshot, ReplayResult, WorldModelQuickstartOptions, WorldModelQuickstartResult,
+  WorldModelSnapshot, WorldModelReplayResult, WorldModelQuickstartOptions, WorldModelQuickstartResult,
 } from './runtime/world-model/index.js';
 
 // ─── Scenario authoring (promoted from /compiler) ───────────────────
@@ -51,8 +51,9 @@ export { ProviderKeyMissingError, resolveProviderWithFallback } from './engine/p
 // ─── Public types from the engine ───────────────────────────────────
 export type {
   ActorConfig,
-  ScenarioPackage, SimulationModelConfig, Citation, ForgedToolRecord,
+  ScenarioPackage, SimulationModelConfig,
 } from './engine/types.js';
+export type { Citation, ForgedToolRecord } from './cli/types.js';
 export type { HexacoProfile } from './engine/core/state.js';
 export type { TraitProfile } from './engine/trait-models/index.js';
 export type { KeyPersonnel } from './engine/core/agent-generator.js';

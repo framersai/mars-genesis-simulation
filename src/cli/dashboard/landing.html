@@ -412,7 +412,7 @@ npm install -g paracosm</div>
         <div class="code-block" style="border:none;border-radius:0;margin:0">
           <div class="code-header"><span>Three lines: brief to running simulation</span><button class="code-copy" onclick="copyCode(this, document.getElementById('quickstart-code').textContent)">Copy</button></div>
           <div tabindex="0" class="code-body" id="quickstart-code"><span class="cm">// Free-text brief in. Compiled scenario, 3 HEXACO actors, 3 RunArtifacts out.</span>
-<span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm/world-model'</span>;
+<span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm'</span>;
 
 <span class="kw">const</span> wm = <span class="kw">await</span> WorldModel.<span class="fn">fromPrompt</span>({
   seedText: <span class="str">'Q3 board brief: lab is preparing to release Atlas-7...'</span>,
@@ -452,12 +452,12 @@ artifacts.<span class="fn">forEach</span>((a, i) =&gt; console.<span class="fn">
         </div>
         <div class="code-block" style="border:none;border-radius:0;margin:0">
           <div class="code-header"><span>Compile + run</span><button class="code-copy" onclick="copyCode(this, document.getElementById('manual-ts-code').textContent)">Copy</button></div>
-          <div tabindex="0" class="code-body" id="manual-ts-code"><span class="kw">import</span> { compileScenario } <span class="kw">from</span> <span class="str">'paracosm/compiler'</span>;
-<span class="kw">import</span> { runSimulation } <span class="kw">from</span> <span class="str">'paracosm/runtime'</span>;
+          <div tabindex="0" class="code-body" id="manual-ts-code"><span class="kw">import</span> { compileScenario, WorldModel } <span class="kw">from</span> <span class="str">'paracosm'</span>;
 <span class="kw">import</span> worldJson <span class="kw">from</span> <span class="str">'./my-world.json'</span> <span class="kw">with</span> { type: <span class="str">'json'</span> };
 
 <span class="kw">const</span> scenario = <span class="kw">await</span> <span class="fn">compileScenario</span>(worldJson);
-<span class="kw">const</span> artifact = <span class="kw">await</span> <span class="fn">runSimulation</span>(myLeader, [], { scenario, maxTurns: <span class="num">6</span>, seed: <span class="num">42</span> });</div>
+<span class="kw">const</span> wm = WorldModel.<span class="fn">fromScenario</span>(scenario);
+<span class="kw">const</span> artifact = <span class="kw">await</span> wm.<span class="fn">simulate</span>({ actor: myLeader, maxTurns: <span class="num">6</span>, seed: <span class="num">42</span> });</div>
         </div>
       </div>
 
@@ -465,7 +465,7 @@ artifacts.<span class="fn">forEach</span>((a, i) =&gt; console.<span class="fn">
       <div class="tab-panel" role="tabpanel" data-panel="granular" style="display:none">
         <div class="code-block" style="border:none;border-radius:0;margin:0">
           <div class="code-header"><span>All knobs: per-role models, cost preset, snapshots, custom events, abort</span><button class="code-copy" onclick="copyCode(this, document.getElementById('granular-code').textContent)">Copy</button></div>
-          <div tabindex="0" class="code-body" id="granular-code"><span class="kw">import</span> { createParacosmClient } <span class="kw">from</span> <span class="str">'paracosm'</span>;
+          <div tabindex="0" class="code-body" id="granular-code"><span class="kw">import</span> { createParacosmClient, WorldModel } <span class="kw">from</span> <span class="str">'paracosm'</span>;
 
 <span class="cm">// Pin defaults once, override per-call.</span>
 <span class="kw">const</span> client = <span class="fn">createParacosmClient</span>({
@@ -486,8 +486,9 @@ artifacts.<span class="fn">forEach</span>((a, i) =&gt; console.<span class="fn">
 <span class="kw">const</span> ctrl = <span class="kw">new</span> <span class="fn">AbortController</span>();
 setTimeout(() =&gt; ctrl.<span class="fn">abort</span>(), <span class="num">120_000</span>); <span class="cm">// kill after 2 min wall</span>
 
-<span class="kw">const</span> artifact = <span class="kw">await</span> client.<span class="fn">runSimulation</span>(leader, [], {
-  scenario, maxTurns: <span class="num">8</span>, seed: <span class="num">42</span>,
+<span class="kw">const</span> wm = WorldModel.<span class="fn">fromScenario</span>(scenario);
+<span class="kw">const</span> artifact = <span class="kw">await</span> wm.<span class="fn">simulate</span>({
+  actor: leader, maxTurns: <span class="num">8</span>, seed: <span class="num">42</span>,
   captureSnapshots: <span class="kw">true</span>,                  <span class="cm">// enable forking + replay</span>
   customEvents: [
     { turn: <span class="num">3</span>, title: <span class="str">'Dust storm'</span>, description: <span class="str">'72-hour storm cuts solar 80%.'</span> },
@@ -501,9 +502,7 @@ setTimeout(() =&gt; ctrl.<span class="fn">abort</span>(), <span class="num">120_
 });
 
 <span class="cm">// Fork + replay are first-class. RunArtifact is Zod-validated.</span>
-<span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm/world-model'</span>;
-<span class="kw">const</span> wm = WorldModel.<span class="fn">fromScenario</span>(scenario);
-<span class="kw">const</span> branch = <span class="kw">await</span> (<span class="kw">await</span> wm.<span class="fn">forkFromArtifact</span>(artifact, <span class="num">3</span>)).<span class="fn">simulate</span>(altLeader, { maxTurns: <span class="num">6</span> });
+<span class="kw">const</span> branch = <span class="kw">await</span> (<span class="kw">await</span> wm.<span class="fn">forkFromArtifact</span>(artifact, <span class="num">3</span>)).<span class="fn">simulate</span>({ actor: altActor, maxTurns: <span class="num">6</span> });
 <span class="kw">const</span> replay = <span class="kw">await</span> wm.<span class="fn">replay</span>(artifact); <span class="cm">// { matches, divergence }</span></div>
         </div>
       </div>
@@ -512,35 +511,33 @@ setTimeout(() =&gt; ctrl.<span class="fn">abort</span>(), <span class="num">120_
       <div class="tab-panel" role="tabpanel" data-panel="counterfactuals" style="display:none">
         <div class="code-block" style="border:none;border-radius:0;margin:0">
           <div class="code-header"><span>Fork at turn N, replay deterministic, model an intervention on a digital twin</span><button class="code-copy" onclick="copyCode(this, document.getElementById('counterfactuals-code').textContent)">Copy</button></div>
-          <div tabindex="0" class="code-body" id="counterfactuals-code"><span class="cm">// One run, three counterfactual surfaces: fork, replay, simulateIntervention.</span>
-<span class="cm">// Same scenario, same kernel, same seed -- only the leader / decision changes.</span>
-<span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm/world-model'</span>;
-<span class="kw">import</span> { runSimulation } <span class="kw">from</span> <span class="str">'paracosm/runtime'</span>;
+          <div tabindex="0" class="code-body" id="counterfactuals-code"><span class="cm">// One run, three counterfactual surfaces: fork, replay, intervene.</span>
+<span class="cm">// Same scenario, same kernel, same seed — only the actor / decision changes.</span>
+<span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm'</span>;
 
 <span class="kw">const</span> wm = WorldModel.<span class="fn">fromScenario</span>(scenario);
 
 <span class="cm">// 1. Capture a baseline run with snapshots so we can fork it later.</span>
-<span class="kw">const</span> baseline = <span class="kw">await</span> <span class="fn">runSimulation</span>(reyes, [], {
-  scenario, maxTurns: <span class="num">8</span>, seed: <span class="num">42</span>,
+<span class="kw">const</span> baseline = <span class="kw">await</span> wm.<span class="fn">simulate</span>({
+  actor: reyes, maxTurns: <span class="num">8</span>, seed: <span class="num">42</span>,
   captureSnapshots: <span class="kw">true</span>,           <span class="cm">// required for forking</span>
 });
 
-<span class="cm">// 2. Fork at turn 3, swap the leader, run forward. Same kernel state at t=3.</span>
+<span class="cm">// 2. Fork at turn 3, swap the actor, run forward. Same kernel state at t=3.</span>
 <span class="kw">const</span> branchPoint = <span class="kw">await</span> wm.<span class="fn">forkFromArtifact</span>(baseline, <span class="num">3</span>);
-<span class="kw">const</span> alt = <span class="kw">await</span> branchPoint.<span class="fn">simulate</span>(okafor, { maxTurns: <span class="num">5</span> });
+<span class="kw">const</span> alt = <span class="kw">await</span> branchPoint.<span class="fn">simulate</span>({ actor: okafor, maxTurns: <span class="num">5</span> });
 console.<span class="fn">log</span>(<span class="str">'baseline:'</span>, baseline.fingerprint);
 console.<span class="fn">log</span>(<span class="str">'fork(reyes -&gt; okafor):'</span>, alt.fingerprint);
 
 <span class="cm">// 3. Replay the original deterministically. Proves the kernel is byte-equal.</span>
 <span class="kw">const</span> { matches, divergence } = <span class="kw">await</span> wm.<span class="fn">replay</span>(baseline);
 console.<span class="fn">log</span>(<span class="str">'replay matches:'</span>, matches);  <span class="cm">// true</span>
-<span class="kw">if</span> (!matches) console.<span class="fn">error</span>(<span class="str">'first divergence at:'</span>, divergence.path);
+<span class="kw">if</span> (!matches) console.<span class="fn">error</span>(<span class="str">'first divergence at:'</span>, divergence);
 
-<span class="cm">// 4. Inject an event at turn 4 by forking and running forward with a custom</span>
-<span class="cm">//    event in the queue. Same scenario+seed up to t=4, then a new event the</span>
-<span class="cm">//    original timeline never saw.</span>
+<span class="cm">// 4. Inject an event at turn 4 by forking + running with a custom event.</span>
 <span class="kw">const</span> branchAt4 = <span class="kw">await</span> wm.<span class="fn">forkFromArtifact</span>(baseline, <span class="num">4</span>);
-<span class="kw">const</span> twin = <span class="kw">await</span> branchAt4.<span class="fn">simulate</span>(reyes, {
+<span class="kw">const</span> twin = <span class="kw">await</span> branchAt4.<span class="fn">simulate</span>({
+  actor: reyes,
   maxTurns: <span class="num">5</span>,
   customEvents: [{ turn: <span class="num">5</span>, title: <span class="str">'Supply convoy delayed 60 days'</span>,
                    description: <span class="str">'External supply chain disruption.'</span> }],
@@ -548,8 +545,8 @@ console.<span class="fn">log</span>(<span class="str">'replay matches:'</span>, 
 console.<span class="fn">log</span>(<span class="str">'twin under disruption:'</span>, twin.fingerprint);
 
 <span class="cm">// (For digital-twin runs against a *subject* + *intervention* — e.g.</span>
-<span class="cm">// "company X under a 25% RIF policy" — see wm.simulateIntervention(</span>
-<span class="cm">// subject, intervention, leader, opts) in docs/COOKBOOK.md.)</span></div>
+<span class="cm">// "company X under a 25% RIF policy" — see</span>
+<span class="cm">// wm.intervene({ subject, intervention, actor, ...opts }) in COOKBOOK.md.)</span></div>
         </div>
       </div>
 
@@ -557,8 +554,9 @@ console.<span class="fn">log</span>(<span class="str">'twin under disruption:'</
       <div class="tab-panel" role="tabpanel" data-panel="trait-models" style="display:none">
         <div class="code-block" style="border:none;border-radius:0;margin:0;border-bottom:1px solid var(--border)">
           <div class="code-header"><span>Pluggable trait models: HEXACO for humans, ai-agent for AI systems, custom for anything</span><button class="code-copy" onclick="copyCode(this, document.getElementById('trait-models-code').textContent)">Copy</button></div>
-          <div tabindex="0" class="code-body" id="trait-models-code"><span class="cm">// Leaders aren't just people. Same engine, different decision-maker shapes.</span>
-<span class="kw">import</span> { runSimulation } <span class="kw">from</span> <span class="str">'paracosm/runtime'</span>;
+          <div tabindex="0" class="code-body" id="trait-models-code"><span class="cm">// Actors aren't just people. Same engine, different decision-maker shapes.</span>
+<span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm'</span>;
+<span class="kw">const</span> wm = WorldModel.<span class="fn">fromScenario</span>(scenario);
 
 <span class="cm">// Path A: legacy HEXACO leader (humans, councils, archetypes).</span>
 <span class="kw">const</span> humanLeader = {
@@ -598,8 +596,8 @@ console.<span class="fn">log</span>(<span class="str">'twin under disruption:'</
 };
 
 <span class="cm">// Same runtime, same RunArtifact shape, same fingerprint classifier.</span>
-<span class="kw">const</span> humanRun = <span class="kw">await</span> <span class="fn">runSimulation</span>(humanLeader, [], { scenario, maxTurns: <span class="num">6</span>, seed: <span class="num">42</span> });
-<span class="kw">const</span> aiRun    = <span class="kw">await</span> <span class="fn">runSimulation</span>(aiLeader,    [], { scenario, maxTurns: <span class="num">6</span>, seed: <span class="num">42</span> });</div>
+<span class="kw">const</span> humanRun = <span class="kw">await</span> wm.<span class="fn">simulate</span>({ actor: humanLeader, maxTurns: <span class="num">6</span>, seed: <span class="num">42</span> });
+<span class="kw">const</span> aiRun    = <span class="kw">await</span> wm.<span class="fn">simulate</span>({ actor: aiLeader,    maxTurns: <span class="num">6</span>, seed: <span class="num">42</span> });</div>
         </div>
         <div class="code-block" style="border:none;border-radius:0;margin:0">
           <div class="code-header"><span>Or register your own model. Any axis ids, any drift table.</span><button class="code-copy" onclick="copyCode(this, document.getElementById('trait-models-custom-code').textContent)">Copy</button></div>
@@ -690,19 +688,19 @@ paracosm init my-app --domain <span class="str">"AI lab Q4 release pressure"</sp
 <span class="cm">//   npx tsx index.ts       (or: bun index.ts)</span>
 <span class="cm">// Paracosm auto-detects whichever key is present and falls back between providers.</span>
 
-<span class="kw">import</span> { compileScenario } <span class="kw">from</span> <span class="str">'paracosm/compiler'</span>;
-<span class="kw">import</span> { runSimulation } <span class="kw">from</span> <span class="str">'paracosm/runtime'</span>;
+<span class="kw">import</span> { compileScenario, WorldModel } <span class="kw">from</span> <span class="str">'paracosm'</span>;
 <span class="kw">import</span> worldJson <span class="kw">from</span> <span class="str">'./my-world.json'</span> <span class="kw">with</span> { type: <span class="str">'json'</span> };
 
 <span class="cm">// 1. Compile JSON into a runnable ScenarioPackage (~$0.10, cached to disk)</span>
 <span class="cm">//    Defaults to OpenAI (gpt-5.4-mini). Pass provider: 'anthropic' to switch.</span>
 <span class="kw">const</span> scenario = <span class="kw">await</span> <span class="fn">compileScenario</span>(worldJson);
+<span class="kw">const</span> wm = WorldModel.<span class="fn">fromScenario</span>(scenario);
 
-<span class="cm">// 2. Define leaders with HEXACO personality profiles</span>
-<span class="cm">//    Each leader is one simulation run. Run one, two, or many.</span>
+<span class="cm">// 2. Define actors with HEXACO personality profiles.</span>
+<span class="cm">//    Each actor is one simulation run. Run one, two, or many.</span>
 <span class="cm">//    The dashboard runs two side-by-side for comparison,</span>
 <span class="cm">//    but the API has no limit.</span>
-<span class="kw">const</span> leaders = [
+<span class="kw">const</span> actors = [
   {
     name: <span class="str">'Captain Reyes'</span>,
     archetype: <span class="str">'The Pragmatist'</span>,
@@ -725,15 +723,15 @@ paracosm init my-app --domain <span class="str">"AI lab Q4 release pressure"</sp
 
 <span class="cm">// 3. Run in parallel: same seed, same crises, different outcomes</span>
 <span class="kw">const</span> results = <span class="kw">await</span> Promise.<span class="fn">all</span>(
-  leaders.<span class="fn">map</span>(leader =>
-    <span class="fn">runSimulation</span>(leader, [], {
-      scenario,
+  actors.<span class="fn">map</span>(actor =>
+    wm.<span class="fn">simulate</span>({
+      actor,
       maxTurns: <span class="num">6</span>,
       seed: <span class="num">42</span>,
       <span class="cm">// costPreset: 'economy',  // uncomment for ~5-10× cheaper iteration</span>
       <span class="cm">// Every event carries a one-liner `summary` field. Prints cleanly</span>
       <span class="cm">// for all 17 event types. Narrow on `e.type` for exact payloads.</span>
-      <span class="fn">onEvent</span>(e) { console.<span class="fn">log</span>(leader.name, e.type, e.data.summary); },
+      <span class="fn">onEvent</span>(e) { console.<span class="fn">log</span>(actor.name, e.type, e.data.summary); },
     })
   )
 );
@@ -854,7 +852,7 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
         <img class="feat-icon" src="/brand/feature-icons/replay.svg?v=1" width="48" height="48" alt="">
         <h3>Replay-Verified Determinism</h3>
         <p><code>wm.replay(stored)</code> re-executes the deterministic between-turn progression hook from each recorded snapshot, captures fresh snapshots, and compares them under canonical JSON. <code>matches=true</code> proves the kernel is byte-equal-deterministic for this artifact's transitions; <code>matches=false</code> names the first divergence path so you can localize the change. Pillar 2 (Reproducible) is now verifiable in code, not just promised in copy.</p>
-        <div class="feat-ref">WorldModel.replay() in paracosm/world-model &middot; canonicalJson &middot; firstDivergence</div>
+        <div class="feat-ref">WorldModel.replay() in paracosm &middot; canonicalJson &middot; firstDivergence</div>
       </div>
     </div>
   </div>
@@ -1098,7 +1096,7 @@ npm run dashboard     <span class="cm"># opens http://localhost:3456</span>
     <div class="code-sec">
       <div class="code-block">
         <div class="code-header"><span>Prompt to running simulation, three lines</span><button class="code-copy" onclick="copyCode(this, document.getElementById('cb-quickstart').textContent)">Copy</button></div>
-        <div tabindex="0" class="code-body" id="cb-quickstart"><span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm/world-model'</span>;
+        <div tabindex="0" class="code-body" id="cb-quickstart"><span class="kw">import</span> { WorldModel } <span class="kw">from</span> <span class="str">'paracosm'</span>;
 
 <span class="kw">const</span> wm = <span class="kw">await</span> WorldModel.<span class="fn">fromPrompt</span>({ seedText, domainHint: <span class="str">'AI safety lab leadership decision'</span> });
 <span class="kw">const</span> { actors, artifacts } = <span class="kw">await</span> wm.<span class="fn">quickstart</span>({ actorCount: <span class="num">3</span> });</div>
