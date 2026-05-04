@@ -17,6 +17,7 @@ import {
   readLastLaunchConfig,
   writeLastLaunchConfig,
 } from '../../hooks/useLastLaunchConfig';
+import { resolveSetupRedirectHref } from '../../tab-routing';
 import styles from './RerunPanel.module.scss';
 
 interface RerunPanelProps {
@@ -64,7 +65,11 @@ export function RerunPanel({ enabled = true }: RerunPanelProps) {
         // Persist the new seed so a subsequent Re-run bumps from THIS
         // run's seed, not the original.
         writeLastLaunchConfig(window.localStorage, next);
-        window.location.href = data.redirect;
+        // Same bug Quickstart had: a bare /sim from /setup falls
+        // through to the URL parser's default ('quickstart'), so the
+        // user lands on the form they came from instead of the live
+        // Sim tab. resolveSetupRedirectHref forces ?tab=sim.
+        window.location.href = resolveSetupRedirectHref(window.location.href, data.redirect);
       } else {
         alert('Re-run failed: server did not return a redirect. Check the server logs.');
       }

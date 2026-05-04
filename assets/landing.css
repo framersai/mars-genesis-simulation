@@ -2017,12 +2017,23 @@ html.light .waitlist-field select:focus {
 }
 .hero-trust-pill-static { cursor: default; }
 .hero-trust-pill-static:hover { transform: none; border-color: var(--border); }
+/* Inline SVG glyph for the forks pill — Unicode ⑂ (U+2442) tofus on
+   iOS Safari + several Linux distros without OCR-A fallback. SVG
+   sized to font-em so it scales with the label and aligns to its
+   baseline. */
+.hero-trust-glyph {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+  margin-right: 2px;
+}
 @media (max-width: 640px) {
   .hero-trust { margin-top: 14px; gap: 6px; }
   .hero-trust-pill { padding: 5px 10px; font-size: 11px; }
   .hero-trust-label { display: none; }
-  .hero-trust-pill[aria-label^="npm"] .hero-trust-value::before { content: 'npm '; opacity: 0.5; }
-  .hero-trust-pill[aria-label^="GitHub"] .hero-trust-value::before { content: '★ '; }
+  .hero-trust-pill[aria-label="npm package"] .hero-trust-value::before { content: 'npm '; opacity: 0.5; }
+  .hero-trust-pill[aria-label="GitHub stars"] .hero-trust-value::before { content: '★ '; }
+  .hero-trust-pill[aria-label="GitHub forks"] .hero-trust-value::before { content: 'forks '; opacity: 0.5; }
 }
 
 /* ════════════════════════════════════════════════════════════════════
