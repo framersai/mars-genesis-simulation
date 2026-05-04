@@ -125,11 +125,14 @@ export interface InterveneOptions extends SimulateOptions {
 }
 
 /**
- * Options-bag for `wm.batch`. Replaces v0.8 positional `(actors, opts)`.
+ * Options-bag for `wm.batch`. Already a single-arg options-bag in v0.8;
+ * v0.9 just re-exports the existing shape from the public root for
+ * symmetry with `SimulateOptions` / `InterveneOptions`.
+ *
+ * Note: uses `turns` (required) instead of `maxTurns` (optional) to
+ * match the underlying `runBatch` signature. For variable per-actor
+ * lengths, call `wm.simulate({...})` directly in a loop.
  *
  * @public
  */
-export interface BatchOptions extends Omit<SimulateOptions, 'actor'> {
-  /** The actors to run in parallel. Each gets its own RunArtifact. */
-  actors: ActorConfig[];
-}
+export type BatchOptions = import('../runtime/world-model/index.js').WorldModelBatchOptions;
