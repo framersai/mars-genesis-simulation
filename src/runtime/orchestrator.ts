@@ -36,7 +36,7 @@ import { SeededRng } from '../engine/core/rng.js';
 import { classifyOutcome, classifyOutcomeById, driftCommanderHexaco } from '../engine/core/progression.js';
 import { buildTrajectoryCue } from './hexaco-cues/trajectory.js';
 import { buildTrajectoryCue as buildTrajectoryCueGeneric, type TraitProfileSnapshot } from './trait-cues/trajectory.js';
-import { normalizeActorConfig } from '../engine/trait-models/normalize-leader.js';
+import { normalizeActorConfig, traitsToHexaco } from '../engine/trait-models/normalize-leader.js';
 import { traitModelRegistry, type TraitProfile } from '../engine/trait-models/index.js';
 import { driftLeaderProfile } from '../engine/trait-models/drift.js';
 import type { DepartmentReport, CommanderDecision, TurnArtifact } from './contracts.js';
@@ -449,7 +449,14 @@ export async function runSimulation(leader: ActorConfig, keyPersonnel: KeyPerson
   // traitProfile from leader.hexaco. Non-HEXACO callers (e.g. ai-agent
   // leaders) get their explicit traitProfile passed through.
   // See docs/superpowers/specs/2026-04-26-trait-model-generalization-design.md.
-  leader = normalizeActorConfig(leader);
+  const normalized = normalizeActorConfig(leader);
+  leader = normalized;
+  // Resolve a HEXACO-shape view for legacy downstream reads (drift
+  // bookkeeping, chat-agent personality, swarm-roster snapshots). For
+  // pure-traitProfile actors (e.g. ai-agent), this projects from the
+  // trait map; for hexaco-supplied actors, it round-trips the same
+  // values back. Either way, every `.hexaco.X` read below is safe.
+  const leaderHexaco: HexacoProfile = leader.hexaco ?? traitsToHexaco(normalized.traitProfile.traits);
   const timePerTurn = opts.timePerTurn ?? opts.scenario?.setup?.defaultTimePerTurn ?? 1;
   const requestedProvider = resolveProviderFromCredentials(opts.provider, opts, 'openai');
   const requestedProviderApiKey = apiKeyForProvider(requestedProvider, opts);
@@ -672,9 +679,9 @@ export async function runSimulation(leader: ActorConfig, keyPersonnel: KeyPerson
   // pair-runner reuses configs across runs and chat-agents hold
   // references to the baseline profile. Every downstream read of the
   // commander's current personality goes through commanderHexacoLive.
-  const commanderHexacoLive: HexacoProfile = { ...leader.hexaco };
+  const commanderHexacoLive: HexacoProfile = { ...leaderHexaco };
   const commanderHexacoHistory: HexacoSnapshot[] = [
-    { turn: 0, time: startTime, hexaco: { ...leader.hexaco } },
+    { turn: 0, time: startTime, hexaco: { ...leaderHexaco } },
   ];
 
   // Parallel commander trait profile + history under whatever
@@ -706,7 +713,7 @@ export async function runSimulation(leader: ActorConfig, keyPersonnel: KeyPerson
     apiKey: providerApiKey,
     fallbackProviders: providerApiKey ? [] : undefined,
     instructions: leader.instructions,
-    personality: { openness: leader.hexaco.openness, conscientiousness: leader.hexaco.conscientiousness, extraversion: leader.hexaco.extraversion, agreeableness: leader.hexaco.agreeableness, emotionality: leader.hexaco.emotionality, honesty: leader.hexaco.honestyHumility },
+    personality: { openness: leaderHexaco.openness, conscientiousness: leaderHexaco.conscientiousness, extraversion: leaderHexaco.extraversion, agreeableness: leaderHexaco.agreeableness, emotionality: leaderHexaco.emotionality, honesty: leaderHexaco.honestyHumility },
     maxSteps: opts.execution?.commanderMaxSteps ?? DEFAULT_EXECUTION.commanderMaxSteps,
     // Commander outputs CommanderDecision JSON: rationale + reasoning +
     // selectedOptionId etc. Typical ~500-1500 output tokens; cap 3000
@@ -723,7 +730,7 @@ export async function runSimulation(leader: ActorConfig, keyPersonnel: KeyPerson
   // compute on a run that has no hope of producing valid output.
   try {
     trackUsage(
-      await cmdSess.send(buildCommanderBootstrap(buildPersonalityCue(leader.hexaco))),
+      await cmdSess.send(buildCommanderBootstrap(buildPersonalityCue(leaderHexaco))),
       'commander',
     );
   } catch (err) {

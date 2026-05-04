@@ -1,4 +1,5 @@
 import type { HexacoProfile } from '../engine/core/state.js';
+import type { TraitProfile } from '../engine/trait-models/index.js';
 export type { HexacoProfile };
 
 export interface ActorConfig {
@@ -8,6 +9,9 @@ export interface ActorConfig {
   /** Optional in v0.9: ai-agent and other non-HEXACO trait models can
    * omit this if they supply `traitProfile` instead. */
   hexaco?: HexacoProfile;
+  /** Pluggable trait profile naming a registered TraitModel. When set,
+   * overrides `hexaco` for cue translation and drift. See engine/types.ts. */
+  traitProfile?: TraitProfile;
   instructions: string;
 }
 

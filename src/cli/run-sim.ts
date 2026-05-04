@@ -98,10 +98,17 @@ export async function runSim(argv: readonly string[]): Promise<number> {
   }
 
   const baseActor = actors[actorIdx] || actors[0];
+  // Spread + merge hexaco only when both sides supply it; otherwise
+  // pass through whichever is defined (or undefined if neither — then
+  // traitProfile must be set on baseActor for the runtime to accept).
+  const mergedHexaco =
+    baseActor.hexaco || cliActor.hexaco
+      ? { ...(baseActor.hexaco ?? {}), ...(cliActor.hexaco ?? {}) } as ActorConfig['hexaco']
+      : undefined;
   const actor: ActorConfig = {
     ...baseActor,
     ...cliActor,
-    hexaco: { ...baseActor.hexaco, ...(cliActor.hexaco || {}) },
+    ...(mergedHexaco ? { hexaco: mergedHexaco } : {}),
   };
 
   if (cliActor.name && !cliActor.instructions) {
@@ -109,7 +116,11 @@ export async function runSim(argv: readonly string[]): Promise<number> {
   }
 
   process.stdout.write(`\n  Actor: ${actor.name} (${actor.archetype}): ${actor.unit}\n`);
-  process.stdout.write(`  HEXACO: O=${actor.hexaco.openness} C=${actor.hexaco.conscientiousness} E=${actor.hexaco.extraversion}\n`);
+  if (actor.hexaco) {
+    process.stdout.write(`  HEXACO: O=${actor.hexaco.openness} C=${actor.hexaco.conscientiousness} E=${actor.hexaco.extraversion}\n`);
+  } else if (actor.traitProfile) {
+    process.stdout.write(`  Trait model: ${actor.traitProfile.modelId}\n`);
+  }
 
   try {
     await runSimulation(actor, DEFAULT_KEY_PERSONNEL, {
