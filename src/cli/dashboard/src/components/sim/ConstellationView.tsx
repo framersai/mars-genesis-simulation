@@ -187,8 +187,12 @@ export function ConstellationView({ state, onActorClick }: ConstellationViewProp
                 const stats = nodeStats[i];
                 if (!stats) return null;
                 const lineGap = 14;
+                // stats.morale is sourced from actor.moraleHistory[last]
+                // (constellation-stats.ts:47), which useGameState already
+                // pre-scales to 0-100. Don't multiply by 100 a second
+                // time — same bug as ActorBar's compact branch had.
                 const popMoraleText = stats.pop !== null && stats.morale !== null
-                  ? `POP ${Math.round(stats.pop)} · MORALE ${Math.round(stats.morale * 100)}%`
+                  ? `POP ${Math.round(stats.pop)} · MORALE ${Math.round(stats.morale)}%`
                   : '';
                 const glyph = stats.latestOutcome === 'success' ? '✓' : stats.latestOutcome === 'failure' ? '⚠' : '…';
                 const glyphClass =

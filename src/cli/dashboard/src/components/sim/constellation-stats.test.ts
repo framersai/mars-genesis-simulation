@@ -50,9 +50,13 @@ test('extractNodeStats: latest outcome with `failure` substring → failure', ()
 });
 
 test('extractNodeStats: pop/morale come from last entry in their histories', () => {
-  const s = extractNodeStats(stateWith([], [25, 28, 30], [0.9, 0.86]), 'A');
+  // moraleHistory is pre-scaled to 0-100 by useGameState (Math.round(metrics.morale * 100)),
+  // so the last entry is an integer percent value. Locking the contract here so the
+  // ConstellationView display logic (which now reads stats.morale verbatim) doesn't
+  // accidentally re-multiply.
+  const s = extractNodeStats(stateWith([], [25, 28, 30], [90, 86]), 'A');
   assert.equal(s.pop, 30);
-  assert.equal(s.morale, 0.86);
+  assert.equal(s.morale, 86);
 });
 
 test('extractNodeStats: counts pull from pre-counted state fields, not events walk', () => {
