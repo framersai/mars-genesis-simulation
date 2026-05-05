@@ -208,16 +208,23 @@ export async function compileScenario(
   const json = scenarioJson as Record<string, any>;
   const hooks: ScenarioHooks = {};
 
-  // Generate each hook, using cache when available.
+  // Generate each hook in parallel, using cache when available.
   //
-  // Cache writes below skip `result.fromFallback === true` so a failed
+  // Hooks are independent — each reads from the same `json` and
+  // `genText` but mutates a different field of the `hooks` object —
+  // so we fan out with Promise.all instead of awaiting them in series.
+  // Serial generation was costing ~210s (7 hooks × ~30s) on top of the
+  // ~30s draft call; parallel cuts the wall-clock to roughly the
+  // slowest single hook.
+  //
+  // Cache writes skip `result.fromFallback === true` so a failed
   // generation (key exhaustion, transient LLM error) does not poison
   // future compiles with the fallback's no-op source. The runtime path
   // still gets the fallback hook for THIS run; the disk cache stays
   // empty so the next compile retries against the LLM. Prior bug:
   // `'// No-op: generation failed'` was cached for `progression`, then
   // crashed the sandbox at parse on every subsequent simulate.
-  for (const hookName of HOOK_NAMES) {
+  await Promise.all(HOOK_NAMES.map(async (hookName) => {
     // Try to restore from cache first.
     //
     // `restoreHookFromCache` validates the cached source via the same
@@ -232,7 +239,7 @@ export async function compileScenario(
         if (restored) {
           onProgress?.(hookName, 'cached');
           Object.assign(hooks, restored);
-          continue;
+          return;
         }
       }
     }
@@ -285,7 +292,7 @@ export async function compileScenario(
     }
 
     onProgress?.(hookName, 'done');
-  }
+  }));
 
   // Seed ingestion: enrich knowledge bundle from document or URL.
   // Cached on disk by seed signature (text/URL + maxSearches + webSearch flag)
