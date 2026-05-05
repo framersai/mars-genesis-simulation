@@ -211,6 +211,21 @@ export function GuidedTour({ activeTab, chatEnabled = true, onTabChange, onClose
 
     attemptCancelRef.current?.();
 
+    // Strip the previous step's highlight IMMEDIATELY so the new step
+    // never renders its title/copy with the previous step's element
+    // glowing. The polling loop below can take 100-3000ms to find a
+    // target on a slow or off-tab mount; without this clear the user
+    // sees "Divergence rail" in the tour card while "Event streams"
+    // (the prior step's target) still glows. Same desync also showed
+    // up when the user hit Back from the next step — the prior new
+    // highlight stuck around because apply() only swaps when the new
+    // target is found.
+    if (prevElRef.current) {
+      prevElRef.current.classList.remove(HIGHLIGHT_CLASS);
+      prevElRef.current = null;
+    }
+    setRect(null);
+
     cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(() => {
       let cancelled = false;
