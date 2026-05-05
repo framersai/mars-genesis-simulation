@@ -23,6 +23,12 @@
   <a href="https://wilds.ai/discord">Discord</a>
 </p>
 
+<p align="center">
+  <a href="https://paracosm.agentos.sh/demo/e2e-atlas-8-hero.mp4">▶ Watch the 90-second end-to-end demo</a>
+  &nbsp;·&nbsp;
+  <a href="https://paracosm.agentos.sh/demo/digital-twin-maria-2-hero.mp4">▶ Digital twin walkthrough</a>
+</p>
+
 ---
 
 Paracosm is an agent swarm simulation framework for structured world modeling with LLMs. It compiles a JSON scenario draft (or a prompt, or an extracted document) into a runnable multi-agent world, plays it through a deterministic kernel, and lets agents with HEXACO personality profiles decide turn by turn how the world unfolds. Snapshots persist on disk. Runs replay byte-for-byte. Any past turn can be forked with a different actor, a different seed, or a custom event, and the divergent branch streams alongside the trunk so the contrast is visible in the artifact, not promised in copy.

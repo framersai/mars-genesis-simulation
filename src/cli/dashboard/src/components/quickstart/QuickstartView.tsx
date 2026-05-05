@@ -8,6 +8,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { SeedInput } from './SeedInput';
 import { InterventionDemoCard } from '../digital-twin/InterventionDemoCard';
 import { CompareModal } from '../compare/CompareModal.js';
+import { ReplayLastRunCTA } from './ReplayLastRunCTA';
 import { QuickstartProgress, type Stage, type ActorProgress } from './QuickstartProgress';
 import { QuickstartResults } from './QuickstartResults';
 import type { ActorConfig, ScenarioPackage } from '../../../../../engine/types.js';
@@ -144,6 +145,12 @@ export function QuickstartView({ sse, sessionId, onRunStarted, onInterventionRes
   const handleLoadedScenarioRun = useCallback(async (actorCount: number) => {
     setErrorBanner(null);
     onRunStarted?.();
+    // Reset the local SSE buffer up front so the Progress panel never
+    // shows leftover events from a prior run while this one ramps up.
+    // The later sse.reset() right before the /setup fetch is kept as
+    // belt-and-suspenders for the brief window when actor-generation
+    // is still in flight.
+    sse.reset();
 
     // Inherit the user's Settings-tab choices (API keys, provider,
     // model picks, economics profile) so the CTA respects what the
@@ -313,6 +320,12 @@ export function QuickstartView({ sse, sessionId, onRunStarted, onInterventionRes
     // session. Symmetric with handleRun's setUserTriggeredRun(true)
     // in App.tsx.
     onRunStarted?.();
+    // Clear local SSE buffer immediately. Without this, the
+    // QuickstartProgress panel's "Run N simulations" stage card renders
+    // any events still resident from a prior run while the new compile
+    // is in flight — the user reported seeing 192 stale events labeled
+    // with the prior run's actors before this fix.
+    sse.reset();
     setPhase({ kind: 'progress', stage: 'compile' });
     try {
       const compileRes = await fetch('/api/quickstart/compile-from-seed', {
@@ -504,6 +517,7 @@ export function QuickstartView({ sse, sessionId, onRunStarted, onInterventionRes
             </ul>
           </header>
           {errorBanner && <p className={styles.errorBanner} role="alert">{errorBanner}</p>}
+          <ReplayLastRunCTA />
           <SeedInput
             onSeedReady={handleSeedReady}
             onLoadedScenarioRunStart={handleLoadedScenarioRun}

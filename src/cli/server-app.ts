@@ -1325,6 +1325,16 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
           broadcast,
           resetEventBuffer: clearEventBuffer,
         };
+        // compile-from-seed is the first call in a new Quickstart
+        // launch flow. Clearing the event buffer here means that any
+        // SSE clients reconnecting between compile and /setup won't
+        // re-receive events from the prior run (which was leaving
+        // QuickstartProgress's "Run N simulations" stage card with
+        // 100+ stale events from the previous bookstore/AGI/clinical
+        // run before the new run had even started simulating).
+        if (req.url === '/api/quickstart/compile-from-seed') {
+          clearEventBuffer();
+        }
         if (req.url === '/api/quickstart/fetch-seed') {
           await handleFetchSeed(req, res, body, quickstartDeps);
           return;

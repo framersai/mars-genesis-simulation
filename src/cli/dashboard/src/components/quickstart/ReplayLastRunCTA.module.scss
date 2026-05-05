@@ -1,0 +1,59 @@
+@use '../../theme/typography' as typo;
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 600px;
+  margin: 0 auto 14px;
+  padding: 10px 14px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  font-family: var(--sans);
+  color: var(--text-2);
+  transition: border-color 120ms, background 120ms;
+
+  &:hover {
+    border-color: var(--text-3);
+    background: var(--bg-elev-1, var(--bg-panel));
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+  }
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: var(--font-3xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.actor {
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.arrow {
+  font-size: var(--font-md);
+  color: var(--amber);
+}
+
+.meta {
+  font-family: var(--mono);
+  font-size: var(--font-3xs);
+  color: var(--text-3);
+}
