@@ -2096,7 +2096,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
           }
         } else if (!actorsArray || actorsArray.length < 2) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Two actors required' }));
+          res.end(JSON.stringify({ error: 'At least 2 actors required' }));
           return;
         }
 
