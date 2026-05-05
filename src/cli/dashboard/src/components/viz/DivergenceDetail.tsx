@@ -52,11 +52,13 @@ export function DivergenceDetail({ diff, departmentLabels }: DivergenceDetailPro
         {sorted.map(([key, entry]) => {
           const label = departmentLabels[key] ?? key;
           const strong = entry.magnitude >= 0.5;
+          const ariaText = `${label}: A has ${entry.aState.agentCount} agents (${entry.aState.dominantMood} mood); B has ${entry.bState.agentCount} agents (${entry.bState.dominantMood} mood)`;
           return (
             <li
               key={key}
               className={`${styles.chip} ${strong ? styles.chipStrong : styles.chipLight}`}
-              title={`A: ${entry.aState.agentCount} agents (${entry.aState.dominantMood}); B: ${entry.bState.agentCount} agents (${entry.bState.dominantMood})`}
+              title={ariaText}
+              aria-label={ariaText}
             >
               <span className={styles.chipDept}>{label}</span>
               <span className={styles.chipCount}>

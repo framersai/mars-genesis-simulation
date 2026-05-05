@@ -60,7 +60,10 @@ export function computeTurnHighlight(
   turn: number,
 ): string {
   if (!a || !b) return 'Awaiting first turn snapshot.';
-  const year = a.year || b.year;
+  // `??` instead of `||` so a legitimate year of 0 (synthetic test
+  // fixtures, year-zero scenarios) isn't silently overridden by the
+  // other side's year.
+  const year = a.year ?? b.year;
 
   // 1. Mass deaths on one side
   if (a.deathsThisTurn !== b.deathsThisTurn) {
