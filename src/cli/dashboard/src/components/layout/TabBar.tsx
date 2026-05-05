@@ -77,6 +77,28 @@ export function TabBar({ active, onTabChange, scenario }: TabBarProps) {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
+  // Inject a focus-visible style block once. Inline styles can't express
+  // `:focus-visible`, but TabBar is a bespoke surface that doesn't have
+  // a paired SCSS module today. A scoped <style> tag at the nav root keeps
+  // the visual focus ring consistent without forcing a wider refactor.
+  const focusStyleId = 'tab-bar-focus-visible';
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (document.getElementById(focusStyleId)) return;
+    const style = document.createElement('style');
+    style.id = focusStyleId;
+    style.textContent = `
+      .tab-bar [role="tab"]:focus { outline: none; }
+      .tab-bar [role="tab"]:focus-visible {
+        outline: 2px solid var(--amber);
+        outline-offset: -2px;
+        position: relative;
+        z-index: 1;
+      }
+    `;
+    document.head.appendChild(style);
+  }, []);
+
   // Arrow-key cycling per ARIA APG tablist pattern: Left/Right (and
   // Home/End) move focus between tabs and activate them. Without this,
   // keyboard users can only Tab linearly through the row.

@@ -36,12 +36,21 @@ interface ActorBarProps {
   pendingDecision?: string;
 }
 
-/** Map a 0-100 morale value to a mood tier label + emoji. */
+/**
+ * Map a 0-100 morale value to a mood tier label + glyph.
+ *
+ * Glyphs are geometric Unicode triangles (▼ ▽ △ ▲) rather than face
+ * emoji because face emoji render with wildly different shapes across
+ * Apple / Microsoft / Linux / Android. The dashboard is a data surface;
+ * keeping the symbol identical across OSes matters more than expressive
+ * emotion. Triangles also encode the direction (down = bad, up = good)
+ * without needing the label.
+ */
 function moodFor(morale: number): { label: string; icon: string; tone: 'low' | 'tense' | 'ok' | 'high' } {
-  if (morale < 25) return { label: 'low', icon: '\u{1F622}', tone: 'low' };
-  if (morale < 50) return { label: 'tense', icon: '\u{1F614}', tone: 'tense' };
-  if (morale < 75) return { label: 'steady', icon: '\u{1F642}', tone: 'ok' };
-  return { label: 'rising', icon: '\u{1F60A}', tone: 'high' };
+  if (morale < 25) return { label: 'low', icon: '▼', tone: 'low' }; // ▼
+  if (morale < 50) return { label: 'tense', icon: '▽', tone: 'tense' }; // ▽
+  if (morale < 75) return { label: 'steady', icon: '△', tone: 'ok' }; // △
+  return { label: 'rising', icon: '▲', tone: 'high' }; // ▲
 }
 
 /** Pick up to N status chips from the statuses bag. Skips empty / false entries. */
@@ -243,13 +252,21 @@ export function ActorBar({
         <span className={styles.quote}>
           {(() => {
             if (leader?.quote) return `"${leader.quote}"`;
-            if (!leader?.instructions) return '';
-            const bio = leader.instructions
-              .replace(/^You are [^.]+\.\s*/i, '')
-              .replace(/^"[^"]+"\.\s*/i, '')
-              .replace(/Your HEXACO profile drives your leadership.*$/i, '')
-              .trim();
-            return bio ? `"${bio.slice(0, 80)}${bio.length > 80 ? '...' : ''}"` : '';
+            if (leader?.instructions) {
+              const bio = leader.instructions
+                .replace(/^You are [^.]+\.\s*/i, '')
+                .replace(/^"[^"]+"\.\s*/i, '')
+                .replace(/Your HEXACO profile drives your leadership.*$/i, '')
+                .trim();
+              if (bio) return `"${bio.slice(0, 80)}${bio.length > 80 ? '...' : ''}"`;
+            }
+            // Empty-state hint: no quote, no bio, no sim activity yet.
+            // Tells the user the card is alive and just waiting for data
+            // rather than implying a leader with no personality.
+            if (popHistory.length === 0 && moraleHistory.length === 0) {
+              return <span className={styles.awaiting}>Awaiting first turn…</span>;
+            }
+            return '';
           })()}
         </span>
         <span className={`leader-sparklines ${styles.sparklines}`}>

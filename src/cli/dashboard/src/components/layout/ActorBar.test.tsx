@@ -202,6 +202,30 @@ test('ActorBar non-compact: dynamic state row is a polite live region', () => {
   assert.match(html, /aria-live="polite"/, 'aria-live polite so we never interrupt');
 });
 
+test('ActorBar non-compact: empty state shows "Awaiting first turn…" hint', () => {
+  const html = renderToString(
+    <ActorBar
+      actorIndex={0}
+      leader={null}
+      popHistory={[]}
+      moraleHistory={[]}
+    />,
+  );
+  assert.match(html, /Awaiting first turn/, 'empty card surfaces an awaiting hint');
+});
+
+test('ActorBar non-compact: empty state hidden once popHistory has data', () => {
+  const html = renderToString(
+    <ActorBar
+      actorIndex={0}
+      leader={null}
+      popHistory={[100]}
+      moraleHistory={[60]}
+    />,
+  );
+  assert.ok(!/Awaiting first turn/.test(html), 'no awaiting hint when sim has begun');
+});
+
 test('humanizeKey: snake_case + camelCase + already-spaced all map to Sentence case', () => {
   const html = renderToString(
     <ActorBar

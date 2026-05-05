@@ -111,6 +111,14 @@
   white-space: nowrap;
 }
 
+.awaiting {
+  color: var(--text-3);
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: var(--font-2xs);
+  letter-spacing: 0.04em;
+}
+
 .sparklines {
   font-family: var(--mono);
   font-size: var(--font-2xs);
@@ -242,18 +250,27 @@
 }
 
 .compactCrisis {
-  background: rgba(213, 95, 95, 0.12);
-  border: 1px solid rgba(213, 95, 95, 0.4);
-  color: var(--red, #d55f5f);
+  // Bumped from rgba(213,95,95,0.12) bg + 0.4 border → 0.18/0.55. WCAG
+  // AA wants 3:1 contrast for graphical objects (the chip border) and
+  // ~4.5:1 for body text. The previous values landed under 3:1 against
+  // var(--bg-panel). 0.55 alpha on the border + slightly bolder text
+  // crosses both thresholds on the dashboard's dark surface.
+  background: rgba(213, 95, 95, 0.18);
+  border: 1px solid rgba(213, 95, 95, 0.55);
+  color: var(--red, #ff7676);
   text-transform: none;
   letter-spacing: 0;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .compactDeciding {
-  background: rgba(232, 180, 74, 0.12);
-  border: 1px solid var(--amber-dim);
+  // Same contrast bump rationale as .compactCrisis. Amber on amber-tint
+  // was washing out at the previous alpha; bolder weight + brighter
+  // text color resolves the drift without changing visual hierarchy.
+  background: rgba(232, 180, 74, 0.18);
+  border: 1px solid var(--amber);
   color: var(--amber);
+  font-weight: 800;
   animation: pulse-deciding 1.4s ease-in-out infinite;
 }
 
@@ -268,6 +285,33 @@
     animation: none;
     opacity: 1;
   }
+}
+
+// Below 480px the TurnGrid sticky header stacks into one column per leader,
+// and the compact bar can wrap to 3+ rows once mood + crisis + DECIDING
+// land on it. That's too much sticky-header height on a phone. Drop the
+// non-essential chips (mood / crisis / archetype) below this width — name
+// + POP + MORALE + DECIDING is the bare minimum signal. The full
+// non-compact ActorBar at the top of SimView still surfaces everything.
+@media (max-width: 480px) {
+  .compactArchetype,
+  .compactMood,
+  .compactCrisis {
+    display: none;
+  }
+}
+
+// Focus-visible polish for the chips that are interactive surfaces.
+// Spans aren't focusable by default, so this only matters if a future
+// caller adds tabindex; keeping the rule in place locks the visual
+// contract so it stays consistent if/when that happens.
+.chip:focus-visible,
+.compactArchetype:focus-visible,
+.compactMood:focus-visible,
+.compactCrisis:focus-visible,
+.compactDeciding:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
 }
 
 .dynamicRow {
@@ -330,13 +374,16 @@
 }
 
 .mood_low {
-  color: rgba(213, 95, 95, 0.95);
-  border-color: rgba(213, 95, 95, 0.4);
-  background: rgba(213, 95, 95, 0.08);
+  // Lifted text alpha to 1.0 + border to 0.55 + brighter base color
+  // so the "low mood" chip clears WCAG AA at the dashboard's dark
+  // surface. Distinctly red without leaning into pure-saturation.
+  color: #ff8585;
+  border-color: rgba(213, 95, 95, 0.55);
+  background: rgba(213, 95, 95, 0.12);
 }
 
 .mood_low .chipLabel {
-  color: rgba(213, 95, 95, 0.85);
+  color: #ff8585;
 }
 
 .mood_tense {

@@ -851,44 +851,108 @@ function AppContent() {
 
           <main id="main-content" className={`flex-1 overflow-hidden ${styles.main}`} role="main" aria-label={`${activeTab} view`}>
             {activeTab === 'quickstart' && (
-              <QuickstartView
-                sse={sse}
-                sessionId={replaySessionId ?? undefined}
-                onRunStarted={() => setUserTriggeredRun(true)}
-                onInterventionStart={handleInterventionStart}
-                onInterventionResult={handleInterventionResult}
-              />
+              <section
+                role="tabpanel"
+                id="tabpanel-quickstart"
+                aria-labelledby="tab-quickstart"
+                tabIndex={0}
+                style={{ display: 'contents' }}
+              >
+                <QuickstartView
+                  sse={sse}
+                  sessionId={replaySessionId ?? undefined}
+                  onRunStarted={() => setUserTriggeredRun(true)}
+                  onInterventionStart={handleInterventionStart}
+                  onInterventionResult={handleInterventionResult}
+                />
+              </section>
             )}
 
             {activeTab === 'sim' && (
-              <SimView
-                state={gameState}
-                sseStatus={sse.status}
-                onRun={handleRun}
-                onTour={handleTourStart}
-                verdict={sse.verdict}
-                launching={launching}
-                interventionArtifact={interventionArtifact}
-                interventionRunning={interventionRunning}
-                onInterventionDismiss={handleInterventionDismiss}
-                forceLayout={tourActive ? 'side-by-side' : undefined}
-              />
+              <section
+                role="tabpanel"
+                id="tabpanel-sim"
+                aria-labelledby="tab-sim"
+                tabIndex={0}
+                style={{ display: 'contents' }}
+              >
+                <SimView
+                  state={gameState}
+                  sseStatus={sse.status}
+                  onRun={handleRun}
+                  onTour={handleTourStart}
+                  verdict={sse.verdict}
+                  launching={launching}
+                  interventionArtifact={interventionArtifact}
+                  interventionRunning={interventionRunning}
+                  onInterventionDismiss={handleInterventionDismiss}
+                  forceLayout={tourActive ? 'side-by-side' : undefined}
+                />
+              </section>
             )}
 
-            {activeTab === 'viz' && <SwarmViz state={gameState} onNavigateToChat={navigateToChat} />}
+            {activeTab === 'viz' && (
+              <section
+                role="tabpanel"
+                id="tabpanel-viz"
+                aria-labelledby="tab-viz"
+                tabIndex={0}
+                style={{ display: 'contents' }}
+              >
+                <SwarmViz state={gameState} onNavigateToChat={navigateToChat} />
+              </section>
+            )}
 
             {activeTab === 'settings' && (
-              <SettingsPanel
-                events={effectiveEvents}
-                initialSubTab={settingsInitialSubTab}
-              />
+              <section
+                role="tabpanel"
+                id="tabpanel-settings"
+                aria-labelledby="tab-settings"
+                tabIndex={0}
+                style={{ display: 'contents' }}
+              >
+                <SettingsPanel
+                  events={effectiveEvents}
+                  initialSubTab={settingsInitialSubTab}
+                />
+              </section>
             )}
 
-            {activeTab === 'reports' && <ReportView state={gameState} verdict={sse.verdict} reportSections={scenario.ui.reportSections} />}
+            {activeTab === 'reports' && (
+              <section
+                role="tabpanel"
+                id="tabpanel-reports"
+                aria-labelledby="tab-reports"
+                tabIndex={0}
+                style={{ display: 'contents' }}
+              >
+                <ReportView state={gameState} verdict={sse.verdict} reportSections={scenario.ui.reportSections} />
+              </section>
+            )}
 
-            {activeTab === 'library' && <LibraryTab />}
+            {activeTab === 'library' && (
+              <section
+                role="tabpanel"
+                id="tabpanel-library"
+                aria-labelledby="tab-library"
+                tabIndex={0}
+                style={{ display: 'contents' }}
+              >
+                <LibraryTab />
+              </section>
+            )}
 
-            {activeTab === 'studio' && <StudioTab initialSubTab={studioInitialSubTab} />}
+            {activeTab === 'studio' && (
+              <section
+                role="tabpanel"
+                id="tabpanel-studio"
+                aria-labelledby="tab-studio"
+                tabIndex={0}
+                style={{ display: 'contents' }}
+              >
+                <StudioTab initialSubTab={studioInitialSubTab} />
+              </section>
+            )}
 
             {/* ChatPanel stays mounted across tab switches so per-agent
                 message threads survive when the user jumps to Sim / Reports
@@ -896,10 +960,19 @@ function AppContent() {
                 local state; unmounting on tab change dropped every
                 conversation the moment the user navigated away. Other tabs
                 (Sim, Viz, Settings, Reports, Log) have no user-generated
-                state at risk and stay on the unmount-on-switch pattern. */}
-            <div className={activeTab === 'chat' ? styles.chatSurfaceVisible : styles.chatSurfaceHidden}>
+                state at risk and stay on the unmount-on-switch pattern.
+                Wrapped in a tabpanel that toggles aria-hidden so AT
+                respects the visibility flip. */}
+            <section
+              role="tabpanel"
+              id="tabpanel-chat"
+              aria-labelledby="tab-chat"
+              aria-hidden={activeTab !== 'chat'}
+              tabIndex={activeTab === 'chat' ? 0 : -1}
+              className={activeTab === 'chat' ? styles.chatSurfaceVisible : styles.chatSurfaceHidden}
+            >
               <ChatPanel state={gameState} onChatUsage={handleChatUsage} />
-            </div>
+            </section>
 
             {/* LOG moved into SETTINGS as a sub-tab; EventLogPanel is now
                 rendered inside SettingsPanel when its sub-tab is 'log'. */}
