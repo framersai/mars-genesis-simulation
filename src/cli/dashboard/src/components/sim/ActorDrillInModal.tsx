@@ -13,6 +13,7 @@
  */
 import * as React from 'react';
 import { ActorBar } from '../layout/ActorBar.js';
+import { useFocusTrap } from '../../hooks/useFocusTrap.js';
 import type { GameState, ProcessedEvent } from '../../hooks/useGameState.js';
 import styles from './ActorDrillInModal.module.scss';
 
@@ -30,6 +31,10 @@ function eventTitle(e: ProcessedEvent): string {
 }
 
 export function ActorDrillInModal({ actorName, actorIndex, state, onClose }: ActorDrillInModalProps): JSX.Element | null {
+  // Trap Tab cycling inside the dialog while open. Restores focus to
+  // the constellation node that triggered the open on close.
+  const dialogRef = useFocusTrap<HTMLDivElement>(actorName !== null);
+
   React.useEffect(() => {
     if (actorName === null) return;
     const onKey = (e: KeyboardEvent) => {
@@ -60,10 +65,12 @@ export function ActorDrillInModal({ actorName, actorIndex, state, onClose }: Act
   return (
     <div className={styles.overlay} role="presentation" onClick={onClose}>
       <div
+        ref={dialogRef}
         className={styles.modal}
         role="dialog"
         aria-modal="true"
         aria-label={`Report for ${actorName}`}
+        tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
       >
         <header className={styles.head}>

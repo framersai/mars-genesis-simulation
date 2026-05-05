@@ -18,6 +18,7 @@
  */
 import * as React from 'react';
 import styles from './CompareModal.module.scss';
+import { useFocusTrap } from '../../hooks/useFocusTrap.js';
 import { useBundle } from './hooks/useBundle.js';
 import { useBundleAggregate } from './hooks/useBundleAggregate.js';
 import { usePinnedRuns } from './hooks/usePinnedRuns.js';
@@ -50,22 +51,18 @@ export function CompareModal({ bundleId, extraArtifacts, open, onClose }: Compar
   const pinning = usePinnedRuns();
   const [openRunId, setOpenRunId] = React.useState<string | null>(null);
 
-  const ref = React.useRef<HTMLDivElement | null>(null);
-  const lastFocusedRef = React.useRef<HTMLElement | null>(null);
+  // Focus trap: cycles Tab inside the modal, focuses the first
+  // interactive descendant on open, restores focus to the trigger on
+  // close. Replaces the prior manual `lastFocusedRef + querySelector`
+  // dance which lacked Tab cycling, so keyboard users could escape the
+  // modal via Tab and end up scrolling the still-mounted background.
+  const ref = useFocusTrap<HTMLDivElement>(open);
 
   React.useEffect(() => {
     if (!open) return;
-    lastFocusedRef.current = document.activeElement as HTMLElement | null;
     document.body.style.overflow = 'hidden';
-    requestAnimationFrame(() => {
-      const target = ref.current?.querySelector<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
-      target?.focus();
-    });
     return () => {
       document.body.style.overflow = '';
-      lastFocusedRef.current?.focus();
     };
   }, [open]);
 
@@ -94,6 +91,7 @@ export function CompareModal({ bundleId, extraArtifacts, open, onClose }: Compar
         role="dialog"
         aria-modal="true"
         aria-labelledby="compare-modal-title"
+        tabIndex={-1}
         className={styles.modal}
       >
         <header className={styles.head}>
