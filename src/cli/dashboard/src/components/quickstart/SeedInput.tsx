@@ -238,6 +238,14 @@ export function SeedInput({ onSeedReady, onLoadedScenarioRunStart, disabled = fa
       {tab === 'pdf' && (
         <div
           className={styles.dropZone}
+          // The dashboard shell installs a window-level drop handler
+          // (useDashboardDropZone) that auto-loads a dropped .json save
+          // file from anywhere on the page and rejects everything else
+          // with "Only .json simulation files supported." That handler
+          // bails out when its hit-test lands inside an element marked
+          // with this data attribute, so the PDF tab's local drop zone
+          // wins for PDF drops without losing the global json-drop UX.
+          data-paracosm-local-dropzone="pdf"
           onClick={() => { if (!disabled) fileInputRef.current?.click(); }}
           onDragOver={e => e.preventDefault()}
           onDrop={e => {

@@ -55,8 +55,28 @@ export function useDashboardDropZone(
   useEffect(() => {
     let counter = 0;
 
+    /**
+     * `true` when the drag event's target is inside an element that
+     * declared its own local drop zone via the
+     * `data-paracosm-local-dropzone` attribute. The Quickstart PDF tab
+     * uses this so a PDF drop on its dashed-border zone is handled
+     * locally (extracted via pdf.js, not rejected with "Only .json
+     * simulation files supported"). The window listener short-circuits
+     * for these events so it never preventDefault()'s and never fires
+     * its onError toast.
+     *
+     * Hit-tests against the event target: if the closest ancestor
+     * carrying the data attribute exists, the local zone wins.
+     */
+    const isInsideLocalDropZone = (e: DragEvent): boolean => {
+      const target = e.target as Element | null;
+      if (!target || typeof target.closest !== 'function') return false;
+      return !!target.closest('[data-paracosm-local-dropzone]');
+    };
+
     const onDragEnter = (e: DragEvent) => {
       if (!hasFilesDragPayload(e.dataTransfer)) return;
+      if (isInsideLocalDropZone(e)) return;
       counter += 1;
       setIsDragging(true);
     };
@@ -65,17 +85,27 @@ export function useDashboardDropZone(
       // preventDefault is REQUIRED on every dragover, or browsers
       // treat the page as non-droppable and never fire the drop event.
       if (!hasFilesDragPayload(e.dataTransfer)) return;
+      if (isInsideLocalDropZone(e)) return;
       e.preventDefault();
     };
 
     const onDragLeave = (e: DragEvent) => {
       if (!hasFilesDragPayload(e.dataTransfer)) return;
+      if (isInsideLocalDropZone(e)) return;
       counter = Math.max(0, counter - 1);
       if (counter === 0) setIsDragging(false);
     };
 
     const onDrop = (e: DragEvent) => {
       if (!hasFilesDragPayload(e.dataTransfer)) return;
+      // Local drop zones own PDF / future-format drops on the components
+      // that declare them. Yield without preventDefault so the local
+      // listener handles the drop.
+      if (isInsideLocalDropZone(e)) {
+        counter = 0;
+        setIsDragging(false);
+        return;
+      }
       e.preventDefault();
       counter = 0;
       setIsDragging(false);
