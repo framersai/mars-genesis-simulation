@@ -15,7 +15,9 @@ import {
   buildNextRunConfig,
   readKeyOverrides,
   readLastLaunchConfig,
+  writeActiveRunActors,
   writeLastLaunchConfig,
+  type PersistedActor,
 } from '../../hooks/useLastLaunchConfig';
 import { resolveSetupRedirectHref } from '../../tab-routing';
 import styles from './RerunPanel.module.scss';
@@ -65,6 +67,15 @@ export function RerunPanel({ enabled = true }: RerunPanelProps) {
         // Persist the new seed so a subsequent Re-run bumps from THIS
         // run's seed, not the original.
         writeLastLaunchConfig(window.localStorage, next);
+        // Persist the actors this re-run is launching so the SIM
+        // header shows names during the SSE connect-and-replay window.
+        // The Settings form (and the Quickstart paths) all write the
+        // same key when launching; this keeps the rerun-from-epilogue
+        // path on the same contract.
+        const actors = Array.isArray(next.actors) ? (next.actors as PersistedActor[]) : null;
+        if (actors && actors.length > 0) {
+          writeActiveRunActors(window.localStorage, actors);
+        }
         // Same bug Quickstart had: a bare /sim from /setup falls
         // through to the URL parser's default ('quickstart'), so the
         // user lands on the form they came from instead of the live

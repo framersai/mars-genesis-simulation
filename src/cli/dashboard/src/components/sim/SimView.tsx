@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import type { GameState, LeaderInfo } from '../../hooks/useGameState';
 import { useScenarioContext } from '../../App';
+import { readActiveRunActors } from '../../hooks/useLastLaunchConfig';
 import { DigitalTwinPanel } from '../digital-twin/DigitalTwinPanel';
 import { DigitalTwinProgress } from '../digital-twin/DigitalTwinProgress';
 import type { RunArtifact } from '../../../../../engine/schema/index.js';
@@ -181,20 +182,35 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
     onRun?.();
   }, [onRun, launchingProp]);
 
-  // Fallback leader info from scenario presets when no simulation data yet.
-  // Server's projectScenarioForClient ships ScenarioPreset.leaders (engine
-  // field name); the legacy `actors` alias is preserved on older fixtures.
-  // Reading leaders first lets the SIM header carry the loaded scenario's
-  // commander names ("Aria Chen" / "Dietrich Voss") during the launch
-  // window before the SSE status event lands, instead of falling through
-  // to the "Leader A" / "Leader B" placeholder in ActorBar.
+  // Fallback leader info for the live header. Two-step chain:
+  //   1. Scenario presets (Mars Genesis / Lunar / etc. ship leaders).
+  //   2. The actors of the most recently launched run, persisted to
+  //      localStorage at /setup time so compiled scenarios (which
+  //      ship no presets) still surface names through the SSE
+  //      connect-and-replay window.
+  // ActorBar's `leader={sideA?.leader || presetLeaderA}` chain still
+  // wins on the SSE-populated value once status:parallel lands.
   const defaultPreset = scenario.presets.find(p => p.id === 'default');
   const presetLeaders = defaultPreset?.leaders ?? defaultPreset?.actors;
-  const presetLeaderA: LeaderInfo | null = presetLeaders?.[0]
-    ? { name: presetLeaders[0].name, archetype: presetLeaders[0].archetype, unit: 'Colony Alpha', hexaco: presetLeaders[0].hexaco, instructions: presetLeaders[0].instructions, quote: '' }
+  const persistedActors = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    return readActiveRunActors(window.localStorage);
+  }, []);
+  // Coerce both shapes (preset entry, persisted-actor entry) into a
+  // single loose record so the `unit` / `instructions` field reads
+  // don't TS-error on the structural union. Preset entries don't carry
+  // `unit`; the column-default provides "Colony Alpha" / "Colony Beta".
+  const fallbackA = (presetLeaders?.[0] ?? persistedActors?.[0]) as
+    | { name?: string; archetype?: string; unit?: string; hexaco?: unknown; instructions?: string }
+    | undefined;
+  const fallbackB = (presetLeaders?.[1] ?? persistedActors?.[1]) as
+    | { name?: string; archetype?: string; unit?: string; hexaco?: unknown; instructions?: string }
+    | undefined;
+  const presetLeaderA: LeaderInfo | null = fallbackA?.name
+    ? { name: fallbackA.name, archetype: fallbackA.archetype ?? '', unit: fallbackA.unit ?? 'Colony Alpha', hexaco: (fallbackA.hexaco ?? {}) as LeaderInfo['hexaco'], instructions: fallbackA.instructions ?? '', quote: '' }
     : null;
-  const presetLeaderB: LeaderInfo | null = presetLeaders?.[1]
-    ? { name: presetLeaders[1].name, archetype: presetLeaders[1].archetype, unit: 'Colony Beta', hexaco: presetLeaders[1].hexaco, instructions: presetLeaders[1].instructions, quote: '' }
+  const presetLeaderB: LeaderInfo | null = fallbackB?.name
+    ? { name: fallbackB.name, archetype: fallbackB.archetype ?? '', unit: fallbackB.unit ?? 'Colony Beta', hexaco: (fallbackB.hexaco ?? {}) as LeaderInfo['hexaco'], instructions: fallbackB.instructions ?? '', quote: '' }
     : null;
 
   const [showIntro, setShowIntro] = useState(() => {

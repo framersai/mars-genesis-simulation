@@ -87,6 +87,24 @@ const HOOK_NAMES = [
   'reactions',
 ] as const;
 
+/**
+ * Derive a runId-friendly shortName from a scenario id when the seed
+ * draft did not supply one. Trims to 24 chars so the resulting runId
+ * (`${shortName}-${actor-slug}-${epoch}`) stays under ~80 chars in the
+ * Library gallery. Falls back to `'compiled'` only if the id itself
+ * is empty or non-string — in which case the runId is the only place
+ * that signals "this came from compile-from-seed".
+ */
+function deriveShortName(rawId: unknown, override: string | undefined): string {
+  if (typeof override === 'string' && override.trim() && override !== 'compiled') {
+    return override;
+  }
+  const id = typeof rawId === 'string' ? rawId : '';
+  const slug = id.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
+  if (!slug) return 'compiled';
+  return slug.slice(0, 24);
+}
+
 /** Restore a hook from cached source text. Returns the hook assignment or null if parse fails. */
 function restoreHookFromCache(hookName: string, source: string): Partial<ScenarioHooks> | null {
   try {
@@ -358,9 +376,16 @@ export async function compileScenario(
     // draft that lacks `actorNoun` / `actorNounPlural` (or any other
     // optional noun) gets sensible UI fallbacks instead of leaving
     // dashboard fields undefined.
+    //
+    // `shortName` falls back to a derivative of the scenario id rather
+    // than the literal 'compiled' so RunRecord runIds read as
+    // `glp1-alzheimers-offlabel-trial-the-engineer-...` instead of
+    // `compiled-the-engineer-...` for compile-from-seed scenarios.
+    // Cap at 24 chars so the full runId stays under 80 in the Library
+    // gallery.
     labels: {
       name: 'Compiled Scenario',
-      shortName: 'compiled',
+      shortName: deriveShortName(json.id, json.labels?.shortName),
       populationNoun: 'members',
       settlementNoun: 'settlement',
       currency: 'credits',

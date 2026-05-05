@@ -19,6 +19,7 @@ import {
   SETTINGS_LABEL_STYLE,
   SETTINGS_SECTION_HEADER_STYLE,
 } from './shared/settingsStyles';
+import { readActiveRunActors, writeActiveRunActors } from '../../hooks/useLastLaunchConfig';
 import styles from './SettingsPanel.module.scss';
 
 type SettingsSubTab = 'config' | 'log';
@@ -124,15 +125,29 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
   // the type but only older fixtures populate it. Read leaders first so
   // hosted prod's Mars Genesis preset surfaces "Aria Chen / Dietrich
   // Voss" instead of the defaultLeader(0/1) placeholder.
+  //
+  // For compiled scenarios (which ship no presets) the form falls back
+  // to actors persisted by the most recent /setup launch. Without that
+  // fallback the form rendered "Actor A" / "Actor B" placeholders even
+  // though the user had just launched a clinical or bookstore run with
+  // real generated actors a moment ago.
   const presetLeaders = defaultPreset?.leaders ?? defaultPreset?.actors;
+  const persistedActors =
+    typeof window !== 'undefined' ? readActiveRunActors(window.localStorage) : null;
+  const fallbackA =
+    presetLeaders?.[0] ??
+    (persistedActors?.[0] as { name?: string; archetype?: string; instructions?: string; hexaco?: Record<string, number> } | undefined);
+  const fallbackB =
+    presetLeaders?.[1] ??
+    (persistedActors?.[1] as { name?: string; archetype?: string; instructions?: string; hexaco?: Record<string, number> } | undefined);
   // Spread the hexaco object so the form's per-trait edits don't mutate
   // the preset that lives in the scenario context (which is shared with
   // every other consumer that reads scenario.presets).
-  const initLeaderA = presetLeaders?.[0]
-    ? { name: presetLeaders[0].name, archetype: presetLeaders[0].archetype, unit: 'Colony Alpha', instructions: presetLeaders[0].instructions, hexaco: { ...presetLeaders[0].hexaco } }
+  const initLeaderA: ActorFormData = fallbackA?.name
+    ? { name: fallbackA.name, archetype: fallbackA.archetype ?? '', unit: 'Colony Alpha', instructions: fallbackA.instructions ?? '', hexaco: { ...(fallbackA.hexaco ?? {}) } }
     : defaultLeader(0);
-  const initLeaderB = presetLeaders?.[1]
-    ? { name: presetLeaders[1].name, archetype: presetLeaders[1].archetype, unit: 'Colony Beta', instructions: presetLeaders[1].instructions, hexaco: { ...presetLeaders[1].hexaco } }
+  const initLeaderB: ActorFormData = fallbackB?.name
+    ? { name: fallbackB.name, archetype: fallbackB.archetype ?? '', unit: 'Colony Beta', instructions: fallbackB.instructions ?? '', hexaco: { ...(fallbackB.hexaco ?? {}) } }
     : defaultLeader(1);
 
   const [leaderA, setLeaderA] = useState<ActorFormData>(initLeaderA);
@@ -307,6 +322,11 @@ export function SettingsPanel({ events = [], initialSubTab = 'config' }: Setting
       try {
         localStorage.setItem('paracosm:lastLaunchConfig', JSON.stringify(config));
       } catch { /* quota or privacy mode — silent */ }
+      // Persist the leaders the user is about to launch so the live SIM
+      // header has names available during the SSE connect-and-replay
+      // window. Without this, compiled-scenario runs render the
+      // alphabetic placeholder until status:parallel lands.
+      writeActiveRunActors(window.localStorage, [leaderA, leaderB]);
       // Attach any user-provided key overrides (never sends .env values)
       if (keyOverrides.openai) config.apiKey = keyOverrides.openai;
       if (keyOverrides.anthropic) config.anthropicKey = keyOverrides.anthropic;

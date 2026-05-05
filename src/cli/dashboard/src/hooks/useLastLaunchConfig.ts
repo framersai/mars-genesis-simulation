@@ -18,6 +18,14 @@ export const LAST_LAUNCH_KEY = 'paracosm:lastLaunchConfig';
 /** localStorage key holding per-provider API key overrides. */
 export const KEY_OVERRIDES_KEY = 'paracosm:keyOverrides';
 
+/** localStorage key holding the actors of the run that the most recent
+ *  /setup call kicked off. Read by SimView/ActorBar as a fallback for
+ *  the live header when the SSE `status` event with `phase: 'parallel'`
+ *  has not landed yet (or arrived in an order that left state.actorIds
+ *  populated only with sim-event-keyed entries that don't carry the
+ *  full actor metadata). Written by every /setup caller. */
+export const ACTIVE_RUN_ACTORS_KEY = 'paracosm:activeRunActors';
+
 /** Minimal storage interface for tests. */
 interface StorageLike {
   getItem(key: string): string | null;
@@ -72,6 +80,70 @@ export function writeLastLaunchConfig(
     storage.setItem(LAST_LAUNCH_KEY, JSON.stringify(config));
   } catch {
     // Best-effort.
+  }
+}
+
+/**
+ * Minimal per-actor shape persisted at /setup time so the live SIM
+ * header can render the right names during the SSE connect-and-replay
+ * window. Trimmed deliberately: name, archetype, unit, and hexaco are
+ * the four fields ActorBar reads — instructions and per-tier model
+ * picks belong on RerunPanel's heavier `lastLaunchConfig` payload, not
+ * this transient header-fallback contract.
+ *
+ * `hexaco` is typed as a record of numeric keys rather than the
+ * engine's `HexacoProfile` so callers (Quickstart's actor-generation
+ * path, Settings' form, RerunPanel's rerun-config) can write whatever
+ * shape they have without a structural cast — the consumer (SimView)
+ * just spreads it into ActorBar's display, and ActorBar's renderer
+ * already gates on `Object.values(h).some(v => v > 0)`.
+ */
+export interface PersistedActor {
+  name?: string;
+  archetype?: string;
+  unit?: string;
+  hexaco?: Record<string, number> | unknown;
+}
+
+/**
+ * Write the actors of the just-launched run to localStorage.
+ *
+ * Accepts a structurally-loose `unknown[]` rather than `PersistedActor[]`
+ * because callers pass the engine's `ActorConfig[]` directly (with the
+ * full `HexacoProfile`-typed hexaco) and a structural intersection
+ * would force every call site through an explicit cast. The reader
+ * (`readActiveRunActors`) re-validates so unsafe shapes fail closed.
+ */
+export function writeActiveRunActors(
+  storage: StorageLike,
+  actors: ReadonlyArray<unknown>,
+): void {
+  try {
+    storage.setItem(ACTIVE_RUN_ACTORS_KEY, JSON.stringify(actors));
+  } catch {
+    // Best-effort.
+  }
+}
+
+/**
+ * Read the actors of the most recently launched run, or `null` when
+ * the slot is empty / malformed. SimView uses this so the live header
+ * carries names during the SSE-connect window for compiled scenarios
+ * (which ship no preset leaders).
+ */
+export function readActiveRunActors(
+  storage: StorageLike,
+): PersistedActor[] | null {
+  try {
+    const raw = storage.getItem(ACTIVE_RUN_ACTORS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed.filter(
+      (a): a is PersistedActor => !!a && typeof a === 'object' && !Array.isArray(a),
+    );
+  } catch {
+    return null;
   }
 }
 

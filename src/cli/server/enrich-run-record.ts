@@ -21,9 +21,25 @@ import type { RunArtifact } from '../../engine/schema/index.js';
 import { extractSummaryTrajectory } from './run-summary-trajectory.js';
 
 export function enrichRunRecordFromArtifact(base: RunRecord, artifact: RunArtifact): RunRecord {
-  const ext = artifact.scenarioExtensions as { outputPath?: string } | undefined;
+  const ext = artifact.scenarioExtensions as
+    | {
+        outputPath?: string;
+        paracosmInternal?: {
+          leader?: { name?: string; archetype?: string };
+        };
+      }
+    | undefined;
   const meta = artifact.metadata;
-  const leader = (artifact as { leader?: { name?: string; archetype?: string } }).leader;
+  // Leader metadata lives at `scenarioExtensions.paracosmInternal.leader`
+  // (where the orchestrator stashes the resolved actor config). Older
+  // call paths checked the top-level `artifact.leader` key, which the
+  // engine has never populated — that's why the Library tab shows
+  // "names not recorded" on every run before this fix. Fall through to
+  // the top-level slot only as a last-resort for synthetic test
+  // artifacts that hand-roll the shape.
+  const leader =
+    ext?.paracosmInternal?.leader ??
+    (artifact as { leader?: { name?: string; archetype?: string } }).leader;
   const cost = (artifact as { cost?: { totalUSD?: number } }).cost;
 
   const startedAt = meta?.startedAt;

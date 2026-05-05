@@ -15,7 +15,7 @@ import type { RunArtifact } from '../../../../../engine/schema/index.js';
 import type { LeaderPreset } from '../../../../../engine/leader-presets.js';
 import type { SimEvent } from '../../hooks/useSSE';
 import { useScenarioContext } from '../../App';
-import { readKeyOverrides, readLastLaunchConfig } from '../../hooks/useLastLaunchConfig';
+import { readKeyOverrides, readLastLaunchConfig, writeActiveRunActors } from '../../hooks/useLastLaunchConfig';
 import { useToast } from '../shared/Toast';
 import { resolveSetupRedirectHref } from '../../tab-routing';
 import styles from './QuickstartView.module.scss';
@@ -188,6 +188,15 @@ export function QuickstartView({ sse, sessionId, onRunStarted, onInterventionRes
         instructions: p.instructions,
       } as ActorConfig));
       sse.reset();
+      // Persist the actors we're about to launch so the SIM header
+      // carries names through the SSE connect-and-replay window. Compiled
+      // scenarios ship no preset leaders, so without this fallback the
+      // ActorBar renders the alphabetic placeholder until the status
+      // event with `phase: 'parallel'` lands and useGameState pairs the
+      // names against state.actorIds.
+      if (typeof window !== 'undefined') {
+        writeActiveRunActors(window.localStorage, actors);
+      }
       try {
         const setupRes = await fetch('/setup', {
           method: 'POST',
@@ -260,6 +269,9 @@ export function QuickstartView({ sse, sessionId, onRunStarted, onInterventionRes
       setPhase({ kind: 'progress', stage: 'running' });
 
       sse.reset();
+      if (typeof window !== 'undefined') {
+        writeActiveRunActors(window.localStorage, actors);
+      }
       const setupRes = await fetch('/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -361,6 +373,9 @@ export function QuickstartView({ sse, sessionId, onRunStarted, onInterventionRes
       setPhase({ kind: 'progress', stage: 'running', scenario, actors });
 
       sse.reset();
+      if (typeof window !== 'undefined') {
+        writeActiveRunActors(window.localStorage, actors);
+      }
       const setupRes = await fetch('/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
