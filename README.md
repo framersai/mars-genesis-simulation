@@ -24,15 +24,17 @@
 </p>
 
 <p align="center">
-  <a href="https://paracosm.agentos.sh/demo/e2e-atlas-8-hero.mp4">
-    <img src="https://paracosm.agentos.sh/demo/e2e-atlas-8-poster.jpg" alt="▶ Watch the 90-second end-to-end demo" width="720" />
-  </a>
+  <img src="assets/blog/readme/paracosm-hero.gif" alt="Paracosm end-to-end: paragraph in, two leaders running, fork-and-replay out" width="720" />
 </p>
 
 <p align="center">
-  <a href="https://paracosm.agentos.sh/demo/e2e-atlas-8-hero.mp4">▶ 90s end-to-end</a>
+  <em>Type a what-if. Compile a typed world. Run two LLM commanders against it. Fork any past turn. Watch the trajectories diverge.</em>
+</p>
+
+<p align="center">
+  <a href="https://paracosm.agentos.sh/demo/e2e-atlas-8-hero.mp4">▶ Full 90-second demo</a>
   &nbsp;·&nbsp;
-  <a href="https://paracosm.agentos.sh/demo/digital-twin-maria-2-hero.mp4">▶ Digital twin walkthrough</a>
+  <a href="https://paracosm.agentos.sh/demo/digital-twin-maria-2-hero.mp4">▶ Digital twin</a>
   &nbsp;·&nbsp;
   <a href="https://paracosm.agentos.sh/demo/branches.mp4">▶ Branches & forks</a>
 </p>
