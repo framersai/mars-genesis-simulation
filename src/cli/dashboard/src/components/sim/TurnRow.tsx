@@ -70,6 +70,15 @@ export function TurnRow({ entry, eventsA, eventsB }: TurnRowProps) {
         {[eventsA, eventsB].map((cellEvents, idx) => {
           const renderable = cellEvents.filter(e => !PENDING_TYPES.has(e.type));
           const allPending = cellEvents.length > 0 && renderable.length === 0;
+          // When THIS cell has zero events but the row is classified
+          // 'one-sided' (the other leader has reached this turn first
+          // — parallel-run timing variance), the placeholder needs to
+          // explicitly say "catching up" rather than "(no events yet)".
+          // The latter sounded broken in production: a user saw their
+          // Side A render six events for T6 while Side B's cell read
+          // "(no events yet)" with no other signal that B was simply
+          // a turn behind in wall-clock processing.
+          const isCatchingUp = cellEvents.length === 0 && entry.classification === 'one-sided';
           return (
             <div
               key={idx}
@@ -79,7 +88,14 @@ export function TurnRow({ entry, eventsA, eventsB }: TurnRowProps) {
             >
               <span className={styles.cellBand} aria-hidden="true" />
               {cellEvents.length === 0 ? (
-                <div className={styles.cellEmpty}>(no events yet)</div>
+                isCatchingUp ? (
+                  <div className={styles.cellPending} aria-live="polite" title="Parallel runs can drift turn-to-turn — events arrive whenever this side's LLM calls finish.">
+                    <span className={`spinner ${styles.cellPendingSpinner}`} />
+                    Catching up to turn {entry.turn}…
+                  </div>
+                ) : (
+                  <div className={styles.cellEmpty}>(no events yet)</div>
+                )
               ) : allPending ? (
                 <div className={styles.cellPending} aria-live="polite">
                   <span className={`spinner ${styles.cellPendingSpinner}`} />
