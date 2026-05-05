@@ -566,11 +566,29 @@ export async function runSimulation(leader: ActorConfig, keyPersonnel: KeyPerson
    * failures (terminal, aborts the run).
    */
   const reportValidationFallback = (site: string, details: { rawText: string; schemaName?: string; err: unknown }) => {
-    console.warn(`  [${site}] SCHEMA FALLBACK on ${details.schemaName ?? '<unknown>'}: ${(details.err as any)?.message ?? details.err}`);
+    // Surface the Zod validation issues so production runs don't throw
+    // away the actual reason the model's output was rejected. Without
+    // this the only signal in pm2 logs was 'Validation failed after 3
+    // attempts' — which made every schema fallback look identical and
+    // hid an actionable shape mismatch behind a generic message.
+    const zodIssues = (details.err as { validationErrors?: { issues?: Array<{ path?: unknown[]; message?: string; code?: string }> } } | undefined)?.validationErrors?.issues;
+    const issueSummary = Array.isArray(zodIssues) && zodIssues.length > 0
+      ? zodIssues.slice(0, 5).map(i => `${(i.path ?? []).join('.') || '<root>'}:${i.code ?? ''}=${i.message ?? ''}`).join(' | ')
+      : '';
+    const headline = (details.err as { message?: string })?.message ?? String(details.err);
+    console.warn(
+      `  [${site}] SCHEMA FALLBACK on ${details.schemaName ?? '<unknown>'}: ${headline}` +
+      (issueSummary ? `\n    issues: ${issueSummary}` : '') +
+      `\n    raw[:600]: ${details.rawText.slice(0, 600).replace(/\n/g, '\\n')}`,
+    );
     emit('validation_fallback', {
       site,
       schemaName: details.schemaName,
-      rawTextPreview: details.rawText.slice(0, 300),
+      rawTextPreview: details.rawText.slice(0, 1500),
+      // Compact Zod issue list for the dashboard / forensic-replay tooling.
+      issues: Array.isArray(zodIssues)
+        ? zodIssues.slice(0, 5).map(i => ({ path: i.path ?? [], message: i.message, code: i.code }))
+        : undefined,
     });
   };
 
