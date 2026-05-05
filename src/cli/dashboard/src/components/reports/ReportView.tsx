@@ -350,6 +350,22 @@ export function ReportView({ state, verdict, reportSections }: ReportViewProps) 
   }, [turns.length]);
 
   if (!(sideA?.events.length ?? 0) && !(sideB?.events.length ?? 0)) {
+    // Differentiate "never ran" from "currently running, no events
+    // yet": during the launch + research window the SSE stream is
+    // already flowing but the first turn-event hasn't arrived. Showing
+    // the static "Run a simulation first" copy in that window read as
+    // "the run isn't happening" even though it was. Mirror SimView's
+    // launching/connecting language and surface a spinner.
+    if (state.isRunning) {
+      return (
+        <div className={styles.empty}>
+          <div className={`${styles.emptyMsg} ${styles.emptyMsgRunning ?? ''}`} role="status" aria-live="polite">
+            <span className={styles.emptySpinner} aria-hidden="true" />
+            <span>Awaiting first turn — the report populates once the kernel reports an event.</span>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className={styles.empty}>
         <div className={styles.emptyMsg}>

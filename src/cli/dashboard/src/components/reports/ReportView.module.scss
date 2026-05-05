@@ -16,6 +16,32 @@
   padding: 40px;
 }
 
+.emptyMsgRunning {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.emptySpinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid color-mix(in srgb, var(--text-3) 30%, transparent);
+  border-top-color: var(--text-3);
+  border-radius: 50%;
+  animation: reportEmptySpinnerRotate 0.9s linear infinite;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emptySpinner { animation: none; }
+}
+
+@keyframes reportEmptySpinnerRotate {
+  to { transform: rotate(360deg); }
+}
+
 .layout {
   display: flex;
   flex: 1;

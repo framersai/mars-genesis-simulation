@@ -181,13 +181,20 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
     onRun?.();
   }, [onRun, launchingProp]);
 
-  // Fallback leader info from scenario presets when no simulation data yet
+  // Fallback leader info from scenario presets when no simulation data yet.
+  // Server's projectScenarioForClient ships ScenarioPreset.leaders (engine
+  // field name); the legacy `actors` alias is preserved on older fixtures.
+  // Reading leaders first lets the SIM header carry the loaded scenario's
+  // commander names ("Aria Chen" / "Dietrich Voss") during the launch
+  // window before the SSE status event lands, instead of falling through
+  // to the "Leader A" / "Leader B" placeholder in ActorBar.
   const defaultPreset = scenario.presets.find(p => p.id === 'default');
-  const presetLeaderA: LeaderInfo | null = defaultPreset?.actors?.[0]
-    ? { name: defaultPreset.actors[0].name, archetype: defaultPreset.actors[0].archetype, unit: 'Colony Alpha', hexaco: defaultPreset.actors[0].hexaco, instructions: defaultPreset.actors[0].instructions, quote: '' }
+  const presetLeaders = defaultPreset?.leaders ?? defaultPreset?.actors;
+  const presetLeaderA: LeaderInfo | null = presetLeaders?.[0]
+    ? { name: presetLeaders[0].name, archetype: presetLeaders[0].archetype, unit: 'Colony Alpha', hexaco: presetLeaders[0].hexaco, instructions: presetLeaders[0].instructions, quote: '' }
     : null;
-  const presetLeaderB: LeaderInfo | null = defaultPreset?.actors?.[1]
-    ? { name: defaultPreset.actors[1].name, archetype: defaultPreset.actors[1].archetype, unit: 'Colony Beta', hexaco: defaultPreset.actors[1].hexaco, instructions: defaultPreset.actors[1].instructions, quote: '' }
+  const presetLeaderB: LeaderInfo | null = presetLeaders?.[1]
+    ? { name: presetLeaders[1].name, archetype: presetLeaders[1].archetype, unit: 'Colony Beta', hexaco: presetLeaders[1].hexaco, instructions: presetLeaders[1].instructions, quote: '' }
     : null;
 
   const [showIntro, setShowIntro] = useState(() => {

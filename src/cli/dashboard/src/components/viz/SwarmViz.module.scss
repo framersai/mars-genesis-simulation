@@ -25,8 +25,29 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 12px;
   color: var(--text-3);
   font-size: var(--font-md);
+  text-align: center;
+  padding: 0 24px;
+}
+
+.emptySpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid color-mix(in srgb, var(--text-3) 30%, transparent);
+  border-top-color: var(--text-3);
+  border-radius: 50%;
+  animation: emptySpinnerRotate 0.9s linear infinite;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emptySpinner { animation: none; }
+}
+
+@keyframes emptySpinnerRotate {
+  to { transform: rotate(360deg); }
 }
 
 .root {

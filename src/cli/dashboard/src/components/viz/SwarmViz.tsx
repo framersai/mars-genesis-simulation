@@ -448,11 +448,16 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
   const snapATurn = snapA?.turn ?? 0;
   const snapBTurn = snapB?.turn ?? 0;
   const defaultPreset = scenario.presets.find(p => p.id === 'default');
-  const presetA: LeaderInfo | null = defaultPreset?.actors?.[0]
-    ? { name: defaultPreset.actors[0].name, archetype: defaultPreset.actors[0].archetype, unit: 'Colony Alpha', hexaco: defaultPreset.actors[0].hexaco, instructions: defaultPreset.actors[0].instructions, quote: '' }
+  // Server populates `leaders` (engine field name) post-rename; legacy
+  // `actors` alias stays on older fixtures. Read leaders first so the
+  // VIZ panel labels carry the loaded scenario's commander names during
+  // the launch window before SSE status fires.
+  const presetLeaders = defaultPreset?.leaders ?? defaultPreset?.actors;
+  const presetA: LeaderInfo | null = presetLeaders?.[0]
+    ? { name: presetLeaders[0].name, archetype: presetLeaders[0].archetype, unit: 'Colony Alpha', hexaco: presetLeaders[0].hexaco, instructions: presetLeaders[0].instructions, quote: '' }
     : null;
-  const presetB: LeaderInfo | null = defaultPreset?.actors?.[1]
-    ? { name: defaultPreset.actors[1].name, archetype: defaultPreset.actors[1].archetype, unit: 'Colony Beta', hexaco: defaultPreset.actors[1].hexaco, instructions: defaultPreset.actors[1].instructions, quote: '' }
+  const presetB: LeaderInfo | null = presetLeaders?.[1]
+    ? { name: presetLeaders[1].name, archetype: presetLeaders[1].archetype, unit: 'Colony Beta', hexaco: presetLeaders[1].hexaco, instructions: presetLeaders[1].instructions, quote: '' }
     : null;
   const leaderA = sideStateA?.leader ?? presetA;
   const leaderB = sideStateB?.leader ?? presetB;
@@ -827,6 +832,20 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
   const phone = useMediaQuery(PHONE_QUERY);
 
   if (maxTurn === 0) {
+    // Running but no first-turn snapshot yet: the run starts with
+    // research + commander prompts that take ~10-30s before the first
+    // kernel snapshot lands. Showing the static "Run a simulation"
+    // empty state in that window read as "nothing happened" even though
+    // the SSE stream was carrying status events. Render a live waiting
+    // state instead so the user sees the run is on the way.
+    if (state.isRunning) {
+      return (
+        <div className={`viz-content ${styles.empty}`} role="status" aria-live="polite">
+          <span className={styles.emptySpinner} aria-hidden="true" />
+          <span>Awaiting first turn snapshot — the {scenarioLabels.place} viz will populate once the kernel reports state.</span>
+        </div>
+      );
+    }
     return (
       <div className={`viz-content ${styles.empty}`}>
         Run a simulation to see the {scenarioLabels.place} visualization.
