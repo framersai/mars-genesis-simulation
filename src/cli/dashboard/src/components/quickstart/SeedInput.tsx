@@ -10,6 +10,7 @@ import { validateSeedText, validateSeedUrl } from './QuickstartView.helpers';
 import { extractPdfText } from './pdf-extract';
 import { ViewAsCodePanel } from './ViewAsCodePanel';
 import { LoadedScenarioCTA } from './LoadedScenarioCTA';
+import { QUICKSTART_TEMPLATES } from './quickstart-templates';
 import styles from './SeedInput.module.scss';
 
 export interface SeedInputProps {
@@ -186,6 +187,32 @@ export function SeedInput({ onSeedReady, onLoadedScenarioRunStart, disabled = fa
           </div>
         </>
       )}
+      <label className={styles.templatePicker}>
+        <span className={styles.templatePickerLabel}>Try a template</span>
+        <select
+          className={styles.templatePickerSelect}
+          value=""
+          disabled={disabled}
+          onChange={(e) => {
+            const id = e.target.value;
+            if (!id) return;
+            const template = QUICKSTART_TEMPLATES.find(t => t.id === id);
+            if (!template) return;
+            setTab('paste');
+            setSeedText(template.seedText);
+            setError(null);
+            // Reset to placeholder so the same template can be picked
+            // again later (replacing the textarea content) without the
+            // select getting stuck on a previously-resolved value.
+            e.target.value = '';
+          }}
+        >
+          <option value="">Pick a sample scenario…</option>
+          {QUICKSTART_TEMPLATES.map(t => (
+            <option key={t.id} value={t.id}>{t.label}</option>
+          ))}
+        </select>
+      </label>
       <div className={styles.tabs} role="tablist">
         {(['paste', 'url', 'pdf'] as Tab[]).map(t => (
           <button

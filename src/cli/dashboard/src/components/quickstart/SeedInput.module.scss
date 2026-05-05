@@ -52,6 +52,47 @@
   font-family: var(--sans);
 }
 
+.templatePicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.templatePickerLabel {
+  @include typo.field-label;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.templatePickerSelect {
+  flex: 1 1 auto;
+  min-width: 220px;
+  max-width: 100%;
+  background: var(--bg-input);
+  color: var(--text-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-family: var(--sans);
+  font-size: var(--font-sm);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: var(--amber);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
 .tabs {
   display: flex;
   gap: 4px;
