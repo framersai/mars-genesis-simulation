@@ -1,0 +1,62 @@
+@use '../../theme/typography' as typo;
+
+.panel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  min-height: 38px;
+  background: var(--bg-deep);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: var(--font-xs);
+  color: var(--text-2);
+  flex-wrap: wrap;
+}
+
+.eyebrow {
+  font-size: var(--font-3xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-right: 4px;
+}
+
+.empty {
+  color: var(--text-3);
+}
+
+.chipRow {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1 1 auto;
+}
+
+.chip {
+  display: inline-flex;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: var(--font-3xs);
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+
+.chipLight {
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  background: rgba(232, 180, 74, 0.08);
+}
+
+.chipStrong {
+  border: 2px solid var(--rust);
+  color: var(--rust);
+  background: rgba(224, 101, 48, 0.1);
+}
+
+.chipDept { font-weight: 700; }
+.chipCount { color: var(--text-3); }

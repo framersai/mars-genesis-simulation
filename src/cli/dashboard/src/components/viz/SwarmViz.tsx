@@ -26,11 +26,43 @@ import { ExportMenu } from './grid/ExportMenu.js';
 import { useScenarioLabels } from '../../hooks/useScenarioLabels.js';
 import { HighlightStrip } from './HighlightStrip';
 import { VizLegendBar } from './VizLegendBar';
+import { DivergenceDetail } from './DivergenceDetail';
 import { computeTurnHighlight, snapToHighlight } from './viz-highlights';
+import { computeCellDiff, type DiffCell } from './viz-diff';
 import { DEPARTMENT_COLORS, DEFAULT_DEPT_COLOR } from './viz-types';
 
 /** Tiny keyboard-shortcut chip for the footer legend. Kept local since
  *  it's only used in the viz tab footer. */
+/**
+ * Aggregate alive cells of a TurnSnapshot into per-department DiffCell
+ * entries — one row per department label, with the agent count and the
+ * dominant mood across that department's alive members. Returns []
+ * when the snapshot is missing (lagging side at the playhead edge).
+ */
+function aggregateByDept(snap: TurnSnapshot | undefined): DiffCell[] {
+  if (!snap) return [];
+  const byDept = new Map<string, { count: number; moods: Record<string, number> }>();
+  for (const c of snap.cells) {
+    if (!c.alive) continue;
+    const dept = c.department || 'unknown';
+    let entry = byDept.get(dept);
+    if (!entry) {
+      entry = { count: 0, moods: {} };
+      byDept.set(dept, entry);
+    }
+    entry.count += 1;
+    const m = c.mood || 'neutral';
+    entry.moods[m] = (entry.moods[m] ?? 0) + 1;
+  }
+  const out: DiffCell[] = [];
+  for (const [dept, agg] of byDept) {
+    const dominantMood =
+      Object.entries(agg.moods).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'neutral';
+    out.push({ cellKey: dept, department: dept, agentCount: agg.count, dominantMood });
+  }
+  return out;
+}
+
 function Kbd({ k, v }: { k: string; v: string }) {
   return (
     <span className={styles.kbd}>
@@ -907,6 +939,57 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
     [scenario.departments],
   );
 
+  // Department label lookup for the divergence-detail chips.
+  const departmentLabels = useMemo<Record<string, string>>(
+    () => Object.fromEntries(scenario.departments.map((d) => [d.id, d.label])),
+    [scenario.departments],
+  );
+
+  // Diff overlay state: persisted so the toggle survives page reloads.
+  // Default off — first-time viewers shouldn't be hit by the divergence
+  // panel before they've understood the highlight strip + legend.
+  const [diffOverlayOn, setDiffOverlayOn] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return window.localStorage.getItem('paracosm:vizDiffOverlay') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const setDiffOverlay = useCallback((next: boolean) => {
+    setDiffOverlayOn(next);
+    try {
+      window.localStorage.setItem('paracosm:vizDiffOverlay', next ? '1' : '0');
+    } catch {
+      /* private mode */
+    }
+  }, []);
+
+  // D hotkey toggle. Skipped while typing in inputs / textareas / contenteditable
+  // so the user's search query doesn't get interrupted.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && target.matches('input, textarea, [contenteditable=true]')) return;
+      if (e.key === 'd' || e.key === 'D') {
+        e.preventDefault();
+        setDiffOverlay(!diffOverlayOn);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [diffOverlayOn, setDiffOverlay]);
+
+  // Per-department diff at the current turn. Computed only when the
+  // overlay is on — useMemo dependency on diffOverlayOn means the heavy
+  // work is skipped entirely when the user has the toggle off.
+  const cellDiff = useMemo<Map<string, import('./viz-diff').CellDiff> | null>(() => {
+    if (!diffOverlayOn) return null;
+    const aCells = aggregateByDept(snapsA[currentTurn]);
+    const bCells = aggregateByDept(snapsB[currentTurn]);
+    return computeCellDiff(aCells, bCells);
+  }, [diffOverlayOn, snapsA, snapsB, currentTurn]);
+
   return (
       <div
         ref={vizRootRef}
@@ -915,6 +998,9 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
         <TurnBanner state={state} currentTurn={currentTurn} />
         <HighlightStrip text={highlightText} turn={currentTurn + 1} />
         <VizLegendBar departments={legendDepartments} />
+        {diffOverlayOn && cellDiff && (
+          <DivergenceDetail diff={cellDiff} departmentLabels={departmentLabels} />
+        )}
         <div className={styles.toolbarStrip}>
           <div className={styles.toolbarTopRow}>
             <div className={styles.modePillsWrap}>
@@ -941,6 +1027,16 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
               className={[styles.overflowToggle, overflowOpen ? styles.overflowToggleOpen : ''].filter(Boolean).join(' ')}
             >
               {'\u22ef'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setDiffOverlay(!diffOverlayOn)}
+              aria-label={diffOverlayOn ? 'Hide A-vs-B diff overlay (D)' : 'Show A-vs-B diff overlay (D)'}
+              aria-pressed={diffOverlayOn}
+              title="Highlight where Leader A and Leader B diverged this turn (press D)"
+              className={styles.helpBtn}
+            >
+              Diff {diffOverlayOn ? 'on' : 'off'}
             </button>
             <button
               type="button"
