@@ -2269,7 +2269,18 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         });
         console.log(`  Running scenario: "${activeScenario.labels?.name ?? activeScenario.id}" (${activeScenario.id})`);
 
-        marsServer.startWithConfig(simConfig, { onArtifact: onArtifactPersist }).catch((error) => {
+        // Capture into a local non-null reference. Between the
+        // `simConfig = normalizeSimulationConfig(...)` assignment above
+        // and this call we await several things (the dynamic import of
+        // bundle-id, the in-flight-sim abort drain, the active_scenario
+        // broadcast); during any of those microtasks a concurrent
+        // /clear or /select-scenario request can re-enter the event
+        // loop and reset `simConfig = null`. The previous closure-level
+        // dereference then threw "Cannot read properties of null
+        // (reading 'forkFrom')" inside startWithConfig (server logs
+        // were full of these). Local capture removes the race.
+        const launchConfig = simConfig;
+        marsServer.startWithConfig(launchConfig, { onArtifact: onArtifactPersist }).catch((error) => {
           console.warn('[setup] simulation failed:', error);
         });
 
