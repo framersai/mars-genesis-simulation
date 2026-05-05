@@ -24,6 +24,10 @@ import { RunSummaryDrawer } from './grid/RunSummaryDrawer.js';
 import { ForgeLineageModal, type ForgeLineagePayload } from './grid/ForgeLineageModal.js';
 import { ExportMenu } from './grid/ExportMenu.js';
 import { useScenarioLabels } from '../../hooks/useScenarioLabels.js';
+import { HighlightStrip } from './HighlightStrip';
+import { VizLegendBar } from './VizLegendBar';
+import { computeTurnHighlight, snapToHighlight } from './viz-highlights';
+import { DEPARTMENT_COLORS, DEFAULT_DEPT_COLOR } from './viz-types';
 
 /** Tiny keyboard-shortcut chip for the footer legend. Kept local since
  *  it's only used in the viz tab footer. */
@@ -874,12 +878,43 @@ export function SwarmViz({ state, onNavigateToChat }: SwarmVizProps) {
   // change, not on every parent re-render (was triggering on every
   // tickClock bump ~30x/sec before this memo).
   const searchMatches: SearchMatch[] = searchMatchesMemo;
+  // Highlight strip: pure derivation from the current and previous
+  // snapshot pair. snapToHighlight converts cumulative deaths/births
+  // into per-turn deltas; computeTurnHighlight picks the largest
+  // divergence and returns one templated sentence. Recomputes on turn
+  // change. Nothing async, no LLM.
+  const highlightText = useMemo(() => {
+    const a = snapsA[currentTurn]
+      ? snapToHighlight(snapsA[currentTurn], snapsA[currentTurn - 1])
+      : null;
+    const b = snapsB[currentTurn]
+      ? snapToHighlight(snapsB[currentTurn], snapsB[currentTurn - 1])
+      : null;
+    return computeTurnHighlight(a, b, currentTurn + 1);
+  }, [snapsA, snapsB, currentTurn]);
+
+  // Department list for the legend popover. Colors come from the shared
+  // DEPARTMENT_COLORS table so the swatch in the legend matches the
+  // tile color rendered on the grid. Memoized on scenario.id so we
+  // don't rebuild the array every render.
+  const legendDepartments = useMemo(
+    () =>
+      scenario.departments.map((d) => ({
+        id: d.id,
+        label: d.label,
+        color: DEPARTMENT_COLORS[d.id] ?? DEFAULT_DEPT_COLOR,
+      })),
+    [scenario.departments],
+  );
+
   return (
       <div
         ref={vizRootRef}
         className={`viz-content ${styles.root}`}
       >
         <TurnBanner state={state} currentTurn={currentTurn} />
+        <HighlightStrip text={highlightText} turn={currentTurn + 1} />
+        <VizLegendBar departments={legendDepartments} />
         <div className={styles.toolbarStrip}>
           <div className={styles.toolbarTopRow}>
             <div className={styles.modePillsWrap}>
