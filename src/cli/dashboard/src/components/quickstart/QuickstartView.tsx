@@ -515,6 +515,9 @@ export function QuickstartView({ sse, sessionId, onRunStarted, onInterventionRes
               <li><strong>Actor</strong> — an LLM decision-maker driving the scenario, weighted by a HEXACO personality vector.</li>
               <li><strong>Run</strong> — one actor playing the scenario turn by turn. Paracosm runs N actors in parallel against the same world so you can compare divergent outcomes.</li>
             </ul>
+            <p className={styles.timingHint}>
+              <strong>Heads-up:</strong> a fresh run takes <strong>2-5 minutes</strong> (compile, ground with citations, generate actors, simulate). For instant results, replay a cached run below.
+            </p>
           </header>
           {errorBanner && <p className={styles.errorBanner} role="alert">{errorBanner}</p>}
           <ReplayLastRunCTA />

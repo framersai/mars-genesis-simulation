@@ -24,9 +24,17 @@
 </p>
 
 <p align="center">
-  <a href="https://paracosm.agentos.sh/demo/e2e-atlas-8-hero.mp4">▶ Watch the 90-second end-to-end demo</a>
+  <a href="https://paracosm.agentos.sh/demo/e2e-atlas-8-hero.mp4">
+    <img src="https://paracosm.agentos.sh/demo/e2e-atlas-8-poster.jpg" alt="▶ Watch the 90-second end-to-end demo" width="720" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://paracosm.agentos.sh/demo/e2e-atlas-8-hero.mp4">▶ 90s end-to-end</a>
   &nbsp;·&nbsp;
   <a href="https://paracosm.agentos.sh/demo/digital-twin-maria-2-hero.mp4">▶ Digital twin walkthrough</a>
+  &nbsp;·&nbsp;
+  <a href="https://paracosm.agentos.sh/demo/branches.mp4">▶ Branches & forks</a>
 </p>
 
 ---
@@ -391,55 +399,15 @@ Numbers assume 6 turns, 5 departments, 100 agents, up to 3 events per turn. Forg
 
 ## How a turn runs
 
-```
-1. EVENT DIRECTOR     Reads world state, prior decisions, tool intelligence.
-                      Generates an event that targets actual weaknesses.
+Director event → Kernel advance (deterministic, seeded) → Department analysis in parallel (with optional runtime tool forging in a hardened `node:vm` sandbox; an LLM judge approves each forge) → Commander decision (HEXACO-weighted) → Outcome classification → Kernel effects → Agent reactions → Memory consolidation → Personality drift.
 
-2. KERNEL ADVANCE     Deterministic time progression: births, deaths, aging,
-                      health decay, resource consumption. Seeded PRNG.
-
-3. DEPARTMENT ANALYSIS  All active departments analyze the event in parallel.
-                        Each head uses personality plus tools. Specialists can
-                        forge new computational tools at runtime in a hardened
-                        node:vm sandbox. An LLM judge approves each forge.
-
-4. COMMANDER DECISION   Reads all department reports. Selects an option.
-                        Personality shapes risk tolerance and priority weighting.
-
-5. OUTCOME              Kernel classifies the outcome (risky success, risky
-                        failure, safe success, safe failure) from option,
-                        probability, and colony state.
-
-6. EFFECTS              Kernel applies deltas (population, morale, food,
-                        power, etc.) per outcome and event category.
-
-7. AGENT REACTIONS      ~100 agents react in parallel using a cheap model.
-                        Each reaction is shaped by the agent's personality,
-                        health, relationships, and accumulated memories.
-
-8. MEMORY               Reactions become persistent memories. Short-term
-                        consolidates into long-term. Stances drift.
-                        Relationships shift on shared experience.
-
-9. PERSONALITY DRIFT    HEXACO traits shift through actor pull, role activation,
-                        and outcome reinforcement. The commander drifts alongside
-                        their agents using peer-reviewed outcome-pull tables.
-```
-
-Every structured LLM call (director events, department reports, commander decisions, reactions, verdict, promotions) runs through Zod schema validation with automatic retry-with-feedback on failure. Schemas live under [`src/runtime/schemas/`](src/runtime/schemas/). Two wrappers (`generateValidatedObject` for one-shot, `sendAndValidate` for session-aware) preserve conversation memory while enforcing validation discipline.
+Every structured LLM call (director, departments, commander, reactions, verdict) is Zod-validated with retry-with-feedback. Schemas under [`src/runtime/schemas/`](src/runtime/schemas/). Full per-stage breakdown in [docs/architecture.md](docs/architecture.md).
 
 ---
 
-## Seed enrichment and citations
+## Seed enrichment
 
-Real source material grounds the scenario all the way through to department reports.
-
-```bash
-paracosm compile scenarios/lunar.json --seed-text "$(cat ./papers/iss-radiation.md)"
-paracosm compile scenarios/lunar.json --seed-url https://ntrs.nasa.gov/citations/20210018970
-```
-
-The pipeline runs eight steps: extract topics and search queries from the seed, fan out to Firecrawl / Tavily / Serper / Brave in parallel, dedup and rerank with Cohere `rerank-v3.5`, assemble a `KnowledgeBundle`, ingest into an AgentOS `AgentMemory.sqlite()` store, recall per event during runtime, inject `[claim](url)` markdown into department prompts, and surface citations in the dashboard's Reports tab. The seed bundle is cached separately from the hook cache, keyed on the seed signature, so the same URL never re-extracts.
+`paracosm compile <scenario.json> --seed-text "..."` or `--seed-url <url>` extracts topics, searches across Firecrawl + Tavily + Serper + Brave in parallel, reranks with Cohere `rerank-v3.5`, ingests the result into an AgentOS `AgentMemory.sqlite()` store, and threads citations into department prompts. Bundle cached per-seed. Surface citations land in the dashboard's Reports tab.
 
 ---
 
@@ -550,12 +518,6 @@ src/
 ```
 
 The engine owns the chassis. The scenario owns the domain. The kernel handles state, time, randomness, and invariants. The scenario handles event categories, department instructions, progression hooks, and research citations. The orchestrator connects them.
-
----
-
-## Background
-
-Paracosm sits in the structured world model lineage ([Xing 2025](https://arxiv.org/abs/2507.05169), [ACM CSUR 2025](https://dl.acm.org/doi/full/10.1145/3746449)). The LLM-world-model implementation closest to it is [Yang et al, 2026](https://openreview.net/forum?id=XmYCERErcD), which evaluates LLM-based world models through policy verification, action proposal, and policy planning. Full taxonomy mapping in [`docs/positioning/world-model-mapping.md`](docs/positioning/world-model-mapping.md).
 
 ---
 

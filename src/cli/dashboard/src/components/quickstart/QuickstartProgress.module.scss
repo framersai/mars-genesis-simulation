@@ -77,3 +77,30 @@
   outline: 2px solid var(--amber);
   outline-offset: 2px;
 }
+
+// Surfaced on the running / done stages so users don't have to watch
+// the staged progress panel while events are already streaming into
+// SIM. Primary-styled (amber fill) so it reads as the recommended
+// next action once the simulation is live.
+.jumpToSim {
+  align-self: flex-start;
+  background: var(--amber);
+  color: var(--bg-deep);
+  border: 1px solid var(--amber);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-family: var(--mono);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: filter 0.15s, transform 0.15s;
+  margin-bottom: 8px;
+
+  &:hover { filter: brightness(1.08); }
+  &:focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 3px;
+  }
+}

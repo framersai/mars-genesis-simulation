@@ -17,6 +17,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { SimEvent } from '../../hooks/useSSE';
+import { useDashboardNavigation } from '../../App';
 import { QuickstartStageCard } from './QuickstartStageCard';
 import {
   buildLogForStage,
@@ -99,6 +100,7 @@ export function QuickstartProgress({
   }, [stage]);
 
   const resolvedActorCount = actorCount ?? actors?.length ?? 3;
+  const navigate = useDashboardNavigation();
 
   const ctx: BuildLogContext = useMemo(
     () => ({
@@ -146,6 +148,20 @@ export function QuickstartProgress({
         })}
       </ol>
 
+      {/* Once the running stage starts, the live SSE stream is already
+          flowing into SIM. Surface a one-click jump so users who don't
+          want to watch the staged progress panel can hop to the live
+          side-by-side view immediately. Hidden until running starts so
+          earlier stages stay focused on their own progress. */}
+      {(stage === 'running' || stage === 'done') && (
+        <button
+          type="button"
+          className={styles.jumpToSim}
+          onClick={() => navigate('sim')}
+        >
+          Jump to live SIM →
+        </button>
+      )}
       {onCancel && stage !== 'done' && (
         <button type="button" className={styles.cancel} onClick={onCancel}>
           Cancel run

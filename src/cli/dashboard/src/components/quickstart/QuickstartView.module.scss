@@ -69,6 +69,31 @@
   }
 }
 
+// Heads-up note under the glossary explaining that a fresh run takes
+// 2-5 minutes. Surfaces alongside the ReplayLastRunCTA so users with
+// no time to wait see "replay a cached run" as the immediate option.
+.timingHint {
+  max-width: 600px;
+  margin: 12px auto 0;
+  padding: 10px 14px;
+  background: var(--bg-deep);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  font-family: var(--sans);
+  font-size: var(--font-sm);
+  line-height: 1.55;
+  color: var(--text-2);
+
+  strong {
+    color: var(--amber);
+  }
+
+  @media (max-width: 480px) {
+    display: none;
+  }
+}
+
 .errorBanner {
   max-width: 640px;
   margin: 0 auto;
