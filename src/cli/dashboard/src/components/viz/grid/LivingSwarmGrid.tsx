@@ -1092,6 +1092,8 @@ export function LivingSwarmGrid(props: LivingSwarmGridProps) {
                     preserveAspectRatio="none"
                     width={sW}
                     height={sH}
+                    role="img"
+                    aria-label={`Psychological trajectory across ${trail.length} turns`}
                     className={styles.psychSvg}
                   >
                     <line

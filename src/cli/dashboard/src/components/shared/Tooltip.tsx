@@ -30,6 +30,21 @@ export function Tooltip({ content, children, dot, block }: TooltipProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
+  // ESC dismisses the tooltip while it's open. Without this, keyboard
+  // users who Tab onto a tooltipped element have to Tab away to dismiss
+  // (or wait for the blur timeout). Common AT pattern per ARIA APG.
+  React.useEffect(() => {
+    if (!visible) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setVisible(false);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [visible]);
+
   const show = useCallback((e: React.MouseEvent) => {
     clearTimeout(timer.current);
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();

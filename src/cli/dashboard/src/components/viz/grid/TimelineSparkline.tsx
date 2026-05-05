@@ -107,6 +107,8 @@ export function TimelineSparkline({
       <svg
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="none"
+        role="img"
+        aria-label="Timeline sparkline of morale, population, and food across both leaders"
         onClick={handleClick}
         onMouseMove={handleMove}
         onMouseLeave={handleLeave}
