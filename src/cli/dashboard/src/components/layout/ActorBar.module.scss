@@ -203,3 +203,152 @@
   white-space: nowrap;
   flex-shrink: 0;
 }
+
+.compactArchetype {
+  font-size: var(--font-3xs);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--actor-color, var(--amber));
+  background: var(--actor-bg, rgba(232, 180, 74, 0.12));
+  border: 1px solid var(--actor-border, var(--amber-dim));
+  padding: 1px 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.compactMood,
+.compactCrisis,
+.compactDeciding {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-3xs);
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.compactMood {
+  background: rgba(120, 120, 120, 0.1);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+}
+
+.compactCrisis {
+  background: rgba(213, 95, 95, 0.12);
+  border: 1px solid rgba(213, 95, 95, 0.4);
+  color: var(--red, #d55f5f);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+
+.compactDeciding {
+  background: rgba(232, 180, 74, 0.12);
+  border: 1px solid var(--amber-dim);
+  color: var(--amber);
+  animation: pulse-deciding 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse-deciding {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.dynamicRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: var(--font-3xs);
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.chipLabel {
+  color: var(--text-3);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.chipValue {
+  color: var(--text-1);
+  font-weight: 600;
+}
+
+.chipCrisis {
+  background: rgba(213, 95, 95, 0.08);
+  border-color: rgba(213, 95, 95, 0.3);
+}
+
+.chipCrisis .chipLabel {
+  color: rgba(213, 95, 95, 0.85);
+}
+
+.chipDeciding {
+  background: rgba(232, 180, 74, 0.08);
+  border-color: var(--amber-dim);
+  animation: pulse-deciding 1.4s ease-in-out infinite;
+}
+
+.chipDeciding .chipLabel {
+  color: var(--amber);
+}
+
+.chipStatus {
+  background: var(--bg-card);
+}
+
+.mood_low {
+  color: rgba(213, 95, 95, 0.95);
+  border-color: rgba(213, 95, 95, 0.4);
+  background: rgba(213, 95, 95, 0.08);
+}
+
+.mood_low .chipLabel {
+  color: rgba(213, 95, 95, 0.85);
+}
+
+.mood_tense {
+  color: var(--amber);
+  border-color: var(--amber-dim);
+  background: rgba(232, 180, 74, 0.08);
+}
+
+.mood_tense .chipLabel {
+  color: var(--amber);
+}
+
+.mood_ok {
+  color: var(--text-1);
+}
+
+.mood_high {
+  color: var(--green, #6aad48);
+  border-color: rgba(106, 173, 72, 0.4);
+  background: rgba(106, 173, 72, 0.08);
+}
+
+.mood_high .chipLabel {
+  color: rgba(106, 173, 72, 0.85);
+}

@@ -266,6 +266,9 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
               popHistory={sideA?.popHistory || []}
               moraleHistory={sideA?.moraleHistory || []}
               verdictPlacement={verdictPlacementFor('A')}
+              event={sideA?.event}
+              statuses={sideA?.statuses}
+              pendingDecision={sideA?.pendingDecision}
             />
             <ActorBar
               actorIndex={1}
@@ -273,6 +276,9 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
               popHistory={sideB?.popHistory || []}
               moraleHistory={sideB?.moraleHistory || []}
               verdictPlacement={verdictPlacementFor('B')}
+              event={sideB?.event}
+              statuses={sideB?.statuses}
+              pendingDecision={sideB?.pendingDecision}
             />
           </div>
 

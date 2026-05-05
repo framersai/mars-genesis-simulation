@@ -57,6 +57,8 @@ export function TurnGrid({ state }: TurnGridProps) {
           leader={sideA?.leader ?? null}
           popHistory={sideA?.popHistory ?? []}
           moraleHistory={sideA?.moraleHistory ?? []}
+          event={sideA?.event}
+          pendingDecision={sideA?.pendingDecision}
         />
         <ActorBar
           compact
@@ -64,6 +66,8 @@ export function TurnGrid({ state }: TurnGridProps) {
           leader={sideB?.leader ?? null}
           popHistory={sideB?.popHistory ?? []}
           moraleHistory={sideB?.moraleHistory ?? []}
+          event={sideB?.event}
+          pendingDecision={sideB?.pendingDecision}
         />
       </header>
 
