@@ -1981,29 +1981,39 @@ html.light .waitlist-field select:focus {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
-  margin: 18px auto 0;
+  gap: 10px;
+  /* Generous breathing room: pulled away from the dense mono tagline
+     above and gives the CTA row below its own visual chunk. The pill
+     row is the only piece on the hero with this much vertical air, so
+     the eye lands on it before scanning to the CTAs. */
+  margin: 36px auto 28px;
   max-width: 720px;
 }
 .hero-trust-pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
+  gap: 10px;
+  padding: 8px 16px;
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: var(--bg2);
+  /* Subtle inner gradient so the pill reads as a "chip" rather than a
+     flat label. Two-stop gradient with the second stop at the bg color
+     keeps the elevation cue when the page is in dark mode but stays
+     invisible against the same-tone bg2 in light mode. */
+  background: linear-gradient(180deg, var(--bg2), var(--bg1) 100%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 1px 2px rgba(0, 0, 0, 0.18);
   color: var(--t2);
   text-decoration: none;
   font-family: var(--mono);
-  font-size: 11.5px;
-  letter-spacing: 0.3px;
-  transition: border-color 120ms ease, color 120ms ease, transform 80ms ease;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  transition: border-color 120ms ease, color 120ms ease, transform 80ms ease, box-shadow 120ms ease;
 }
 .hero-trust-pill:not(.hero-trust-pill-static):hover {
   border-color: var(--amber);
   color: var(--t1);
   transform: translateY(-1px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 4px 10px rgba(232, 180, 74, 0.18);
 }
 .hero-trust-label {
   color: var(--t3);
