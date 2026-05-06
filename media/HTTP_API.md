@@ -4,7 +4,7 @@ The dashboard server (`paracosm dashboard`) exposes a versioned HTTP surface und
 
 Source of truth: [`src/cli/server/routes/platform-api.ts`](../src/cli/server/routes/platform-api.ts), [`src/cli/server/routes/public-demo.ts`](../src/cli/server/routes/public-demo.ts), [`src/cli/bundle-routes.ts`](../src/cli/bundle-routes.ts), and [`src/cli/server/library-import-route.ts`](../src/cli/server/library-import-route.ts).
 
-For the SDK (`WorldModel`, `runBatch`, `simulateIntervention`, etc.) see the [Cookbook](./COOKBOOK.md). This page is the wire-level reference for the HTTP surface only.
+For the SDK (`WorldModel.simulate()`, `WorldModel.batch()`, `WorldModel.intervene()`, etc.) see the [Cookbook](./COOKBOOK.md). This page is the wire-level reference for the HTTP surface only.
 
 ## Base URL and gating
 

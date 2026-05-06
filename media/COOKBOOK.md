@@ -11,7 +11,7 @@ The runner exercises the API in this order:
 - [`wm.replay`](#4-wmreplay) verify the kernel is byte-equal-deterministic
 - [`POST /simulate`](#5-post-simulate) one-shot HTTP endpoint for non-SSE consumers
 - [`wm.intervene`](#6-wmintervene) digital-twin pattern with subject + intervention
-- [`runBatch`](#7-runbatch) N scenarios x M leaders manifest
+- [`wm.batch`](#7-wmbatch) N actors per scenario manifest
 
 Captured JSON files live in [`output/cookbook/`](../output/cookbook/). Each section embeds excerpts; the full files are linked.
 
@@ -445,7 +445,7 @@ Both `subject` and `intervention` carry through verbatim. Full output: [`output/
 
 ---
 
-## 7. `runBatch`
+## 7. `wm.batch`
 
 Run N scenarios x M leaders against shared config. Useful for ablations, leader sweeps, and cross-scenario reproducibility checks.
 
@@ -687,7 +687,7 @@ console.log(`${founders.length} founders with descendants`);
 Three import paths reach the same data:
 
 - **`paracosm/swarm`** — pure projections (`getSwarm`, `swarmByDepartment`, `swarmFamilyTree`, `aliveCount`, `deathCount`, `moodHistogram`, `departmentHeadcount`). Tree-shake-friendly when you only want swarm helpers.
-- **`paracosm/world-model`** — `WorldModel.swarm(artifact)` etc. Useful when you already have `WorldModel` imported for `simulate()` / `fork()`.
+- **`paracosm`** — `WorldModel.swarm(artifact)` etc. Useful when you already have `WorldModel` imported for `simulate()` / `fork()`.
 - **`paracosm/schema`** — types only (`SwarmAgent`, `SwarmSnapshot`). Pair with direct `result.finalSwarm` access if you don't want the helpers.
 
 The `SwarmAgent` shape is intentionally narrow: identifiers, role/dept,
@@ -870,7 +870,7 @@ Router unit tests live at [`tests/cli/router.test.ts`](../tests/cli/router.test.
 
 ## Pluggable trait models: `ai-agent` end-to-end
 
-paracosm@0.8+ ships a `TraitModel` registry alongside the historical HEXACO. Two built-ins land in v1: `hexaco` (the canonical Ashton-Lee shape, the existing default) and `ai-agent` (a six-axis model designed for AI-system leaders). The registry lives at [`src/engine/trait-models/`](../src/engine/trait-models/); the design is documented at [`docs/superpowers/specs/2026-04-26-trait-model-generalization-design.md`](superpowers/specs/2026-04-26-trait-model-generalization-design.md).
+paracosm@0.8+ ships a `TraitModel` registry alongside the historical HEXACO. Two built-ins land in v1: `hexaco` (the canonical Ashton-Lee shape, the existing default) and `ai-agent` (a six-axis model designed for AI-system leaders). The registry lives at [`src/engine/trait-models/`](../src/engine/trait-models/) and is demonstrated below with a captured end-to-end run.
 
 ### `ai-agent` axes
 
@@ -976,8 +976,8 @@ The full `cookbook-e2e.ts` run on 2026-04-25 against OpenAI economy preset:
 | 3. forkFromArtifact (1 leader x 2 turns) | $0.34 | 88s |
 | 4. replay | $0 | <1s |
 | 5. POST /simulate (1 leader x 2 turns) | $0.10 | 61s |
-| 6. simulateIntervention (1 leader x 2 turns) | $0.11 | 76s |
-| 7. runBatch (4 cells x 2 turns) | $0.69 | 179s |
+| 6. intervene (1 actor x 2 turns) | $0.11 | 76s |
+| 7. wm.batch (4 cells x 2 turns) | $0.69 | 179s |
 | **Total** | **~$1.94** | **~10 min** |
 
 Per-artifact cost is enforced at $1, total at $5. Both ceilings throw if exceeded. Per-step cost is recorded in `artifact.cost.totalUSD` and broken down by role (commander, departments, judge, agent reactions, director). The cost field also includes prompt-cache statistics: `cost.caches.{readTokens, creationTokens, savedUSD}` so you can verify the prompt cache is hitting on turn 2+.
