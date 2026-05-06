@@ -39,7 +39,17 @@ export function LoadedScenarioCTA({
   const presetActors = scenario.presets[0]?.leaders ?? scenario.presets[0]?.actors ?? [];
   const presetCount = presetActors.length;
   const hasPreset = presetCount >= 2;
-  const sliderMax = Math.max(2, presetCount || 2);
+  // Slider goes to 50 (matches generate-actors API + SeedInput range).
+  // When the user picks more than presetCount, QuickstartView's
+  // loaded-scenario handler routes through /api/quickstart/generate-actors
+  // for the extra slots beyond the preset, so the run still launches —
+  // it just costs an extra ~30s for the LLM to generate the additional
+  // HEXACO profiles. Capping at presetCount (the previous behavior)
+  // silently clamped users to 2 for Mars Genesis even when they had
+  // dragged the slider to 3+; the third actor never made it into the
+  // SIM/VIZ render because state.actorIds.length was never > 2.
+  const sliderMax = 50;
+  const exceedsPreset = actorCount > presetCount;
   const scenarioName = scenario.labels.name;
 
   const leaderLine = hasPreset
@@ -95,9 +105,9 @@ export function LoadedScenarioCTA({
         <span className={styles.runButtonCompact} aria-hidden="true">{compactRunLabel}</span>
       </button>
       <div className={styles.tradeoff}>
-        {hasPreset
-          ? 'Same scenario, fresh seed: skips the compile step.'
-          : 'Same scenario; ~30s for actor generation since no preset is defined.'}
+        {hasPreset && !exceedsPreset && 'Same scenario, fresh seed: skips the compile step.'}
+        {hasPreset && exceedsPreset && `Same scenario; ${actorCount} LLM-generated actors replace the preset leaders for this run (~30s for generation).`}
+        {!hasPreset && 'Same scenario; ~30s for actor generation since no preset is defined.'}
       </div>
     </section>
   );
