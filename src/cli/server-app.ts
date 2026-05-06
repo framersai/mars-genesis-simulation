@@ -2347,15 +2347,24 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       return;
     }
 
-    // Serve brand assets
+    // Serve brand assets. Defensive: bot probes hit `/brand/` (empty
+    // suffix) or `/brand/<dirname>`, which `existsSync` reports as
+    // present but `readFileSync` then blows up on with EISDIR. The whole
+    // block wraps in try/catch + the existsSync check now also requires
+    // a file (not a directory) so a probe falls through to 404 instead
+    // of crashing the request handler. Server logs were full of these.
     if (req.url?.split('?')[0].startsWith('/brand/')) {
-      const brandPath = resolve(__dirname, '..', '..', 'assets', req.url.split('?')[0].replace('/brand/', ''));
-      if (existsSync(brandPath)) {
-        const ext = brandPath.split('.').pop() || '';
-        const types: Record<string,string> = { svg:'image/svg+xml', png:'image/png', jpg:'image/jpeg', css:'text/css', js:'application/javascript', woff2:'font/woff2' };
-        res.writeHead(200, { 'Content-Type': types[ext] || 'application/octet-stream', 'Cache-Control': 'public, max-age=300, s-maxage=60' });
-        res.end(readFileSync(brandPath));
-        return;
+      try {
+        const brandPath = resolve(__dirname, '..', '..', 'assets', req.url.split('?')[0].replace('/brand/', ''));
+        if (existsSync(brandPath) && statSync(brandPath).isFile()) {
+          const ext = brandPath.split('.').pop() || '';
+          const types: Record<string,string> = { svg:'image/svg+xml', png:'image/png', jpg:'image/jpeg', css:'text/css', js:'application/javascript', woff2:'font/woff2' };
+          res.writeHead(200, { 'Content-Type': types[ext] || 'application/octet-stream', 'Cache-Control': 'public, max-age=300, s-maxage=60' });
+          res.end(readFileSync(brandPath));
+          return;
+        }
+      } catch (err) {
+        console.warn(`[brand] failed to serve ${req.url}: ${(err as Error).message}`);
       }
     }
 
