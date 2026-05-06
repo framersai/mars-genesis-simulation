@@ -1,0 +1,80 @@
+@use '../../theme/typography' as typo;
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 12px auto;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  max-width: 960px;
+}
+
+.heading {
+  @include typo.field-label;
+
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--amber);
+    color: var(--text-1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.pillFocused {
+  background: var(--amber-glow, rgba(232, 180, 74, 0.18));
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.pillDimmed {
+  opacity: 0.4;
+}
+
+.pillCount {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-1);
+}
+
+.pillFocused .pillCount {
+  color: var(--amber);
+}
+
+.pillLabel {
+  white-space: nowrap;
+}

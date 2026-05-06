@@ -11,12 +11,15 @@
  * @module paracosm/dashboard/sim/ConstellationView
  */
 import * as React from 'react';
+import { useState, useMemo } from 'react';
 import styles from './ConstellationView.module.scss';
 import { computeHexacoDistances } from './computeHexacoDistances.js';
 import { extractNodeStats } from './constellation-stats.js';
 import { getActorColorVar } from '../../hooks/useGameState.js';
 import type { GameState } from '../../hooks/useGameState.js';
 import { useScenarioContext } from '../../App';
+import { projectCohorts } from './cohort.helpers.js';
+import { CohortLegend } from './CohortLegend';
 
 export interface ConstellationViewProps {
   state: GameState;
@@ -82,6 +85,21 @@ export function ConstellationView({ state, onActorClick }: ConstellationViewProp
     [actorIds, state],
   );
 
+  // Cohort grouping by leader archetype. The legend renders only when
+  // there are 2+ cohorts and ≥3 actors (CohortLegend gates internally);
+  // pair runs collapse to nothing. Focus state lives here so clicking
+  // a legend pill dims the off-cohort nodes + edges below.
+  const cohorts = useMemo(() => projectCohorts(state), [state]);
+  const [focusedArchetype, setFocusedArchetype] = useState<string | null>(null);
+  // Map of id → cohort archetype, for cheap per-render lookup.
+  const archetypeById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of cohorts) for (const id of c.ids) m.set(id, c.archetype);
+    return m;
+  }, [cohorts]);
+  const isInFocus = (id: string): boolean =>
+    focusedArchetype === null || archetypeById.get(id) === focusedArchetype;
+
   if (actorIds.length === 0) {
     return (
       <div className={styles.empty}>
@@ -94,6 +112,11 @@ export function ConstellationView({ state, onActorClick }: ConstellationViewProp
 
   return (
     <div className={styles.wrap}>
+      <CohortLegend
+        cohorts={cohorts}
+        focusedArchetype={focusedArchetype}
+        onFocusChange={setFocusedArchetype}
+      />
       <svg
         className={styles.svg}
         viewBox={`0 0 ${size} ${size}`}
@@ -107,8 +130,13 @@ export function ConstellationView({ state, onActorClick }: ConstellationViewProp
           const pb = positions[actorIds.indexOf(idB)];
           if (!pa || !pb) return null;
           const norm = pairLookup.get(`${idA}|${idB}`) ?? 0;
-          const opacity = Math.max(0.06, Math.min(0.95, 1 - norm));
-          const showLabel = actorIds.length < EDGE_LABEL_CAP;
+          // Dim edges that connect actors outside the focused cohort —
+          // either endpoint outside is enough to fade. Cross-cohort
+          // edges are inherently mixed, so we treat them as off-focus.
+          const edgeInFocus = isInFocus(idA) && isInFocus(idB);
+          const focusMul = focusedArchetype === null ? 1 : (edgeInFocus ? 1 : 0.12);
+          const opacity = Math.max(0.06, Math.min(0.95, 1 - norm)) * focusMul;
+          const showLabel = actorIds.length < EDGE_LABEL_CAP && (focusedArchetype === null || edgeInFocus);
           const mx = (pa.cx + pb.cx) / 2;
           const my = (pa.cy + pb.cy) / 2;
           return (
@@ -149,8 +177,13 @@ export function ConstellationView({ state, onActorClick }: ConstellationViewProp
           const lx = pos.cx + Math.cos(pos.angle) * labelDistance;
           const ly = pos.cy + Math.sin(pos.angle) * labelDistance;
           const anchor = pos.angle > -Math.PI / 2 && pos.angle < Math.PI / 2 ? 'start' : 'end';
+          // Cohort focus: when a legend pill is active, fade nodes
+          // outside that cohort to ~25% opacity. Click-through still
+          // works on dimmed nodes so users can drill in if curious.
+          const dimmed = focusedArchetype !== null && !isInFocus(id);
+          const groupOpacity = dimmed ? 0.25 : 1;
           return (
-            <g key={id}>
+            <g key={id} opacity={groupOpacity}>
               <circle
                 data-actor={id}
                 className={styles.node}
