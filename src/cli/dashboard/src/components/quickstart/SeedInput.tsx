@@ -236,7 +236,7 @@ export function SeedInput({ onSeedReady, onLoadedScenarioRunStart, disabled = fa
           placeholder="Type or paste a brief, article, meeting notes, or any domain-specific source material (at least 200 characters)."
           value={seedText}
           onChange={e => setSeedText(e.target.value)}
-          rows={12}
+          rows={6}
           disabled={disabled}
         />
       )}
