@@ -54,10 +54,14 @@ test('ViewAsCodePanel: expanded with TS tab renders the escaped recipe', () => {
 });
 
 test('ViewAsCodePanel: expanded with curl tab renders the curl POST', () => {
+  // actorCount=2 (the dashboard default) so the rendered body is the
+  // minimal "{seedText:...}" shape — the test focuses on the URL +
+  // shell-escape contract, not the actorCount-when-non-default branch
+  // (covered separately in view-as-code.test.ts).
   const html = renderToString(
     <ViewAsCodePanel
       seedText="A coastal mayor must evacuate."
-      actorCount={3}
+      actorCount={2}
       initiallyExpanded
       initialTab="curl"
     />,

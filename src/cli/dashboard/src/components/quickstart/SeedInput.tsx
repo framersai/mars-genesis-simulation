@@ -51,10 +51,13 @@ export function SeedInput({ onSeedReady, onLoadedScenarioRunStart, disabled = fa
   const [error, setError] = useState<string | null>(null);
   const [fetching, setFetching] = useState(false);
   // Actor count: how many parallel actors run against this scenario.
-  // Default 3 matches the legacy Quickstart behavior. Cap 50 mirrors
-  // GenerateLeadersSchema. Each actor is ~$0.30 LLM spend; the cost
-  // preview surfaces the total below the slider.
-  const [actorCount, setActorCount] = useState(3);
+  // Default 2: this dashboard is built around the side-by-side 2-actor
+  // comparison surface (TurnGrid, DivergenceRail, ActorBar). 3+ actors
+  // run cleanly through the API + CLI but the visual story collapses
+  // here — a richer N-actor dashboard is on the Pro/Enterprise roadmap.
+  // Cap 50 mirrors GenerateLeadersSchema. Each actor is ~$0.30 LLM
+  // spend; the cost preview surfaces the total below the slider.
+  const [actorCount, setActorCount] = useState(2);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const submit = useCallback(() => {
@@ -345,6 +348,7 @@ export function SeedInput({ onSeedReady, onLoadedScenarioRunStart, disabled = fa
           ~${(0.10 + 0.30 * actorCount).toFixed(2)} · {wallTimeEstimate(actorCount)}
         </span>
       </div>
+      {actorCount > 2 && <MultiActorExperimentalNotice actorCount={actorCount} />}
 
       <ViewAsCodePanel
         seedText={seedText}
@@ -362,6 +366,35 @@ export function SeedInput({ onSeedReady, onLoadedScenarioRunStart, disabled = fa
       >
         Generate + Run {actorCount} {actorCount === 1 ? 'Actor' : 'Actors'} (~${(0.10 + 0.30 * actorCount).toFixed(2)})
       </button>
+    </div>
+  );
+}
+
+/**
+ * Inline notice that the dashboard's visual surface is built around
+ * 2-actor side-by-side comparison and 3+ actor runs work but currently
+ * fall back to a roster-table + distribution-band layout instead of the
+ * per-actor TurnGrid. The full N-actor cohort dashboard is on the
+ * Pro/Enterprise roadmap; the landing page waitlist captures interest.
+ */
+function MultiActorExperimentalNotice({ actorCount }: { actorCount: number }) {
+  return (
+    <div className={styles.multiActorNotice} role="note">
+      <strong className={styles.multiActorNoticeBadge}>BETA</strong>
+      <span>
+        Running <strong>{actorCount} actors</strong> through the engine works fine — but this dashboard's
+        side-by-side event view is built for 2-actor comparisons.
+        With 3+ actors you get a roster table + distribution panel instead of per-actor turn cards.
+        The full N-actor cohort dashboard is on the Pro / Enterprise roadmap.{' '}
+        <a
+          href="https://paracosm.agentos.sh/#waitlist"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.multiActorNoticeLink}
+        >
+          Join the waitlist →
+        </a>
+      </span>
     </div>
   );
 }

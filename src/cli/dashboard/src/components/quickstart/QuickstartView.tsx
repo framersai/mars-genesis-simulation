@@ -359,10 +359,14 @@ export function QuickstartView({ sse, sessionId, onRunStarted, onInterventionRes
       }
       setPhase({ kind: 'progress', stage: 'actors', scenario });
 
-      // Honor the actor-count from the seed input; fall back to 3 for
-      // back-compat with callers that don't supply one. Server-side
-      // GenerateActorsSchema clamps 1-50 (Compare-runs UI cap).
-      const requestedCount = Math.max(1, Math.min(50, payload.actorCount ?? 3));
+      // Honor the actor-count from the seed input; fall back to 2
+      // because the dashboard's primary surface is the 2-actor side-by-
+      // side comparison. 3+ actors run cleanly through the engine but
+      // the UI degrades to a roster table; the full N-actor cohort
+      // dashboard is on the Pro/Enterprise roadmap (see
+      // MultiActorExperimentalNotice). Server-side GenerateActorsSchema
+      // still clamps 1-50.
+      const requestedCount = Math.max(1, Math.min(50, payload.actorCount ?? 2));
       const actorsRes = await fetch('/api/quickstart/generate-actors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -540,7 +544,7 @@ export function QuickstartView({ sse, sessionId, onRunStarted, onInterventionRes
           stage={phase.stage}
           actors={actorProgress}
           events={sse.events}
-          actorCount={phase.actors?.length ?? actorProgress?.length ?? 3}
+          actorCount={phase.actors?.length ?? actorProgress?.length ?? 2}
           groundingSummary={groundingSummary}
         />
       )}

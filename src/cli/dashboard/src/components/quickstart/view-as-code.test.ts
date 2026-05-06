@@ -3,9 +3,12 @@ import assert from 'node:assert/strict';
 
 import { renderTsRecipe, renderCurlRecipe, type RecipeInput } from './view-as-code.js';
 
+// baseInput uses the dashboard's default actor count (2). Tests that
+// need to assert the "non-default" branch in renderCurlRecipe pass an
+// explicit override (5).
 const baseInput: RecipeInput = {
   seedText: 'A coastal mayor must evacuate.',
-  actorCount: 3,
+  actorCount: 2,
 };
 
 test('renderTsRecipe: base case — emits v0.9 runMany with brief + count', () => {
@@ -13,7 +16,7 @@ test('renderTsRecipe: base case — emits v0.9 runMany with brief + count', () =
   assert.match(out, /^import \{ runMany \} from 'paracosm';/m);
   assert.match(out, /const \{ runs \} = await runMany\(/);
   assert.match(out, /`A coastal mayor must evacuate\.`/);
-  assert.match(out, /\{ count: 3 \}/);
+  assert.match(out, /\{ count: 2 \}/);
   assert.match(out, /runs\.forEach\(\(\{ actor, artifact \}\)/);
   // Old v0.8 shape is gone:
   assert.ok(!out.includes('paracosm/world-model'), 'no v0.8 subpath');
@@ -72,7 +75,10 @@ test('renderCurlRecipe: base case — POSTs to compile-from-seed with seedText o
 });
 
 test("renderCurlRecipe: escapes literal single quote in seedText via the sh-quote idiom", () => {
-  const out = renderCurlRecipe({ seedText: "it's fine", actorCount: 3 });
+  // Pass actorCount=2 (the dashboard default) so the curl body stays
+  // minimal — the test is asserting the sh-quote escape, not the
+  // actorCount branch.
+  const out = renderCurlRecipe({ seedText: "it's fine", actorCount: 2 });
   // JSON is `{"seedText":"it's fine"}`; shell wrap with `'...'` and the
   // single quote inside becomes `'\''`. Final emitted -d argument:
   // '{"seedText":"it'\''s fine"}'

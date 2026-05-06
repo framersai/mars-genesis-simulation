@@ -80,7 +80,10 @@ export function renderCurlRecipe(state: RecipeInput): string {
   if (state.domainHint && state.domainHint.trim().length > 0) {
     body.domainHint = state.domainHint;
   }
-  if (state.actorCount !== 3) {
+  // Only emit actorCount in the curl body when the user moved off the
+  // dashboard default. 2 is the visual surface's primary mode; 3+ runs
+  // through the engine fine but the dashboard surfaces a BETA notice.
+  if (state.actorCount !== 2) {
     body.actorCount = state.actorCount;
   }
   // sourceUrl is intentionally omitted from the curl body — the
