@@ -58,6 +58,10 @@
     "check:doc-examples": "npx tsx scripts/check-doc-examples.ts",
     "typecheck:dashboard": "tsc -p src/cli/dashboard",
     "test": "npm run typecheck:dashboard && node --import tsx --import ./scripts/test-css-stub.mjs --test 'tests/**/*.test.ts' 'src/cli/**/*.test.ts' 'src/cli/dashboard/src/**/*.test.tsx'",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:install": "playwright install chromium",
+    "test:e2e:fixtures": "node tests-e2e/fixtures/build-fixtures.mjs",
     "docs": "typedoc && cp assets/docs-theme/paracosm-override.css docs/api/assets/paracosm-override.css",
     "changelog": "node scripts/generate-changelog.mjs",
     "export:json-schema": "npx tsx scripts/export-json-schema.ts",
@@ -75,7 +79,9 @@
     "zod": "^4.4.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.48.0",
     "@types/node": "^25.6.0",
+    "pdf-lib": "^1.17.1",
     "tsx": "^4.21.0",
     "typedoc": "^0.28.0",
     "typescript": "^5.4.0"

@@ -1,0 +1,44 @@
+import { defineConfig, devices } from '@playwright/test';
+
+/**
+ * Playwright config for the Paracosm dashboard E2E suite.
+ *
+ * Tests run against the production-style server at http://localhost:3456
+ * (the same one shipped to paracosm.agentos.sh). The webServer block
+ * builds the dashboard once and boots `npm run dashboard` so we exercise
+ * the served bundle, not the dev-mode HMR variant.
+ *
+ * Override the target with `PARACOSM_E2E_BASE_URL` to point at a remote
+ * deploy (e.g. PARACOSM_E2E_BASE_URL=https://paracosm.agentos.sh npm run test:e2e).
+ */
+export default defineConfig({
+  testDir: './tests-e2e/specs',
+  timeout: 60_000,
+  expect: { timeout: 10_000 },
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 2 : undefined,
+  reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : [['list']],
+  use: {
+    baseURL: process.env.PARACOSM_E2E_BASE_URL ?? 'http://127.0.0.1:3456',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+  },
+  projects: [
+    { name: 'chromium-desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } } },
+    { name: 'chromium-tablet',  use: { ...devices['Desktop Chrome'], viewport: { width: 768, height: 1024 } } },
+    { name: 'chromium-mobile',  use: { ...devices['iPhone 13'] } },
+  ],
+  webServer: process.env.PARACOSM_E2E_BASE_URL
+    ? undefined
+    : {
+        command: 'npm run dashboard:build && PORT=3456 npx tsx src/cli/serve.ts',
+        url: 'http://127.0.0.1:3456',
+        timeout: 180_000,
+        reuseExistingServer: !process.env.CI,
+        stdout: 'pipe',
+        stderr: 'pipe',
+      },
+});
