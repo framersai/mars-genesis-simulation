@@ -142,7 +142,7 @@ export function SeedInput({ onSeedReady, onLoadedScenarioRunStart, disabled = fa
       } else if (/InvalidPDFException|invalid pdf|corrupt/i.test(raw)) {
         msg = 'This PDF appears to be corrupted or password-protected. Try a different file or paste the text directly.';
       } else if (/worker|GlobalWorkerOptions/i.test(raw)) {
-        msg = 'PDF parser failed to start. Hard-refresh the page (Cmd/Ctrl-Shift-R) and try again.';
+        msg = `Couldn't load the PDF parser (${raw}). Try a different file, or paste the text into WRITE.`;
       } else {
         msg = `Couldn't read this PDF (${raw}). Try paste-text or a different file.`;
       }

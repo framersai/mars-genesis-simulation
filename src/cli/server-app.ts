@@ -2807,9 +2807,18 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       const insideDist = assetPath === distDir || assetPath.startsWith(distDir + sep);
       if (insideDist && existsSync(assetPath)) {
         const ext = assetPath.split('.').pop();
+        // `mjs` MUST resolve to a JS MIME type — pdfjs-dist ships its
+        // worker as `pdf.worker.min.mjs`, and Vite emits other ESM
+        // chunks under that extension. Without it the browser sees
+        // `application/octet-stream` and rejects the script under
+        // strict module MIME checks, surfacing as "PDF parser failed
+        // to start" with no real recovery short of a hard refresh.
+        // `map` covers source-maps emitted in dev/preview bundles.
         const mimeTypes: Record<string, string> = {
-          js: 'application/javascript', css: 'text/css', svg: 'image/svg+xml',
-          png: 'image/png', jpg: 'image/jpeg', woff2: 'font/woff2', woff: 'font/woff',
+          js: 'text/javascript', mjs: 'text/javascript', css: 'text/css',
+          svg: 'image/svg+xml', png: 'image/png', jpg: 'image/jpeg',
+          woff2: 'font/woff2', woff: 'font/woff', map: 'application/json',
+          json: 'application/json', wasm: 'application/wasm',
         };
         const content = readFileSync(assetPath);
         res.writeHead(200, {

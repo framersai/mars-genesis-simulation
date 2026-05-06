@@ -31,6 +31,43 @@ export interface PdfExtractOptions {
 }
 
 /**
+ * Resolve the worker URL to an absolute string anchored against the
+ * current origin. Vite returns a relative path like `/assets/pdf.worker-abc.mjs`
+ * which works on the dev/preview server but can 404 when the dashboard
+ * is mounted behind a path-rewriting proxy. Anchoring against
+ * `window.location.origin` makes the URL absolute so `new Worker(...)`
+ * routes through the same origin regardless of base-path.
+ */
+function resolveWorkerSrc(): string {
+  if (typeof window === 'undefined') return pdfWorkerUrl;
+  try {
+    return new URL(pdfWorkerUrl, window.location.origin).toString();
+  } catch {
+    return pdfWorkerUrl;
+  }
+}
+
+let pdfjsModule: typeof import('pdfjs-dist') | null = null;
+
+/**
+ * Load `pdfjs-dist` exactly once and pin `GlobalWorkerOptions.workerSrc`
+ * before the first `getDocument()` call. The prior implementation set
+ * the worker source AFTER the dynamic import on every call, racing the
+ * module's own bootstrap and producing a "GlobalWorkerOptions.workerSrc"
+ * error on the very first upload — the user could only recover with a
+ * hard refresh. Pinning the URL once, in the same async closure as the
+ * import, removes that race.
+ */
+async function loadPdfjs(): Promise<typeof import('pdfjs-dist')> {
+  if (pdfjsModule) return pdfjsModule;
+  const mod = await import('pdfjs-dist');
+  (mod as unknown as { GlobalWorkerOptions: { workerSrc: string } })
+    .GlobalWorkerOptions.workerSrc = resolveWorkerSrc();
+  pdfjsModule = mod;
+  return mod;
+}
+
+/**
  * Extract text from a PDF File. Uses `pdfjs-dist` via dynamic import.
  *
  * @throws Error when the file is not a PDF or the extraction fails.
@@ -43,12 +80,7 @@ export async function extractPdfText(
   if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
     throw new Error(`File is not a PDF: ${file.name}`);
   }
-  const pdfjs = await import('pdfjs-dist');
-  // Point pdf.js at the bundled worker. Earlier we set workerSrc=''
-  // hoping pdf.js v4 would fall back to main-thread execution; in
-  // practice it just throws 'No "GlobalWorkerOptions.workerSrc"
-  // specified.' on the first getDocument() call.
-  (pdfjs as unknown as { GlobalWorkerOptions: { workerSrc: string } }).GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+  const pdfjs = await loadPdfjs();
 
   const buffer = await file.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data: buffer }).promise;
