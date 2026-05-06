@@ -276,7 +276,7 @@ In Paracosm, HEXACO influences:
   - *Role pull*: department role activates specific traits (Tett & Burnett 2003)
   - *Outcome pull*: every (trait, outcome) pair has a peer-reviewed sign (Silvia & Sanders 2010 for openness; Roberts et al. 2006 for conscientiousness; Smillie et al. 2012 for extraversion; Graziano et al. 2007 for agreeableness; Lee & Ashton 2004 for emotionality; Hilbig & Zettler 2009 for honesty-humility)
   - Rate-capped at ±0.05/turn; bounds [0.05, 0.95]
-- **Commander drift**: the commander's HEXACO evolves alongside agents. `runSimulation` clones `leader.hexaco` at run start and applies outcome-pull after every turn's resolution. The final output carries both the drifted `hexaco`, the original `hexacoBaseline`, and a per-turn `hexacoHistory` for trajectory visualization. The caller's `LeaderConfig` is never mutated.
+- **Commander drift**: the commander's HEXACO evolves alongside agents. The runtime clones `actor.hexaco` at run start and applies outcome-pull after every turn's resolution. The final output carries both the drifted `hexaco`, the original `hexacoBaseline`, and a per-turn `hexacoHistory` for trajectory visualization. The caller's `ActorConfig` is never mutated.
 - **Trajectory cues**: commander, director, and department-head prompts all receive a one-line cue describing drift since turn 0 ("Since you took command, your personality has drifted substantially toward higher openness and measurably away from higher conscientiousness. Notice how recent decisions have shaped your judgment."). Threshold 0.05 matches the per-turn rate cap.
 - **Chat memory retrieval**: AgentOS uses HEXACO to modulate which memories surface during character chat.
 
@@ -336,7 +336,7 @@ The swarm is first-class on every consumer surface:
 | **`RunArtifact.finalSwarm`** | End-of-run snapshot: every agent's id, name, dept, role, alive flag, mood, family edges, last memories. |
 | **`paracosm/schema`** | `SwarmAgent` and `SwarmSnapshot` Zod schemas + TypeScript types. |
 | **`paracosm/swarm`** | Pure projections: `getSwarm`, `swarmByDepartment`, `swarmFamilyTree`, `aliveCount`, `deathCount`, `moodHistogram`, `departmentHeadcount`. |
-| **`paracosm/world-model`** | `WorldModel.swarm(artifact)` and the same helpers as static methods. |
+| **`paracosm`** | `WorldModel.swarm(artifact)` and the same helpers as static methods. |
 | **HTTP** | `GET /api/v1/runs/:runId/swarm` returns just the swarm snapshot — lighter than the full artifact. |
 | **SSE stream** | `systems_snapshot` event fires every turn with the full agent roster + per-turn births/deaths/morale. |
 
@@ -397,7 +397,7 @@ Agents are created lazily on first chat message (~2-3s init) and pooled (max 10,
 
 ### Universal Schema (`paracosm/schema`)
 
-Every `runSimulation()` call returns a `RunArtifact`: one Zod-validated shape covering all simulation modes. The subpath `paracosm/schema` exports the schemas + inferred TypeScript types:
+Every `WorldModel.simulate()` call returns a `RunArtifact`: one Zod-validated shape covering all simulation modes. The subpath `paracosm/schema` exports the schemas + inferred TypeScript types:
 
 ```typescript
 import { RunArtifactSchema, StreamEventSchema, type RunArtifact } from 'paracosm/schema';
@@ -528,12 +528,12 @@ Common mistake: clicking **Store** (saves the JSON draft, does not generate hook
 Programmatic flow:
 
 ```ts
-import { compileScenario } from 'paracosm/compiler';
-import { runSimulation } from 'paracosm/runtime';
+import { WorldModel, compileScenario } from 'paracosm';
 import sourceJson from './mission-mercury.json';
 
 const scenario = await compileScenario(sourceJson, { provider: 'anthropic', model: 'claude-sonnet-4-6' });
-await runSimulation(leader, personnel, { scenario, maxTurns: 8 });
+const wm = WorldModel.fromScenario(scenario);
+await wm.simulate({ actor: leader, keyPersonnel: personnel, maxTurns: 8 });
 ```
 
 The runtime `scenario` parameter MUST be a compiled `ScenarioPackage` (has `hooks`), not the raw source JSON.
@@ -542,28 +542,23 @@ The runtime `scenario` parameter MUST be a compiled `ScenarioPackage` (has `hook
 
 | Import | What |
 |--------|------|
-| `paracosm` | Engine types, registries, kernel |
+| `paracosm` | Root API: `run`, `runMany`, `WorldModel`, built-in scenarios, engine types, registries, kernel |
 | `paracosm/compiler` | `compileScenario()` |
-| `paracosm/runtime` | `runSimulation()`, `runBatch()` |
-| `paracosm/world-model` | `WorldModel` façade (`fromJson` / `fromPrompt` / `simulate` / `fork` / `replay` + swarm statics) |
 | `paracosm/swarm` | Pure swarm projections: `getSwarm`, `swarmByDepartment`, `swarmFamilyTree`, `aliveCount`, `deathCount`, `moodHistogram`, `departmentHeadcount` |
 | `paracosm/schema` | Universal schemas + types (`RunArtifact`, `SwarmAgent`, `SwarmSnapshot`, …) |
-| `paracosm/mars` | Mars Genesis scenario package |
-| `paracosm/lunar` | Lunar Outpost scenario package |
-| `paracosm/digital-twin` | Subject + intervention digital-twin scenarios |
-| `paracosm/leader-presets` | Library of HEXACO-typed leader archetypes |
-| `paracosm/core` | Kernel state types |
+| `paracosm/digital-twin` | `DigitalTwin` alias plus subject + intervention types |
+| `paracosm/core` | Kernel internals (`SimulationKernel`, `SeededRng`) and state types for low-level consumers |
 
 ### Programmatic Usage
 
 ```typescript
-import { compileScenario } from 'paracosm/compiler';
-import { runSimulation } from 'paracosm/runtime';
+import { WorldModel, compileScenario } from 'paracosm';
 
 const scenario = await compileScenario(worldJson, { provider: 'anthropic' });
+const wm = WorldModel.fromScenario(scenario);
 
-const result = await runSimulation(leader, [], {
-  scenario,
+const result = await wm.simulate({
+  actor: leader,
   maxTurns: 6,
   seed: 42,
   onEvent(e) { console.log(e.type, e.data?.title); },
@@ -576,10 +571,10 @@ console.log(result.forgedTools?.length ?? 0);
 ### Replay (T5.5)
 
 ```typescript
-import { WorldModel } from 'paracosm/world-model';
+import { WorldModel } from 'paracosm';
 
 const wm = WorldModel.fromScenario(myScenario);
-const trunk = await wm.simulate(leader, { maxTurns: 6, captureSnapshots: true });
+const trunk = await wm.simulate({ actor: leader, maxTurns: 6, captureSnapshots: true });
 
 // Audit: did the kernel change since this run was produced?
 const replay = await wm.replay(trunk);
@@ -611,11 +606,11 @@ const twin = await DigitalTwin.fromJson(scenarioJson);
 const subject: SubjectConfig = { id: 'company', kind: 'organization', attributes: { headcount: 100 } };
 const intervention: InterventionConfig = { id: 'rif', kind: 'policy', description: '25% RIF', parameters: { percent: 25 } };
 
-const artifact = await twin.simulateIntervention(subject, intervention, leader, { maxTurns: 4 });
+const artifact = await twin.intervene({ subject, intervention, actor: leader, maxTurns: 4 });
 console.log(artifact.subject, artifact.intervention);
 ```
 
-`paracosm/digital-twin` is a curated re-export of `WorldModel` aliased as `DigitalTwin` plus the `SubjectConfig` and `InterventionConfig` types. The class is identical to `WorldModel`; the alias names the use case in the import path. `simulateIntervention(subject, intervention, leader, options)` is sugar over `simulate(leader, { ...options, subject, intervention })` that returns a `RunArtifact` with both fields populated for traceability.
+`paracosm/digital-twin` is a curated re-export of `WorldModel` aliased as `DigitalTwin` plus the `SubjectConfig` and `InterventionConfig` types. The class is identical to `WorldModel`; the alias names the use case in the import path. `intervene({ subject, intervention, actor, ...options })` is sugar over `simulate({ actor, ...options, subject, intervention })` that returns a `RunArtifact` with both fields populated for traceability.
 
 ### Schema breaking-change gate (T6.2)
 

@@ -3,17 +3,17 @@
  *
  * Curated entry point for the digital-twin use case. `DigitalTwin` is
  * an alias for the same `WorldModel` class exported from
- * `paracosm/world-model`; the alias names the use case the user is
+ * `paracosm`; the alias names the use case the user is
  * modeling rather than the underlying mechanism.
  *
  * Use this subpath when:
  *   - You have a specific subject (person, organism, organization, or
  *     system) you want to simulate under counterfactual interventions.
- *   - You want the most ergonomic surface for `simulateIntervention()`.
+ *   - You want the most ergonomic surface for `intervene()`.
  *   - You want type-only access to `SubjectConfig` and `InterventionConfig`
- *     without pulling the full `paracosm/runtime` module.
+ *     without importing the root API.
  *
- * Use `paracosm/world-model` instead when:
+ * Use the root `paracosm` export instead when:
  *   - You are running civilization simulations or policy comparisons
  *     across scenarios.
  *   - You need access to the full `WorldModel.batch`, `WorldModel.fork`,
@@ -21,7 +21,7 @@
  *     here, since `DigitalTwin === WorldModel`, but the subpath
  *     docstrings focus on the digital-twin case).
  *
- * Both subpaths back-end to the same class. Choosing one is a
+ * Both entry points back-end to the same class. Choosing one is a
  * positioning decision, not a functional one.
  *
  * @example Quickstart with subject + intervention
@@ -31,7 +31,7 @@
  * const twin = await DigitalTwin.fromJson(scenarioJson);
  * const subject: SubjectConfig = { id: 'company', kind: 'organization', attributes: { headcount: 100 } };
  * const intervention: InterventionConfig = { id: 'rif', kind: 'policy', description: '25% RIF', parameters: { percent: 25 } };
- * const artifact = await twin.simulateIntervention(subject, intervention, leader, { maxTurns: 4 });
+ * const artifact = await twin.intervene({ subject, intervention, actor: leader, maxTurns: 4 });
  * ```
  *
  * @module paracosm/digital-twin

@@ -61,7 +61,7 @@ Paracosm operationalizes CWSMs:
 
 ### Onboarding: prompt or document is the authoring surface, JSON is the contract
 
-Paracosm accepts prompt text, briefs, URLs, and PDFs as seed source material. `WorldModel.fromPrompt` asks an LLM to propose a scenario draft against `DraftScenarioSchema`, validates it, and routes it into the canonical `compileScenario` pipeline. No prompt-only path bypasses the kernel or the schema. This keeps the ingestion surface permissive while preserving every reproducibility guarantee (seeded PRNG, deterministic transitions, Zod-validated artifacts) that the structured-world-model positioning rests on. The dashboard's Quickstart tab composes `fromPrompt` + `wm.quickstart` into a one-click "seed in, three HEXACO counterfactuals out" experience; external consumers integrate the same two calls programmatically. A curated library of 10 HEXACO archetypes at `paracosm/leader-presets` provides default leaders for `runBatch` sweeps and the dashboard's Swap control.
+Paracosm accepts prompt text, briefs, URLs, and PDFs as seed source material. `WorldModel.fromPrompt` asks an LLM to propose a scenario draft against `DraftScenarioSchema`, validates it, and routes it into the canonical `compileScenario` pipeline. No prompt-only path bypasses the kernel or the schema. This keeps the ingestion surface permissive while preserving every reproducibility guarantee (seeded PRNG, deterministic transitions, Zod-validated artifacts) that the structured-world-model positioning rests on. The dashboard's Quickstart tab composes `fromPrompt` + `wm.quickstart` into a one-click "seed in, three HEXACO counterfactuals out" experience; external consumers integrate the same two calls programmatically. A curated library of 10 HEXACO archetypes exported as `ACTOR_PRESETS` from `paracosm` provides default leaders for batch sweeps and the dashboard's Swap control.
 
 Related academic work on LLM-counterfactual simulation:
 
@@ -121,7 +121,7 @@ Kernel state transitions use a Mulberry32-seeded PRNG. Same seed produces identi
 
 ### 3. Counterfactual-first
 
-The product is two runs against the same seed with different leaders, and a surfaced divergence. `runBatch` scales this to N × M. See [`src/runtime/batch.ts`](../../src/runtime/batch.ts).
+The product is two runs against the same seed with different leaders, and a surfaced divergence. `wm.batch` scales this to N actors against a compiled world. See [`src/runtime/batch.ts`](../../src/runtime/batch.ts).
 
 ### 4. Personality-grounded
 

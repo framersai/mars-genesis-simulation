@@ -32,14 +32,21 @@ npm install paracosm
 ## Quickstart
 
 ```typescript
-import { runSimulation } from 'paracosm/runtime';
-import { marsScenario } from 'paracosm/engine/mars';
+import { WorldModel, marsScenario } from 'paracosm';
 
-const result = await runSimulation(
-  { name: 'Commander Vega', traits: { /* HEXACO vector */ } },
-  [/* key personnel */],
-  { scenario: marsScenario, turns: 6, seed: 42 },
-);
+const wm = WorldModel.fromScenario(marsScenario);
+const result = await wm.simulate({
+  actor: {
+    name: 'Commander Vega',
+    archetype: 'The Systems Optimizer',
+    unit: 'Colony Alpha',
+    hexaco: { openness: 0.7, conscientiousness: 0.8, extraversion: 0.5, agreeableness: 0.6, emotionality: 0.4, honestyHumility: 0.7 },
+    instructions: 'Keep the colony alive without hiding tradeoffs.',
+  },
+  keyPersonnel: [/* key personnel */],
+  maxTurns: 6,
+  seed: 42,
+});
 ```
 
 ## Use Cases

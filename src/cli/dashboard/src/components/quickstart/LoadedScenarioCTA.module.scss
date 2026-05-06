@@ -6,6 +6,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
   padding: 16px 18px;
   background: var(--bg-card);
   border: 1px solid color-mix(in srgb, var(--amber) 30%, transparent);
@@ -21,6 +22,7 @@
   letter-spacing: 0.02em;
   color: var(--amber);
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .subline {
@@ -28,6 +30,8 @@
   color: var(--text-2);
   line-height: 1.45;
   font-style: italic;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .actorRow {
@@ -61,6 +65,7 @@
 
 .runButton {
   width: 100%;
+  min-width: 0;
   padding: 12px 20px;
   border: none;
   border-radius: 6px;
@@ -72,6 +77,9 @@
   letter-spacing: 0.04em;
   cursor: pointer;
   text-transform: uppercase;
+  white-space: normal;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
   box-shadow: 0 4px 16px rgba(224, 101, 48, 0.25);
 
   &:hover { filter: brightness(1.08); }
@@ -83,10 +91,50 @@
   }
 }
 
+.runButtonFull {
+  display: inline;
+}
+
+.runButtonCompact {
+  display: none;
+}
+
 .tradeoff {
   font-size: var(--font-3xs);
   font-family: var(--mono);
   color: var(--text-3);
   text-align: center;
   letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  .card {
+    gap: 8px;
+    padding: 14px;
+  }
+
+  .heading {
+    font-size: var(--font-sm);
+  }
+
+  .actorRow {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 8px;
+  }
+
+  .runButton {
+    padding: 10px 12px;
+    font-size: var(--font-sm);
+    letter-spacing: 0.03em;
+  }
+
+  .runButtonFull {
+    display: none;
+  }
+
+  .runButtonCompact {
+    display: inline;
+  }
 }

@@ -1,5 +1,17 @@
 @use '../../theme/typography' as typo;
 
+.wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  &:focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+  }
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -59,6 +71,77 @@
     &:hover {
       border-color: var(--amber);
       color: var(--amber);
+    }
+  }
+}
+
+@media (max-width: 720px) {
+  .wrapper {
+    overflow-x: visible;
+  }
+
+  .table,
+  .table thead,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+  }
+
+  .table {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .table tr {
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    background: var(--bg-card);
+    overflow: hidden;
+  }
+
+  .table td {
+    display: grid;
+    grid-template-columns: minmax(76px, 0.38fr) minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: center;
+    min-height: 40px;
+    padding: 0.6rem 0.75rem;
+    overflow-wrap: anywhere;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    color: var(--text-4);
+    font-family: var(--sans);
+    font-size: var(--font-xs);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .actionsCell {
+    display: flex !important;
+    justify-content: flex-end;
+    gap: 0.5rem;
+
+    &::before {
+      content: none;
+    }
+
+    button {
+      min-height: 40px;
+      padding: 0.45rem 0.75rem;
     }
   }
 }

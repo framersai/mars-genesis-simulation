@@ -1,5 +1,5 @@
 /**
- * Tests for the swarm-inspection helpers on `paracosm/world-model`:
+ * Tests for the swarm-inspection helpers on `WorldModel`:
  * `WorldModel.swarm`, `WorldModel.swarmByDepartment`,
  * `WorldModel.swarmFamilyTree`.
  *

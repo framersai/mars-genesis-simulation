@@ -3,20 +3,6 @@ import assert from 'node:assert/strict';
 import { renderToString } from 'react-dom/server';
 import * as React from 'react';
 
-// Node test runs without a DOM. Stub the bits TabBar reads at module
-// scope before importing it so the SSR `renderToString` path doesn't
-// throw on `window.innerWidth` / `addEventListener`.
-if (typeof globalThis.window === 'undefined') {
-  Object.defineProperty(globalThis, 'window', {
-    value: {
-      innerWidth: 1400,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-    },
-    configurable: true,
-  });
-}
-
 import { TabBar } from './TabBar.js';
 
 const baseScenario: any = {
@@ -54,20 +40,29 @@ test('TabBar: aria-controls links each tab to its panel', () => {
   assert.equal(extractTabAttrs(html, 'viz')['aria-controls'], 'tabpanel-viz');
 });
 
-test('TabBar non-compact: aria-label is omitted (visible label avoids duplicate SR readout)', () => {
-  // Force non-compact path via wide window mock.
-  const realInnerWidth = window.innerWidth;
-  Object.defineProperty(window, 'innerWidth', { value: 1400, configurable: true });
+test('TabBar: server render does not depend on browser viewport globals', () => {
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const previousDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
+  Reflect.deleteProperty(globalThis, 'window');
+  Reflect.deleteProperty(globalThis, 'document');
   try {
     const html = renderToString(
       <TabBar active="sim" onTabChange={() => {}} scenario={baseScenario} />,
     );
-    const attrs = extractTabAttrs(html, 'quickstart');
-    assert.equal(attrs['aria-label'], undefined, 'aria-label omitted in non-compact mode');
-    assert.ok(html.includes('QUICKSTART'), 'visible label still rendered');
+    assert.ok(html.includes('id="tab-sim"'), 'tab rendered without window/document');
   } finally {
-    Object.defineProperty(window, 'innerWidth', { value: realInnerWidth, configurable: true });
+    if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow);
+    if (previousDocument) Object.defineProperty(globalThis, 'document', previousDocument);
   }
+});
+
+test('TabBar: every tab has one accessible name while visible labels stay present', () => {
+  const html = renderToString(
+    <TabBar active="sim" onTabChange={() => {}} scenario={baseScenario} />,
+  );
+  const attrs = extractTabAttrs(html, 'quickstart');
+  assert.equal(attrs['aria-label'], 'QUICKSTART');
+  assert.ok(html.includes('>QUICKSTART<'), 'visible label still rendered for CSS desktop layout');
 });
 
 test('TabBar: respects scenario policy gating (chat tab hidden when characterChat is off)', () => {

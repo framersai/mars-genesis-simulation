@@ -57,6 +57,11 @@ export function LoadedScenarioCTA({
     // for the duration of the run, which keeps this button gated.
   };
 
+  const actorLabel = `${actorCount} ${actorCount === 1 ? 'actor' : 'actors'}`;
+  const accessibleRunLabel = launching ? 'Launching...' : `Run ${actorLabel} against ${scenarioName}`;
+  const fullRunLabel = launching ? 'Launching...' : `${accessibleRunLabel} ->`;
+  const compactRunLabel = launching ? 'Launching...' : `Run ${actorLabel}`;
+
   return (
     <section className={styles.card} aria-labelledby={headingId}>
       <h2 className={styles.heading} id={headingId}>
@@ -84,8 +89,10 @@ export function LoadedScenarioCTA({
         onClick={handleClick}
         disabled={disabled || launching}
         aria-busy={launching}
+        aria-label={accessibleRunLabel}
       >
-        {launching ? 'Launching…' : `Run ${actorCount} ${actorCount === 1 ? 'actor' : 'actors'} against ${scenarioName} →`}
+        <span className={styles.runButtonFull} aria-hidden="true">{fullRunLabel}</span>
+        <span className={styles.runButtonCompact} aria-hidden="true">{compactRunLabel}</span>
       </button>
       <div className={styles.tradeoff}>
         {hasPreset

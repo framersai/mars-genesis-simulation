@@ -3,8 +3,8 @@
  * regardless of scenario or mode. Exported from `paracosm/schema`.
  *
  * Consumers pattern-match on `metadata.mode` to know which optional fields
- * are populated. See the per-mode field matrix in
- * [the design spec](../../../docs/superpowers/specs/2026-04-22-universal-schema-design.md).
+ * are populated. The public README and cookbook cover the mode-level
+ * field matrix.
  *
  * @module paracosm/schema/artifact
  */

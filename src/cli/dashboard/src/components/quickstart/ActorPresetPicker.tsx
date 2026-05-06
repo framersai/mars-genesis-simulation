@@ -1,6 +1,6 @@
 /**
  * Modal that lets the user swap one of the Quickstart-generated actors
- * for a preset from `paracosm/leader-presets`.
+ * for a built-in actor preset.
  *
  * @module paracosm/dashboard/quickstart/ActorPresetPicker
  */

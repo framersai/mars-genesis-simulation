@@ -3,7 +3,7 @@
  * event envelope. Exported from `paracosm/schema`.
  *
  * Every primitive is defined as `*Schema` (Zod v4) with a type alias
- * derived via `z.infer<>` in [./types.ts](./types.ts). Consumers import
+ * derived via `z.infer<>` in `./types.ts`. Consumers import
  * either the schema (for runtime validation) or the type (for TS-only
  * consumption) — both come from one source of truth.
  *
@@ -47,9 +47,7 @@ export const ScenarioExtensionsSchema = z.record(z.string(), z.unknown()).option
  * registered TraitModel by `modelId` and supplies a per-axis float
  * map. The runtime cross-validates trait keys against the named
  * model's axes via `normalizeActorConfig`; Zod alone validates
- * structure here. See
- * [docs/superpowers/specs/2026-04-26-trait-model-generalization-design.md](../../../docs/superpowers/specs/2026-04-26-trait-model-generalization-design.md)
- * for the full design.
+ * structure here.
  */
 export const TraitProfileSchema = z.object({
   /**
@@ -124,7 +122,7 @@ export const RunMetadataSchema = z.object({
 
 /**
  * Five-bag world state. Promotes the internal
- * [`WorldState`](../types.ts) declaration to public API. All bags optional
+ * `WorldState` declaration to public API. All bags optional
  * except `metrics` — a sim without any numeric metric is degenerate.
  */
 export const WorldSnapshotSchema = z.object({
@@ -319,7 +317,7 @@ export const TrajectorySchema = z.object({
 
 /**
  * Re-uses the shape of
- * [runtime CitationSchema](../../runtime/schemas/department.ts) so
+ * the runtime `CitationSchema` so
  * existing paracosm internal callers don't break.
  */
 export const CitationSchema = z.object({
@@ -505,7 +503,7 @@ export const CostSchema = z.object({
 
 /**
  * Classified provider error on terminal failure. Matches
- * [runtime provider-errors.ts](../../runtime/provider-errors.ts).
+ * the runtime provider-error classifier.
  */
 export const ProviderErrorSchema = z.object({
   kind: z.enum(['auth', 'quota', 'rate_limit', 'network', 'unknown']),

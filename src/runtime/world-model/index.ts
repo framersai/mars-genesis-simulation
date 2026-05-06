@@ -1,13 +1,12 @@
 /**
  * Paracosm WorldModel façade: a one-object surface over the
- * `compileScenario + runSimulation + runBatch` trio, plus the
+ * compiler and orchestrator internals, plus the
  * snapshot + fork API that operationalizes paracosm's CWSM
  * (counterfactual world simulation model) positioning.
  *
  * Why it exists: paracosm positions itself as a structured world model
  * for AI agents (see `docs/positioning/world-model-mapping.md`). The
- * existing APIs (`compileScenario`, `runSimulation`, `runBatch`) are all
- * first-class and unchanged. `WorldModel` is an additive thin wrapper
+ * lower-level APIs remain internal building blocks. `WorldModel` is a thin wrapper
  * that lets consumers write code in the same vocabulary the docs use.
  * `fromJson` takes the validated world contract. Prompt, document, and
  * URL authoring should compile into that same contract before reaching
@@ -17,7 +16,7 @@
  * import { WorldModel } from 'paracosm';
  *
  * const wm = await WorldModel.fromJson(worldJson, { provider: 'anthropic' });
- * const result = await wm.simulate(leader, { maxTurns: 6, seed: 42 });
+ * const result = await wm.simulate({ actor: leader, maxTurns: 6, seed: 42 });
  * ```
  *
  * Every method dispatches to the underlying API with the `scenario`
@@ -29,7 +28,7 @@
  * depends on `runSimulation` + `runBatch`; the engine layer does not
  * import from runtime (one-way dependency).
  *
- * @module paracosm/world-model
+ * @module paracosm
  */
 
 import { runSimulation, replaySimulation, WorldModelReplayError, type RunOptions, type ActorConfig } from '../orchestrator.js';
@@ -169,9 +168,7 @@ export interface ForkOptions {
  * e.g. `marsScenario`).
  *
  * The underlying scenario is exposed via {@link WorldModel.scenario} as
- * an escape hatch for callers that want the raw
- * {@link ScenarioPackage}: direct `runSimulation(leader, [], { scenario: wm.scenario, ... })`
- * still works and is unchanged.
+ * an escape hatch for callers that want the raw {@link ScenarioPackage}.
  *
  * @example Single-leader simulation
  * ```ts
@@ -179,18 +176,21 @@ export interface ForkOptions {
  * import worldJson from './my-world.json' with { type: 'json' };
  *
  * const wm = await WorldModel.fromJson(worldJson, { provider: 'anthropic' });
- * const artifact = await wm.simulate(leader, { maxTurns: 6, seed: 42 });
+ * const artifact = await wm.simulate({ actor: leader, maxTurns: 6, seed: 42 });
  * ```
  *
  * @example Counterfactual branch via fork
  * ```ts
  * const wm = await WorldModel.fromJson(worldJson);
- * const trunk = await wm.simulate(visionary, {
+ * const trunk = await wm.simulate({
+ *   actor: visionary,
  *   maxTurns: 6, seed: 42, captureSnapshots: true,
  * });
- * const branch = await (await wm.forkFromArtifact(trunk, 3)).simulate(
- *   pragmatist, { maxTurns: 6, seed: 42 },
- * );
+ * const branch = await (await wm.forkFromArtifact(trunk, 3)).simulate({
+ *   actor: pragmatist,
+ *   maxTurns: 6,
+ *   seed: 42,
+ * });
  * // branch.metadata.forkedFrom === { parentRunId: trunk.metadata.runId, atTurn: 3 }
  * ```
  *
@@ -200,14 +200,13 @@ export interface ForkOptions {
  * import { WorldModel } from 'paracosm';
  *
  * const wm = WorldModel.fromScenario(marsScenario);
- * const artifact = await wm.simulate(leader, { maxTurns: 8 });
+ * const artifact = await wm.simulate({ actor: leader, maxTurns: 8 });
  * ```
  */
 export class WorldModel {
   /**
-   * The underlying compiled scenario. Exposed so callers can drop down
-   * to direct `runSimulation` / `runBatch` calls when they need options
-   * the façade does not surface.
+   * The underlying compiled scenario. Exposed so callers can reuse the
+   * same compiled package across custom integrations.
    */
   public readonly scenario: ScenarioPackage;
 
@@ -427,11 +426,8 @@ export class WorldModel {
    * action) is applied, and the leader drives the run. The returned
    * RunArtifact carries `subject` and `intervention` for traceability.
    *
-   * @param subject       The subject being modeled.
-   * @param intervention  The intervention to test.
-   * @param leader        The decision-maker driving the run.
-   * @param options       Same as `simulate()` options minus `subject`/`intervention`.
-   * @param keyPersonnel  Optional key-personnel array; defaults to `[]`.
+   * @param opts Options bag containing the subject, intervention, actor,
+   * and normal simulation settings.
    * @returns RunArtifact with `subject` and `intervention` populated.
    *
    * @example

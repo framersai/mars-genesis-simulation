@@ -372,8 +372,7 @@ export interface ActorConfig {
    * per-axis values. When set, this overrides the legacy `hexaco`
    * field for cue translation, drift, and prompt generation. When
    * omitted, the runtime synthesizes a profile from `hexaco` with
-   * `modelId: 'hexaco'`. See
-   * `docs/superpowers/specs/2026-04-26-trait-model-generalization-design.md`.
+   * `modelId: 'hexaco'`.
    */
   traitProfile?: TraitProfile;
   instructions: string;

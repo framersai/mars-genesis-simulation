@@ -74,3 +74,9 @@ test('LoadedScenarioCTA: disabled prop disables the button + slider, sets aria-b
   assert.match(html, /<button[^>]*disabled[^>]*>/);
   assert.match(html, /aria-busy="false"/);
 });
+
+test('LoadedScenarioCTA: run button accessible label omits decorative arrow', () => {
+  const html = renderToString(withScenario(stubScenarioWithPreset, <LoadedScenarioCTA onRunStart={() => {}} />));
+  assert.match(html, /aria-label="Run 2 actors against Mars Genesis"/);
+  assert.doesNotMatch(html, /aria-label="[^"]*-&gt;[^"]*"/);
+});

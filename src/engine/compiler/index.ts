@@ -158,7 +158,7 @@ function restoreHookFromCache(hookName: string, source: string): Partial<Scenari
  *
  * @param scenarioJson - Canonical world draft (labels, departments, metrics, effects, etc.)
  * @param options - Compiler options (provider, model, cache settings, seed text / URL grounding)
- * @returns A complete ScenarioPackage ready for runSimulation()
+ * @returns A complete ScenarioPackage ready for `WorldModel.fromScenario(...).simulate()`
  */
 export async function compileScenario(
   scenarioJson: Record<string, unknown>,

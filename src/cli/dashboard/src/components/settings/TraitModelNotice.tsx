@@ -42,12 +42,12 @@ export function TraitModelNotice() {
             Captured ai-agent end-to-end run
           </a>
           <a
-            href="https://github.com/framersai/paracosm/blob/master/docs/superpowers/specs/2026-04-26-trait-model-generalization-design.md"
+            href="https://github.com/framersai/paracosm/blob/master/docs/COOKBOOK.md#pluggable-trait-models-ai-agent-end-to-end"
             target="_blank"
             rel="noopener"
             className={styles.link}
           >
-            Design spec
+            Trait-model cookbook
           </a>
         </div>
       </div>

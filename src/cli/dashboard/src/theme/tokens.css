@@ -80,7 +80,9 @@
   }
 
   body {
-    width: 100%; min-height: 100vh;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
     overflow-x: hidden;
     background: var(--bg-deep);
     color: var(--text-1);
@@ -491,7 +493,7 @@
   @keyframes scanline {
     0% { transform: translateY(-100%); opacity: 0; }
     50% { opacity: 0.05; }
-    100% { transform: translateY(100vh); opacity: 0; }
+    100% { transform: translateY(100dvh); opacity: 0; }
   }
   @keyframes ambientGlow {
     0%, 100% { box-shadow: var(--card-shadow), 0 0 20px var(--amber-glow); }
@@ -658,8 +660,8 @@
     .stats-bar { overflow-x: auto !important; justify-content: flex-start !important; -webkit-overflow-scrolling: touch; }
 
     /* TabBar stays a single row at every width now that labels switch
-       to icons below 900px in TabBar.tsx. The bar horizontal-scrolls
-       past ~340px viewports (10 tabs × 34px min-width) so each tap
+       to icons below 900px in TabBar.module.scss. The bar horizontal-scrolls
+       past very narrow viewports (tab count × 44px min-width) so each tap
        target stays readable rather than crushing into 24px slivers,
        and `-webkit-overflow-scrolling: touch` keeps momentum on iOS. */
     .tab-bar {
@@ -724,10 +726,10 @@
     .pill-label-full { display: none !important; }
     .pill-label-short { display: inline !important; }
 
-    /* TabBar tightening so 10 tabs fit in a single non-scrolling row
-       at common iPhone widths (375-430px); the scroll fallback in the
-       768px block still kicks in below ~340px. */
-    .tab-bar button { min-width: 36px !important; padding: 6px 0 !important; }
+    /* TabBar stays at the 44px touch floor on phones. Very narrow
+       viewports can scroll the row horizontally instead of shrinking
+       tap targets below a comfortable size. */
+    .tab-bar button { min-width: 44px !important; padding: 6px 0 !important; }
   }
 
   /* The short-label span stays hidden above phone breakpoint. */

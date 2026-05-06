@@ -1,7 +1,7 @@
 /**
  * `paracosm/swarm` — focused API surface for the agent-swarm view of a
  * paracosm run. Pairs with `paracosm/schema` (types) and
- * `paracosm/world-model` (run façade); use this module when you only
+ * root `WorldModel` static helpers; use this module when you only
  * need swarm inspection without pulling the full WorldModel surface.
  *
  * @example

@@ -28,10 +28,12 @@ Then edit each file:
 
 ```typescript
 import { myScenario } from './engine/my-scenario/index.js';
-import { runSimulation } from 'paracosm/runtime';
+import { WorldModel } from 'paracosm';
 
-const output = await runSimulation(leader, personnel, {
-  scenario: myScenario,
+const wm = WorldModel.fromScenario(myScenario);
+const output = await wm.simulate({
+  actor: leader,
+  keyPersonnel: personnel,
   maxTurns: 8,
   seed: 100,
 });

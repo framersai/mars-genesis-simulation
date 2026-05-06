@@ -159,3 +159,48 @@
   cursor: pointer;
   font-weight: 700;
 }
+
+@media (max-width: 600px) {
+  .drawer {
+    top: auto;
+    right: max(8px, env(safe-area-inset-right));
+    bottom: 0;
+    left: max(8px, env(safe-area-inset-left));
+    width: auto;
+    max-height: min(72dvh, 560px);
+    border-radius: 8px 8px 0 0;
+    z-index: 18;
+  }
+
+  .header {
+    padding: 8px 10px;
+  }
+
+  .headerLabel {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .closeBtn {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
+  .sortRow {
+    gap: 4px;
+    padding: 6px 8px;
+  }
+
+  .sortChip,
+  .row,
+  .deceasedToggle {
+    min-height: 40px;
+  }
+
+  .row {
+    padding: 6px 10px;
+  }
+}

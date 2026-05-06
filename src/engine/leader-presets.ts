@@ -4,15 +4,15 @@
  *
  * - Dashboard `ForkModal` + `Quickstart` "Swap leader" controls read
  *   from it.
- * - External consumers pull `ACTOR_PRESETS` via the `paracosm/leader-presets`
- *   subpath for programmatic `runBatch` sweeps.
+ * - External consumers pull `ACTOR_PRESETS` from the root `paracosm`
+ *   export for programmatic batch sweeps.
  *
  * HEXACO traits live in [0, 1]. Each preset is designed to diverge from
  * the others on at least one high-impact trait (openness, conscientiousness,
  * emotionality), producing measurably different decision-making when
  * the same scenario + seed runs against them.
  *
- * @module paracosm/leader-presets
+ * @module paracosm
  */
 import type { HexacoProfile } from './core/state.js';
 

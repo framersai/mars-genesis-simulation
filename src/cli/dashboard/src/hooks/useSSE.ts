@@ -5,8 +5,8 @@ import type { RunArtifact } from '../../../../engine/schema/index.js';
 /**
  * Event type strings the dashboard consumes.
  *
- * Superset of `SimEventType` from `paracosm/runtime` (the discriminated
- * payload map defined in `src/runtime/orchestrator.ts`) plus two
+ * Superset of the discriminated payload map defined in
+ * `src/runtime/orchestrator.ts`, plus two
  * server-synthetic types the HTTP+SSE layer folds into the same stream:
  *
  * - `status`: run-level metadata (effective maxTurns, phase, leaders).
@@ -19,10 +19,9 @@ import type { RunArtifact } from '../../../../engine/schema/index.js';
  * Kept as a literal union rather than `string` so typos fail at
  * compile time. `data` stays loose because dashboard code reads events
  * generically (fingerprinting, filtering, persistence); the narrow
- * per-event payload shapes live in the published `paracosm/runtime`
- * types for direct API consumers who want full intellisense. If the
- * runtime adds a new event type, add it here too so the dashboard
- * type-check acknowledges it.
+ * per-event payload shapes live in `src/runtime/orchestrator.ts`.
+ * If the runtime adds a new event type, add it here too so the
+ * dashboard type-check acknowledges it.
  */
 export type SimEventType =
   // Mirror of runtime SimEventType (src/runtime/orchestrator.ts):

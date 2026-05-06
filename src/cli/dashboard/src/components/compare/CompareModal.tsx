@@ -1,7 +1,6 @@
 /**
  * Full-screen Compare modal for a Quickstart bundle. Renders three
- * progressive zooms (per the spec at
- * docs/superpowers/specs/2026-04-26-compare-runs-ui-design.md):
+ * progressive zooms:
  *
  *   1. AggregateStrip   — all members at once (top ~25% of modal)
  *   2. SmallMultiplesGrid — one cell per run with pin checkbox

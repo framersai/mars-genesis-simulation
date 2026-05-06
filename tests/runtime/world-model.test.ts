@@ -1,9 +1,9 @@
 /**
- * Smoke + type-surface tests for the `paracosm/world-model` façade.
+ * Smoke + type-surface tests for the `WorldModel` facade.
  *
  * Does NOT call `.simulate()` or `.batch()` with real providers:
  * those hit live LLM APIs and cost money. Those paths are exercised
- * indirectly via the existing `runSimulation` / `runBatch` smoke
+ * indirectly via the existing runtime smoke
  * scripts. Here we only verify:
  *
  * 1. `WorldModel.fromScenario` wraps a pre-compiled scenario without I/O.

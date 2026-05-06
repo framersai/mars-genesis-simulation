@@ -44,7 +44,7 @@ interface TopBarProps {
 function ParacosmLogo({ size = 20 }: { size?: number }) {
   const { resolved } = useTheme();
   const light = resolved === 'light';
-  const src = light ? '/brand/icons/paracosm-icon-64-light.svg' : '/brand/icons/paracosm-icon-64.svg';
+  const src = '/favicon.svg';
   const glowColor = light ? 'rgba(122,82,0,.12)' : 'rgba(232,180,74,.15)';
 
   return (

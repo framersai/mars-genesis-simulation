@@ -3,8 +3,9 @@
 // for production builds, but the loader pipeline goes through esbuild
 // without that override, so the namespace import stays required.
 import * as React from 'react';
-import { useState, useEffect, useRef, type KeyboardEvent } from 'react';
+import { useRef, type KeyboardEvent } from 'react';
 import type { ScenarioClientPayload } from '../../hooks/useScenario';
+import styles from './TabBar.module.scss';
 void React;
 
 type Tab = 'quickstart' | 'sim' | 'viz' | 'settings' | 'reports' | 'library' | 'studio' | 'chat' | 'about';
@@ -63,45 +64,9 @@ const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'about', label: 'ABOUT' },
 ];
 
-// Labels collapse to icons below this width. Raised from 640 so the
-// tab row never wraps onto two lines at common tablet + narrow-laptop
-// viewports (768-900px) where labels + 7 tabs don't fit horizontally
-// and used to force wrap, pushing the viz content down. Icons alone
-// comfortably fit 7 tabs in one row at 300px+.
-const MOBILE_BREAKPOINT = 900;
-
 export function TabBar({ active, onTabChange, scenario }: TabBarProps) {
   const tabs = TABS.filter(t => t.id !== 'chat' || scenario.policies.characterChat);
-  const [compact, setCompact] = useState(window.innerWidth < MOBILE_BREAKPOINT);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
-
-  useEffect(() => {
-    const onResize = () => setCompact(window.innerWidth < MOBILE_BREAKPOINT);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-
-  // Inject a focus-visible style block once. Inline styles can't express
-  // `:focus-visible`, but TabBar is a bespoke surface that doesn't have
-  // a paired SCSS module today. A scoped <style> tag at the nav root keeps
-  // the visual focus ring consistent without forcing a wider refactor.
-  const focusStyleId = 'tab-bar-focus-visible';
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    if (document.getElementById(focusStyleId)) return;
-    const style = document.createElement('style');
-    style.id = focusStyleId;
-    style.textContent = `
-      .tab-bar [role="tab"]:focus { outline: none; }
-      .tab-bar [role="tab"]:focus-visible {
-        outline: 2px solid var(--amber);
-        outline-offset: -2px;
-        position: relative;
-        z-index: 1;
-      }
-    `;
-    document.head.appendChild(style);
-  }, []);
 
   // Arrow-key cycling per ARIA APG tablist pattern: Left/Right (and
   // Home/End) move *focus* between tabs. Activation happens via the
@@ -123,10 +88,9 @@ export function TabBar({ active, onTabChange, scenario }: TabBarProps) {
 
   return (
     <nav
-      className="tab-bar flex shrink-0"
+      className={`tab-bar ${styles.root}`}
       role="tablist"
       aria-label="Dashboard navigation"
-      style={{ background: 'var(--bg-panel)', borderBottom: '1px solid var(--border)' }}
     >
       {tabs.map((tab, idx) => {
         const isActive = active === tab.id;
@@ -139,49 +103,23 @@ export function TabBar({ active, onTabChange, scenario }: TabBarProps) {
             role="tab"
             type="button"
             aria-selected={isActive}
-            // In non-compact mode the visible text already says "QUICKSTART";
-            // re-supplying it as aria-label causes screen readers to read it
-            // twice. Only label-when-icon-only in compact mode.
-            aria-label={compact ? tab.label : undefined}
+            aria-label={tab.label}
             aria-controls={`tabpanel-${tab.id}`}
             id={`tab-${tab.id}`}
+            title={tab.label}
             // Roving tabindex: only the active tab is in the document tab
             // order; arrow keys move between the rest. Per ARIA APG.
             tabIndex={isActive ? 0 : -1}
-            className="cursor-pointer transition-colors"
-            style={{
-              // 44px floor on compact (touch target). Non-compact stays at
-              // the historical 8px padding to preserve density on desktop.
-              minHeight: compact ? 44 : undefined,
-              padding: compact ? '4px 0' : '8px 0',
-              flex: 1,
-              fontFamily: 'var(--sans)',
-              fontSize: compact ? '10px' : '12px',
-              fontWeight: 700,
-              letterSpacing: compact ? '0' : '0.5px',
-              textTransform: 'uppercase' as const,
-              color: isActive ? 'var(--amber)' : 'var(--text-3)',
-              background: isActive ? 'var(--bg-card)' : 'transparent',
-              border: 'none',
-              // Vertical divider on every tab except the last so the row
-              // reads as separate cells. Without this, eleven labels at
-              // 12px spacing blurred into one fuzzy band. The right-edge
-              // border drops on the active tab so its amber-underline
-              // chip reads cleanly.
-              borderRight: idx < tabs.length - 1 && !isActive
-                ? '1px solid var(--border)'
-                : 'none',
-              borderBottom: isActive ? '2px solid var(--amber)' : '2px solid transparent',
-              marginBottom: '-1px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: compact ? '2px' : '0',
-            }}
+            className={[
+              styles.tab,
+              idx < tabs.length - 1 ? styles.withDivider : '',
+              isActive ? styles.active : styles.inactive,
+            ].filter(Boolean).join(' ')}
           >
-            {compact && <TabIcon id={tab.id} size={18} />}
-            {!compact && tab.label}
+            <span className={styles.icon} aria-hidden="true">
+              <TabIcon id={tab.id} size={18} />
+            </span>
+            <span className={styles.label} aria-hidden="true">{tab.label}</span>
           </button>
         );
       })}

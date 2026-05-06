@@ -18,18 +18,6 @@ import assert from 'node:assert/strict';
 // paracosm/compiler
 import { compileScenario } from '../src/engine/compiler/index.js';
 
-// paracosm/runtime
-import { runSimulation } from '../src/runtime/orchestrator.js';
-import { runBatch } from '../src/runtime/batch.js';
-import type { ActorConfig } from '../src/runtime/orchestrator.js';
-
-// paracosm/world-model
-import { WorldModel } from '../src/runtime/world-model/index.js';
-
-// paracosm/mars + paracosm/lunar
-import { marsScenario } from '../src/engine/mars/index.js';
-import { lunarScenario } from '../src/engine/lunar/index.js';
-
 // paracosm/digital-twin
 import { DigitalTwin } from '../src/engine/digital-twin/index.js';
 
@@ -64,21 +52,28 @@ import {
 
 // paracosm (root)
 import {
-  SimulationKernel,
-  SeededRng,
+  run,
+  runMany,
+  WorldModel,
   traitModelRegistry,
   hexacoModel,
   aiAgentModel,
   createParacosmClient,
-} from '../src/engine/index.js';
-import type { ScenarioPackage, Agent, HexacoProfile } from '../src/engine/index.js';
+  marsScenario,
+  lunarScenario,
+} from '../src/index.js';
+import type { ActorConfig, ScenarioPackage, HexacoProfile } from '../src/index.js';
+import type { Agent } from '../src/engine/index.js';
+
+// paracosm/core
+import { SimulationKernel, SeededRng } from '../src/engine/core/state.js';
 
 // === Tests ==============================================================
 
 test('every advertised export resolves at compile time', () => {
   assert.equal(typeof compileScenario, 'function');
-  assert.equal(typeof runSimulation, 'function');
-  assert.equal(typeof runBatch, 'function');
+  assert.equal(typeof run, 'function');
+  assert.equal(typeof runMany, 'function');
   assert.equal(typeof getSwarm, 'function');
   assert.equal(typeof swarmByDepartment, 'function');
   assert.equal(typeof swarmFamilyTree, 'function');

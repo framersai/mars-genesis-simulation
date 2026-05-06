@@ -7,7 +7,7 @@
  *   - 'ai-agent'  six-axis AI-system tendency model
  *
  * Adding a third model post-hoc is a single `traitModelRegistry.register(...)`
- * call. See `docs/superpowers/specs/2026-04-26-trait-model-generalization-design.md`.
+ * call.
  *
  * @module paracosm/engine/trait-models
  */

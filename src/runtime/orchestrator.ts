@@ -448,7 +448,8 @@ export async function runSimulation(leader: ActorConfig, keyPersonnel: KeyPerson
   // to work because the resolver synthesizes a hexaco-modeled
   // traitProfile from leader.hexaco. Non-HEXACO callers (e.g. ai-agent
   // leaders) get their explicit traitProfile passed through.
-  // See docs/superpowers/specs/2026-04-26-trait-model-generalization-design.md.
+  // Use the normalized trait profile throughout the run so non-HEXACO
+  // actor models drive cues and drift consistently.
   const normalized = normalizeActorConfig(leader);
   leader = normalized;
   // Resolve a HEXACO-shape view for legacy downstream reads (drift

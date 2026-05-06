@@ -123,7 +123,7 @@ export type { ResolvedProviderChoice, ResolveProviderOptions } from './provider-
 // Top-level client re-export so `import { createParacosmClient } from
 // 'paracosm'` works. Keeps the discoverability bar low for new users:
 // one import for the most common entry point, deeper imports available
-// via `paracosm/runtime` and `paracosm/compiler` when needed.
+// via supported public subpaths such as `paracosm/compiler` when needed.
 export { createParacosmClient } from '../runtime/client.js';
 export type { ParacosmClient, ParacosmClientOptions } from '../runtime/client.js';
 export type { CostPreset } from '../cli/sim-config.js';

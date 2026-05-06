@@ -567,8 +567,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
   const eventTimestamps: number[] = new Array(eventBuffer.length).fill(0);
 
   // Run-state flags for auto-save on clean completion. Reset inside
-  // clearEventBuffer() so the next run starts fresh. See
-  // docs/superpowers/specs/2026-04-18-load-menu-cached-runs-design.md.
+  // clearEventBuffer() so the next run starts fresh.
   //
   // AUTO_SAVE_MIN_TURNS floors the run length at one completed turn:
   // accidental clicks never get saved (no turn_done → nothing to replay
@@ -1282,9 +1281,8 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
     // Landing-page enterprise-access waitlist. Captures email, sends a
     // branded confirmation via Resend, dedupes per-email, rate-limits
     // 1 submission / IP / 5 min. When `rateLimiter` is null (self-hosted
-    // unlimited mode), fall through to allow-all — there's only one
-    // user so abuse mitigation is unnecessary. See
-    // docs/superpowers/specs/2026-05-03-paracosm-waitlist-design.md.
+    // unlimited mode), fall through to allow-all because there is only
+    // one operator to protect from abusive submissions.
     if (req.url === '/api/waitlist' && req.method === 'POST') {
       const body = await readBody(req, maxRequestBodyBytes);
       await handleWaitlist(req, res, body, {
