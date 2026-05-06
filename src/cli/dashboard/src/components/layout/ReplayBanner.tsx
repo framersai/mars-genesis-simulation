@@ -47,17 +47,32 @@ export function ReplayBanner({ replaySessionId }: ReplayBannerProps) {
   const headline = meta?.title || meta?.scenarioName || 'saved run';
   const subline: string[] = [];
   if (meta) {
+    if (meta.scenarioName) subline.push(meta.scenarioName);
     if (meta.leaderA && meta.leaderB) subline.push(`${meta.leaderA} vs ${meta.leaderB}`);
     if (typeof meta.turnCount === 'number' && meta.turnCount > 0) subline.push(`${meta.turnCount} turns`);
     if (typeof meta.totalCostUSD === 'number' && meta.totalCostUSD > 0) subline.push(`$${meta.totalCostUSD.toFixed(2)}`);
+    if (typeof meta.eventCount === 'number' && meta.eventCount > 0) subline.push(`${meta.eventCount} events`);
     if (meta.createdAt) subline.push(formatTimestamp(meta.createdAt));
   }
+  // Seed prompt teaser — first ~140 chars on its own line so the user
+  // can see WHAT they prompted, not just "saved run · 292 events". Only
+  // populated when the run came out of compile-from-seed.
+  const seedTeaser = meta?.seedText
+    ? meta.seedText.length > 140
+      ? `${meta.seedText.slice(0, 140).trim()}…`
+      : meta.seedText.trim()
+    : null;
   return (
     <div role="status" className={styles.activeBanner}>
       <span>
         <strong>REPLAYING</strong> · {headline}
         {subline.length > 0 && <span style={{ opacity: 0.7 }}> · {subline.join(' · ')}</span>}
-        <span style={{ opacity: 0.55, marginLeft: 8 }}>stored event stream, no LLM calls</span>
+        <span style={{ opacity: 0.55, marginLeft: 8 }}>cached playback (no new LLM cost)</span>
+        {seedTeaser && (
+          <span style={{ display: 'block', opacity: 0.65, fontStyle: 'italic', marginTop: 2 }}>
+            “{seedTeaser}”
+          </span>
+        )}
       </span>
       <button
         type="button"

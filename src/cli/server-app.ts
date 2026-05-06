@@ -437,6 +437,13 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
   let simConfig: NormalizedSimulationConfig | null = null;
   let simRunning = false;
   let activeScenario: ScenarioPackage = marsScenario;
+  // Original natural-language prompt that produced `activeScenario`,
+  // when the run originated from compile-from-seed. Threaded through
+  // the active_scenario SSE broadcast and into the session store so
+  // the replay banner can show users WHAT they prompted, not just a
+  // run title and an event count. Reset to null whenever a non-seed
+  // scenario gets installed.
+  let activeScenarioSeedText: string | null = null;
   // Raw custom scenario JSON payloads authored during this session.
   const memoryScenarios = new Map<string, unknown>();
   // Runnable scenarios that can appear in the catalog and be switched to.
@@ -1334,8 +1341,11 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       try {
         const body = JSON.parse(await readBody(req, maxRequestBodyBytes));
         const quickstartDeps: QuickstartDeps = {
-          setActiveScenario: (sc) => {
+          setActiveScenario: (sc, seedText) => {
             activeScenario = sc;
+            activeScenarioSeedText = typeof seedText === 'string' && seedText.trim().length > 0
+              ? seedText.slice(0, 1000)
+              : null;
             // Quickstart-compiled scenarios reuse the 'compiled' source
             // tag; same post-compile semantics, no new source state
             // required.
@@ -2293,6 +2303,9 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
           settlementNoun: activeScenario.labels?.settlementNoun,
           populationNoun: activeScenario.labels?.populationNoun,
           departments: activeScenario.departments?.length ?? 0,
+          // Carry the original seed prompt through when the run came
+          // out of compile-from-seed; null for built-in scenarios.
+          seedText: activeScenarioSeedText,
         });
         console.log(`  Running scenario: "${activeScenario.labels?.name ?? activeScenario.id}" (${activeScenario.id})`);
 

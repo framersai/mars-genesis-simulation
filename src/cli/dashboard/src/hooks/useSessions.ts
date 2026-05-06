@@ -30,6 +30,10 @@ export interface StoredSessionMeta {
    *  Populated asynchronously after the save lands; may be absent on
    *  rows from pre-titling deploys or where the title LLM call failed. */
   title?: string;
+  /** Original seed prompt the user submitted to compile this scenario.
+   *  Truncated to 1000 chars server-side. Absent on preset/Mars-Genesis
+   *  runs and on rows saved before the seed-text plumbing landed. */
+  seedText?: string;
 }
 
 export type SessionsStatus = 'loading' | 'ready' | 'unavailable' | 'error';

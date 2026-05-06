@@ -126,8 +126,12 @@ const DEFAULT_DIGITAL_TWIN_LEADER: ActorConfig = {
 };
 
 export interface QuickstartDeps {
-  /** Installs a compiled scenario as the active scenario. */
-  setActiveScenario: (scenario: ScenarioPackage) => void;
+  /** Installs a compiled scenario as the active scenario. The optional
+   *  `seedText` is the user's original natural-language prompt — server
+   *  state stashes it so the next /setup → active_scenario broadcast can
+   *  carry it through to the session store, which surfaces it on the
+   *  replay banner and Replay-Last-Run CTA. */
+  setActiveScenario: (scenario: ScenarioPackage, seedText?: string) => void;
   /** Resolves an in-memory scenario id against the server catalog. */
   getScenarioById: (id: string) => ScenarioPackage | undefined;
   /** Fetches a URL's main text content. Returns `{text, title, sourceUrl}`. */
@@ -378,7 +382,7 @@ export async function handleCompileFromSeed(
     stored.scenario = scenario;
     stored.status = 'done';
     stored.resolvedAt = Date.now();
-    deps.setActiveScenario(scenario);
+    deps.setActiveScenario(scenario, parsed.data.seedText);
   }).catch((err: unknown) => {
     const stored = compileJobs.get(jobId);
     if (!stored) return;

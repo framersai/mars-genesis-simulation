@@ -29,11 +29,13 @@ void React;
 interface SessionRecord {
   id: string;
   title?: string;
+  scenarioName?: string;
   leaderA?: string;
   leaderB?: string;
   eventCount?: number;
   durationMs?: number;
   createdAt?: number;
+  seedText?: string;
 }
 
 export function ReplayLastRunCTA() {
@@ -64,11 +66,23 @@ export function ReplayLastRunCTA() {
   const href = typeof window !== 'undefined'
     ? buildReplayHref(window.location.href, session.id)
     : `?replay=${encodeURIComponent(session.id)}`;
+  // Prefer the LLM-generated narrative title; fall back through the
+  // scenario name, leader pair, or seed-prompt teaser so the CTA never
+  // shows just a UUID. The seed teaser is the most informative fallback
+  // for compile-from-seed runs that haven't titled yet.
+  const seedTeaser = session.seedText
+    ? session.seedText.length > 70
+      ? `${session.seedText.slice(0, 70).trim()}…`
+      : session.seedText.trim()
+    : null;
   const subtitle =
     session.title ||
+    session.scenarioName ||
     [session.leaderA, session.leaderB].filter((v): v is string => typeof v === 'string' && v.length > 0).join(' vs ') ||
+    seedTeaser ||
     session.id;
   const meta = [
+    session.scenarioName && session.scenarioName !== subtitle ? session.scenarioName : null,
     typeof session.eventCount === 'number' ? `${session.eventCount} events` : null,
     typeof session.durationMs === 'number' ? `${Math.round(session.durationMs / 1000)}s` : null,
     typeof session.createdAt === 'number' ? new Date(session.createdAt).toISOString().slice(0, 10) : null,

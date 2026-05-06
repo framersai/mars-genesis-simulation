@@ -63,6 +63,13 @@ export interface SessionMeta {
    * title LLM call failed.
    */
   title?: string | null;
+  /**
+   * The seed prompt the user submitted to compile this scenario, when
+   * available. Truncated to 1000 chars so the listing stays light.
+   * Populated when the run originated from a compile-from-seed call;
+   * preset/Mars-Genesis runs leave this undefined.
+   */
+  seedText?: string;
 }
 
 /** A full session record, including the event payload for replay. */
@@ -79,6 +86,7 @@ export interface SessionMetaOverride {
   leaderB?: string;
   turnCount?: number;
   totalCostUSD?: number;
+  seedText?: string;
 }
 
 /**
@@ -151,24 +159,29 @@ async function bootstrapSchema(adapter: StorageAdapter): Promise<void> {
       durationMs INTEGER,
       totalCostUSD REAL,
       events TEXT NOT NULL,
-      title TEXT
+      title TEXT,
+      seedText TEXT
     );
   `);
   await adapter.exec(`CREATE INDEX IF NOT EXISTS idx_sessions_createdAt ON sessions(createdAt);`);
 
-  // Idempotent schema migration: add `title` on existing DBs without
-  // dropping them. Only matters for SQLite (Postgres tenants spin up
-  // with the v0.8 schema directly).
+  // Idempotent schema migration for SQLite: add columns introduced
+  // after the original schema landed, without dropping the DB.
+  // Postgres tenants spin up with the latest schema directly; SQLite
+  // boxes need ADD COLUMN statements to catch up on existing data.
   if (isSqliteAdapter(adapter)) {
     const columns = await adapter.all<{ name: string }>('PRAGMA table_info(sessions)');
-    if (!columns.some((c) => c.name === 'title')) {
+    const addColumnIfMissing = async (name: string, ddl: string) => {
+      if (columns.some((c) => c.name === name)) return;
       try {
-        await adapter.exec('ALTER TABLE sessions ADD COLUMN title TEXT');
+        await adapter.exec(ddl);
       } catch (err) {
         const msg = String((err as Error).message ?? err);
         if (!msg.includes('duplicate column name')) throw err;
       }
-    }
+    };
+    await addColumnIfMissing('title', 'ALTER TABLE sessions ADD COLUMN title TEXT');
+    await addColumnIfMissing('seedText', 'ALTER TABLE sessions ADD COLUMN seedText TEXT');
   }
 }
 
@@ -228,9 +241,9 @@ export function openSessionStore(
 
       await adapter.run(
         `INSERT INTO sessions
-           (id, createdAt, scenarioId, scenarioName, leaderA, leaderB, turnCount, eventCount, durationMs, totalCostUSD, events)
+           (id, createdAt, scenarioId, scenarioName, leaderA, leaderB, turnCount, eventCount, durationMs, totalCostUSD, events, seedText)
          VALUES
-           (@id, @createdAt, @scenarioId, @scenarioName, @leaderA, @leaderB, @turnCount, @eventCount, @durationMs, @totalCostUSD, @events)`,
+           (@id, @createdAt, @scenarioId, @scenarioName, @leaderA, @leaderB, @turnCount, @eventCount, @durationMs, @totalCostUSD, @events, @seedText)`,
         {
           id,
           createdAt,
@@ -243,6 +256,7 @@ export function openSessionStore(
           durationMs,
           totalCostUSD: override?.totalCostUSD ?? derived.totalCostUSD ?? null,
           events: JSON.stringify(events),
+          seedText: override?.seedText ?? derived.seedText ?? null,
         },
       );
 
@@ -265,7 +279,7 @@ export function openSessionStore(
     async listSessions() {
       const adapter = await getAdapter();
       const rows = await adapter.all<SessionMetaRow>(
-        `SELECT id, createdAt, scenarioId, scenarioName, leaderA, leaderB, turnCount, eventCount, durationMs, totalCostUSD, title
+        `SELECT id, createdAt, scenarioId, scenarioName, leaderA, leaderB, turnCount, eventCount, durationMs, totalCostUSD, title, seedText
          FROM sessions ORDER BY createdAt DESC`,
       );
       return rows.map(rowToMeta);
@@ -325,6 +339,7 @@ interface SessionMetaRow {
   durationMs: number | null;
   totalCostUSD: number | null;
   title: string | null;
+  seedText: string | null;
 }
 
 interface SessionRow extends SessionMetaRow {
@@ -345,6 +360,7 @@ function rowToMeta(row: SessionMetaRow): SessionMeta {
   if (row.durationMs != null) meta.durationMs = row.durationMs;
   if (row.totalCostUSD != null) meta.totalCostUSD = row.totalCostUSD;
   if (row.title) meta.title = row.title;
+  if (row.seedText) meta.seedText = row.seedText;
   return meta;
 }
 
@@ -383,6 +399,13 @@ function deriveMetadata(events: TimestampedEvent[]): SessionMetaOverride {
     if (eventType === 'active_scenario') {
       if (typeof data.id === 'string') out.scenarioId = data.id;
       if (typeof data.name === 'string') out.scenarioName = data.name;
+      // server-app threads the original seed prompt into the active_scenario
+      // payload when the run originated from compile-from-seed. Truncate
+      // to 1000 chars so the listing payload stays under control even
+      // for paste-the-whole-PDF cases.
+      if (typeof data.seedText === 'string' && data.seedText.trim().length > 0) {
+        out.seedText = data.seedText.slice(0, 1000);
+      }
     }
     // Two paths to the actor roster:
     //   1. Legacy SSE `event: setup` frames (kept so callers that
