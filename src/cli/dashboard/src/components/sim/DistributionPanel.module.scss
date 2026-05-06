@@ -1,0 +1,101 @@
+@use '../../theme/typography' as typo;
+
+.panel {
+  margin: 16px 0;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.heading {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.headingLabel {
+  @include typo.field-label;
+
+  color: var(--text-3);
+}
+
+.headingHint {
+  font-family: var(--mono);
+  font-size: var(--font-3xs);
+  color: var(--text-3);
+  opacity: 0.8;
+}
+
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 16px;
+}
+
+.chartWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chartHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chartTitle {
+  font-family: var(--sans);
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.chartLatest {
+  font-family: var(--mono);
+  font-size: var(--font-3xs);
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart {
+  width: 100%;
+  height: auto;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: block;
+}
+
+.envelope {
+  fill: var(--amber);
+  fill-opacity: 0.1;
+  stroke: none;
+}
+
+.iqr {
+  fill: var(--amber);
+  fill-opacity: 0.28;
+  stroke: none;
+}
+
+.median {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.empty {
+  padding: 16px;
+  font-family: var(--mono);
+  font-size: var(--font-xs);
+  color: var(--text-3);
+  text-align: center;
+}

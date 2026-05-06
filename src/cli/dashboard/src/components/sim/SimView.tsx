@@ -18,6 +18,7 @@ import { LoadPriorRunsCTA } from '../settings/LoadPriorRunsCTA';
 import { SimLayoutToggle, type SimLayout } from './SimLayoutToggle';
 import { ConstellationView } from './ConstellationView';
 import { ActorTable } from './ActorTable';
+import { DistributionPanel } from './DistributionPanel';
 import { ActorDrillInModal } from './ActorDrillInModal';
 import styles from './SimView.module.scss';
 
@@ -283,6 +284,11 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
             state={state}
             onActorClick={(name) => setDrillInActor(name)}
           />
+          {/* N-way distribution: quantile bands across all actors per
+              turn (median + IQR + min-max envelope) for morale and
+              population. Replaces the A-vs-B DivergenceRail story
+              with "where does the variance live across the cohort." */}
+          <DistributionPanel state={state} />
           {/* Sortable actor roster — the constellation is the visual
               overview, the table is the data view for ranking by
               morale, deaths, forges, or turn progress. Click a row to
