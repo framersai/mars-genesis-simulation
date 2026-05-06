@@ -3,10 +3,19 @@
  * active: one when the session exists (REPLAYING SAVED DEMO) and one
  * when it's gone (REPLAY NOT FOUND). Both offer an exit back to live
  * mode.
+ *
+ * The active banner is INFO, not error. Earlier versions reused the
+ * rust accent (`var(--accent)`) for the background, which made the
+ * banner read as a warning even though it just announces "you're
+ * watching a cached run". The palette here uses the elevated-surface
+ * neutral background and AA-compliant token colors for muted text.
  */
+import * as React from 'react';
 import { useEffect, useState } from 'react';
 import type { StoredSessionMeta } from '../../hooks/useSessions';
 import styles from './ReplayBanner.module.scss';
+
+void React; // dashboard SSR tests run without the automatic JSX runtime
 
 interface ReplayBannerProps {
   replaySessionId: string;
@@ -96,11 +105,14 @@ export function ReplayBanner({ replaySessionId }: ReplayBannerProps) {
   return (
     <div role="status" className={styles.activeBanner}>
       <span>
-        <strong>REPLAYING</strong> · {headline}
-        {subline.length > 0 && <span style={{ opacity: 0.7 }}> · {subline.join(' · ')}</span>}
-        <span style={{ opacity: 0.55, marginLeft: 8 }}>cached playback (no new LLM cost)</span>
+        <strong className={styles.activeBannerHeadline}>REPLAYING</strong>
+        <span className={styles.activeBannerSubline}>· {headline}</span>
+        {subline.length > 0 && (
+          <span className={styles.activeBannerSubline}> · {subline.join(' · ')}</span>
+        )}
+        <span className={styles.activeBannerCacheTag}>· cached playback (no new LLM cost)</span>
         {seedTeaser && (
-          <span style={{ display: 'block', opacity: 0.65, fontStyle: 'italic', marginTop: 2 }}>
+          <span className={styles.activeBannerSeed}>
             “{seedTeaser}”
           </span>
         )}

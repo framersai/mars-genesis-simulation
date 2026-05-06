@@ -19,10 +19,49 @@
   border-bottom: 1px solid var(--border);
 }
 
+// Active replay banner: INFO surface, not error/warning. The previous
+// design reused the rust accent (`var(--accent)`) for the background,
+// which made viewers read this as "something went wrong" — it's just
+// announcing that the events on screen come from a cached run. The
+// elevated-surface background plus an amber-dim bottom border keeps
+// the visual weight without the alarm signal.
 .activeBanner {
   @extend .banner;
-  background: var(--accent);
-  color: var(--bg-deep);
+  background: var(--bg-elevated);
+  color: var(--text-1);
+  border-bottom: 1px solid var(--amber-dim);
+}
+
+.activeBannerHeadline {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-right: 6px;
+}
+
+// Subline (scenario · leaders · counts · timestamp). Reaches contrast
+// via the --text-2 token instead of an inline opacity hack so the
+// computed RGB lands above WCAG AA on the elevated-surface background
+// in both dark and light themes.
+.activeBannerSubline {
+  color: var(--text-2);
+  margin-left: 6px;
+}
+
+// Trailing "cached playback (no new LLM cost)" tag. Slightly more
+// muted than the subline but still AA against --bg-elevated.
+.activeBannerCacheTag {
+  color: var(--text-3);
+  margin-left: 8px;
+}
+
+// Seed-prompt teaser block. Italicised; sits on its own line below the
+// status row so the user can see WHAT they prompted without the run
+// metadata stretching across two lines.
+.activeBannerSeed {
+  display: block;
+  color: var(--text-2);
+  font-style: italic;
+  margin-top: 2px;
 }
 
 .notFoundBanner {
@@ -34,14 +73,19 @@
   border-bottom: 1px solid var(--rust);
 }
 
+// EXIT REPLAY button — sits inside the active banner. Outline-only
+// so the banner's background does the heavy lifting; --text-2 outline
+// gives it presence without competing with the headline.
 .exitButton {
   @include typo.field-label;
   padding: 4px 10px;
   background: transparent;
-  border: 1px solid var(--bg-deep);
-  color: var(--bg-deep);
+  border: 1px solid var(--text-2);
+  color: var(--text-1);
   border-radius: 4px;
   cursor: pointer;
+
+  &:hover { border-color: var(--amber); color: var(--amber); }
 }
 
 // Sentence-case CTA: "← Back to live mode" must NOT be uppercased.
