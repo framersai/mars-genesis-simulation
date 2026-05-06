@@ -17,6 +17,7 @@ import { RerunPanel } from './RerunPanel';
 import { LoadPriorRunsCTA } from '../settings/LoadPriorRunsCTA';
 import { SimLayoutToggle, type SimLayout } from './SimLayoutToggle';
 import { ConstellationView } from './ConstellationView';
+import { ActorTable } from './ActorTable';
 import { ActorDrillInModal } from './ActorDrillInModal';
 import styles from './SimView.module.scss';
 
@@ -277,10 +278,20 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
   return (
     <div className={styles.root}>
       {layout === 'constellation' ? (
-        <ConstellationView
-          state={state}
-          onActorClick={(name) => setDrillInActor(name)}
-        />
+        <>
+          <ConstellationView
+            state={state}
+            onActorClick={(name) => setDrillInActor(name)}
+          />
+          {/* Sortable actor roster — the constellation is the visual
+              overview, the table is the data view for ranking by
+              morale, deaths, forges, or turn progress. Click a row to
+              open the same drill-in modal the constellation uses. */}
+          <ActorTable
+            state={state}
+            onActorClick={(id) => setDrillInActor(id)}
+          />
+        </>
       ) : (
         <>
           {/* Shared leaders row. Winner/tie/second chip on each card
