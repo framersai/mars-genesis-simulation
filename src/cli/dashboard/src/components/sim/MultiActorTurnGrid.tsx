@@ -94,6 +94,12 @@ export function MultiActorTurnGrid({ state }: MultiActorTurnGridProps) {
                   compact
                   actorIndex={idx}
                   leader={actor?.leader ?? null}
+                  // Fall back to the actor id (the orchestrator-side
+                  // actor name) so the header renders the real name
+                  // even if the `status: parallel` payload hasn't yet
+                  // arrived. Without this the bar showed generic
+                  // "Leader A/B/C" until the status event landed.
+                  nameFallback={id}
                   popHistory={actor?.popHistory ?? []}
                   moraleHistory={actor?.moraleHistory ?? []}
                   event={actor?.event}

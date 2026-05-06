@@ -34,6 +34,13 @@ interface ActorBarProps {
   /** Non-empty when the leader is currently mid-decision (post-event,
    *  pre-outcome). Renders a "DECIDING…" pulse chip. */
   pendingDecision?: string;
+  /** Optional name to show when `leader.name` is missing — typically
+   *  the SSE-stream actor id, which is the orchestrator-side actor
+   *  name even before the `status: parallel` payload populates the
+   *  full LeaderInfo. Without this, the fallback is the generic
+   *  "Leader A/B/C" string keyed off actorIndex, which surfaces on
+   *  3+ actor compile-from-seed runs as the user already flagged. */
+  nameFallback?: string;
 }
 
 /**
@@ -103,12 +110,17 @@ export function ActorBar({
   event,
   statuses,
   pendingDecision,
+  nameFallback,
 }: ActorBarProps) {
   const sideColor = getActorColorVar(actorIndex);
   const sideBg = actorIndex === 0 ? 'rgba(232,180,74,.12)' : 'rgba(76,168,168,.12)';
   const sideBorder = actorIndex === 0 ? 'var(--amber-dim)' : 'var(--teal-dim)';
+  // Resolution order: real leader name → caller-provided fallback (the
+  // SSE actor id, which is the orchestrator-side actor name even before
+  // the `status: parallel` payload populates the full LeaderInfo) →
+  // generic "Leader A/B/C" placeholder keyed off actorIndex.
   const fallbackLabel = `Leader ${String.fromCharCode(65 + actorIndex)}`;
-  const name = leader?.name || fallbackLabel;
+  const name = leader?.name || nameFallback || fallbackLabel;
 
   if (compact) {
     const pop = popHistory.length > 0 ? popHistory[popHistory.length - 1] : null;

@@ -226,6 +226,41 @@ test('ActorBar non-compact: empty state hidden once popHistory has data', () => 
   assert.ok(!/Awaiting first turn/.test(html), 'no awaiting hint when sim has begun');
 });
 
+test('ActorBar: nameFallback used when leader is null (status not yet seen)', () => {
+  // Regression for the 3+ actor compile-from-seed UI: the orchestrator
+  // emits sim events with `leader: actor.name` immediately, but the
+  // `status: parallel` payload that populates the full LeaderInfo can
+  // arrive a moment later. Without nameFallback, the bar showed generic
+  // "Leader A" / "Leader B" / "Leader C" until status landed.
+  const html = renderToString(
+    <ActorBar
+      actorIndex={2}
+      leader={null}
+      nameFallback="Captain Mara Voss"
+      popHistory={[40]}
+      moraleHistory={[69]}
+      compact
+    />,
+  );
+  assert.ok(html.includes('Captain Mara Voss'), `expected nameFallback to surface; got:\n${html}`);
+  assert.ok(!html.includes('Leader C'), 'generic Leader C placeholder should not render when nameFallback is provided');
+});
+
+test('ActorBar: generic "Leader N" placeholder still kicks in when both leader and nameFallback are missing', () => {
+  // Defensive: keep the legacy fallback for surfaces that have neither
+  // a real leader nor an actor id (e.g. brand-new sim-empty render).
+  const html = renderToString(
+    <ActorBar
+      actorIndex={0}
+      leader={null}
+      popHistory={[]}
+      moraleHistory={[]}
+      compact
+    />,
+  );
+  assert.ok(html.includes('Leader A'), 'generic Leader A still expected when nothing else is provided');
+});
+
 test('humanizeKey: snake_case + camelCase + already-spaced all map to Sentence case', () => {
   const html = renderToString(
     <ActorBar

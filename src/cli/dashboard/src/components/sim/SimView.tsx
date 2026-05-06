@@ -13,7 +13,6 @@ import { DivergenceRail } from './DivergenceRail';
 import { Timeline } from './Timeline';
 import { TurnGrid } from './TurnGrid';
 import { MultiActorTurnGrid } from './MultiActorTurnGrid';
-import { MultiActorLeadersRow } from './MultiActorLeadersRow';
 import { SimFooterBar } from './SimFooterBar';
 import { RerunPanel } from './RerunPanel';
 import { LoadPriorRunsCTA } from '../settings/LoadPriorRunsCTA';
@@ -317,19 +316,19 @@ export function SimView({ state, sseStatus, onRun, onTour, verdict, launching: l
           />
         </>
       ) : state.actorIds.length >= 3 ? (
-        <>
-          {/* N-actor leaders row: horizontally scrolling track of compact
-              ActorBars so every actor's live morale, current event, and
-              pending-decision pill stay visible at a glance. The Mars
-              Genesis 2-actor surface renders an inline grid; for N>=3
-              the same pattern just gets a wider track. */}
-          <MultiActorLeadersRow state={state} />
-          <StatsBar
-            actors={state.actorIds.map(id => ({ id, state: state.actors[id] }))}
-            crisisText={crisisText}
-            toolRegistry={toolRegistry}
-          />
-        </>
+        // N-actor side-by-side: skip the standalone leaders-row that the
+        // 2-actor mode renders. `MultiActorTurnGrid` (rendered below)
+        // carries its own sticky compact-ActorBar header that already
+        // shows every actor's name + archetype + POP + morale + event +
+        // Deciding pill. Rendering both at the same time produced two
+        // visually-redundant rows of leader cards stacked on top of
+        // each other (user-reported regression). StatsBar still pins
+        // the global crisis text + tool counts above the grid.
+        <StatsBar
+          actors={state.actorIds.map(id => ({ id, state: state.actors[id] }))}
+          crisisText={crisisText}
+          toolRegistry={toolRegistry}
+        />
       ) : (
         <>
           {/* Shared leaders row. Winner/tie/second chip on each card
