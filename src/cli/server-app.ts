@@ -522,7 +522,11 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
   // and the route handler still surfaces a 503 if the user beats the
   // pre-warm to the request.
   void getDigitalTwinWorld();
-  const clients: Set<ServerResponse> = new Set();
+  // SSE clients with optional per-actor filter. Map value is the
+  // actorId the client subscribed to via /events?actor=<id>, or null
+  // for the default "send me everything" subscription. broadcast()
+  // filters writes per-client based on this.
+  const clients: Map<ServerResponse, string | null> = new Map();
 
   // Event buffer: stores all broadcast events so new clients can catch up.
   // Persisted to disk so a server restart (CI/CD redeploy, pm2 reload,
@@ -572,6 +576,15 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
   // fixed inter-event interval. Live runs after the deploy get
   // accurate pacing.
   const eventTimestamps: number[] = new Array(eventBuffer.length).fill(0);
+  // Parallel array tracking the actorId each buffered SSE message is
+  // attributed to, so /events?actor=<id> replay can filter at the
+  // buffer level instead of re-parsing JSON per message. null means
+  // "global event" (status, active_scenario, complete, sim_aborted,
+  // verdict — anything not scoped to a specific leader). Buffer
+  // entries that survive a server restart come back tagged null
+  // (rehydrated entries lose their original tag), which is the
+  // safest default — they replay to everyone.
+  const eventActorIds: Array<string | null> = new Array(eventBuffer.length).fill(null);
 
   // Run-state flags for auto-save on clean completion. Reset inside
   // clearEventBuffer() so the next run starts fresh.
@@ -914,12 +927,20 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
     }
   };
 
-  const broadcast: BroadcastFn = (event, data) => {
+  const broadcast: BroadcastFn = (event, data, actorId) => {
     const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+    const tag = actorId ?? null;
     eventBuffer.push(msg);
     eventTimestamps.push(Date.now());
+    eventActorIds.push(tag);
     persistBufferSoon();
-    for (const res of clients) {
+    for (const [res, filter] of clients) {
+      // Filter contract: client subscribed without ?actor= sees
+      // everything (filter null). Client subscribed to ?actor=X
+      // sees global events (tag null) AND events tagged with X.
+      // Events tagged with a different actor are dropped for that
+      // client.
+      if (filter !== null && tag !== null && tag !== filter) continue;
       try {
         res.write(msg);
       } catch {
@@ -959,6 +980,7 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
     currentRunErrored = false;
     eventBuffer.length = 0;
     eventTimestamps.length = 0;
+    eventActorIds.length = 0;
     if (persistTimer) {
       clearTimeout(persistTimer);
       persistTimer = null;
@@ -1104,14 +1126,30 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       return;
     }
 
-    if (req.url === '/events') {
+    if (req.url === '/events' || req.url?.startsWith('/events?')) {
+      // Per-actor channel: /events?actor=<leaderName> filters the
+      // stream to events tagged with that leader plus all global
+      // events (status, active_scenario, complete, etc.). The default
+      // /events with no query param keeps the legacy "send me
+      // everything" behavior so the constellation, distribution
+      // panel, and table still receive the full stream.
+      let actorFilter: string | null = null;
+      if (req.url?.includes('?')) {
+        try {
+          const parsed = new URL(req.url, 'http://localhost');
+          const a = parsed.searchParams.get('actor');
+          if (a && a.trim().length > 0) actorFilter = a.trim();
+        } catch {
+          // Malformed URL — fall through with no filter (safest).
+        }
+      }
       res.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
         'Access-Control-Allow-Origin': '*',
       });
-      res.write('event: connected\ndata: {}\n\n');
+      res.write(`event: connected\ndata: ${JSON.stringify({ actorFilter })}\n\n`);
       // Stale-buffer gate: when this is the first reconnect after a long
       // idle and the buffer hasn't moved in over STALE_BUFFER_MS, the run
       // it represents is terminal in practice (user closed the tab,
@@ -1142,11 +1180,18 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
       // events from truly live ones so toasts (transient per-event
       // notifications) only fire for events that arrive AFTER the user
       // reached the page, never for the replay of a prior run.
-      for (const msg of eventBuffer) {
-        try { res.write(msg); } catch { break; }
+      for (let i = 0; i < eventBuffer.length; i++) {
+        // Replay-time filtering: skip events tagged with a different
+        // actor when the client subscribed with ?actor=. Untagged
+        // (global) events always replay so the dashboard's run
+        // metadata (active_scenario, status) reaches per-actor
+        // subscribers.
+        const tag = eventActorIds[i] ?? null;
+        if (actorFilter !== null && tag !== null && tag !== actorFilter) continue;
+        try { res.write(eventBuffer[i]); } catch { break; }
       }
       try { res.write('event: replay_done\ndata: {}\n\n'); } catch {}
-      clients.add(res);
+      clients.set(res, actorFilter);
       // Reconnection cancels any pending disconnect watchdog fire so
       // the sim keeps running once the returning user is watching again.
       disarmDisconnectWatchdog();

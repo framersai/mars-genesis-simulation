@@ -6,7 +6,15 @@ import { VerdictSchema } from '../runtime/schemas/verdict.js';
 import type { ScenarioPackage } from '../engine/types.js';
 import type { ResolvedEconomicsProfile } from '../runtime/economics-profile.js';
 
-export type BroadcastFn = (event: string, data: unknown) => void;
+/**
+ * SSE broadcast contract. The optional `actorId` lets per-actor
+ * subscribers (`/events?actor=<id>`) filter to one leader's stream
+ * without parsing every payload server-side. Callers emitting global
+ * events (status, active_scenario, complete, sim_aborted, verdict)
+ * omit it; per-actor callers (sim, sim_error, result) pass the
+ * leader's name so the filter can match.
+ */
+export type BroadcastFn = (event: string, data: unknown, actorId?: string) => void;
 
 /**
  * Derive a stable kebab-case tag for a leader from archetype, name, and
@@ -84,7 +92,15 @@ export async function runPairSimulations(
   broadcast('status', { phase: 'starting', maxTurns: turns, customEvents });
 
   const { runSimulation } = await import('../runtime/orchestrator.js');
-  const onEvent = (event: unknown) => broadcast('sim', event);
+  // Per-actor SSE channels: pull leader from each event so subscribers
+  // on /events?actor=<leaderName> can filter the stream server-side.
+  // Orchestrator emits events with `{ type, leader: leader.name, data }`
+  // (see runtime/orchestrator.ts:514), so the leader field is always
+  // present on per-actor events.
+  const onEvent = (event: unknown) => {
+    const leader = (event as { leader?: string } | null)?.leader;
+    broadcast('sim', event, leader);
+  };
   broadcast('status', {
     phase: 'parallel',
     actors: actors.map(leader => ({
@@ -148,7 +164,7 @@ export async function runPairSimulations(
       }
       return { tag, leader, result };
     }, error => {
-      broadcast('sim_error', { leader: tag, error: String(error) });
+      broadcast('sim_error', { leader: tag, error: String(error) }, tag);
       throw error;
     });
   }));
@@ -345,7 +361,13 @@ export async function runForkSimulation(
     `parent ${simConfig.forkFrom.parentArtifact.metadata.runId}\n`,
   );
 
-  const onEvent = (event: unknown) => broadcast('sim', event);
+  // Per-actor SSE filter: orchestrator events carry { leader } so
+  // /events?actor=<leaderName> subscribers receive only this fork's
+  // stream.
+  const onEvent = (event: unknown) => {
+    const lname = (event as { leader?: string } | null)?.leader;
+    broadcast('sim', event, lname);
+  };
 
   try {
     const result = await forkedWm.simulate({
@@ -397,7 +419,7 @@ export async function runForkSimulation(
       }
     }
   } catch (err) {
-    broadcast('sim_error', { leader: leader.archetype, error: String(err) });
+    broadcast('sim_error', { leader: leader.archetype, error: String(err) }, leader.name);
     throw err;
   }
 
@@ -427,7 +449,11 @@ export async function runBatchSimulations(
   broadcast('status', { phase: 'starting', maxTurns: turns, customEvents, batch: true, actorCount: actors.length });
 
   const { runSimulation } = await import('../runtime/orchestrator.js');
-  const onEvent = (event: unknown) => broadcast('sim', event);
+  // Per-actor SSE filter: same pattern as runPairSimulations / fork.
+  const onEvent = (event: unknown) => {
+    const lname = (event as { leader?: string } | null)?.leader;
+    broadcast('sim', event, lname);
+  };
   broadcast('status', {
     phase: 'parallel',
     batch: true,
@@ -497,7 +523,7 @@ export async function runBatchSimulations(
       }
       return result;
     }, error => {
-      broadcast('sim_error', { leader: tag, actorIndex: index, error: String(error) });
+      broadcast('sim_error', { leader: tag, actorIndex: index, error: String(error) }, tag);
       throw error;
     });
   }));

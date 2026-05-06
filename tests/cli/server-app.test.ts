@@ -1241,3 +1241,135 @@ test('rehydrates fresh .event-buffer.json (within STALE_BUFFER_MS)', async () =>
     rmSync(appDir, { recursive: true, force: true });
   }
 });
+
+// -- Per-actor SSE channels (#5 of N-actor scaling) -------------------------
+
+test('GET /events?actor=Aria filters live broadcasts to Aria + global events only', async () => {
+  // Spin up a server with a hold-open runner so we can capture the
+  // broadcast handle and emit tagged events from the test. The
+  // /events?actor=Aria subscriber should see Aria-tagged events plus
+  // untagged global events; Bob-tagged events should never reach it.
+  const appDir = mkdtempSync(join(tmpdir(), 'paracosm-actor-filter-'));
+  let captureBroadcast: ((event: string, data: unknown, actorId?: string) => void) | null = null;
+  const server = createMarsServer({
+    env: { ...process.env, APP_DIR: appDir },
+    runPairSimulations: async (_config, broadcast) => {
+      captureBroadcast = broadcast;
+      await new Promise(() => {});
+    },
+  } as any);
+  server.listen(0);
+  await once(server, 'listening');
+  const port = (server.address() as { port: number }).port;
+  try {
+    const setupRes = await fetch(`http://127.0.0.1:${port}/setup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        actors: [leaderA, leaderB],
+        provider: 'anthropic',
+        turns: 1,
+        startTime: 2042,
+        population: 110,
+        activeDepartments: ['medical'],
+        startingResources: { food: 20, water: 900, power: 500, morale: 80, pressurizedVolumeM3: 4100, lifeSupportCapacity: 175, infrastructureModules: 5 },
+        startingPolitics: { earthDependencyPct: 68 },
+        execution: { commanderMaxSteps: 7, departmentMaxSteps: 11, sandboxTimeoutMs: 15000, sandboxMemoryMB: 256 },
+        models: { commander: 'gpt-5.4', departments: 'gpt-5.4-mini', judge: 'gpt-5.4' },
+      }),
+    });
+    assert.ok(setupRes.ok, `setup: ${setupRes.status}`);
+    await new Promise((r) => setTimeout(r, 50));
+    assert.ok(captureBroadcast, 'broadcast not captured');
+
+    const eventsRes = await fetch(`http://127.0.0.1:${port}/events?actor=Aria`);
+    assert.equal(eventsRes.status, 200);
+    const reader = eventsRes.body!.getReader();
+    const decoder = new TextDecoder();
+
+    // Drain the connected + replay_done frames first.
+    await reader.read();
+    // Now broadcast 3 tagged events live, then read.
+    captureBroadcast!('sim', { type: 'turn_done', leader: 'Aria', data: { turn: 1 } }, 'Aria');
+    captureBroadcast!('sim', { type: 'turn_done', leader: 'Bob',  data: { turn: 1 } }, 'Bob');
+    captureBroadcast!('active_scenario', { id: 'mars', name: 'Mars Genesis' });
+    await new Promise((r) => setTimeout(r, 30));
+    let buf = '';
+    for (let i = 0; i < 3; i++) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value);
+      if (buf.includes('Aria') && buf.includes('Mars Genesis')) break;
+    }
+    await reader.cancel();
+
+    assert.ok(buf.includes('"leader":"Aria"'), `Aria event missing: ${buf.slice(0, 200)}`);
+    assert.ok(buf.includes('Mars Genesis'), `global active_scenario event missing: ${buf.slice(0, 200)}`);
+    assert.ok(!buf.includes('"leader":"Bob"'), `Bob event leaked: ${buf.slice(0, 200)}`);
+  } finally {
+    server.close();
+    await once(server, 'close');
+    rmSync(appDir, { recursive: true, force: true });
+  }
+});
+
+test('GET /events (no actor filter) still receives every tag — backwards compat', async () => {
+  // Default subscription must keep working for the constellation,
+  // distribution panel, and table that need the all-actor stream.
+  const appDir = mkdtempSync(join(tmpdir(), 'paracosm-actor-default-'));
+  let captureBroadcast: ((event: string, data: unknown, actorId?: string) => void) | null = null;
+  const server = createMarsServer({
+    env: { ...process.env, APP_DIR: appDir },
+    runPairSimulations: async (_config, broadcast) => {
+      captureBroadcast = broadcast;
+      await new Promise(() => {});
+    },
+  } as any);
+  server.listen(0);
+  await once(server, 'listening');
+  const port = (server.address() as { port: number }).port;
+  try {
+    const setupRes = await fetch(`http://127.0.0.1:${port}/setup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        actors: [leaderA, leaderB],
+        provider: 'anthropic',
+        turns: 1,
+        startTime: 2042,
+        population: 110,
+        activeDepartments: ['medical'],
+        startingResources: { food: 20, water: 900, power: 500, morale: 80, pressurizedVolumeM3: 4100, lifeSupportCapacity: 175, infrastructureModules: 5 },
+        startingPolitics: { earthDependencyPct: 68 },
+        execution: { commanderMaxSteps: 7, departmentMaxSteps: 11, sandboxTimeoutMs: 15000, sandboxMemoryMB: 256 },
+        models: { commander: 'gpt-5.4', departments: 'gpt-5.4-mini', judge: 'gpt-5.4' },
+      }),
+    });
+    assert.ok(setupRes.ok);
+    await new Promise((r) => setTimeout(r, 50));
+    assert.ok(captureBroadcast, 'broadcast not captured');
+
+    const eventsRes = await fetch(`http://127.0.0.1:${port}/events`);
+    const reader = eventsRes.body!.getReader();
+    const decoder = new TextDecoder();
+    await reader.read();
+    captureBroadcast!('sim', { type: 'turn_done', leader: 'Aria', data: {} }, 'Aria');
+    captureBroadcast!('sim', { type: 'turn_done', leader: 'Bob',  data: {} }, 'Bob');
+    await new Promise((r) => setTimeout(r, 30));
+    let buf = '';
+    for (let i = 0; i < 3; i++) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value);
+      if (buf.includes('Aria') && buf.includes('Bob')) break;
+    }
+    await reader.cancel();
+
+    assert.ok(buf.includes('"leader":"Aria"'), 'unfiltered subscriber should receive Aria events');
+    assert.ok(buf.includes('"leader":"Bob"'), 'unfiltered subscriber should receive Bob events');
+  } finally {
+    server.close();
+    await once(server, 'close');
+    rmSync(appDir, { recursive: true, force: true });
+  }
+});
