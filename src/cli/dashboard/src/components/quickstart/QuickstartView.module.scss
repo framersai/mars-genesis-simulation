@@ -36,6 +36,73 @@
 // the eye can return to). Hidden on phone widths because the textarea
 // already pushes the CTA below the fold there — vocab support belongs
 // on hover (data-tooltip planned for a follow-up).
+// Collapsible "How it works" wrapper around the glossary + timing
+// hint. <details> ships the open/close behaviour for free — no JS
+// state needed. Closed by default so the input form sits higher on
+// the page; first-time users toggle it open and the glossary cascades.
+.howItWorks {
+  max-width: 600px;
+  margin: 16px auto 0;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+
+  // Drop the panel-style chrome on the inner glossary + timing hint
+  // so they read as the body of THIS panel rather than nested cards.
+  // Specificity scoped here so the standalone .glossary still works
+  // if some other surface needs the original look.
+  > .glossary,
+  > .timingHint {
+    margin-top: 0;
+    border: none;
+    background: transparent;
+    border-radius: 0;
+    max-width: none;
+  }
+
+  > .timingHint {
+    border-top: 1px dashed var(--border);
+  }
+
+  // The standalone glossary hides on mobile (no panel real estate);
+  // inside the collapsible it should stay visible because the user
+  // explicitly opened the section. Override the mobile-hide rule.
+  @media (max-width: 480px) {
+    > .glossary { display: block; }
+  }
+}
+
+.howItWorksSummary {
+  cursor: pointer;
+  padding: 10px 14px;
+  font-family: var(--sans);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-2);
+  list-style: none;
+
+  // Hide the default disclosure triangle; we render our own marker.
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::before {
+    content: '▸';
+    display: inline-block;
+    width: 1em;
+    color: var(--amber);
+    transition: transform 120ms ease;
+  }
+
+  // Rotate the marker when the parent <details> is open.
+  // :where() keeps specificity low so the .howItWorks scoping above
+  // doesn't fight this rule.
+}
+
+.howItWorks[open] > .howItWorksSummary::before {
+  content: '▾';
+}
+
 .glossary {
   list-style: none;
   padding: 14px 18px;

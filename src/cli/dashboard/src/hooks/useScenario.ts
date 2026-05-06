@@ -18,6 +18,9 @@ export interface ScenarioClientPayload {
     actorNoun?: string;
     /** Plural form of `actorNoun`. Default "actors". */
     actorNounPlural?: string;
+    /** Optional 1-2 sentence "what is this scenario about" copy
+     *  surfaced on the LoadedScenarioCTA. <=200 chars, plain prose. */
+    tagline?: string;
   };
   theme: {
     primaryColor: string;

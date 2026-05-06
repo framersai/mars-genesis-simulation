@@ -99,6 +99,18 @@
   display: none;
 }
 
+/* 1-2 sentence scenario lore line under the heading. Compact, prose
+   tone (not mono) so it reads as flavor text rather than data. Falls
+   out entirely when scenario.labels.tagline is absent — no empty
+   reservation. */
+.tagline {
+  margin: 0;
+  font-size: var(--font-xs);
+  color: var(--text-2);
+  line-height: 1.5;
+  max-width: 60ch;
+}
+
 .tradeoff {
   font-size: var(--font-3xs);
   font-family: var(--mono);

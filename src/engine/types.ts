@@ -50,6 +50,14 @@ export interface ScenarioLabels {
   actorNoun?: string;
   /** Plural form of `actorNoun`. Defaults to "actors". */
   actorNounPlural?: string;
+  /**
+   * Optional one-line "what is this scenario about" copy surfaced on
+   * Quickstart cards and replay banners. Read by the LoadedScenarioCTA
+   * to give first-time visitors enough context to know what they're
+   * about to launch without having to dig into the JSON. Compact: <=
+   * 200 chars, plain text.
+   */
+  tagline?: string;
 }
 
 /** Visual theme for a scenario. Applied to the dashboard via CSS custom properties. */

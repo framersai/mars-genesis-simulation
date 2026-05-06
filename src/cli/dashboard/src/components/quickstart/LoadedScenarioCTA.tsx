@@ -51,6 +51,11 @@ export function LoadedScenarioCTA({
   const sliderMax = 50;
   const exceedsPreset = actorCount > presetCount;
   const scenarioName = scenario.labels.name;
+  // Optional 1-2 sentence "what's this scenario about" line. Mars
+  // Genesis ships with one out of the box; compile-from-seed and
+  // user-uploaded scenarios usually don't, so this falls back to the
+  // existing leader-pair tradition.
+  const tagline = scenario.labels.tagline?.trim();
 
   const leaderLine = hasPreset
     ? `${presetActors[0].name} (${presetActors[0].archetype}) vs ${presetActors[1].name} (${presetActors[1].archetype})`
@@ -77,6 +82,7 @@ export function LoadedScenarioCTA({
       <h2 className={styles.heading} id={headingId}>
         ▶ Run with the loaded scenario: {scenarioName}
       </h2>
+      {tagline && <p className={styles.tagline}>{tagline}</p>}
       <div className={styles.subline}>{leaderLine}</div>
       <div className={styles.actorRow}>
         <label className={styles.actorLabel} htmlFor={sliderId}>Actors</label>
