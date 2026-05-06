@@ -1373,3 +1373,76 @@ test('GET /events (no actor filter) still receives every tag — backwards compa
     rmSync(appDir, { recursive: true, force: true });
   }
 });
+
+// Regression: a stream of concurrent /setup requests used to hit a race
+// where `simConfig` (a closure-level variable) was nulled out by a
+// concurrent /scenario/switch (or another /setup) DURING the
+// `await import('./server/bundle-id.js')` microtask in /setup. The
+// next read of `simConfig.actors` would then throw
+// "Cannot read properties of null (reading 'actors')" and the handler
+// would return 400 with that error in the body. Production server logs
+// caught this as a user-visible "Launch failed" toast on the dashboard.
+//
+// The fix captures simConfig into a non-null `launchConfig` local
+// BEFORE the first await; this test fires 8 concurrent /setup calls
+// against the same server and asserts none of them lands the
+// race-induced 400. With the bug present, several setups would fail
+// with the actors-deref error; with the fix all should return 200.
+test('concurrent /setup requests do not race on the simConfig closure', async () => {
+  let runCount = 0;
+  const server = createMarsServer({
+    maxSimsPerDay: 0,
+    runPairSimulations: async () => { runCount++; },
+  });
+  server.listen(0);
+  await once(server, 'listening');
+  const port = (server.address() as { port: number }).port;
+  const body = JSON.stringify({
+    actors: [leaderA, leaderB],
+    provider: 'anthropic',
+    turns: 1,
+    population: 110,
+    activeDepartments: ['medical'],
+    startingResources: { food: 20, water: 900, power: 500, morale: 80, pressurizedVolumeM3: 4100, lifeSupportCapacity: 175, infrastructureModules: 5 },
+    startingPolitics: { earthDependencyPct: 68 },
+    execution: { commanderMaxSteps: 7, departmentMaxSteps: 11, sandboxTimeoutMs: 15000, sandboxMemoryMB: 256 },
+    models: { commander: 'gpt-5.4', departments: 'gpt-5.4-mini', judge: 'gpt-5.4' },
+  });
+  try {
+    // 8 concurrent setups. Each one mutates the closure-level simConfig,
+    // and the in-flight-abort drain in /setup awaits the prior run's
+    // teardown — exactly the window where the race used to fire. With
+    // the fix, every setup completes with a 200 + redirect because
+    // launchConfig is captured before the first await.
+    const responses = await Promise.all(
+      Array.from({ length: 8 }, () =>
+        fetch(`http://127.0.0.1:${port}/setup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body,
+        }),
+      ),
+    );
+    for (const r of responses) {
+      const text = await r.text();
+      assert.ok(
+        r.ok,
+        `expected 200 from /setup under concurrent load, got ${r.status} with body: ${text}`,
+      );
+      // Belt-and-suspenders: even if a future regression returns 200
+      // but smuggles an error string in the body, fail loudly.
+      assert.ok(
+        !text.includes("reading 'actors'"),
+        `/setup body must not surface a "reading 'actors'" race error: ${text}`,
+      );
+    }
+    // All 8 calls reach the runner (each one aborts the prior in-flight
+    // run via the simRunning drain) — the count proves no setup short-
+    // circuited with a race-induced 400 before scheduling the runner.
+    await new Promise((r) => setTimeout(r, 50));
+    assert.equal(runCount, 8, 'every /setup should have invoked the runner');
+  } finally {
+    server.close();
+    await once(server, 'close');
+  }
+});

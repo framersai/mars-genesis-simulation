@@ -2258,6 +2258,18 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
           );
         }
 
+        // Capture into a local non-null reference BEFORE the first
+        // await. Earlier code only captured at the startWithConfig call
+        // site (line ~2367), but every read of `simConfig` between the
+        // first `await import(...)` below and that capture site was
+        // still racing against `/clear` / `/select-scenario` (lines
+        // 1353, 1672, 2013) which null out the closure variable. A
+        // concurrent /clear during the bundle-id import or the
+        // in-flight-sim abort drain produced "Cannot read properties of
+        // null (reading 'actors')" 400s for the originating /setup.
+        // Single capture here removes the whole race surface.
+        const launchConfig = simConfig;
+
         // Build a base RunRecord for the /setup response (line ~1830). The
         // record is NOT inserted at run-start; instead, server-app inserts
         // one enriched record per completed artifact via the onArtifact
@@ -2272,16 +2284,16 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         // query. Solo runs (1 leader) leave bundleId undefined and
         // render as solo cards exactly as today.
         const { generateBundleId } = await import('./server/bundle-id.js');
-        const bundleId = simConfig.actors.length >= 2 ? generateBundleId() : undefined;
+        const bundleId = launchConfig.actors.length >= 2 ? generateBundleId() : undefined;
         const runRecord = createRunRecord({
           scenarioId: activeScenario.id,
           scenarioVersion: activeScenario.version,
           actorConfigHash: hashActorConfig({
-            actors: simConfig.actors,
-            turns: simConfig.turns,
-            seed: simConfig.seed,
+            actors: launchConfig.actors,
+            turns: launchConfig.turns,
+            seed: launchConfig.seed,
           }),
-          economicsProfile: simConfig.economics.id,
+          economicsProfile: launchConfig.economics.id,
           sourceMode: serverMode,
           createdBy: hasUserKeys ? 'user' : 'anonymous',
           bundleId,
@@ -2290,10 +2302,8 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         // `onArtifact` for each completed leader, we enrich the base
         // record with artifact fields and use the artifact's own runId
         // so the Library tab links each card to a specific artifact.
-        // Capture the resolved simConfig values now so the closure does
-        // not depend on the (nullable) closure-level `simConfig` later.
-        const persistTurns = simConfig.turns;
-        const persistSeed = simConfig.seed;
+        const persistTurns = launchConfig.turns;
+        const persistSeed = launchConfig.seed;
         const onArtifactPersist = async (
           artifact: import('../engine/schema/index.js').RunArtifact,
           leader: import('../runtime/orchestrator.js').ActorConfig,
@@ -2354,17 +2364,9 @@ export function createMarsServer(options: CreateMarsServerOptions = {}): MarsSer
         });
         console.log(`  Running scenario: "${activeScenario.labels?.name ?? activeScenario.id}" (${activeScenario.id})`);
 
-        // Capture into a local non-null reference. Between the
-        // `simConfig = normalizeSimulationConfig(...)` assignment above
-        // and this call we await several things (the dynamic import of
-        // bundle-id, the in-flight-sim abort drain, the active_scenario
-        // broadcast); during any of those microtasks a concurrent
-        // /clear or /select-scenario request can re-enter the event
-        // loop and reset `simConfig = null`. The previous closure-level
-        // dereference then threw "Cannot read properties of null
-        // (reading 'forkFrom')" inside startWithConfig (server logs
-        // were full of these). Local capture removes the race.
-        const launchConfig = simConfig;
+        // launchConfig was captured above (right after applyDemoCaps)
+        // so it stays non-null even if a concurrent /clear nulls out
+        // the closure-level simConfig during one of the awaits.
         marsServer.startWithConfig(launchConfig, { onArtifact: onArtifactPersist }).catch((error) => {
           console.warn('[setup] simulation failed:', error);
         });
